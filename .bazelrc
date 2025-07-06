@@ -28,5 +28,5 @@ build:wasi --platforms=@rules_rust//rust/platform:wasm32-wasi
 
 # Performance
 build --jobs=auto
-build --local_ram_resources=HOST_RAM*.8
-build --local_cpu_resources=HOST_CPUS*.8
+build --local_resources=memory=HOST_RAM*.8
+build --local_resources=cpu=HOST_CPUS*.8

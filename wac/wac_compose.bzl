@@ -155,8 +155,13 @@ def _generate_composition(components):
     
     # Export first component as main
     if components:
-        first_comp = next(iter(components))
-        lines.append("export {} as main;".format(first_comp))
+        # Get first key from dict (Starlark doesn't have next/iter)
+        first_comp = None
+        for key in components:
+            first_comp = key
+            break
+        if first_comp:
+            lines.append("export {} as main;".format(first_comp))
     
     return "\n".join(lines)
 

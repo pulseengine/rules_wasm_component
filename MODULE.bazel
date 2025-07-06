@@ -8,12 +8,12 @@ module(
 
 # Dependencies for WebAssembly tooling
 bazel_dep(name = "rules_rust", version = "0.46.0")
-bazel_dep(name = "bazel_skylib", version = "1.5.0")
-bazel_dep(name = "platforms", version = "0.0.8")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.10")
 
 # Development dependencies
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
-bazel_dep(name = "stardoc", version = "0.6.2", dev_dependency = True)
+bazel_dep(name = "stardoc", version = "0.7.1", dev_dependency = True)
 
 # Rust toolchain setup
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
