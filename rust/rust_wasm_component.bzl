@@ -1,6 +1,6 @@
 """Rust WASM component rule implementation"""
 
-load("@rules_rust//rust:defs.bzl", "rust_shared_library")
+load("@rules_rust//rust:defs.bzl", "rust_library")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//common:common.bzl", "WASM_TARGET_TRIPLE")
 
@@ -109,7 +109,7 @@ def rust_wasm_component(
     """
     Builds a Rust WebAssembly component.
     
-    This macro combines rust_shared_library with WASM component conversion.
+    This macro combines rust_library with WASM component conversion.
     
     Args:
         name: Target name
@@ -121,7 +121,7 @@ def rust_wasm_component(
         rustc_flags: Additional rustc flags
         profiles: List of build profiles to create ["debug", "release", "custom"]
         visibility: Target visibility
-        **kwargs: Additional arguments passed to rust_shared_library
+        **kwargs: Additional arguments passed to rust_library
     
     Example:
         rust_wasm_component(
@@ -169,13 +169,13 @@ def rust_wasm_component(
             "--target=" + WASM_TARGET_TRIPLE,
         ]
         
-        rust_shared_library(
+        rust_library(
             name = rust_library_name,
             srcs = srcs,
             deps = deps,
             edition = "2021",
             crate_features = crate_features,
-            rustc_flags = profile_rustc_flags,
+            rustc_flags = profile_rustc_flags + ["--crate-type=cdylib"],
             visibility = ["//visibility:private"],
             **kwargs
         )
