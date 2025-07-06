@@ -9,7 +9,7 @@ module(
 # Dependencies for WebAssembly tooling
 bazel_dep(name = "rules_rust", version = "0.46.0")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "platforms", version = "0.0.11")
 
 # Development dependencies
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
