@@ -1,0 +1,103 @@
+"""Example of multi-profile WASM component composition"""
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
+
+package(default_visibility = ["//visibility:public"])
+
+# Define WIT interfaces
+wit_library(
+    name = "sensor_interfaces",
+    srcs = ["wit/sensor.wit"],
+    package_name = "sensor:interfaces",
+)
+
+wit_library(
+    name = "ai_interfaces", 
+    srcs = ["wit/ai.wit"],
+    deps = [":sensor_interfaces"],
+    package_name = "ai:interfaces",
+)
+
+# Build components with multiple profiles
+rust_wasm_component(
+    name = "camera_sensor",
+    srcs = ["src/camera.rs"],
+    wit_bindgen = ":sensor_interfaces",
+    profiles = ["debug", "release"],  # Build both variants
+)
+
+rust_wasm_component(
+    name = "object_detection",
+    srcs = ["src/detection.rs"],
+    wit_bindgen = ":ai_interfaces",
+    profiles = ["debug", "release", "custom"],  # Three variants
+)
+
+# Compose system with mixed profiles for development
+wac_compose(
+    name = "development_system",
+    components = {
+        "camera": ":camera_sensor",
+        "ai": ":object_detection", 
+    },
+    profile = "debug",  # Default profile
+    component_profiles = {
+        "ai": "release",  # Use optimized AI component even in debug
+    },
+    use_symlinks = True,  # Save disk space
+    composition = """
+        // Development composition with mixed profiles
+        let camera = new camera:component {
+            frame-rate: 30,
+            resolution: "1080p",
+        };
+        
+        let ai = new ai:component {
+            model: "yolov5n",
+            confidence: 0.5,
+        };
+        
+        // Connect camera output to AI input
+        connect camera.frame-output -> ai.frame-input;
+        
+        export ai as main;
+    """,
+)
+
+# Production composition - all release builds
+wac_compose(
+    name = "production_system",
+    components = {
+        "camera": ":camera_sensor",
+        "ai": ":object_detection",
+    },
+    profile = "release",  # All components use release profile
+    use_symlinks = True,
+    composition_file = "production.wac",
+)
+
+# Custom mixed composition for testing
+wac_compose(
+    name = "test_system", 
+    components = {
+        "camera": ":camera_sensor",
+        "ai": ":object_detection",
+    },
+    component_profiles = {
+        "camera": "debug",   # Debug camera for detailed logging
+        "ai": "custom",      # Custom optimized AI
+    },
+    use_symlinks = False,  # Copy files for isolated testing
+    composition = """
+        // Test composition
+        let camera = new camera:component {};
+        let ai = new ai:component {};
+        
+        connect camera.frame-output -> ai.frame-input;
+        
+        export camera as camera-output;
+        export ai as ai-output;
+    """,
+)

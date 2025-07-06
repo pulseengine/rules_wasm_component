@@ -1,0 +1,33 @@
+/// AI interfaces for object detection
+package ai:interfaces@0.1.0;
+
+use sensor:interfaces/camera.{frame};
+
+interface detection {
+    record detection-result {
+        class: string,
+        confidence: f32,
+        bbox: bounding-box,
+    }
+    
+    record bounding-box {
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    }
+    
+    /// Load AI model
+    load-model: func(model-path: string) -> result<_, string>;
+    
+    /// Process frame for object detection
+    detect-objects: func(frame: frame) -> result<list<detection-result>, string>;
+    
+    /// Set confidence threshold
+    set-confidence: func(threshold: f32) -> result<_, string>;
+}
+
+world ai {
+    import sensor:interfaces/camera;
+    export detection;
+}

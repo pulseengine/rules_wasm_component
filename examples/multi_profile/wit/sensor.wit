@@ -1,0 +1,24 @@
+/// Sensor interfaces for ADAS system
+package sensor:interfaces@0.1.0;
+
+interface camera {
+    record frame {
+        width: u32,
+        height: u32,
+        data: list<u8>,
+        timestamp: u64,
+    }
+    
+    /// Configure camera settings
+    configure: func(frame-rate: u32, resolution: string) -> result<_, string>;
+    
+    /// Capture a frame
+    capture-frame: func() -> result<frame, string>;
+    
+    /// Get camera status
+    get-status: func() -> string;
+}
+
+world sensor {
+    export camera;
+}

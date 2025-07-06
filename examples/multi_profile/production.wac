@@ -1,0 +1,25 @@
+// Production WAC composition
+// Optimized for performance and size
+
+package adas:production@1.0.0;
+
+let camera = new camera:component {
+    // Production camera settings
+    frame-rate: 60,
+    resolution: "4K",
+    quality: "high",
+};
+
+let ai = new ai:component {
+    // Production AI settings  
+    model: "yolov5s",
+    confidence: 0.7,
+    nms-threshold: 0.5,
+    batch-size: 1,
+};
+
+// High-performance data flow
+connect camera.frame-output -> ai.frame-input;
+
+// Export the complete system
+export ai as adas-system;

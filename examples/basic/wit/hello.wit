@@ -1,0 +1,11 @@
+/// Hello world interface
+package hello:interfaces@0.1.0;
+
+interface greeting {
+    /// Say hello to someone
+    hello: func(name: string) -> string;
+}
+
+world hello {
+    export greeting;
+}

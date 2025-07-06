@@ -1,0 +1,30 @@
+"""Basic example of building a WASM component"""
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component", "rust_wasm_component_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Define WIT interfaces
+wit_library(
+    name = "hello_interfaces",
+    srcs = ["wit/hello.wit"],
+    package_name = "hello:interfaces",
+    world = "hello",
+)
+
+# Build Rust WASM component
+rust_wasm_component(
+    name = "hello_component",
+    srcs = ["src/lib.rs"],
+    wit_bindgen = ":hello_interfaces",
+    deps = [
+        # Add wit-bindgen dependency when available
+    ],
+)
+
+# Test the component
+rust_wasm_component_test(
+    name = "hello_component_test",
+    component = ":hello_component",
+)
