@@ -23,8 +23,6 @@ rust.toolchain(
     extra_target_triples = [
         "wasm32-unknown-unknown",
         "wasm32-wasi",
-        "wasm32-wasip1",
-        "wasm32-wasip2",
     ],
 )
 use_repo(rust, "rust_toolchains")
