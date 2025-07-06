@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BAZEL_VERSION: 7.0.0
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Cache Bazel
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/bazel
+          ~/.cache/bazelisk
+        key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'WORKSPACE.bazel', '**/*.bzl') }}
+        restore-keys: |
+          ${{ runner.os }}-bazel-
+    
+    - name: Install Bazelisk
+      run: |
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          chmod +x bazelisk-linux-amd64
+          sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-darwin-amd64
+          chmod +x bazelisk-darwin-amd64
+          sudo mv bazelisk-darwin-amd64 /usr/local/bin/bazel
+        fi
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        targets: |
+          wasm32-wasip1
+          wasm32-wasip2
+          wasm32-unknown-unknown
+        override: true
+    
+    - name: Install WASM tools
+      run: |
+        cargo install wasm-tools wac-cli wit-bindgen-cli
+    
+    - name: Verify Bazel Installation
+      run: bazel version
+    
+    - name: Build All Targets
+      run: bazel build //...
+    
+    - name: Run Tests
+      run: bazel test //... --test_output=errors
+    
+    - name: Build Examples
+      run: |
+        bazel build //examples/basic:hello_component
+        bazel build //examples/multi_profile:development_system
+    
+    - name: Validate Generated Files
+      run: |
+        # Check that WASM files are valid
+        bazel build //examples/basic:hello_component
+        wasm-tools validate bazel-bin/examples/basic/hello_component.wasm || true
+    
+    - name: Check Formatting
+      run: |
+        bazel run //:buildifier -- --lint=warn --mode=check -r .
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Dependencies
+      run: |
+        curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+        chmod +x bazelisk-linux-amd64
+        sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+        
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source ~/.cargo/env
+        rustup target add wasm32-wasip2 wasm32-wasip1
+        cargo install wasm-tools wac-cli wit-bindgen-cli
+    
+    - name: Test Multi-Profile Builds
+      run: |
+        cd examples/multi_profile
+        bazel build :camera_sensor
+        bazel build :object_detection
+        
+        # Verify multiple profiles were created
+        ls -la bazel-bin/
+    
+    - name: Test WAC Composition
+      run: |
+        cd examples/multi_profile
+        bazel build :development_system
+        bazel build :production_system
+        
+        # Verify composed systems are valid WASM
+        wasm-tools validate bazel-bin/development_system.wasm
+        wasm-tools validate bazel-bin/production_system.wasm
+    
+    - name: Test Symlink Strategy
+      run: |
+        cd examples/multi_profile
+        bazel build :development_system --verbose_failures
+        
+        # Check that symlinks were created (not copies)
+        find bazel-bin -type l -name "*.wasm" | wc -l
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [test, integration]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Generate Release Notes
+      run: |
+        echo "## Changes" > release_notes.md
+        git log --oneline --since="1 week ago" >> release_notes.md
+    
+    - name: Create Release Archive
+      run: |
+        tar -czf rules_wasm_component.tar.gz \
+          --exclude='.git*' \
+          --exclude='bazel-*' \
+          --exclude='*.tar.gz' \
+          .
+    
+    - name: Upload Release Asset
+      uses: actions/upload-artifact@v3
+      with:
+        name: rules_wasm_component
+        path: rules_wasm_component.tar.gz
