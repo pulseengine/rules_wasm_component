@@ -1,0 +1,21 @@
+"""BUILD file for WAC composition rules"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    deps = [
+        ":wac_compose",
+    ],
+)
+
+bzl_library(
+    name = "wac_compose",
+    srcs = ["wac_compose.bzl"],
+    deps = [
+        "//providers:providers",
+    ],
+)
