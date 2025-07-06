@@ -1,0 +1,22 @@
+# Bazel outputs
+bazel-*
+/bazel-*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test outputs
+test.log
+test.xml
+
+# Temporary files
+*.tmp
+*.temp

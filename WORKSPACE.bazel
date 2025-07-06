@@ -1,0 +1,11 @@
+# Bazel workspace file for rules_wasm_component
+# Note: This file is for legacy WORKSPACE mode compatibility
+# Modern projects should use MODULE.bazel instead
+
+workspace(name = "rules_wasm_component")
+
+# Required for rules_rust
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# Fallback to WORKSPACE mode if bzlmod is not available
+# Most dependencies are handled in MODULE.bazel for modern Bazel versions

@@ -1,0 +1,32 @@
+# Bazel configuration for rules_wasm_component
+
+# Enable modern features
+common --enable_bzlmod
+common --experimental_google_legacy_api
+
+# Build settings
+build --incompatible_enable_cc_toolchain_resolution
+build --enable_platform_specific_config
+
+# Test settings
+test --test_output=errors
+test --test_summary=detailed
+
+# Platform-specific settings
+build:linux --copt=-fPIC
+build:macos --copt=-fPIC
+
+# WebAssembly specific settings
+build:wasm --platforms=@rules_rust//rust/platform:wasm32-unknown-unknown
+build:wasm --@rules_rust//:no_std
+
+# WASI Preview 2 settings  
+build:wasi --platforms=@rules_rust//rust/platform:wasm32-wasi
+
+# Remote cache (if using remote execution)
+# build --remote_cache=...
+
+# Performance
+build --jobs=auto
+build --local_ram_resources=HOST_RAM*.8
+build --local_cpu_resources=HOST_CPUS*.8
