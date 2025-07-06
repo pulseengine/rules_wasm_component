@@ -1,9 +1,18 @@
 """Toolchain type definitions"""
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(default_visibility = ["//visibility:public"])
 
 # Toolchain type for WebAssembly tools
 toolchain_type(
     name = "wasm_tools_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+# Bzl library for toolchain implementation
+bzl_library(
+    name = "wasm_toolchain",
+    srcs = ["wasm_toolchain.bzl"],
     visibility = ["//visibility:public"],
 )
