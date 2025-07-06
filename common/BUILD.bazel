@@ -1,0 +1,10 @@
+"""BUILD file for common utilities"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+bzl_library(
+    name = "common",
+    srcs = ["common.bzl"],
+)

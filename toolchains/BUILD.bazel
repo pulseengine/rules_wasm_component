@@ -1,0 +1,9 @@
+"""Toolchain type definitions"""
+
+package(default_visibility = ["//visibility:public"])
+
+# Toolchain type for WebAssembly tools
+toolchain_type(
+    name = "wasm_tools_toolchain_type",
+    visibility = ["//visibility:public"],
+)

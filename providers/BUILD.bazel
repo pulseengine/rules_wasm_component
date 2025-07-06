@@ -1,0 +1,10 @@
+"""BUILD file for providers"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+bzl_library(
+    name = "providers",
+    srcs = ["providers.bzl"],
+)
