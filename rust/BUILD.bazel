@@ -1,0 +1,33 @@
+"""BUILD file for Rust WASM component rules"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    deps = [
+        ":rust_wasm_component",
+        ":rust_wasm_component_test",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_component",
+    srcs = ["rust_wasm_component.bzl"],
+    deps = [
+        "//providers:providers",
+        "//common:common",
+        "@rules_rust//rust:defs",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_component_test",
+    srcs = ["rust_wasm_component_test.bzl"],
+    deps = [
+        "//providers:providers",
+        ":rust_wasm_component",
+    ],
+)
