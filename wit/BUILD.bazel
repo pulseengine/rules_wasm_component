@@ -1,0 +1,31 @@
+"""BUILD file for WIT rules"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    deps = [
+        ":wit_library",
+        ":wit_bindgen",
+    ],
+)
+
+bzl_library(
+    name = "wit_library",
+    srcs = ["wit_library.bzl"],
+    deps = [
+        "//providers:providers",
+    ],
+)
+
+bzl_library(
+    name = "wit_bindgen",
+    srcs = ["wit_bindgen.bzl"],
+    deps = [
+        "//providers:providers",
+        "@bazel_skylib//lib:paths",
+    ],
+)
