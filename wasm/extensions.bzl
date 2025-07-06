@@ -16,14 +16,24 @@ def _wasm_toolchain_extension_impl(module_ctx):
     for name, registration in registrations.items():
         wasm_toolchain_repository(
             name = name + "_toolchains",
-            wasm_tools_version = registration.version,
+            strategy = registration.strategy,
+            version = registration.version,
+            git_commit = registration.git_commit,
+            wasm_tools_url = registration.wasm_tools_url,
+            wac_url = registration.wac_url,
+            wit_bindgen_url = registration.wit_bindgen_url,
         )
     
-    # If no registrations, create default
+    # If no registrations, create default system toolchain
     if not registrations:
         wasm_toolchain_repository(
-            name = "wasm_tools_toolchains", 
-            wasm_tools_version = "1.0.60",
+            name = "wasm_tools_toolchains",
+            strategy = "system",
+            version = "1.235.0",
+            git_commit = "main",
+            wasm_tools_url = "",
+            wac_url = "",
+            wit_bindgen_url = "",
         )
 
 # Module extension for WASM toolchain
@@ -36,9 +46,27 @@ wasm_toolchain = module_extension(
                     doc = "Name for this toolchain registration",
                     default = "wasm_tools",
                 ),
+                "strategy": attr.string(
+                    doc = "Tool acquisition strategy: 'system', 'download', or 'build'",
+                    default = "system",
+                    values = ["system", "download", "build"],
+                ),
                 "version": attr.string(
-                    doc = "Version of wasm-tools to use",
-                    default = "1.0.60",
+                    doc = "Version to use (for download/build strategies)",
+                    default = "1.235.0",
+                ),
+                "git_commit": attr.string(
+                    doc = "Git commit/tag to build from (for build strategy)",
+                    default = "main",
+                ),
+                "wasm_tools_url": attr.string(
+                    doc = "Custom download URL for wasm-tools (optional)",
+                ),
+                "wac_url": attr.string(
+                    doc = "Custom download URL for wac (optional)",
+                ),
+                "wit_bindgen_url": attr.string(
+                    doc = "Custom download URL for wit-bindgen (optional)",
                 ),
             },
         ),
