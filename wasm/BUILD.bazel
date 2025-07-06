@@ -1,0 +1,38 @@
+"""BUILD file for WASM toolchain and extensions"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    deps = [
+        ":wasm_validate",
+        ":wasm_component_new",
+    ],
+)
+
+bzl_library(
+    name = "extensions",
+    srcs = ["extensions.bzl"],
+    deps = [
+        "//toolchains:wasm_toolchain",
+    ],
+)
+
+bzl_library(
+    name = "wasm_validate",
+    srcs = ["wasm_validate.bzl"],
+    deps = [
+        "//providers:providers",
+    ],
+)
+
+bzl_library(
+    name = "wasm_component_new",
+    srcs = ["wasm_component_new.bzl"],
+    deps = [
+        "//providers:providers",
+    ],
+)
