@@ -3,7 +3,7 @@ package ai:interfaces@0.1.0;
 
 use sensor:interfaces/camera.{frame};
 
-interface detection {
+interface detector {
     record detection-result {
         class: string,
         confidence: f32,
@@ -27,7 +27,7 @@ interface detection {
     set-confidence: func(threshold: f32) -> result<_, string>;
 }
 
-world ai {
+world object-detector {
     import sensor:interfaces/camera;
-    export detection;
+    export detector;
 }

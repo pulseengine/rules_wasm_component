@@ -19,6 +19,6 @@ interface camera {
     get-status: func() -> string;
 }
 
-world sensor {
+world camera-sensor {
     export camera;
 }

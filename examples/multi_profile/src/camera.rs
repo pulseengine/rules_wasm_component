@@ -11,21 +11,21 @@ use exports::sensor::interfaces::camera::{Frame, Guest};
 struct Camera;
 
 impl Guest for Camera {
-    fn capture() -> Frame {
-        Frame {
+    fn capture_frame() -> Result<Frame, String> {
+        Ok(Frame {
             width: 1920,
             height: 1080,
             data: vec![0; 1920 * 1080 * 3], // RGB data
             timestamp: 0,
-        }
+        })
     }
     
-    fn get_resolution() -> (u32, u32) {
-        (1920, 1080)
+    fn configure(frame_rate: u32, resolution: String) -> Result<(), String> {
+        println!("Configuring camera: {}fps, {}", frame_rate, resolution);
+        Ok(())
     }
     
-    fn set_resolution(width: u32, height: u32) {
-        // In a real implementation, this would configure the camera
-        println!("Setting resolution to {}x{}", width, height);
+    fn get_status() -> String {
+        "Camera ready".to_string()
     }
 }
