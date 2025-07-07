@@ -171,7 +171,7 @@
   "moduleExtensions": {
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "m7j/vOoa4XAibcDE0GsmWLJEEVGBacNq3/ViOesr4yU=",
+        "bzlTransitiveDigest": "blHO8P+Z9FIwsxsdBEC1tHH6E8uOMilVQHQSZrF1W78=",
         "usagesDigest": "kIpSrnIOBkT/TQw9vOC/MEjtQ7C/WK9ouPX//hpikM8=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

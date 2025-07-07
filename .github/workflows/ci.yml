@@ -69,6 +69,9 @@ jobs:
     - name: Run Clippy
       run: bazel build --config=clippy //...
     
+    - name: Validate Toolchain Download Fix
+      run: bazel test //test/toolchain:validate_download_fix --test_output=errors
+    
     - name: Build Examples
       run: |
         bazel build //examples/basic:hello_component

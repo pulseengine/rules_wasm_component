@@ -1,0 +1,9 @@
+"""Tests for WASM toolchain functionality"""
+
+# Test to validate the download toolchain fix
+py_test(
+    name = "validate_download_fix",
+    srcs = ["validate_download_fix.py"],
+    tags = ["requires-network", "manual"],  # Requires internet access
+    timeout = "short",
+)
