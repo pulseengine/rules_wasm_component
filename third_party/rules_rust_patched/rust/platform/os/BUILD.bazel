@@ -1,5 +1,0 @@
-alias(
-    name = "unknown",
-    actual = "@platforms//os:none",
-    visibility = ["//visibility:public"],
-)

@@ -1,6 +1,0 @@
-syntax = "proto3";
-package pkg.a.b;
-
-message Message {
-    string name = 1;
-}

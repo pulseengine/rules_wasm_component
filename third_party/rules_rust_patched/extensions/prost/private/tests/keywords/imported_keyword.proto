@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package imported.type;
-
-message B {
-    string name = 1;
-}

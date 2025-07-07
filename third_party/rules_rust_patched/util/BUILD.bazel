@@ -1,5 +1,0 @@
-alias(
-    name = "collect_coverage",
-    actual = "//util/collect_coverage",
-    visibility = ["//visibility:public"],
-)

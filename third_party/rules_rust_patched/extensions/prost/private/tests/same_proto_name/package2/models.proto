@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-package package2;
-import "package3/models.proto";
-
-message Model {
-    package3.Model model = 1;
-}
