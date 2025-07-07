@@ -42,6 +42,7 @@ wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
     version = "1.235.0",
+    strategy = "download",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 

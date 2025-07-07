@@ -130,28 +130,47 @@ def _setup_downloaded_tools(repository_ctx):
         stripPrefix = "wasm-tools-{}-{}".format(version, platform_suffix),
     )
     
-    # Download wac
+    # Download wac (binary release, not tarball)
     wac_url = repository_ctx.attr.wac_url  
     if not wac_url:
-        wac_url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-{}-{}.tar.gz".format(
-            version, version, platform_suffix
+        # wac has different version numbering and release format
+        wac_version = "0.7.0"  # Latest stable version
+        # Map platform suffixes to wac naming convention
+        wac_platform_map = {
+            "aarch64-macos": "aarch64-apple-darwin",
+            "x86_64-macos": "x86_64-apple-darwin",
+            "x86_64-linux": "x86_64-unknown-linux-musl",
+            "aarch64-linux": "aarch64-unknown-linux-musl",
+            "x86_64-windows": "x86_64-pc-windows-gnu",
+        }
+        wac_platform = wac_platform_map.get(platform_suffix, "x86_64-unknown-linux-musl")
+        wac_url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-cli-{}".format(
+            wac_version, wac_platform
         )
     
-    repository_ctx.download_and_extract(
+    # Download wac binary directly (not a tarball)
+    repository_ctx.download(
         url = wac_url,
-        stripPrefix = "wac-{}-{}".format(version, platform_suffix),
+        output = "wac",
+        executable = True,
     )
     
-    # Download wit-bindgen
+    # Download wit-bindgen (has different versioning)
     wit_bindgen_url = repository_ctx.attr.wit_bindgen_url
     if not wit_bindgen_url:
+        # wit-bindgen has different version numbering than wasm-tools
+        wit_bindgen_version = "0.43.0"  # Latest stable version
         wit_bindgen_url = "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{}/wit-bindgen-{}-{}.tar.gz".format(
-            version, version, platform_suffix  
+            wit_bindgen_version, wit_bindgen_version, platform_suffix  
         )
+    
+    # Extract wit-bindgen version from URL for stripPrefix
+    wit_bindgen_version_match = repository_ctx.execute(["bash", "-c", "echo '{}' | sed -n 's/.*wit-bindgen-\\([0-9\\.]*\\)-.*/\\1/p'".format(wit_bindgen_url)])
+    wit_bindgen_version = wit_bindgen_version_match.stdout.strip() or "0.43.0"
     
     repository_ctx.download_and_extract(
         url = wit_bindgen_url,
-        stripPrefix = "wit-bindgen-{}-{}".format(version, platform_suffix),
+        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, platform_suffix),
     )
 
 def _setup_built_tools(repository_ctx):

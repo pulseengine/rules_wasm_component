@@ -18,10 +18,11 @@ build:macos --copt=-fPIC
 
 # WebAssembly specific settings
 build:wasm --platforms=//platforms:wasm32-unknown-unknown
-build:wasm --@rules_rust//:no_std
+build:wasm --@rules_rust//:no_std=alloc
 
 # WASI settings  
 build:wasi --platforms=//platforms:wasm32-wasi
+build:wasi --@rules_rust//:no_std=alloc
 
 # Default WASM component platform (use WASI for component model compatibility)
 build:wasm_component --platforms=//platforms:wasm32-wasi
