@@ -263,24 +263,8 @@ alias(
     visibility = ["//visibility:public"],
 )
 
-# Aliases for backward compatibility
-alias(
-    name = "wasm-tools",
-    actual = ":wasm_tools_binary",
-    visibility = ["//visibility:public"],
-)
-
-alias(
-    name = "wac",
-    actual = ":wac_binary",
-    visibility = ["//visibility:public"],
-)
-
-alias(
-    name = "wit-bindgen",
-    actual = ":wit_bindgen_binary",
-    visibility = ["//visibility:public"],
-)
+# Note: Aliases removed to prevent dependency cycles
+# Use the _binary targets directly: wasm_tools_binary, wac_binary, wit_bindgen_binary
 """)
 
 wasm_toolchain_repository = repository_rule(

@@ -165,9 +165,7 @@ def rust_wasm_component(
         # Build the Rust library as cdylib for this profile
         rust_library_name = "{}_wasm_lib_{}".format(name, profile)
         
-        profile_rustc_flags = rustc_flags + config["rustc_flags"] + [
-            "--target=" + WASM_TARGET_TRIPLE,
-        ]
+        profile_rustc_flags = rustc_flags + config["rustc_flags"]
         
         rust_library(
             name = rust_library_name,
