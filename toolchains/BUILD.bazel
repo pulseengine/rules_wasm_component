@@ -46,10 +46,6 @@ cc_toolchain(
 # Toolchain for WASM32 WASIP1
 toolchain(
     name = "wasm32_wasip1_cc_toolchain",
-    exec_compatible_with = [
-        "@platforms//os:macos",
-        "@platforms//cpu:aarch64",
-    ],
     target_compatible_with = [
         "@platforms//cpu:wasm32",
         "@platforms//os:wasi",
@@ -61,10 +57,6 @@ toolchain(
 # Toolchain for WASM32 WASIP2
 toolchain(
     name = "wasm32_wasip2_cc_toolchain",
-    exec_compatible_with = [
-        "@platforms//os:macos",
-        "@platforms//cpu:aarch64",
-    ],
     target_compatible_with = [
         "@platforms//cpu:wasm32",
         "@platforms//os:wasi",
@@ -76,10 +68,6 @@ toolchain(
 # Toolchain for WASM32 unknown
 toolchain(
     name = "wasm32_unknown_cc_toolchain", 
-    exec_compatible_with = [
-        "@platforms//os:macos",
-        "@platforms//cpu:aarch64",
-    ],
     target_compatible_with = [
         "@platforms//cpu:wasm32",
         "@platforms//os:none",
