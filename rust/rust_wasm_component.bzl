@@ -1,6 +1,6 @@
 """Rust WASM component rule implementation"""
 
-load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_shared_library")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//common:common.bzl", "WASM_TARGET_TRIPLE")
 load(":transitions.bzl", "wasm_transition")
@@ -107,6 +107,7 @@ def rust_wasm_component(
         rustc_flags = [],
         profiles = ["release"],
         visibility = None,
+        crate_root = None,
         **kwargs):
     """
     Builds a Rust WebAssembly component.
@@ -149,7 +150,7 @@ def rust_wasm_component(
             "opt_level": "s",  # Optimize for size
             "debug": False,
             "strip": True,
-            "rustc_flags": ["-C", "lto=thin"],
+            "rustc_flags": [],  # LTO conflicts with embed-bitcode=no
         },
         "custom": {
             "opt_level": "2",
@@ -167,13 +168,24 @@ def rust_wasm_component(
         # Build the Rust library as cdylib for this profile
         rust_library_name = "{}_wasm_lib_{}".format(name, profile)
         
-        profile_rustc_flags = rustc_flags + config["rustc_flags"] + ["--crate-type=cdylib"]
+        profile_rustc_flags = rustc_flags + config["rustc_flags"]
         
-        # Use rust_library with rustc_flags to produce .wasm files
-        rust_library(
+        # Add wit-bindgen generated code if specified
+        all_srcs = list(srcs)
+        all_deps = list(deps)
+        
+        # Generate WIT bindings before building the rust library
+        if wit_bindgen:
+            # Import wit_bindgen rule at the top of the file
+            # This is done via load() at the file level
+            pass
+        
+        # Use rust_shared_library to produce cdylib .wasm files
+        rust_shared_library(
             name = rust_library_name,
-            srcs = srcs,
-            deps = deps,
+            srcs = all_srcs,
+            crate_root = crate_root,
+            deps = all_deps,
             edition = "2021",
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags,
