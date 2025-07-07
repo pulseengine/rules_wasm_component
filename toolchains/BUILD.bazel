@@ -1,6 +1,7 @@
 """Toolchain type definitions"""
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load(":wasm_cc_toolchain.bzl", "wasm_cc_toolchain_config")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -15,4 +16,59 @@ bzl_library(
     name = "wasm_toolchain",
     srcs = ["wasm_toolchain.bzl"],
     visibility = ["//visibility:public"],
+)
+
+# Minimal C++ toolchain config for WASM
+wasm_cc_toolchain_config(
+    name = "wasm_cc_toolchain_config",
+)
+
+# File group for dummy C++ tools (not actually used)
+filegroup(
+    name = "empty",
+    srcs = [],
+)
+
+# Minimal C++ toolchain for WASM platforms
+cc_toolchain(
+    name = "wasm_cc_toolchain",
+    all_files = ":empty",
+    compiler_files = ":empty", 
+    dwp_files = ":empty",
+    linker_files = ":empty",
+    objcopy_files = ":empty",
+    strip_files = ":empty",
+    supports_param_files = False,
+    toolchain_config = ":wasm_cc_toolchain_config",
+    toolchain_identifier = "wasm-toolchain",
+)
+
+# Toolchain for WASM32 WASIP1
+toolchain(
+    name = "wasm32_wasip1_cc_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:wasm32",
+        "@platforms//os:wasi",
+    ],
+    toolchain = ":wasm_cc_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)
+
+# Toolchain for WASM32 unknown
+toolchain(
+    name = "wasm32_unknown_cc_toolchain", 
+    exec_compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:wasm32",
+        "@platforms//os:none",
+    ],
+    toolchain = ":wasm_cc_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )

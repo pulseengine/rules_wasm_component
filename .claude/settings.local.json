@@ -8,7 +8,10 @@
       "Bash(ls:*)",
       "WebFetch(domain:registry.bazel.build)",
       "WebFetch(domain:github.com)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebFetch(domain:stackoverflow.com)",
+      "Bash(rustc:*)",
+      "Bash(cargo build:*)"
     ],
     "deny": []
   }

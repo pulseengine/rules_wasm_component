@@ -1,6 +1,6 @@
 """Rust WASM component rule implementation"""
 
-load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//common:common.bzl", "WASM_TARGET_TRIPLE")
 load(":transitions.bzl", "wasm_transition")
@@ -164,20 +164,21 @@ def rust_wasm_component(
     for profile in profiles:
         config = profile_configs.get(profile, profile_configs["release"])
         
-        # Build the Rust library as cdylib for this profile
-        rust_library_name = "{}_wasm_lib_{}".format(name, profile)
+        # Build the Rust binary as cdylib for this profile
+        rust_binary_name = "{}_wasm_bin_{}".format(name, profile)
         
         profile_rustc_flags = rustc_flags + config["rustc_flags"]
         
-        # Note: This rust_library should be built with --config=wasm_component
-        # to ensure it targets the wasm32-wasi platform and produces .wasm files
-        rust_library(
-            name = rust_library_name,
+        # Use rust_binary with cdylib to produce .wasm files
+        rust_binary(
+            name = rust_binary_name,
             srcs = srcs,
             deps = deps,
             edition = "2021",
             crate_features = crate_features,
-            rustc_flags = profile_rustc_flags + ["--crate-type=cdylib"],
+            crate_type = "cdylib",
+            out_binary = True,
+            rustc_flags = profile_rustc_flags,
             visibility = ["//visibility:private"],
             tags = ["wasm_component"],  # Tag to identify WASM components
             **kwargs
@@ -187,7 +188,7 @@ def rust_wasm_component(
         component_name = "{}_{}".format(name, profile)
         _rust_wasm_component_rule(
             name = component_name,
-            wasm_module = ":" + rust_library_name,
+            wasm_module = ":" + rust_binary_name,
             wit_bindgen = wit_bindgen,
             adapter = adapter,
             component_type = "component",

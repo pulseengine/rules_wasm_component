@@ -21,8 +21,9 @@ rust.toolchain(
     edition = "2021",
     versions = ["1.88.0"],
     extra_target_triples = [
-        "wasm32-unknown-unknown",
-        "wasm32-wasi",
+        "wasm32-unknown-unknown", 
+        "wasm32-wasip1",
+        # "wasm32-wasip2",  # Not yet supported by rules_rust
     ],
 )
 use_repo(rust, "rust_toolchains")
@@ -39,3 +40,9 @@ wasm_toolchain.register(
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
 register_toolchains("@wasm_tools_toolchains//:all")
+
+# Register WASM C++ toolchains
+register_toolchains(
+    "//toolchains:wasm32_wasip1_cc_toolchain",
+    "//toolchains:wasm32_unknown_cc_toolchain",
+)
