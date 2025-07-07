@@ -1,6 +1,6 @@
 """Rust WASM component rule implementation"""
 
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@rules_rust//rust:defs.bzl", "rust_library")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//common:common.bzl", "WASM_TARGET_TRIPLE")
 load(":transitions.bzl", "wasm_transition")
@@ -75,7 +75,7 @@ _rust_wasm_component_rule = rule(
     implementation = _rust_wasm_component_impl,
     attrs = {
         "wasm_module": attr.label(
-            allow_single_file = [".wasm"],
+            allow_single_file = [".wasm", ".dylib", ".so", ".dll"],
             mandatory = True,
             cfg = wasm_transition,
             doc = "Compiled WASM module from rust_library",
@@ -140,10 +140,10 @@ def rust_wasm_component(
     # Profile configurations
     profile_configs = {
         "debug": {
-            "opt_level": "1",
+            "opt_level": "1", 
             "debug": True,
             "strip": False,
-            "rustc_flags": ["--cfg", "debug_assertions"],
+            "rustc_flags": [],
         },
         "release": {
             "opt_level": "s",  # Optimize for size
@@ -164,20 +164,18 @@ def rust_wasm_component(
     for profile in profiles:
         config = profile_configs.get(profile, profile_configs["release"])
         
-        # Build the Rust binary as cdylib for this profile
-        rust_binary_name = "{}_wasm_bin_{}".format(name, profile)
+        # Build the Rust library as cdylib for this profile
+        rust_library_name = "{}_wasm_lib_{}".format(name, profile)
         
-        profile_rustc_flags = rustc_flags + config["rustc_flags"]
+        profile_rustc_flags = rustc_flags + config["rustc_flags"] + ["--crate-type=cdylib"]
         
-        # Use rust_binary with cdylib to produce .wasm files
-        rust_binary(
-            name = rust_binary_name,
+        # Use rust_library with rustc_flags to produce .wasm files
+        rust_library(
+            name = rust_library_name,
             srcs = srcs,
             deps = deps,
             edition = "2021",
             crate_features = crate_features,
-            crate_type = "cdylib",
-            out_binary = True,
             rustc_flags = profile_rustc_flags,
             visibility = ["//visibility:private"],
             tags = ["wasm_component"],  # Tag to identify WASM components
@@ -188,7 +186,7 @@ def rust_wasm_component(
         component_name = "{}_{}".format(name, profile)
         _rust_wasm_component_rule(
             name = component_name,
-            wasm_module = ":" + rust_binary_name,
+            wasm_module = ":" + rust_library_name,
             wit_bindgen = wit_bindgen,
             adapter = adapter,
             component_type = "component",

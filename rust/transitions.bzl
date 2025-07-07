@@ -3,7 +3,7 @@
 def _wasm_transition_impl(settings, attr):
     """Transition to WASM platform for component builds"""
     return {
-        "//command_line_option:platforms": "//platforms:wasm32-wasip1",
+        "//command_line_option:platforms": "//platforms:wasm32-wasip2",
     }
 
 wasm_transition = transition(

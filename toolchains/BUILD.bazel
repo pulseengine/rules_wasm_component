@@ -58,6 +58,21 @@ toolchain(
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
+# Toolchain for WASM32 WASIP2
+toolchain(
+    name = "wasm32_wasip2_cc_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:wasm32",
+        "@platforms//os:wasi",
+    ],
+    toolchain = ":wasm_cc_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)
+
 # Toolchain for WASM32 unknown
 toolchain(
     name = "wasm32_unknown_cc_toolchain", 
