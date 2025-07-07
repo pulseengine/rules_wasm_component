@@ -4,8 +4,9 @@ This repository uses a fork of rules_rust with minimal patches to support WASI t
 
 ## What's Patched
 
-**File**: `rust/platform/triple.bzl`  
-**Changes**: Added support for 2-component WASI target triples
+**Files**: 
+- `rust/platform/triple.bzl` - Added support for 2-component WASI target triples
+- `rust/platform/triple_mappings.bzl` - Added system constraints for wasip1/wasip2/wasip3
 
 ### The Problem
 rules_rust expects target triples to have 3+ components (e.g., `x86_64-unknown-linux-gnu`), but WASI targets use 2-component format:
@@ -26,14 +27,14 @@ Convert 2-component WASI targets to standard 3-component format:
    cd rules_rust
    ```
 
-2. Apply the patch:
+2. Apply the complete patch:
    ```bash
-   git apply wasip2-support.patch
+   git apply wasip2-complete.patch
    ```
 
 3. Commit and push:
    ```bash
-   git add rust/platform/triple.bzl
+   git add rust/platform/triple.bzl rust/platform/triple_mappings.bzl
    git commit -m "feat: add support for wasm32-wasip2 target triples
 
    - Handle 2-component WASI target triples in triple.bzl
