@@ -222,19 +222,19 @@ package(default_visibility = ["//visibility:public"])
 
 # File targets for executables
 filegroup(
-    name = "wasm-tools", 
+    name = "wasm_tools_binary", 
     srcs = ["wasm-tools"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "wac",
+    name = "wac_binary",
     srcs = ["wac"], 
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "wit-bindgen",
+    name = "wit_bindgen_binary",
     srcs = ["wit-bindgen"],
     visibility = ["//visibility:public"],
 )
@@ -242,9 +242,9 @@ filegroup(
 # Toolchain implementation
 wasm_tools_toolchain(
     name = "wasm_tools_impl",
-    wasm_tools = ":wasm-tools",
-    wac = ":wac", 
-    wit_bindgen = ":wit-bindgen",
+    wasm_tools = ":wasm_tools_binary",
+    wac = ":wac_binary", 
+    wit_bindgen = ":wit_bindgen_binary",
 )
 
 # Toolchain registration
@@ -253,9 +253,33 @@ toolchain(
     toolchain = ":wasm_tools_impl",
     toolchain_type = "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
     exec_compatible_with = [],
-    target_compatible_with = [
-        "@platforms//cpu:wasm32",
-    ],
+    target_compatible_with = [],
+)
+
+# Alias for toolchain registration
+alias(
+    name = "all",
+    actual = ":wasm_tools_toolchain",
+    visibility = ["//visibility:public"],
+)
+
+# Aliases for backward compatibility
+alias(
+    name = "wasm-tools",
+    actual = ":wasm_tools_binary",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "wac",
+    actual = ":wac_binary",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "wit-bindgen",
+    actual = ":wit_bindgen_binary",
+    visibility = ["//visibility:public"],
 )
 """)
 
