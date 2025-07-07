@@ -22,7 +22,13 @@ buildifier(
 # Documentation generation
 filegroup(
     name = "all_files",
-    srcs = glob(["**"]),
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "bazel-*/**",
+            ".git/**",
+        ],
+    ),
 )
 
 # Version file for stamping
