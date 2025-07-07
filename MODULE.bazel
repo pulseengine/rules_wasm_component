@@ -13,7 +13,7 @@ bazel_dep(name = "rules_rust", version = "0.62.0")
 git_override(
     module_name = "rules_rust",
     remote = "https://github.com/avrabe/rules_rust.git",
-    commit = "011e55eaf05ef3806f8ed6bafd1925206dd6e23b",
+    commit = "2389792cfac37da28033e2bca8b712a3c6d961e2",
 )
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.11")
