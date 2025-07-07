@@ -119,38 +119,39 @@ def _setup_downloaded_tools(repository_ctx):
     
     # Download wasm-tools
     wasm_tools_url = repository_ctx.attr.wasm_tools_url
+    platform_suffix = _get_platform_suffix(platform)
     if not wasm_tools_url:
         wasm_tools_url = "https://github.com/bytecodealliance/wasm-tools/releases/download/v{}/wasm-tools-{}-{}.tar.gz".format(
-            version, version, _get_platform_suffix(platform)
+            version, version, platform_suffix
         )
     
     repository_ctx.download_and_extract(
         url = wasm_tools_url,
-        stripPrefix = "wasm-tools-{}".format(version),
+        stripPrefix = "wasm-tools-{}-{}".format(version, platform_suffix),
     )
     
     # Download wac
     wac_url = repository_ctx.attr.wac_url  
     if not wac_url:
         wac_url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-{}-{}.tar.gz".format(
-            version, version, _get_platform_suffix(platform)
+            version, version, platform_suffix
         )
     
     repository_ctx.download_and_extract(
         url = wac_url,
-        stripPrefix = "wac-{}".format(version),
+        stripPrefix = "wac-{}-{}".format(version, platform_suffix),
     )
     
     # Download wit-bindgen
     wit_bindgen_url = repository_ctx.attr.wit_bindgen_url
     if not wit_bindgen_url:
         wit_bindgen_url = "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{}/wit-bindgen-{}-{}.tar.gz".format(
-            version, version, _get_platform_suffix(platform)  
+            version, version, platform_suffix  
         )
     
     repository_ctx.download_and_extract(
         url = wit_bindgen_url,
-        stripPrefix = "wit-bindgen-{}".format(version),
+        stripPrefix = "wit-bindgen-{}-{}".format(version, platform_suffix),
     )
 
 def _setup_built_tools(repository_ctx):
