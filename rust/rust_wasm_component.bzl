@@ -3,6 +3,7 @@
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//common:common.bzl", "WASM_TARGET_TRIPLE")
+load(":transitions.bzl", "wasm_transition")
 
 def _rust_wasm_component_impl(ctx):
     """Implementation of rust_wasm_component rule"""
@@ -76,6 +77,7 @@ _rust_wasm_component_rule = rule(
         "wasm_module": attr.label(
             allow_single_file = [".wasm"],
             mandatory = True,
+            cfg = wasm_transition,
             doc = "Compiled WASM module from rust_library",
         ),
         "wit_bindgen": attr.label(
@@ -167,6 +169,8 @@ def rust_wasm_component(
         
         profile_rustc_flags = rustc_flags + config["rustc_flags"]
         
+        # Note: This rust_library should be built with --config=wasm_component
+        # to ensure it targets the wasm32-wasi platform and produces .wasm files
         rust_library(
             name = rust_library_name,
             srcs = srcs,
@@ -175,6 +179,7 @@ def rust_wasm_component(
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags + ["--crate-type=cdylib"],
             visibility = ["//visibility:private"],
+            tags = ["wasm_component"],  # Tag to identify WASM components
             **kwargs
         )
         

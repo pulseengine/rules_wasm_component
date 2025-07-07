@@ -7,7 +7,7 @@ module(
 )
 
 # Dependencies for WebAssembly tooling
-bazel_dep(name = "rules_rust", version = "0.50.1")
+bazel_dep(name = "rules_rust", version = "0.62.0")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.11")
 
@@ -19,7 +19,7 @@ bazel_dep(name = "stardoc", version = "0.7.1", dev_dependency = True)
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
-    versions = ["1.75.0"],
+    versions = ["1.88.0"],
     extra_target_triples = [
         "wasm32-unknown-unknown",
         "wasm32-wasi",
@@ -34,7 +34,7 @@ register_toolchains("@rust_toolchains//:all")
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
-    version = "1.0.60",
+    version = "1.235.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 

@@ -5,7 +5,10 @@
       "Bash(bazel build:*)",
       "Bash(bazel:*)",
       "mcp__sequential-thinking__sequentialthinking",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "WebFetch(domain:registry.bazel.build)",
+      "WebFetch(domain:github.com)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

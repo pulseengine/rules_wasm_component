@@ -17,11 +17,14 @@ build:linux --copt=-fPIC
 build:macos --copt=-fPIC
 
 # WebAssembly specific settings
-build:wasm --platforms=@rules_rust//rust/platform:wasm32-unknown-unknown
+build:wasm --platforms=//platforms:wasm32-unknown-unknown
 build:wasm --@rules_rust//:no_std
 
-# WASI Preview 2 settings  
-build:wasi --platforms=@rules_rust//rust/platform:wasm32-wasi
+# WASI settings  
+build:wasi --platforms=//platforms:wasm32-wasi
+
+# Default WASM component platform (use WASI for component model compatibility)
+build:wasm_component --platforms=//platforms:wasm32-wasi
 
 # Remote cache (if using remote execution)
 # build --remote_cache=...
