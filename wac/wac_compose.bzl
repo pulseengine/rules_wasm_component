@@ -19,7 +19,7 @@ def _wac_compose_impl(ctx):
     component_files = []
     component_infos = {}
     
-    for comp_name, comp_target in ctx.attr.components.items():
+    for comp_target, comp_name in ctx.attr.components.items():
         comp_info = comp_target[WasmComponentInfo]
         component_files.append(comp_info.wasm_file)
         component_infos[comp_name] = comp_info
@@ -43,7 +43,7 @@ def _wac_compose_impl(ctx):
     
     # Prepare component files with profile selection
     selected_components = {}
-    for comp_name, comp_target in ctx.attr.components.items():
+    for comp_target, comp_name in ctx.attr.components.items():
         # Determine which profile to use for this component
         profile = ctx.attr.component_profiles.get(comp_name, ctx.attr.profile)
         

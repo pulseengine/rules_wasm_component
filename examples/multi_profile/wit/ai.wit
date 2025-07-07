@@ -1,9 +1,15 @@
 /// AI interfaces for object detection
 package ai:interfaces@0.1.0;
 
-use sensor:interfaces/camera.{frame};
-
 interface detector {
+    // Duplicate frame type to avoid cross-package import issues
+    record frame {
+        width: u32,
+        height: u32,
+        data: list<u8>,
+        timestamp: u64,
+    }
+    
     record detection-result {
         class: string,
         confidence: f32,
@@ -28,6 +34,5 @@ interface detector {
 }
 
 world object-detector {
-    import sensor:interfaces/camera;
     export detector;
 }

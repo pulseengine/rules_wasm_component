@@ -39,8 +39,8 @@ rust_wasm_component_bindgen(
 wac_compose(
     name = "development_system",
     components = {
-        "camera": ":camera_sensor_debug",  # Use debug profile
-        "ai": ":object_detection_release",  # Use release profile
+        ":camera_sensor_debug": "camera",  # Use debug profile
+        ":object_detection_release": "ai",  # Use release profile  
     },
     profile = "debug",  # Default profile
     component_profiles = {
@@ -48,7 +48,8 @@ wac_compose(
     },
     use_symlinks = True,  # Save disk space
     composition = """
-        // Development composition with mixed profiles
+        package dev:composition;
+        
         let camera = new camera:component {
             frame-rate: 30,
             resolution: "1080p",
@@ -70,8 +71,8 @@ wac_compose(
 wac_compose(
     name = "production_system",
     components = {
-        "camera": ":camera_sensor_release",
-        "ai": ":object_detection_release",
+        ":camera_sensor_release": "camera",
+        ":object_detection_release": "ai",
     },
     profile = "release",  # All components use release profile
     use_symlinks = True,
@@ -82,8 +83,8 @@ wac_compose(
 wac_compose(
     name = "test_system", 
     components = {
-        "camera": ":camera_sensor_debug",
-        "ai": ":object_detection_custom",
+        ":camera_sensor_debug": "camera",
+        ":object_detection_custom": "ai",
     },
     component_profiles = {
         "camera": "debug",   # Debug camera for detailed logging
@@ -91,13 +92,12 @@ wac_compose(
     },
     use_symlinks = False,  # Copy files for isolated testing
     composition = """
-        // Test composition
+        package test:composition;
+        
         let camera = new camera:component {};
         let ai = new ai:component {};
         
-        connect camera.frame-output -> ai.frame-input;
-        
-        export camera as camera-output;
-        export ai as ai-output;
+        export camera;
+        export ai;
     """,
 )

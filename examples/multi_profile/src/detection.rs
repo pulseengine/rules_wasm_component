@@ -1,8 +1,7 @@
 // Object detection AI component implementation
 // The generated bindings are available as a separate crate
 
-use object_detection_bindings::sensor::interfaces::camera::Frame;
-use object_detection_bindings::exports::ai::interfaces::detector::{DetectionResult, BoundingBox, Guest};
+use object_detection_bindings::exports::ai::interfaces::detector::{Frame, DetectionResult, BoundingBox, Guest};
 
 struct Detector;
 

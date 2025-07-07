@@ -32,9 +32,13 @@ def _wit_bindgen_impl(ctx):
     if wit_info.world_name:
         cmd_args.extend(["--with", wit_info.world_name])
     
-    # Add additional options
+    # Add additional options  
     if ctx.attr.options:
         cmd_args.extend(ctx.attr.options)
+    
+    # For Rust, use a custom runtime path to avoid dependency on wit_bindgen crate
+    if ctx.attr.language == "rust":
+        cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
     
     # Add WIT files at the end (positional argument)
     for wit_file in wit_info.wit_files.to_list():

@@ -14,6 +14,8 @@ def _generate_wrapper_impl(ctx):
 // Minimal wit_bindgen::rt implementation
 pub mod wit_bindgen {
     pub mod rt {
+        use core::alloc::Layout;
+        
         #[inline]
         pub fn run_ctors_once() {
             // No-op - WASM components don't need explicit constructor calls
@@ -22,6 +24,26 @@ pub mod wit_bindgen {
         #[inline]
         pub fn maybe_link_cabi_realloc() {
             // This ensures cabi_realloc is referenced and thus linked
+        }
+        
+        pub struct Cleanup;
+        
+        impl Cleanup {
+            #[inline]
+            pub fn new(_layout: Layout) -> (*mut u8, Option<CleanupGuard>) {
+                // Return a dummy pointer - in real implementation this would use the allocator
+                let ptr = 1 as *mut u8; // Non-null dummy pointer
+                (ptr, None)
+            }
+        }
+        
+        pub struct CleanupGuard;
+        
+        impl CleanupGuard {
+            #[inline]
+            pub fn forget(self) {
+                // No-op
+            }
         }
     }
 }
@@ -33,7 +55,7 @@ pub mod wit_bindgen {
         command = """
             echo '{}' > {} && 
             echo '// Generated bindings:' >> {} && 
-            sed 's/wit_bindgen::rt/crate::wit_bindgen::rt/g' {} >> {}
+            cat {} >> {}
         """.format(
             shim_content.replace("'", "'\"'\"'"),  # Escape single quotes
             out_file.path,

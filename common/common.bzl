@@ -1,7 +1,7 @@
 """Common constants and utilities"""
 
 # WebAssembly target triples
-WASM_TARGET_TRIPLE = "wasm32-wasi"  # WASI Preview 1 (supported by rules_rust)
+WASM_TARGET_TRIPLE = "wasm32-wasip2"  # WASI Preview 2 (supported by patched rules_rust)
 WASM_TARGET_TRIPLE_UNKNOWN = "wasm32-unknown-unknown"
 
 # File extensions
