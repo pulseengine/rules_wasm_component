@@ -39,8 +39,8 @@ rust_wasm_component_bindgen(
 wac_compose(
     name = "development_system",
     components = {
-        "camera": ":camera_sensor",
-        "ai": ":object_detection", 
+        "camera": ":camera_sensor_debug",  # Use debug profile
+        "ai": ":object_detection_release",  # Use release profile
     },
     profile = "debug",  # Default profile
     component_profiles = {
@@ -70,8 +70,8 @@ wac_compose(
 wac_compose(
     name = "production_system",
     components = {
-        "camera": ":camera_sensor",
-        "ai": ":object_detection",
+        "camera": ":camera_sensor_release",
+        "ai": ":object_detection_release",
     },
     profile = "release",  # All components use release profile
     use_symlinks = True,
@@ -82,8 +82,8 @@ wac_compose(
 wac_compose(
     name = "test_system", 
     components = {
-        "camera": ":camera_sensor",
-        "ai": ":object_detection",
+        "camera": ":camera_sensor_debug",
+        "ai": ":object_detection_custom",
     },
     component_profiles = {
         "camera": "debug",   # Debug camera for detailed logging
