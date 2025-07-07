@@ -1,7 +1,7 @@
 """Example of multi-profile WASM component composition"""
 
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
 
 package(default_visibility = ["//visibility:public"])
@@ -21,17 +21,17 @@ wit_library(
 )
 
 # Build components with multiple profiles
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "camera_sensor",
     srcs = ["src/camera.rs"],
-    wit_bindgen = ":sensor_interfaces",
+    wit = ":sensor_interfaces",
     profiles = ["debug", "release"],  # Build both variants
 )
 
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "object_detection",
     srcs = ["src/detection.rs"],
-    wit_bindgen = ":ai_interfaces",
+    wit = ":ai_interfaces",
     profiles = ["debug", "release", "custom"],  # Three variants
 )
 

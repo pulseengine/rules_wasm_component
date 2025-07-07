@@ -1,16 +1,8 @@
 // Object detection AI component implementation
-wit_bindgen::generate!({
-    world: "object-detector",
-    imports: {
-        "sensor:interfaces/camera": sensor::interfaces::camera,
-    },
-    exports: {
-        "ai:interfaces/detector": Detector,
-    },
-});
+// The generated bindings are available as a separate crate
 
-use sensor::interfaces::camera::{Frame};
-use exports::ai::interfaces::detector::{DetectionResult, BoundingBox, Guest};
+use object_detection_bindings::sensor::interfaces::camera::Frame;
+use object_detection_bindings::exports::ai::interfaces::detector::{DetectionResult, BoundingBox, Guest};
 
 struct Detector;
 

@@ -1,12 +1,7 @@
 // Camera sensor component implementation
-wit_bindgen::generate!({
-    world: "camera-sensor",
-    exports: {
-        "sensor:interfaces/camera": Camera,
-    },
-});
+// The generated bindings are available as a separate crate
 
-use exports::sensor::interfaces::camera::{Frame, Guest};
+use camera_sensor_bindings::exports::sensor::interfaces::camera::{Frame, Guest};
 
 struct Camera;
 
