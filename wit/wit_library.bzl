@@ -23,9 +23,13 @@ def _wit_library_impl(ctx):
     # Create output directory with proper deps structure
     out_dir = ctx.actions.declare_directory(ctx.label.name + "_wit")
     
-    # Prepare inputs including all transitive dependencies
+    # Prepare inputs including all transitive dependencies and dependency outputs
+    dep_outputs = []
+    for dep in ctx.attr.deps:
+        dep_outputs.extend(dep[DefaultInfo].files.to_list())
+    
     all_inputs = depset(
-        direct = ctx.files.srcs,
+        direct = ctx.files.srcs + dep_outputs,
         transitive = [wit_deps, all_wit_deps]
     )
     
@@ -33,20 +37,40 @@ def _wit_library_impl(ctx):
     dep_copy_commands = []
     for dep in ctx.attr.deps:
         dep_info = dep[WitInfo]
+        # Convert package name with colons to directory path
+        dep_dir = dep_info.package_name.replace(":", "/")
         dep_copy_commands.append(
-            "mkdir -p {out_dir}/deps/{dep_name}".format(
+            "mkdir -p {out_dir}/deps/{dep_dir}".format(
                 out_dir = out_dir.path,
-                dep_name = dep_info.package_name,
+                dep_dir = dep_dir,
             )
         )
-        for wit_file in dep_info.wit_files.to_list():
+        # Get the dependency's output directory (should be a single directory)
+        dep_output_dir = None
+        for file in dep[DefaultInfo].files.to_list():
+            if file.is_directory:
+                dep_output_dir = file
+                break
+        
+        if dep_output_dir:
+            # Link all files from the dependency's output directory using absolute paths
             dep_copy_commands.append(
-                "ln -sf {src} {out_dir}/deps/{dep_name}/".format(
-                    src = wit_file.path,
+                "for f in {dep_out}/*; do ln -sf \"$(realpath \"$f\")\" {out_dir}/deps/{dep_dir}/; done".format(
+                    dep_out = dep_output_dir.path,
                     out_dir = out_dir.path,
-                    dep_name = dep_info.package_name,
+                    dep_dir = dep_dir,
                 )
             )
+        else:
+            # Fallback to source files if no output directory found
+            for wit_file in dep_info.wit_files.to_list():
+                dep_copy_commands.append(
+                    "ln -sf {src} {out_dir}/deps/{dep_dir}/".format(
+                        src = wit_file.path,
+                        out_dir = out_dir.path,
+                        dep_dir = dep_dir,
+                    )
+                )
     
     # Create deps.toml if there are dependencies
     deps_toml_content = ""
@@ -54,9 +78,11 @@ def _wit_library_impl(ctx):
         deps_toml_content = "[deps]\n"
         for dep in ctx.attr.deps:
             dep_info = dep[WitInfo]
+            # Convert package name with colons to directory path
+            dep_dir = dep_info.package_name.replace(":", "/")
             deps_toml_content += '"{}"\npath = "./deps/{}"\n\n'.format(
                 dep_info.package_name,
-                dep_info.package_name,
+                dep_dir,
             )
     
     ctx.actions.run_shell(
