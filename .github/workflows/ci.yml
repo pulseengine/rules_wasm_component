@@ -51,6 +51,7 @@ jobs:
           wasm32-wasip2
           wasm32-unknown-unknown
         override: true
+        components: clippy
     
     - name: Install WASM tools
       run: |
@@ -64,6 +65,9 @@ jobs:
     
     - name: Run Tests
       run: bazel test //... --test_output=errors
+    
+    - name: Run Clippy
+      run: bazel build --config=clippy //...
     
     - name: Build Examples
       run: |

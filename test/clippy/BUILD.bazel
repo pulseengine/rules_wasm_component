@@ -1,0 +1,14 @@
+"""Test clippy configuration"""
+
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_clippy")
+
+rust_library(
+    name = "test_lib",
+    srcs = ["test.rs"],
+    edition = "2021",
+)
+
+rust_clippy(
+    name = "test_lib_clippy",
+    deps = [":test_lib"],
+)
