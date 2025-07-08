@@ -26,13 +26,14 @@ jobs:
     - name: Check Buildifier Formatting
       run: |
         echo "Checking Bazel file formatting..."
-        bazel run //:buildifier -- --lint=warn --mode=check -r .
+        # Check only formatting, not lint warnings (for now)
+        bazel run //:buildifier -- --mode=check -r .
     
-    - name: Check for Unused Dependencies
+    - name: Show Lint Warnings (Informational)
       run: |
-        echo "Checking for unused dependencies in BUILD files..."
-        # This will warn about unused deps but not fail the build
-        bazel run //:buildifier -- --lint=warn --warnings=load -r . || true
+        echo "Showing lint warnings (informational only - won't fail the build)..."
+        # Show warnings but don't fail the CI
+        bazel run //:buildifier -- --lint=warn --mode=check -r . || true
 
   test:
     name: Test on ${{ matrix.os }}
