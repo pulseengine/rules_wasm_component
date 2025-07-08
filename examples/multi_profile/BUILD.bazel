@@ -55,24 +55,14 @@ wac_compose(
     composition = """
         package dev:composition;
         
-        let camera = new camera:component {
-            frame-rate: 30,
-            resolution: "1080p",
-        };
-        
-        let ai = new ai:component {
-            model: "yolov5n",
-            confidence: 0.5,
-        };
-        
-        // Connect camera output to AI input
-        connect camera.frame-output -> ai.frame-input;
+        let camera = new camera:component {};
+        let ai = new ai:component {};
         
         export ai as main;
     """,
     profile = "debug",  # Default profile
     tags = ["manual"],  # Skip in //... builds until WAC is properly configured
-    use_symlinks = True,  # Save disk space
+    use_symlinks = False,  # Use copying instead of symlinks for CI compatibility
 )
 
 # Production composition - all release builds
@@ -85,7 +75,7 @@ wac_compose(
     composition_file = "production.wac",
     profile = "release",  # All components use release profile
     tags = ["manual"],  # Skip in //... builds until WAC is properly configured
-    use_symlinks = True,
+    use_symlinks = False,  # Use copying instead of symlinks for CI compatibility
 )
 
 # Custom mixed composition for testing

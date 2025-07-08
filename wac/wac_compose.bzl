@@ -72,20 +72,26 @@ def _wac_compose_impl(ctx):
             "profile": profile,
         }
 
-    # Choose linking strategy
-    link_command = "ln -sf" if ctx.attr.use_symlinks else "cp"
-
-    # Prepare deps directory with proper WAC structure
+    # Choose linking strategy - use absolute paths for symlinks
     copy_commands = []
     for comp_name, comp_data in selected_components.items():
-        copy_commands.append(
-            "{link_cmd} {src} {deps_dir}/{comp_name}.wasm".format(
-                link_cmd = link_command,
-                src = comp_data["file"].path,
-                deps_dir = deps_dir.path,
-                comp_name = comp_name,
-            ),
-        )
+        if ctx.attr.use_symlinks:
+            # Use absolute path for symlinks to avoid dangling links
+            copy_commands.append(
+                "ln -sf \"$(pwd)/{src}\" {deps_dir}/{comp_name}.wasm".format(
+                    src = comp_data["file"].path,
+                    deps_dir = deps_dir.path,
+                    comp_name = comp_name,
+                ),
+            )
+        else:
+            copy_commands.append(
+                "cp {src} {deps_dir}/{comp_name}.wasm".format(
+                    src = comp_data["file"].path,
+                    deps_dir = deps_dir.path,
+                    comp_name = comp_name,
+                ),
+            )
 
     ctx.actions.run_shell(
         inputs = [comp_data["file"] for comp_data in selected_components.values()],

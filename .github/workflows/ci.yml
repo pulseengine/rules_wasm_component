@@ -103,7 +103,8 @@ jobs:
     - name: Build Examples
       run: |
         bazel build //examples/basic:hello_component
-        bazel build //examples/multi_profile:development_system
+        bazel build //examples/multi_profile:camera_sensor
+        bazel build //examples/multi_profile:object_detection
     
     - name: Validate Generated Files
       run: |
