@@ -1,7 +1,5 @@
 {
   "type": "auto",
-  "mode": "fix",
-  "lint": "warn",
   "warningsList": [
     "load",
     "load-on-top",

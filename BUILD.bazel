@@ -15,7 +15,6 @@ exports_files([
 buildifier(
     name = "buildifier",
     diff_command = "diff -u",
-    lint_mode = "warn",
     mode = "fix",
 )
 
