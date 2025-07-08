@@ -12,9 +12,10 @@ bazel_dep(name = "rules_rust", version = "0.62.0")
 # Git override to use rules_rust fork with wasm32-wasip2 support
 git_override(
     module_name = "rules_rust",
-    remote = "https://github.com/avrabe/rules_rust.git",
     commit = "2389792cfac37da28033e2bca8b712a3c6d961e2",
+    remote = "https://github.com/avrabe/rules_rust.git",
 )
+
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.11")
 
@@ -26,12 +27,12 @@ bazel_dep(name = "stardoc", version = "0.7.1", dev_dependency = True)
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
-    versions = ["1.88.0"],
     extra_target_triples = [
-        "wasm32-unknown-unknown", 
+        "wasm32-unknown-unknown",
         "wasm32-wasip1",
         "wasm32-wasip2",  # Now supported with patched rules_rust
     ],
+    versions = ["1.88.0"],
 )
 use_repo(rust, "rust_toolchains")
 
@@ -42,8 +43,8 @@ register_toolchains("@rust_toolchains//:all")
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
-    version = "1.235.0",
     strategy = "download",
+    version = "1.235.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 

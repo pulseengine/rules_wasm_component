@@ -9,44 +9,49 @@ package(default_visibility = ["//visibility:public"])
 # Define WIT interfaces
 wit_library(
     name = "sensor_interfaces",
-    srcs = ["wit/sensor.wit"],
     package_name = "sensor:interfaces",
+    srcs = ["wit/sensor.wit"],
 )
 
 wit_library(
-    name = "ai_interfaces", 
+    name = "ai_interfaces",
+    package_name = "ai:interfaces",
     srcs = ["wit/ai.wit"],
     deps = [":sensor_interfaces"],
-    package_name = "ai:interfaces",
 )
 
 # Build components with multiple profiles
 rust_wasm_component_bindgen(
     name = "camera_sensor",
     srcs = ["src/camera.rs"],
+    profiles = [
+        "debug",
+        "release",
+    ],  # Build both variants
     wit = ":sensor_interfaces",
-    profiles = ["debug", "release"],  # Build both variants
 )
 
 rust_wasm_component_bindgen(
     name = "object_detection",
     srcs = ["src/detection.rs"],
+    profiles = [
+        "debug",
+        "release",
+        "custom",
+    ],  # Three variants
     wit = ":ai_interfaces",
-    profiles = ["debug", "release", "custom"],  # Three variants
 )
 
 # Compose system with mixed profiles for development
 wac_compose(
     name = "development_system",
-    components = {
-        ":camera_sensor_debug": "camera",  # Use debug profile
-        ":object_detection_release": "ai",  # Use release profile  
-    },
-    profile = "debug",  # Default profile
     component_profiles = {
         "ai": "release",  # Use optimized AI component even in debug
     },
-    use_symlinks = True,  # Save disk space
+    components = {
+        ":camera_sensor_debug": "camera",  # Use debug profile
+        ":object_detection_release": "ai",  # Use release profile
+    },
     composition = """
         package dev:composition;
         
@@ -65,6 +70,9 @@ wac_compose(
         
         export ai as main;
     """,
+    profile = "debug",  # Default profile
+    tags = ["manual"],  # Skip in //... builds until WAC is properly configured
+    use_symlinks = True,  # Save disk space
 )
 
 # Production composition - all release builds
@@ -74,23 +82,23 @@ wac_compose(
         ":camera_sensor_release": "camera",
         ":object_detection_release": "ai",
     },
-    profile = "release",  # All components use release profile
-    use_symlinks = True,
     composition_file = "production.wac",
+    profile = "release",  # All components use release profile
+    tags = ["manual"],  # Skip in //... builds until WAC is properly configured
+    use_symlinks = True,
 )
 
 # Custom mixed composition for testing
 wac_compose(
-    name = "test_system", 
+    name = "test_system",
+    component_profiles = {
+        "camera": "debug",  # Debug camera for detailed logging
+        "ai": "custom",  # Custom optimized AI
+    },
     components = {
         ":camera_sensor_debug": "camera",
         ":object_detection_custom": "ai",
     },
-    component_profiles = {
-        "camera": "debug",   # Debug camera for detailed logging
-        "ai": "custom",      # Custom optimized AI
-    },
-    use_symlinks = False,  # Copy files for isolated testing
     composition = """
         package test:composition;
         
@@ -100,4 +108,6 @@ wac_compose(
         export camera;
         export ai;
     """,
+    tags = ["manual"],  # Skip in //... builds until WAC is properly configured
+    use_symlinks = False,  # Copy files for isolated testing
 )

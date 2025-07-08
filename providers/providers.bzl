@@ -5,7 +5,7 @@ WitInfo = provider(
     doc = "Information about a WIT library",
     fields = {
         "wit_files": "Depset of WIT source files",
-        "wit_deps": "Depset of WIT dependencies", 
+        "wit_deps": "Depset of WIT dependencies",
         "package_name": "WIT package name",
         "world_name": "Optional world name",
         "interface_names": "List of interface names",

@@ -5,7 +5,7 @@ load(
     _wasm_validate = "wasm_validate",
 )
 load(
-    "//wasm:wasm_component_new.bzl", 
+    "//wasm:wasm_component_new.bzl",
     _wasm_component_new = "wasm_component_new",
 )
 

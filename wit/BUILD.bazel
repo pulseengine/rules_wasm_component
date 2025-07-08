@@ -8,8 +8,8 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     deps = [
-        ":wit_library",
         ":wit_bindgen",
+        ":wit_library",
     ],
 )
 
@@ -17,7 +17,7 @@ bzl_library(
     name = "wit_library",
     srcs = ["wit_library.bzl"],
     deps = [
-        "//providers:providers",
+        "//providers",
     ],
 )
 
@@ -25,7 +25,7 @@ bzl_library(
     name = "wit_bindgen",
     srcs = ["wit_bindgen.bzl"],
     deps = [
-        "//providers:providers",
+        "//providers",
         "@bazel_skylib//lib:paths",
     ],
 )

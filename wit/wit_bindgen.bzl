@@ -5,10 +5,10 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 
 def _wit_bindgen_impl(ctx):
     """Implementation of wit_bindgen rule"""
-    
+
     # Get WIT info from input
     wit_info = ctx.attr.wit[WitInfo]
-    
+
     # Determine output file/directory based on language
     if ctx.attr.language == "rust":
         # wit-bindgen generates a file based on the world/package name
@@ -20,34 +20,34 @@ def _wit_bindgen_impl(ctx):
         out_file = out_dir
     else:
         fail("Unsupported language: " + ctx.attr.language)
-    
+
     # Get wit-bindgen from toolchain
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     wit_bindgen = toolchain.wit_bindgen
-    
+
     # Build command arguments for new wit-bindgen CLI
     cmd_args = [ctx.attr.language]
-    
+
     # Add world if specified using --with syntax
     if wit_info.world_name:
         cmd_args.extend(["--with", wit_info.world_name])
-    
-    # Add additional options  
+
+    # Add additional options
     if ctx.attr.options:
         cmd_args.extend(ctx.attr.options)
-    
+
     # For Rust, use a custom runtime path to avoid dependency on wit_bindgen crate
     if ctx.attr.language == "rust":
         cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
-    
+
     # Add WIT files at the end (positional argument)
     for wit_file in wit_info.wit_files.to_list():
         cmd_args.append(wit_file.path)
-    
+
     # Create output directory for Rust to handle unpredictable filenames
     if ctx.attr.language == "rust":
         out_dir = ctx.actions.declare_directory(ctx.label.name + "_output")
-        
+
         # Run wit-bindgen with a wrapper to handle the output
         ctx.actions.run_shell(
             command = """
@@ -93,7 +93,7 @@ def _wit_bindgen_impl(ctx):
                 ctx.label,
             ),
         )
-    
+
     return [DefaultInfo(files = depset([out_file]))]
 
 wit_bindgen = rule(

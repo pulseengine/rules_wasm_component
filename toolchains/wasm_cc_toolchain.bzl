@@ -1,15 +1,17 @@
 """Minimal C++ toolchain for WASM builds"""
 
-load("@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl", 
-     "tool_path", 
-     "feature", 
-     "flag_group", 
-     "flag_set", 
-     "with_feature_set")
+load(
+    "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
+    "feature",
+    "flag_group",
+    "flag_set",
+    "tool_path",
+    "with_feature_set",
+)
 
 def _wasm_cc_toolchain_config_impl(ctx):
     """Minimal C++ toolchain config for WASM that doesn't actually link"""
-    
+
     # Define tool paths - these are dummy tools that won't actually be used
     tool_paths = [
         tool_path(
@@ -45,7 +47,7 @@ def _wasm_cc_toolchain_config_impl(ctx):
             path = "/bin/true",  # Dummy path
         ),
     ]
-    
+
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,
         cxx_builtin_include_directories = [],

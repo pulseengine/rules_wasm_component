@@ -8,8 +8,8 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     deps = [
-        ":wasm_validate",
         ":wasm_component_new",
+        ":wasm_validate",
     ],
 )
 
@@ -25,7 +25,7 @@ bzl_library(
     name = "wasm_validate",
     srcs = ["wasm_validate.bzl"],
     deps = [
-        "//providers:providers",
+        "//providers",
     ],
 )
 
@@ -33,6 +33,6 @@ bzl_library(
     name = "wasm_component_new",
     srcs = ["wasm_component_new.bzl"],
     deps = [
-        "//providers:providers",
+        "//providers",
     ],
 )

@@ -15,8 +15,8 @@ impl Guest for Camera {
         })
     }
     
-    fn configure(frame_rate: u32, resolution: String) -> Result<(), String> {
-        println!("Configuring camera: {}fps, {}", frame_rate, resolution);
+    fn configure(_frame_rate: u32, _resolution: String) -> Result<(), String> {
+        // Configuration would happen here
         Ok(())
     }
     

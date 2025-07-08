@@ -16,6 +16,6 @@ bzl_library(
     name = "wac_compose",
     srcs = ["wac_compose.bzl"],
     deps = [
-        "//providers:providers",
+        "//providers",
     ],
 )

@@ -7,7 +7,7 @@ load(":rust_wasm_component.bzl", "rust_wasm_component")
 def _generate_wrapper_impl(ctx):
     """Generate a wrapper that includes both bindings and runtime shim"""
     out_file = ctx.actions.declare_file(ctx.label.name + ".rs")
-    
+
     # Use shell command to concatenate the shim and generated bindings
     shim_content = """// Generated wrapper for WIT bindings
 
@@ -50,7 +50,7 @@ pub mod wit_bindgen {
 
 // Generated bindings follow:
 """
-    
+
     ctx.actions.run_shell(
         command = """
             echo '{}' > {} && 
@@ -68,7 +68,7 @@ pub mod wit_bindgen {
         mnemonic = "GenerateWitWrapper",
         progress_message = "Generating wrapper for {}".format(ctx.label),
     )
-    
+
     return [DefaultInfo(files = depset([out_file]))]
 
 _generate_wrapper = rule(
@@ -93,18 +93,18 @@ def rust_wasm_component_bindgen(
         **kwargs):
     """
     Builds a Rust WebAssembly component with automatic WIT binding generation.
-    
+
     This macro generates WIT bindings as a separate library and builds a WASM component
     that depends on them. This provides clean separation between generated bindings
     and user implementation code.
-    
+
     Generated targets:
     - {name}_bindings: A rust_library containing WIT bindings with minimal runtime
     - {name}: The final WASM component that depends on the bindings
-    
+
     Args:
         name: Target name
-        srcs: Rust source files  
+        srcs: Rust source files
         wit: WIT library target for binding generation
         deps: Additional Rust dependencies
         crate_features: Rust crate features to enable
@@ -112,7 +112,7 @@ def rust_wasm_component_bindgen(
         profiles: List of build profiles (e.g. ["debug", "release"])
         visibility: Target visibility
         **kwargs: Additional arguments passed to rust_wasm_component
-    
+
     Example:
         rust_wasm_component_bindgen(
             name = "my_component",
@@ -120,13 +120,13 @@ def rust_wasm_component_bindgen(
             wit = "//wit:my_interfaces",
             profiles = ["debug", "release"],
         )
-        
+
         # In src/lib.rs:
         use my_component_bindings::exports::my_interface::{Guest};
         struct MyComponent;
         impl Guest for MyComponent { ... }
     """
-    
+
     # Generate WIT bindings
     bindgen_target = name + "_wit_bindgen_gen"
     wit_bindgen(
@@ -135,7 +135,7 @@ def rust_wasm_component_bindgen(
         language = "rust",
         visibility = ["//visibility:private"],
     )
-    
+
     # Create a wrapper that includes both the generated bindings and the shim
     wrapper_target = name + "_wrapper"
     _generate_wrapper(
@@ -143,7 +143,7 @@ def rust_wasm_component_bindgen(
         bindgen = ":" + bindgen_target,
         visibility = ["//visibility:private"],
     )
-    
+
     # Create a rust_library from the generated bindings
     bindings_lib = name + "_bindings"
     rust_library(
@@ -153,7 +153,7 @@ def rust_wasm_component_bindgen(
         edition = "2021",
         visibility = ["//visibility:public"],
     )
-    
+
     # Build the WASM component with user sources depending on bindings
     rust_wasm_component(
         name = name,

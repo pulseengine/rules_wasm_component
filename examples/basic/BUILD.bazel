@@ -1,15 +1,15 @@
 """Basic example of building a WASM component"""
 
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component", "rust_wasm_component_test", "rust_wasm_component_clippy")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component", "rust_wasm_component_clippy", "rust_wasm_component_test")
 
 package(default_visibility = ["//visibility:public"])
 
 # Define WIT interfaces
 wit_library(
     name = "hello_interfaces",
-    srcs = ["wit/hello.wit"],
     package_name = "hello:interfaces",
+    srcs = ["wit/hello.wit"],
     world = "hello",
 )
 

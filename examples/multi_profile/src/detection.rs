@@ -6,12 +6,12 @@ use object_detection_bindings::exports::ai::interfaces::detector::{Frame, Detect
 struct Detector;
 
 impl Guest for Detector {
-    fn load_model(model_path: String) -> Result<(), String> {
-        println!("Loading AI model from: {}", model_path);
+    fn load_model(_model_path: String) -> Result<(), String> {
+        // Model loading would happen here
         Ok(())
     }
     
-    fn detect_objects(frame: Frame) -> Result<Vec<DetectionResult>, String> {
+    fn detect_objects(_frame: Frame) -> Result<Vec<DetectionResult>, String> {
         // Simulate object detection
         Ok(vec![
             DetectionResult {
@@ -37,8 +37,8 @@ impl Guest for Detector {
         ])
     }
     
-    fn set_confidence(threshold: f32) -> Result<(), String> {
-        println!("Setting confidence threshold to {}", threshold);
+    fn set_confidence(_threshold: f32) -> Result<(), String> {
+        // Confidence setting would happen here
         Ok(())
     }
 }

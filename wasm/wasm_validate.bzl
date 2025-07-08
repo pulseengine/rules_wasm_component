@@ -1,14 +1,14 @@
 """WASM validation rule implementation"""
 
-load("//providers:providers.bzl", "WasmValidationInfo", "WasmComponentInfo")
+load("//providers:providers.bzl", "WasmComponentInfo", "WasmValidationInfo")
 
 def _wasm_validate_impl(ctx):
     """Implementation of wasm_validate rule"""
-    
+
     # Get toolchain
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     wasm_tools = toolchain.wasm_tools
-    
+
     # Get input WASM file
     if ctx.file.wasm_file:
         wasm_file = ctx.file.wasm_file
@@ -16,10 +16,10 @@ def _wasm_validate_impl(ctx):
         wasm_file = ctx.attr.component[WasmComponentInfo].wasm_file
     else:
         fail("Either wasm_file or component must be specified")
-    
+
     # Output validation log
     validation_log = ctx.actions.declare_file(ctx.label.name + "_validation.log")
-    
+
     # Run validation
     ctx.actions.run_shell(
         inputs = [wasm_file],
@@ -72,15 +72,15 @@ def _wasm_validate_impl(ctx):
         mnemonic = "WasmValidate",
         progress_message = "Validating WASM file %s" % ctx.label,
     )
-    
+
     # Create validation info provider
     validation_info = WasmValidationInfo(
         is_valid = True,  # Will be set based on action success
         validation_log = validation_log,
-        errors = [],      # TODO: Parse errors from log
-        warnings = [],    # TODO: Parse warnings from log
+        errors = [],  # TODO: Parse errors from log
+        warnings = [],  # TODO: Parse warnings from log
     )
-    
+
     return [
         validation_info,
         DefaultInfo(files = depset([validation_log])),

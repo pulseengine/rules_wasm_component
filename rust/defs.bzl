@@ -10,8 +10,8 @@ load(
 )
 load(
     "//rust:clippy.bzl",
-    _rust_wasm_component_clippy = "rust_wasm_component_clippy",
     _rust_clippy_all = "rust_clippy_all",
+    _rust_wasm_component_clippy = "rust_wasm_component_clippy",
 )
 load(
     "//rust:rust_wasm_component_bindgen.bzl",

@@ -4,31 +4,31 @@ load("//providers:providers.bzl", "WasmComponentInfo")
 
 def _wasm_component_new_impl(ctx):
     """Implementation of wasm_component_new rule"""
-    
+
     # Get toolchain
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     wasm_tools = toolchain.wasm_tools
-    
+
     # Input and output files
     wasm_module = ctx.file.wasm_module
     component_wasm = ctx.actions.declare_file(ctx.label.name + ".wasm")
-    
+
     # Build command arguments
     args = ctx.actions.args()
     args.add("component", "new")
     args.add(wasm_module)
     args.add("-o", component_wasm)
-    
+
     # Add adapter if specified
     inputs = [wasm_module]
     if ctx.file.adapter:
         args.add("--adapt", ctx.file.adapter)
         inputs.append(ctx.file.adapter)
-    
+
     # Add additional options
     if ctx.attr.options:
         args.add_all(ctx.attr.options)
-    
+
     # Run wasm-tools component new
     ctx.actions.run(
         executable = wasm_tools,
@@ -38,14 +38,14 @@ def _wasm_component_new_impl(ctx):
         mnemonic = "WasmComponentNew",
         progress_message = "Creating WASM component %s" % ctx.label,
     )
-    
+
     # Create component info provider
     component_info = WasmComponentInfo(
         wasm_file = component_wasm,
         wit_info = None,  # No WIT info for converted modules
         component_type = "component",
-        imports = [],     # TODO: Extract from component
-        exports = [],     # TODO: Extract from component
+        imports = [],  # TODO: Extract from component
+        exports = [],  # TODO: Extract from component
         metadata = {
             "name": ctx.label.name,
             "source_module": wasm_module.path,
@@ -54,7 +54,7 @@ def _wasm_component_new_impl(ctx):
         profile = "unknown",
         profile_variants = {},
     )
-    
+
     return [
         component_info,
         DefaultInfo(files = depset([component_wasm])),

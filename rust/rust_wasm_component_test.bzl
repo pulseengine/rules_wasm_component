@@ -4,17 +4,17 @@ load("//providers:providers.bzl", "WasmComponentInfo")
 
 def _rust_wasm_component_test_impl(ctx):
     """Implementation of rust_wasm_component_test rule"""
-    
+
     # Get component info
     component_info = ctx.attr.component[WasmComponentInfo]
-    
+
     # Create test script
     test_script = ctx.actions.declare_file(ctx.label.name + "_test.sh")
-    
+
     # Get wasmtime from toolchain (if available)
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     wasm_tools = toolchain.wasm_tools
-    
+
     # Generate test script
     ctx.actions.write(
         output = test_script,
@@ -33,7 +33,7 @@ echo "✅ Component validation passed"
         ),
         is_executable = True,
     )
-    
+
     return [
         DefaultInfo(
             executable = test_script,

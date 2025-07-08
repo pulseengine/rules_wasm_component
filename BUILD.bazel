@@ -14,9 +14,9 @@ exports_files([
 # Buildifier for formatting
 buildifier(
     name = "buildifier",
+    diff_command = "diff -u",
     lint_mode = "warn",
     mode = "fix",
-    diff_command = "diff -u",
 )
 
 # Documentation generation

@@ -4,14 +4,14 @@ load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
 
 def _wasm_toolchain_extension_impl(module_ctx):
     """Implementation of wasm_toolchain module extension"""
-    
+
     registrations = {}
-    
+
     # Collect all toolchain registrations
     for mod in module_ctx.modules:
         for registration in mod.tags.register:
             registrations[registration.name] = registration
-    
+
     # Create toolchain repositories
     for name, registration in registrations.items():
         wasm_toolchain_repository(
@@ -23,7 +23,7 @@ def _wasm_toolchain_extension_impl(module_ctx):
             wac_url = registration.wac_url,
             wit_bindgen_url = registration.wit_bindgen_url,
         )
-    
+
     # If no registrations, create default system toolchain
     if not registrations:
         wasm_toolchain_repository(

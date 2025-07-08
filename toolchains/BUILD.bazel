@@ -33,7 +33,7 @@ filegroup(
 cc_toolchain(
     name = "wasm_cc_toolchain",
     all_files = ":empty",
-    compiler_files = ":empty", 
+    compiler_files = ":empty",
     dwp_files = ":empty",
     linker_files = ":empty",
     objcopy_files = ":empty",
@@ -67,7 +67,7 @@ toolchain(
 
 # Toolchain for WASM32 unknown
 toolchain(
-    name = "wasm32_unknown_cc_toolchain", 
+    name = "wasm32_unknown_cc_toolchain",
     target_compatible_with = [
         "@platforms//cpu:wasm32",
         "@platforms//os:none",

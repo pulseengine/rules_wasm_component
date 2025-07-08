@@ -18,8 +18,8 @@ bzl_library(
     name = "rust_wasm_component",
     srcs = ["rust_wasm_component.bzl"],
     deps = [
-        "//providers:providers",
-        "//common:common",
+        "//common",
+        "//providers",
     ],
 )
 
@@ -27,7 +27,7 @@ bzl_library(
     name = "rust_wasm_component_test",
     srcs = ["rust_wasm_component_test.bzl"],
     deps = [
-        "//providers:providers",
         ":rust_wasm_component",
+        "//providers",
     ],
 )

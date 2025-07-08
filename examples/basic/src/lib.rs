@@ -5,7 +5,7 @@
 
 // Dummy implementation for now
 #[no_mangle]
-pub extern "C" fn hello(name_ptr: *const u8, name_len: usize) -> u32 {
+pub extern "C" fn hello(_name_ptr: *const u8, _name_len: usize) -> u32 {
     // In a real implementation, this would use wit-bindgen
     // to properly handle the WIT interface
     
