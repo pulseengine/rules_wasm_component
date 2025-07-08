@@ -207,17 +207,17 @@ def rust_wasm_component(
         
         profile_variants[profile] = ":" + component_name
     
-    # Create a filegroup that includes all profiles
-    native.filegroup(
+    # Create the main component (default to release profile) that provides WasmComponentInfo
+    main_profile = "release" if "release" in profiles else profiles[0]
+    native.alias(
         name = name,
-        srcs = [profile_variants[p] for p in profiles],
+        actual = profile_variants[main_profile],
         visibility = visibility,
     )
     
-    # Create the main component (default to release profile)
-    main_profile = "release" if "release" in profiles else profiles[0]
-    native.alias(
-        name = name + "_main", 
-        actual = profile_variants[main_profile],
+    # Create a filegroup that includes all profiles for those who need it
+    native.filegroup(
+        name = name + "_all_profiles",
+        srcs = [profile_variants[p] for p in profiles],
         visibility = visibility,
     )
