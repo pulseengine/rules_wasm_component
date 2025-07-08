@@ -192,6 +192,10 @@ jobs:
           --exclude='.git*' \
           --exclude='bazel-*' \
           --exclude='*.tar.gz' \
+          --exclude='.bazel*' \
+          --exclude='**/bazel-*' \
+          --exclude='**/.bazel*' \
+          --warning=no-file-changed \
           .
     
     - name: Upload Release Asset
