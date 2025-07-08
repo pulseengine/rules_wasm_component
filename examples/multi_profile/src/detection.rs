@@ -3,6 +3,7 @@
 
 use object_detection_bindings::exports::ai::interfaces::detector::{Frame, DetectionResult, BoundingBox, Guest};
 
+#[allow(dead_code)]
 struct Detector;
 
 impl Guest for Detector {

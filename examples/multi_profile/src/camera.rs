@@ -3,6 +3,7 @@
 
 use camera_sensor_bindings::exports::sensor::interfaces::camera::{Frame, Guest};
 
+#[allow(dead_code)]
 struct Camera;
 
 impl Guest for Camera {

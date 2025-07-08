@@ -11,6 +11,11 @@ def _generate_wrapper_impl(ctx):
     # Use shell command to concatenate the shim and generated bindings
     shim_content = """// Generated wrapper for WIT bindings
 
+// Suppress clippy warnings for generated code
+#![allow(clippy::all)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
 // Minimal wit_bindgen::rt implementation
 pub mod wit_bindgen {
     pub mod rt {
@@ -30,8 +35,10 @@ pub mod wit_bindgen {
         
         impl Cleanup {
             #[inline]
+            #[allow(clippy::new_ret_no_self)]
             pub fn new(_layout: Layout) -> (*mut u8, Option<CleanupGuard>) {
                 // Return a dummy pointer - in real implementation this would use the allocator
+                #[allow(clippy::manual_dangling_ptr)]
                 let ptr = 1 as *mut u8; // Non-null dummy pointer
                 (ptr, None)
             }
