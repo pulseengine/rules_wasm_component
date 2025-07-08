@@ -146,8 +146,8 @@
   "moduleExtensions": {
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "l1FB+mTdxu8L3xi57Nq17l/ZYEaN7N8doXWddCq8Pzc=",
-        "usagesDigest": "U5AqTxPM/BKsr+KK2K/Wfk1dssPVpMK36+CYZouSkHM=",
+        "bzlTransitiveDigest": "UC4IB7w0NFI5svzyC12Y1GIvjDJMcop4E2/EGEUMzdg=",
+        "usagesDigest": "rK5j2mosGdMFy46ZYU38LZaw5olpr5viCMc8zcMVAh0=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
