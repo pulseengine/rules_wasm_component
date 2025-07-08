@@ -1,0 +1,15 @@
+{
+  "version": 4,
+  "lint": {
+    "mode": "warn",
+    "warnings": [
+      "+load",
+      "+load-on-top",
+      "+out-of-order-load", 
+      "+unused-variable",
+      "+function-docstring",
+      "+function-docstring-args",
+      "+print"
+    ]
+  }
+}

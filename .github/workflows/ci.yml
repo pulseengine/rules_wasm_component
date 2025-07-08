@@ -10,9 +10,34 @@ env:
   BAZEL_VERSION: 8.3.1
 
 jobs:
+  lint:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Bazelisk
+      run: |
+        curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+        chmod +x bazelisk-linux-amd64
+        sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+    
+    - name: Check Buildifier Formatting
+      run: |
+        echo "Checking Bazel file formatting..."
+        bazel run //:buildifier -- --lint=warn --mode=check -r .
+    
+    - name: Check for Unused Dependencies
+      run: |
+        echo "Checking for unused dependencies in BUILD files..."
+        # This will warn about unused deps but not fail the build
+        bazel run //:buildifier -- --lint=warn --warnings=load -r . || true
+
   test:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    needs: lint  # Run tests only after lint passes
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -84,10 +109,6 @@ jobs:
         # Check that WASM files are valid
         bazel build //examples/basic:hello_component
         wasm-tools validate bazel-bin/examples/basic/hello_component.wasm || true
-    
-    - name: Check Formatting
-      run: |
-        bazel run //:buildifier -- --lint=warn --mode=check -r .
 
   integration:
     name: Integration Tests
