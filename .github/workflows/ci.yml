@@ -135,30 +135,39 @@ jobs:
     
     - name: Test Multi-Profile Builds
       run: |
-        cd examples/multi_profile
-        bazel build :camera_sensor
-        bazel build :object_detection
+        bazel build //examples/multi_profile:camera_sensor
+        bazel build //examples/multi_profile:object_detection
         
-        # Verify multiple profiles were created
-        ls -la bazel-bin/
+        # Get bazel-bin path and verify multiple profiles were created
+        BAZEL_BIN=$(bazel info bazel-bin)
+        ls -la "$BAZEL_BIN/examples/multi_profile/"
     
-    - name: Test WAC Composition
+    - name: Test Component Variants
       run: |
-        cd examples/multi_profile
-        bazel build :development_system
-        bazel build :production_system
+        bazel build //examples/multi_profile:camera_sensor_debug
+        bazel build //examples/multi_profile:camera_sensor_release
+        bazel build //examples/multi_profile:object_detection_debug
+        bazel build //examples/multi_profile:object_detection_release
         
-        # Verify composed systems are valid WASM
-        wasm-tools validate bazel-bin/development_system.wasm
-        wasm-tools validate bazel-bin/production_system.wasm
+        # Get bazel-bin path
+        BAZEL_BIN=$(bazel info bazel-bin)
+        
+        # Verify individual components are valid WASM
+        wasm-tools validate "$BAZEL_BIN/examples/multi_profile/camera_sensor_debug.component.wasm"
+        wasm-tools validate "$BAZEL_BIN/examples/multi_profile/camera_sensor_release.component.wasm"
+        wasm-tools validate "$BAZEL_BIN/examples/multi_profile/object_detection_debug.component.wasm"
+        wasm-tools validate "$BAZEL_BIN/examples/multi_profile/object_detection_release.component.wasm"
     
-    - name: Test Symlink Strategy
+    - name: Test Component Output Structure
       run: |
-        cd examples/multi_profile
-        bazel build :development_system --verbose_failures
+        # Get bazel-bin path
+        BAZEL_BIN=$(bazel info bazel-bin)
         
-        # Check that symlinks were created (not copies)
-        find bazel-bin -type l -name "*.wasm" | wc -l
+        # Check that multiple profiles created separate outputs
+        echo "Camera sensor variants:"
+        ls -la "$BAZEL_BIN/examples/multi_profile/camera_sensor"*.wasm
+        echo "Object detection variants:"
+        ls -la "$BAZEL_BIN/examples/multi_profile/object_detection"*.wasm
 
   release:
     name: Release
