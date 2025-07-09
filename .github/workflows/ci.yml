@@ -181,22 +181,34 @@ jobs:
         fetch-depth: 0
         submodules: false
     
+    - name: Install git-cliff
+      uses: taiki-e/install-action@v2
+      with:
+        tool: git-cliff
+    
     - name: Generate Release Notes
       run: |
-        echo "## Changes" > release_notes.md
-        git log --oneline --since="1 week ago" >> release_notes.md
+        # Generate changelog for the latest changes
+        git-cliff --latest --strip header -o release_notes.md
+        echo "Generated release notes:"
+        cat release_notes.md
     
     - name: Create Release Archive
       run: |
-        tar -czf rules_wasm_component.tar.gz \
+        # Create a clean directory for the release
+        mkdir -p release_tmp
+        
+        # Copy files excluding Bazel and git directories
+        rsync -av \
           --exclude='.git*' \
           --exclude='bazel-*' \
           --exclude='*.tar.gz' \
           --exclude='.bazel*' \
-          --exclude='**/bazel-*' \
-          --exclude='**/.bazel*' \
-          --warning=no-file-changed \
-          .
+          --exclude='release_tmp' \
+          . release_tmp/
+        
+        # Create the archive from the clean directory
+        tar -czf rules_wasm_component.tar.gz -C release_tmp .
     
     - name: Upload Release Asset
       uses: actions/upload-artifact@v4
