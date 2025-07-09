@@ -1,10 +1,30 @@
 """Platform definitions for WASM targets"""
 
+# Custom WASI version constraints to distinguish between preview versions
+constraint_setting(
+    name = "wasi_version",
+    default_constraint_value = ":wasi_preview_1",
+    visibility = ["//visibility:public"],
+)
+
+constraint_value(
+    name = "wasi_preview_1",
+    constraint_setting = ":wasi_version", 
+    visibility = ["//visibility:public"],
+)
+
+constraint_value(
+    name = "wasi_preview_2",
+    constraint_setting = ":wasi_version",
+    visibility = ["//visibility:public"],
+)
+
 platform(
     name = "wasm32-wasi",
     constraint_values = [
         "@platforms//cpu:wasm32",
         "@platforms//os:wasi",
+        ":wasi_preview_1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -23,6 +43,7 @@ platform(
     constraint_values = [
         "@platforms//cpu:wasm32",
         "@platforms//os:wasi",
+        ":wasi_preview_1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -31,7 +52,8 @@ platform(
     name = "wasm32-wasip2",
     constraint_values = [
         "@platforms//cpu:wasm32",
-        "@platforms//os:wasi",
+        "@platforms//os:wasi", 
+        ":wasi_preview_2",
     ],
     visibility = ["//visibility:public"],
 )

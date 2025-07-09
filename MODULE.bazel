@@ -9,10 +9,10 @@ module(
 # Dependencies for WebAssembly tooling
 bazel_dep(name = "rules_rust", version = "0.62.0")
 
-# Git override to use rules_rust fork with wasm32-wasip2 support
+# Git override to use rules_rust fork with wasm32-wasip2 support  
 git_override(
     module_name = "rules_rust",
-    commit = "2389792cfac37da28033e2bca8b712a3c6d961e2",
+    commit = "54f0df94dccdd34fa35a22adfb7b4626e85d99b4",  # Commit with WASI constraint system fixes
     remote = "https://github.com/avrabe/rules_rust.git",
 )
 
