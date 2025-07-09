@@ -71,14 +71,9 @@ jobs:
         fi
     
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        targets: |
-          wasm32-wasip1
-          wasm32-wasip2
-          wasm32-unknown-unknown
-        override: true
+        targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
         components: clippy
     
     - name: Install WASM tools

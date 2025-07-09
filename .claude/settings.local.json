@@ -13,7 +13,8 @@
       "Bash(rustc:*)",
       "Bash(cargo build:*)",
       "Bash(gh run view:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
