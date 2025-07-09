@@ -35,15 +35,30 @@ filegroup(
     srcs = [],
 )
 
+# File groups for WASI SDK tools
+filegroup(
+    name = "wasi_sdk_tools",
+    srcs = [
+        "@wasi_sdk//:clang",
+        "@wasi_sdk//:ar",
+        "@wasi_sdk//:wasm_ld",
+        "@wasi_sdk//:llvm_nm",
+        "@wasi_sdk//:llvm_objdump",
+        "@wasi_sdk//:llvm_strip",
+        "@wasi_sdk//:sysroot",
+        "@wasi_sdk//:clang_includes",
+    ],
+)
+
 # Minimal C++ toolchain for WASM platforms
 cc_toolchain(
     name = "wasm_cc_toolchain",
-    all_files = ":empty",
-    compiler_files = ":empty",
+    all_files = ":wasi_sdk_tools",
+    compiler_files = ":wasi_sdk_tools",
     dwp_files = ":empty",
-    linker_files = ":empty",
-    objcopy_files = ":empty",
-    strip_files = ":empty",
+    linker_files = ":wasi_sdk_tools",
+    objcopy_files = ":wasi_sdk_tools",
+    strip_files = ":wasi_sdk_tools",
     supports_param_files = False,
     toolchain_config = ":wasm_cc_toolchain_config",
     toolchain_identifier = "wasm-toolchain",
