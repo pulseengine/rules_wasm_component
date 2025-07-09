@@ -140,17 +140,37 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
     # Download WASI SDK
     url = repository_ctx.attr.url
     if not url:
-        # Example URL format - needs to be updated with actual WASI SDK URLs
+        # WASI SDK URL format: wasi-sdk-{VERSION.0}-{ARCH}-{OS}.tar.gz
+        # Convert platform format from "darwin_arm64" to "arm64-macos"
+        platform_mapping = {
+            "darwin_amd64": "x86_64-macos",
+            "darwin_arm64": "arm64-macos", 
+            "linux_amd64": "x86_64-linux",
+            "linux_arm64": "arm64-linux",
+            "windows_amd64": "x86_64-mingw",
+        }
+        
+        if platform not in platform_mapping:
+            fail("Unsupported platform: {}. Supported: {}".format(platform, platform_mapping.keys()))
+        
+        platform_suffix = platform_mapping[platform]
+        full_version = version + ".0" if "." not in version else version
+        
         url = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-{}/wasi-sdk-{}-{}.tar.gz".format(
             version,
-            version,
-            platform,
+            full_version,
+            platform_suffix,
         )
+    
+    # The archive contains the full version and platform in the prefix
+    strip_prefix = "wasi-sdk-{}-{}".format(full_version, platform_suffix)
     
     repository_ctx.download_and_extract(
         url = url,
-        stripPrefix = "wasi-sdk-{}".format(version),
+        stripPrefix = strip_prefix,
     )
+    
+    # No need for symlink, use direct paths in BUILD file
 
 def _create_wasi_sdk_build_file(repository_ctx):
     """Create BUILD file for WASI SDK"""
@@ -163,42 +183,42 @@ package(default_visibility = ["//visibility:public"])
 # File targets for WASI SDK tools
 filegroup(
     name = "clang",
-    srcs = ["wasi-sdk/bin/clang"],
+    srcs = ["bin/clang"],
 )
 
 filegroup(
     name = "ar",
-    srcs = ["wasi-sdk/bin/ar"],
+    srcs = ["bin/ar"],
 )
 
 filegroup(
     name = "wasm_ld",
-    srcs = ["wasi-sdk/bin/wasm-ld"],
+    srcs = ["bin/wasm-ld"],
 )
 
 filegroup(
     name = "llvm_nm",
-    srcs = ["wasi-sdk/bin/llvm-nm"],
+    srcs = ["bin/llvm-nm"],
 )
 
 filegroup(
     name = "llvm_objdump",
-    srcs = ["wasi-sdk/bin/llvm-objdump"],
+    srcs = ["bin/llvm-objdump"],
 )
 
 filegroup(
     name = "llvm_strip",
-    srcs = ["wasi-sdk/bin/llvm-strip"],
+    srcs = ["bin/llvm-strip"],
 )
 
 filegroup(
     name = "sysroot",
-    srcs = glob(["wasi-sdk/share/wasi-sysroot/**"], allow_empty = True),
+    srcs = glob(["share/wasi-sysroot/**"], allow_empty = True),
 )
 
 filegroup(
     name = "clang_includes",
-    srcs = glob(["wasi-sdk/lib/clang/*/include/**"], allow_empty = True),
+    srcs = glob(["lib/clang/*/include/**"], allow_empty = True),
 )
 
 # WASI SDK toolchain
@@ -211,7 +231,7 @@ wasi_sdk_toolchain(
     nm = ":llvm_nm",
     objdump = ":llvm_objdump",
     strip = ":llvm_strip",
-    sysroot = "wasi-sdk/share/wasi-sysroot",
+    sysroot = "share/wasi-sysroot",
     clang_version = "19",
 )
 

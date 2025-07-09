@@ -146,8 +146,8 @@
   "moduleExtensions": {
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "jr7JgqkV711je551IRoD7/QOE6nboPdpctMnA+ybKNw=",
-        "usagesDigest": "rP7EdtQ8HcOzvRGmzDPoLQIUnUX8AlCGvvh+YqhB7aw=",
+        "bzlTransitiveDigest": "edN/wpFR2B4nNnxKKEyYcwOm6E1wZ9p7IiHA7m/U+Zo=",
+        "usagesDigest": "MqRKnh0GcpJSi2+AjxZZCvJpir3bw7DnAbYGqnZVCIk=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -155,7 +155,7 @@
           "wasi_sdk": {
             "repoRuleId": "@@//toolchains:wasi_sdk_toolchain.bzl%wasi_sdk_repository",
             "attributes": {
-              "strategy": "system",
+              "strategy": "download",
               "version": "25",
               "url": "",
               "wasi_sdk_root": ""
@@ -173,7 +173,7 @@
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "jr7JgqkV711je551IRoD7/QOE6nboPdpctMnA+ybKNw=",
+        "bzlTransitiveDigest": "edN/wpFR2B4nNnxKKEyYcwOm6E1wZ9p7IiHA7m/U+Zo=",
         "usagesDigest": "rK5j2mosGdMFy46ZYU38LZaw5olpr5viCMc8zcMVAh0=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
