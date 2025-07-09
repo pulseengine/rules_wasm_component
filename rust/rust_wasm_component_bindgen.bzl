@@ -8,8 +8,8 @@ def _generate_wrapper_impl(ctx):
     """Generate a wrapper that includes both bindings and runtime shim"""
     out_file = ctx.actions.declare_file(ctx.label.name + ".rs")
 
-    # Use shell command to concatenate the shim and generated bindings
-    shim_content = """// Generated wrapper for WIT bindings
+    # Create wrapper content
+    wrapper_content = """// Generated wrapper for WIT bindings
 
 // Suppress clippy warnings for generated code
 #![allow(clippy::all)]
@@ -57,14 +57,11 @@ pub mod wit_bindgen {
 
 // Generated bindings follow:
 """
-
+    
+    # Concatenate wrapper content with generated bindings
     ctx.actions.run_shell(
-        command = """
-            echo '{}' > {} && 
-            echo '// Generated bindings:' >> {} && 
-            cat {} >> {}
-        """.format(
-            shim_content.replace("'", "'\"'\"'"),  # Escape single quotes
+        command = 'echo \'{}\' > {} && echo "" >> {} && cat {} >> {}'.format(
+            wrapper_content.replace("'", "'\"'\"'"),
             out_file.path,
             out_file.path,
             ctx.file.bindgen.path,
@@ -72,8 +69,8 @@ pub mod wit_bindgen {
         ),
         inputs = [ctx.file.bindgen],
         outputs = [out_file],
-        mnemonic = "GenerateWitWrapper",
-        progress_message = "Generating wrapper for {}".format(ctx.label),
+        mnemonic = "ConcatWitWrapper",
+        progress_message = "Concatenating wrapper for {}".format(ctx.label),
     )
 
     return [DefaultInfo(files = depset([out_file]))]

@@ -39,6 +39,8 @@ def _wit_bindgen_impl(ctx):
     # For Rust, use a custom runtime path to avoid dependency on wit_bindgen crate
     if ctx.attr.language == "rust":
         cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
+        # Make the export macro public so it can be used from separate crates
+        cmd_args.append("--pub-export-macro")
 
     # Add WIT files at the end (positional argument)
     for wit_file in wit_info.wit_files.to_list():

@@ -1,0 +1,35 @@
+"""Test that export! macro is accessible from user code"""
+
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+# Define a simple WIT interface
+wit_library(
+    name = "test_interface",
+    package_name = "test:export",
+    srcs = ["test.wit"],
+)
+
+# Build a component using rust_wasm_component_bindgen
+rust_wasm_component_bindgen(
+    name = "test_component",
+    srcs = ["src/lib.rs"],
+    wit = ":test_interface",
+)
+
+# Test that we can build it successfully
+# The test passes if the component builds without errors
+sh_test(
+    name = "export_macro_test",
+    srcs = ["test.sh"],
+    data = [":test_component"],
+)
+
+# Simple test to verify export macro is accessible
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+rust_binary(
+    name = "macro_accessibility_test",
+    srcs = ["macro_test.rs"],
+    deps = [":test_component_bindings"],
+    edition = "2021",
+)
