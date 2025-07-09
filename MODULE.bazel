@@ -12,7 +12,7 @@ bazel_dep(name = "rules_rust", version = "0.62.0")
 # Git override to use rules_rust fork with wasm32-wasip2 support  
 git_override(
     module_name = "rules_rust",
-    commit = "54f0df94dccdd34fa35a22adfb7b4626e85d99b4",  # Commit with WASI constraint system fixes
+    commit = "2a8c7b8e6fdf0dbdf1c4914f897e3f95f674e275",  # Latest commit with repository context fix
     remote = "https://github.com/avrabe/rules_rust.git",
 )
 
