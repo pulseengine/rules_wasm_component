@@ -16,28 +16,45 @@ def _wasm_cc_toolchain_config_impl(ctx):
     wasi_sdk_toolchain_type = "@rules_wasm_component//toolchains:wasi_sdk_toolchain_type"
     wasi_sdk = ctx.toolchains[wasi_sdk_toolchain_type] if wasi_sdk_toolchain_type in ctx.toolchains else None
     
-    # Use WASI SDK toolchain to get tool paths, fallback to hardcoded paths
-    wasi_sdk_path = "/usr/local/wasi-sdk/bin"  # Fallback path
-    
-    # TODO: Use wasi_sdk.clang.path etc once toolchain provides file paths
-    # For now, use hardcoded paths as the toolchain is providing labels, not paths
+    # Use WASI SDK toolchain to get tool paths
+    if wasi_sdk:
+        # Use the actual downloaded WASI SDK tools
+        # For C++ toolchains, we need to use the executable path
+        # The toolchain resolution provides the actual executable files
+        clang_path = wasi_sdk.clang.path
+        ar_path = wasi_sdk.ar.path
+        ld_path = wasi_sdk.ld.path
+        nm_path = wasi_sdk.nm.path
+        objdump_path = wasi_sdk.objdump.path
+        strip_path = wasi_sdk.strip.path
+        sysroot_path = wasi_sdk.sysroot
+    else:
+        # Fallback to hardcoded paths for development
+        wasi_sdk_path = "/usr/local/wasi-sdk/bin"
+        clang_path = wasi_sdk_path + "/clang"
+        ar_path = wasi_sdk_path + "/ar"
+        ld_path = wasi_sdk_path + "/wasm-ld"
+        nm_path = wasi_sdk_path + "/llvm-nm"
+        objdump_path = wasi_sdk_path + "/llvm-objdump"
+        strip_path = wasi_sdk_path + "/llvm-strip"
+        sysroot_path = "/usr/local/wasi-sdk/share/wasi-sysroot"
     
     tool_paths = [
         tool_path(
             name = "gcc",
-            path = wasi_sdk_path + "/clang",
+            path = clang_path,
         ),
         tool_path(
             name = "ld",
-            path = wasi_sdk_path + "/wasm-ld", 
+            path = ld_path,
         ),
         tool_path(
             name = "ar",
-            path = wasi_sdk_path + "/ar",
+            path = ar_path,
         ),
         tool_path(
             name = "cpp",
-            path = wasi_sdk_path + "/clang-cpp",
+            path = clang_path,  # Use clang for C++ preprocessing
         ),
         tool_path(
             name = "gcov",
@@ -45,15 +62,15 @@ def _wasm_cc_toolchain_config_impl(ctx):
         ),
         tool_path(
             name = "nm",
-            path = wasi_sdk_path + "/llvm-nm",
+            path = nm_path,
         ),
         tool_path(
             name = "objdump",
-            path = wasi_sdk_path + "/llvm-objdump",
+            path = objdump_path,
         ),
         tool_path(
             name = "strip",
-            path = wasi_sdk_path + "/llvm-strip",
+            path = strip_path,
         ),
     ]
 
@@ -99,8 +116,8 @@ def _wasm_cc_toolchain_config_impl(ctx):
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,
         cxx_builtin_include_directories = [
-            "/usr/local/wasi-sdk/share/wasi-sysroot/include",
-            "/usr/local/wasi-sdk/lib/clang/19/include",
+            sysroot_path + "/include",
+            sysroot_path + "/../lib/clang/19/include",
         ],
         toolchain_identifier = "wasm-toolchain",
         host_system_name = "local",
