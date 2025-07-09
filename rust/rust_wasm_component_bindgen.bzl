@@ -3,6 +3,7 @@
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load("//wit:wit_bindgen.bzl", "wit_bindgen")
 load(":rust_wasm_component.bzl", "rust_wasm_component")
+load(":transitions.bzl", "wasm_transition")
 
 def _generate_wrapper_impl(ctx):
     """Generate a wrapper that includes both bindings and runtime shim"""
@@ -85,6 +86,31 @@ _generate_wrapper = rule(
     },
 )
 
+def _wasm_rust_library_impl(ctx):
+    """Implementation of wasm_rust_library rule"""
+    # This rule just passes through to the rust_library target
+    # The transition is handled by the cfg attribute
+    target_info = ctx.attr.target[0]
+    
+    # Return the providers we need
+    providers = [target_info[DefaultInfo]]
+    
+    # Add Rust-specific providers if they exist
+    if CcInfo in target_info:
+        providers.append(target_info[CcInfo])
+        
+    return providers
+
+_wasm_rust_library = rule(
+    implementation = _wasm_rust_library_impl,
+    attrs = {
+        "target": attr.label(
+            cfg = wasm_transition,
+            doc = "rust_library target to build for WASM",
+        ),
+    },
+)
+
 def rust_wasm_component_bindgen(
         name,
         srcs,
@@ -150,11 +176,21 @@ def rust_wasm_component_bindgen(
 
     # Create a rust_library from the generated bindings
     bindings_lib = name + "_bindings"
+    bindings_lib_host = bindings_lib + "_host"
+    
+    # Create the bindings library for host platform first
     rust_library(
-        name = bindings_lib,
+        name = bindings_lib_host,
         srcs = [":" + wrapper_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
+        visibility = ["//visibility:private"],
+    )
+    
+    # Create a WASM-transitioned version of the bindings library
+    _wasm_rust_library(
+        name = bindings_lib,
+        target = ":" + bindings_lib_host,
         visibility = ["//visibility:public"],
     )
 
