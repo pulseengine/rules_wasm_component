@@ -55,7 +55,7 @@ wasi_sdk = use_extension("//wasm:extensions.bzl", "wasi_sdk")
 wasi_sdk.register(
     name = "wasi",
     strategy = "system",
-    version = "22",
+    version = "25",
 )
 use_repo(wasi_sdk, "wasi_sdk")
 

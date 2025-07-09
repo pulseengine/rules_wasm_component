@@ -15,7 +15,10 @@
       "Bash(gh run view:*)",
       "Bash(gh run list:*)",
       "Bash(grep:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Bash(gh run watch:*)",
+      "mcp__fetch__imageFetch",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

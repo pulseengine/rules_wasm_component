@@ -12,12 +12,15 @@ load(
 def _wasm_cc_toolchain_config_impl(ctx):
     """C++ toolchain config for WASM using WASI SDK"""
 
-    # Get WASI SDK from toolchain
-    wasi_sdk = ctx.toolchains["@rules_wasm_component//toolchains:wasi_sdk_toolchain_type"]
+    # Get WASI SDK from toolchain if available
+    wasi_sdk_toolchain_type = "@rules_wasm_component//toolchains:wasi_sdk_toolchain_type"
+    wasi_sdk = ctx.toolchains[wasi_sdk_toolchain_type] if wasi_sdk_toolchain_type in ctx.toolchains else None
     
-    # For now, use hardcoded paths as fallback until toolchain is fully integrated
-    # TODO: Use wasi_sdk.clang.path etc once toolchain is registered
-    wasi_sdk_path = "/usr/local/wasi-sdk/bin"
+    # Use WASI SDK toolchain to get tool paths, fallback to hardcoded paths
+    wasi_sdk_path = "/usr/local/wasi-sdk/bin"  # Fallback path
+    
+    # TODO: Use wasi_sdk.clang.path etc once toolchain provides file paths
+    # For now, use hardcoded paths as the toolchain is providing labels, not paths
     
     tool_paths = [
         tool_path(
@@ -115,5 +118,7 @@ wasm_cc_toolchain_config = rule(
     implementation = _wasm_cc_toolchain_config_impl,
     attrs = {},
     provides = [CcToolchainConfigInfo],
-    toolchains = ["@rules_wasm_component//toolchains:wasi_sdk_toolchain_type"],
+    toolchains = [
+        config_common.toolchain_type("@rules_wasm_component//toolchains:wasi_sdk_toolchain_type", mandatory = False),
+    ],
 )

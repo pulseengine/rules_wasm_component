@@ -99,7 +99,7 @@ def _wasi_sdk_extension_impl(module_ctx):
         wasi_sdk_repository(
             name = "wasi_sdk",
             strategy = "system",
-            version = "22",
+            version = "25",
         )
 
 # Module extension for WASI SDK
@@ -119,7 +119,7 @@ wasi_sdk = module_extension(
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download strategy)",
-                    default = "22",
+                    default = "25",
                 ),
                 "url": attr.string(
                     doc = "Custom download URL for WASI SDK (optional)",
