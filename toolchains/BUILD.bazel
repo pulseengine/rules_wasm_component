@@ -11,6 +11,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for WASI SDK
+toolchain_type(
+    name = "wasi_sdk_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for toolchain implementation
 bzl_library(
     name = "wasm_toolchain",

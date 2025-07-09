@@ -50,6 +50,17 @@ use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
 register_toolchains("@wasm_tools_toolchains//:all")
 
+# WASI SDK toolchain
+wasi_sdk = use_extension("//wasm:extensions.bzl", "wasi_sdk")
+wasi_sdk.register(
+    name = "wasi",
+    strategy = "system",
+    version = "22",
+)
+use_repo(wasi_sdk, "wasi_sdk")
+
+register_toolchains("@wasi_sdk//:all")
+
 # Register WASM C++ toolchains
 register_toolchains(
     "//toolchains:wasm32_wasip1_cc_toolchain",

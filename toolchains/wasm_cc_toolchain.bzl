@@ -10,60 +10,110 @@ load(
 )
 
 def _wasm_cc_toolchain_config_impl(ctx):
-    """Minimal C++ toolchain config for WASM that doesn't actually link"""
+    """C++ toolchain config for WASM using WASI SDK"""
 
-    # Define tool paths - these are dummy tools that won't actually be used
+    # Get WASI SDK from toolchain
+    wasi_sdk = ctx.toolchains["@rules_wasm_component//toolchains:wasi_sdk_toolchain_type"]
+    
+    # For now, use hardcoded paths as fallback until toolchain is fully integrated
+    # TODO: Use wasi_sdk.clang.path etc once toolchain is registered
+    wasi_sdk_path = "/usr/local/wasi-sdk/bin"
+    
     tool_paths = [
         tool_path(
             name = "gcc",
-            path = "/bin/true",  # Dummy path
+            path = wasi_sdk_path + "/clang",
         ),
         tool_path(
             name = "ld",
-            path = "/bin/true",  # Dummy path
+            path = wasi_sdk_path + "/wasm-ld", 
         ),
         tool_path(
             name = "ar",
-            path = "/bin/true",  # Dummy path
+            path = wasi_sdk_path + "/ar",
         ),
         tool_path(
             name = "cpp",
-            path = "/bin/true",  # Dummy path
+            path = wasi_sdk_path + "/clang-cpp",
         ),
         tool_path(
             name = "gcov",
-            path = "/bin/true",  # Dummy path
+            path = "/usr/bin/true",  # Not needed for WASM
         ),
         tool_path(
             name = "nm",
-            path = "/bin/true",  # Dummy path
+            path = wasi_sdk_path + "/llvm-nm",
         ),
         tool_path(
             name = "objdump",
-            path = "/bin/true",  # Dummy path
+            path = wasi_sdk_path + "/llvm-objdump",
         ),
         tool_path(
             name = "strip",
-            path = "/bin/true",  # Dummy path
+            path = wasi_sdk_path + "/llvm-strip",
         ),
     ]
 
+    # Define features with proper WASM flags
+    default_compile_flags_feature = feature(
+        name = "default_compile_flags",
+        enabled = True,
+        flag_sets = [
+            flag_set(
+                actions = ["c_compile", "cpp_compile"],
+                flag_groups = [
+                    flag_group(
+                        flags = [
+                            "--target=wasm32-wasi",
+                            "-fno-exceptions",
+                            "-fno-rtti",
+                            "-nostdlib",
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    
+    default_link_flags_feature = feature(
+        name = "default_link_flags", 
+        enabled = True,
+        flag_sets = [
+            flag_set(
+                actions = ["cpp_link_dynamic_library", "cpp_link_executable"],
+                flag_groups = [
+                    flag_group(
+                        flags = [
+                            "--target=wasm32-wasi",
+                            "-nostdlib",
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,
-        cxx_builtin_include_directories = [],
+        cxx_builtin_include_directories = [
+            "/usr/local/wasi-sdk/share/wasi-sysroot/include",
+            "/usr/local/wasi-sdk/lib/clang/19/include",
+        ],
         toolchain_identifier = "wasm-toolchain",
         host_system_name = "local",
-        target_system_name = "wasm",
+        target_system_name = "wasm32-wasi",
         target_cpu = "wasm32",
-        target_libc = "unknown",
+        target_libc = "wasi",
         compiler = "clang",
         abi_version = "unknown",
         abi_libc_version = "unknown",
         tool_paths = tool_paths,
+        features = [default_compile_flags_feature, default_link_flags_feature],
     )
 
 wasm_cc_toolchain_config = rule(
     implementation = _wasm_cc_toolchain_config_impl,
     attrs = {},
     provides = [CcToolchainConfigInfo],
+    toolchains = ["@rules_wasm_component//toolchains:wasi_sdk_toolchain_type"],
 )

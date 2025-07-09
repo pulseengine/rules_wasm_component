@@ -1,6 +1,7 @@
 """Module extensions for WebAssembly toolchain configuration"""
 
 load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
+load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
 
 def _wasm_toolchain_extension_impl(module_ctx):
     """Implementation of wasm_toolchain module extension"""
@@ -67,6 +68,64 @@ wasm_toolchain = module_extension(
                 ),
                 "wit_bindgen_url": attr.string(
                     doc = "Custom download URL for wit-bindgen (optional)",
+                ),
+            },
+        ),
+    },
+)
+
+def _wasi_sdk_extension_impl(module_ctx):
+    """Implementation of wasi_sdk module extension"""
+    
+    registrations = {}
+    
+    # Collect all SDK registrations
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+    
+    # Create SDK repositories
+    for name, registration in registrations.items():
+        wasi_sdk_repository(
+            name = name + "_sdk",
+            strategy = registration.strategy,
+            version = registration.version,
+            url = registration.url,
+            wasi_sdk_root = registration.wasi_sdk_root,
+        )
+    
+    # If no registrations, create default system SDK
+    if not registrations:
+        wasi_sdk_repository(
+            name = "wasi_sdk",
+            strategy = "system",
+            version = "22",
+        )
+
+# Module extension for WASI SDK
+wasi_sdk = module_extension(
+    implementation = _wasi_sdk_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this SDK registration",
+                    default = "wasi",
+                ),
+                "strategy": attr.string(
+                    doc = "SDK acquisition strategy: 'system' or 'download'",
+                    default = "system",
+                    values = ["system", "download"],
+                ),
+                "version": attr.string(
+                    doc = "Version to use (for download strategy)",
+                    default = "22",
+                ),
+                "url": attr.string(
+                    doc = "Custom download URL for WASI SDK (optional)",
+                ),
+                "wasi_sdk_root": attr.string(
+                    doc = "Path to system WASI SDK (for system strategy)",
                 ),
             },
         ),
