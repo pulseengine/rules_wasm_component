@@ -16,28 +16,24 @@ def _wasm_cc_toolchain_config_impl(ctx):
     wasi_sdk_toolchain_type = "@rules_wasm_component//toolchains:wasi_sdk_toolchain_type"
     wasi_sdk = ctx.toolchains[wasi_sdk_toolchain_type] if wasi_sdk_toolchain_type in ctx.toolchains else None
     
-    # Use WASI SDK toolchain to get tool paths
-    if wasi_sdk:
-        # Use the actual downloaded WASI SDK tools
-        # For C++ toolchains, we need to use the executable path
-        # The toolchain resolution provides the actual executable files
-        clang_path = wasi_sdk.clang.path
-        ar_path = wasi_sdk.ar.path
-        ld_path = wasi_sdk.ld.path
-        nm_path = wasi_sdk.nm.path
-        objdump_path = wasi_sdk.objdump.path
-        strip_path = wasi_sdk.strip.path
-        sysroot_path = wasi_sdk.sysroot
-    else:
-        # Fallback to hardcoded paths for development
-        wasi_sdk_path = "/usr/local/wasi-sdk/bin"
-        clang_path = wasi_sdk_path + "/clang"
-        ar_path = wasi_sdk_path + "/ar"
-        ld_path = wasi_sdk_path + "/wasm-ld"
-        nm_path = wasi_sdk_path + "/llvm-nm"
-        objdump_path = wasi_sdk_path + "/llvm-objdump"
-        strip_path = wasi_sdk_path + "/llvm-strip"
-        sysroot_path = "/usr/local/wasi-sdk/share/wasi-sysroot"
+    # Use the label paths - let Bazel resolve them via the filegroup dependencies
+    clang_file = ctx.attr._clang_file.files.to_list()[0]
+    ar_file = ctx.attr._ar_file.files.to_list()[0]
+    ld_file = ctx.attr._ld_file.files.to_list()[0]
+    nm_file = ctx.attr._nm_file.files.to_list()[0]
+    objdump_file = ctx.attr._objdump_file.files.to_list()[0]
+    strip_file = ctx.attr._strip_file.files.to_list()[0]
+    
+    # Debug: clang_file.path = external/+wasi_sdk+wasi_sdk/bin/clang
+    # Debug: clang_file.short_path = ../+wasi_sdk+wasi_sdk/bin/clang
+    
+    clang_path = clang_file.short_path.replace("../", "")
+    ar_path = ar_file.short_path.replace("../", "")
+    ld_path = ld_file.short_path.replace("../", "")
+    nm_path = nm_file.short_path.replace("../", "")
+    objdump_path = objdump_file.short_path.replace("../", "")
+    strip_path = strip_file.short_path.replace("../", "")
+    sysroot_path = "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot"
     
     tool_paths = [
         tool_path(
@@ -133,7 +129,32 @@ def _wasm_cc_toolchain_config_impl(ctx):
 
 wasm_cc_toolchain_config = rule(
     implementation = _wasm_cc_toolchain_config_impl,
-    attrs = {},
+    attrs = {
+        "_clang_file": attr.label(
+            default = "@wasi_sdk//:clang",
+            allow_single_file = True,
+        ),
+        "_ar_file": attr.label(
+            default = "@wasi_sdk//:ar",
+            allow_single_file = True,
+        ),
+        "_ld_file": attr.label(
+            default = "@wasi_sdk//:wasm_ld",
+            allow_single_file = True,
+        ),
+        "_nm_file": attr.label(
+            default = "@wasi_sdk//:llvm_nm",
+            allow_single_file = True,
+        ),
+        "_objdump_file": attr.label(
+            default = "@wasi_sdk//:llvm_objdump",
+            allow_single_file = True,
+        ),
+        "_strip_file": attr.label(
+            default = "@wasi_sdk//:llvm_strip",
+            allow_single_file = True,
+        ),
+    },
     provides = [CcToolchainConfigInfo],
     toolchains = [
         config_common.toolchain_type("@rules_wasm_component//toolchains:wasi_sdk_toolchain_type", mandatory = False),
