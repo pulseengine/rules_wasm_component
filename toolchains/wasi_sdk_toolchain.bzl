@@ -193,12 +193,12 @@ filegroup(
 
 filegroup(
     name = "sysroot",
-    srcs = glob(["wasi-sdk/share/wasi-sysroot/**"]),
+    srcs = glob(["wasi-sdk/share/wasi-sysroot/**"], allow_empty = True),
 )
 
 filegroup(
     name = "clang_includes",
-    srcs = glob(["wasi-sdk/lib/clang/*/include/**"]),
+    srcs = glob(["wasi-sdk/lib/clang/*/include/**"], allow_empty = True),
 )
 
 # WASI SDK toolchain
