@@ -1,7 +1,6 @@
 """Toolchain type definitions"""
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load(":wasm_cc_toolchain.bzl", "wasm_cc_toolchain_config")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -24,75 +23,5 @@ bzl_library(
     visibility = ["//visibility:public"],
 )
 
-# Minimal C++ toolchain config for WASM
-wasm_cc_toolchain_config(
-    name = "wasm_cc_toolchain_config",
-)
-
-# File group for dummy C++ tools (not actually used)
-filegroup(
-    name = "empty",
-    srcs = [],
-)
-
-# File groups for WASI SDK tools
-filegroup(
-    name = "wasi_sdk_tools",
-    srcs = [
-        "@wasi_sdk//:clang",
-        "@wasi_sdk//:ar",
-        "@wasi_sdk//:wasm_ld",
-        "@wasi_sdk//:llvm_nm",
-        "@wasi_sdk//:llvm_objdump",
-        "@wasi_sdk//:llvm_strip",
-        "@wasi_sdk//:sysroot",
-        "@wasi_sdk//:clang_includes",
-    ],
-)
-
-# Minimal C++ toolchain for WASM platforms
-cc_toolchain(
-    name = "wasm_cc_toolchain",
-    all_files = ":wasi_sdk_tools",
-    compiler_files = ":wasi_sdk_tools",
-    dwp_files = ":empty",
-    linker_files = ":wasi_sdk_tools",
-    objcopy_files = ":wasi_sdk_tools",
-    strip_files = ":wasi_sdk_tools",
-    supports_param_files = False,
-    toolchain_config = ":wasm_cc_toolchain_config",
-    toolchain_identifier = "wasm-toolchain",
-)
-
-# Toolchain for WASM32 WASIP1
-toolchain(
-    name = "wasm32_wasip1_cc_toolchain",
-    target_compatible_with = [
-        "@platforms//cpu:wasm32",
-        "@platforms//os:wasi",
-    ],
-    toolchain = ":wasm_cc_toolchain",
-    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
-)
-
-# Toolchain for WASM32 WASIP2
-toolchain(
-    name = "wasm32_wasip2_cc_toolchain",
-    target_compatible_with = [
-        "@platforms//cpu:wasm32",
-        "@platforms//os:wasi",
-    ],
-    toolchain = ":wasm_cc_toolchain",
-    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
-)
-
-# Toolchain for WASM32 unknown
-toolchain(
-    name = "wasm32_unknown_cc_toolchain",
-    target_compatible_with = [
-        "@platforms//cpu:wasm32",
-        "@platforms//os:none",
-    ],
-    toolchain = ":wasm_cc_toolchain",
-    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
-)
+# Note: C++ toolchain configuration has been moved to @wasi_sdk repository
+# The cc_toolchain is now registered via @wasi_sdk//:cc_toolchain in MODULE.bazel

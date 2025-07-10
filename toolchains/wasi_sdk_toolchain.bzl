@@ -177,6 +177,8 @@ def _create_wasi_sdk_build_file(repository_ctx):
     
     build_content = '''
 load("@rules_wasm_component//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_toolchain")
+load("@rules_wasm_component//toolchains:wasm_cc_toolchain.bzl", "wasm_cc_toolchain_config")
+load("@rules_cc//cc:defs.bzl", "cc_toolchain")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -219,6 +221,52 @@ filegroup(
 filegroup(
     name = "clang_includes",
     srcs = glob(["lib/clang/*/include/**"], allow_empty = True),
+)
+
+# All tools filegroup for cc_toolchain
+filegroup(
+    name = "all_tools",
+    srcs = [
+        ":clang",
+        ":ar",
+        ":wasm_ld",
+        ":llvm_nm",
+        ":llvm_objdump",
+        ":llvm_strip",
+        ":sysroot",
+        ":clang_includes",
+    ],
+)
+
+# CC toolchain config
+wasm_cc_toolchain_config(
+    name = "wasm_cc_toolchain_config",
+)
+
+# CC toolchain
+cc_toolchain(
+    name = "wasm_cc_toolchain",
+    all_files = ":all_tools",
+    compiler_files = ":all_tools",
+    dwp_files = ":all_tools",
+    linker_files = ":all_tools",
+    objcopy_files = ":all_tools",
+    strip_files = ":all_tools",
+    supports_param_files = False,
+    toolchain_config = ":wasm_cc_toolchain_config",
+    toolchain_identifier = "wasm-toolchain",
+)
+
+# CC toolchain registration
+toolchain(
+    name = "cc_toolchain",
+    toolchain = ":wasm_cc_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+    exec_compatible_with = [],
+    target_compatible_with = [
+        "@platforms//cpu:wasm32",
+        "@platforms//os:wasi",
+    ],
 )
 
 # WASI SDK toolchain
