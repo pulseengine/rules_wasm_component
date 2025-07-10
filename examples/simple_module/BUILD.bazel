@@ -1,0 +1,14 @@
+"""Simple WASM module example (no component conversion)"""
+
+load("@rules_rust//rust:defs.bzl", "rust_shared_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Simple Rust library compiled to WASM without component conversion
+# This avoids the Rust toolchain issues and produces a working WASM module
+rust_shared_library(
+    name = "simple_wasm",
+    srcs = ["src/lib.rs"],
+    edition = "2021",
+    deps = [],
+)

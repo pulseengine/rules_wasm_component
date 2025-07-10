@@ -38,3 +38,4 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
+cc_library(name="test_archive",srcs=["test_cpp_archive.cpp"],target_compatible_with=["@platforms//cpu:wasm32","@platforms//os:wasi"])

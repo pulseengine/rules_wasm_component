@@ -175,6 +175,24 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
 def _create_wasi_sdk_build_file(repository_ctx):
     """Create BUILD file for WASI SDK"""
     
+    # Create a tools directory with proper symlinks for Rust builds
+    repository_ctx.execute(["mkdir", "-p", "tools"])
+    
+    # Create symlinks in the tools directory that Rust can find
+    tools = [
+        ("bin/ar", "tools/ar"),
+        ("bin/clang", "tools/clang"),
+        ("bin/clang++", "tools/clang++"),
+        ("bin/wasm-ld", "tools/wasm-ld"),
+        ("bin/llvm-nm", "tools/llvm-nm"),
+        ("bin/llvm-objdump", "tools/llvm-objdump"),
+        ("bin/llvm-strip", "tools/llvm-strip"),
+    ]
+    
+    for src, dst in tools:
+        if repository_ctx.path(src).exists:
+            repository_ctx.symlink(src, dst)
+    
     build_content = '''
 load("@rules_wasm_component//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_toolchain")
 load("@rules_wasm_component//toolchains:wasm_cc_toolchain.bzl", "wasm_cc_toolchain_config")
@@ -223,6 +241,12 @@ filegroup(
     srcs = glob(["lib/clang/*/include/**"], allow_empty = True),
 )
 
+# Tools directory for Rust builds
+filegroup(
+    name = "tools",
+    srcs = glob(["tools/*"], allow_empty = True),
+)
+
 # All tools filegroup for cc_toolchain
 filegroup(
     name = "all_tools",
@@ -235,6 +259,7 @@ filegroup(
         ":llvm_strip",
         ":sysroot",
         ":clang_includes",
+        ":tools",
     ],
 )
 

@@ -18,7 +18,8 @@
       "Bash(gh issue view:*)",
       "Bash(gh run watch:*)",
       "mcp__fetch__imageFetch",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": []
   }

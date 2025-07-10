@@ -1,6 +1,6 @@
 """Rust WASM component with WIT bindgen integration"""
 
-load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_common")
 load("//wit:wit_bindgen.bzl", "wit_bindgen")
 load(":rust_wasm_component.bzl", "rust_wasm_component")
 load(":transitions.bzl", "wasm_transition")
@@ -92,12 +92,31 @@ def _wasm_rust_library_impl(ctx):
     # The transition is handled by the cfg attribute
     target_info = ctx.attr.target[0]
     
-    # Return the providers we need
-    providers = [target_info[DefaultInfo]]
+    # Collect providers to forward
+    providers = []
     
-    # Add Rust-specific providers if they exist
+    # Forward DefaultInfo (always needed)
+    if DefaultInfo in target_info:
+        providers.append(target_info[DefaultInfo])
+    
+    # Forward CcInfo if present (Rust libraries often provide this)
     if CcInfo in target_info:
         providers.append(target_info[CcInfo])
+    
+    # Forward Rust-specific providers using the correct rust_common API
+    if rust_common.crate_info in target_info:
+        providers.append(target_info[rust_common.crate_info])
+    
+    if rust_common.dep_info in target_info:
+        providers.append(target_info[rust_common.dep_info])
+    
+    # Handle test crate case
+    if rust_common.test_crate_info in target_info:
+        providers.append(target_info[rust_common.test_crate_info])
+    
+    # Forward other common providers
+    if hasattr(target_info, 'instrumented_files'):
+        providers.append(target_info.instrumented_files)
         
     return providers
 
@@ -199,6 +218,7 @@ def rust_wasm_component_bindgen(
         name = name,
         srcs = srcs,
         deps = deps + [":" + bindings_lib],
+        wit_bindgen = wit,  # Pass the WIT library for component detection
         crate_features = crate_features,
         rustc_flags = rustc_flags,
         profiles = profiles,

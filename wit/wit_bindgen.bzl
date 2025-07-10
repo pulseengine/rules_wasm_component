@@ -28,9 +28,9 @@ def _wit_bindgen_impl(ctx):
     # Build command arguments for new wit-bindgen CLI
     cmd_args = [ctx.attr.language]
 
-    # Add world if specified using --with syntax
+    # Add world if specified using --world syntax
     if wit_info.world_name:
-        cmd_args.extend(["--with", wit_info.world_name])
+        cmd_args.extend(["--world", wit_info.world_name])
 
     # Add additional options
     if ctx.attr.options:

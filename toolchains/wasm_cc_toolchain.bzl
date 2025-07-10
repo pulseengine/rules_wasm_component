@@ -2,6 +2,8 @@
 
 load(
     "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
+    "env_entry",
+    "env_set", 
     "feature",
     "flag_group",
     "flag_set",
@@ -72,7 +74,37 @@ def _wasm_cc_toolchain_config_impl(ctx):
                             "-fno-rtti",
                             "-nostdlib",
                             "--sysroot=external/+wasi_sdk+wasi_sdk/share/wasi-sysroot",
+                            # Use -isystem for WASI SDK includes to allow absolute paths
+                            "-isystem", "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include",
+                            "-isystem", "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include/wasm32-wasi",
+                            "-isystem", "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1",
+                            "-isystem", "external/+wasi_sdk+wasi_sdk/lib/clang/19/include",
                         ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    
+    # Add environment variables for Rust builds
+    env_feature = feature(
+        name = "env",
+        enabled = True,
+        env_sets = [
+            env_set(
+                actions = ["c_compile", "cpp_compile", "cpp_link_dynamic_library", "cpp_link_executable"],
+                env_entries = [
+                    env_entry(
+                        key = "AR",
+                        value = "external/+wasi_sdk+wasi_sdk/bin/ar",
+                    ),
+                    env_entry(
+                        key = "CC",
+                        value = "external/+wasi_sdk+wasi_sdk/bin/clang",
+                    ),
+                    env_entry(
+                        key = "LD",
+                        value = "external/+wasi_sdk+wasi_sdk/bin/wasm-ld",
                     ),
                 ],
             ),
@@ -97,11 +129,19 @@ def _wasm_cc_toolchain_config_impl(ctx):
             ),
         ],
     )
+    
+    # Disable layering check to allow absolute paths in system headers
+    no_layering_check_feature = feature(
+        name = "no_layering_check",
+        enabled = True,
+    )
 
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,
         cxx_builtin_include_directories = [
             "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include",
+            "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include/wasm32-wasi",
+            "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1",
             "external/+wasi_sdk+wasi_sdk/lib/clang/19/include",
         ],
         builtin_sysroot = None,
@@ -114,7 +154,7 @@ def _wasm_cc_toolchain_config_impl(ctx):
         abi_version = "unknown",
         abi_libc_version = "unknown",
         tool_paths = tool_paths,
-        features = [default_compile_flags_feature, default_link_flags_feature],
+        features = [default_compile_flags_feature, default_link_flags_feature, env_feature, no_layering_check_feature],
     )
 
 wasm_cc_toolchain_config = rule(

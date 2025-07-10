@@ -1,14 +1,16 @@
-// Basic hello world WASM component
+// Basic hello world WASM component using generated bindings
 
-// TODO: Include wit-bindgen generated code
-// wit_bindgen::generate!("hello");
+// Import the generated WIT bindings
+use hello_component_bindings::exports::hello::interfaces::greeting::Guest;
 
-// Dummy implementation for now
-#[no_mangle]
-pub extern "C" fn hello(_name_ptr: *const u8, _name_len: usize) -> u32 {
-    // In a real implementation, this would use wit-bindgen
-    // to properly handle the WIT interface
-    
-    // For now, just return a success code
-    0
+// Component implementation
+struct Component;
+
+impl Guest for Component {
+    fn hello(name: String) -> String {
+        format!("Hello, {name}!")
+    }
 }
+
+// Export the component implementation
+hello_component_bindings::export!(Component with_types_in hello_component_bindings);
