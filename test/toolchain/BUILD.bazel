@@ -10,3 +10,13 @@ py_test(
         "requires-network",
     ],  # Requires internet access
 )
+
+# Simple C++ binary to test the toolchain
+cc_binary(
+    name = "test_cc",
+    srcs = ["test_cc.cpp"],
+    target_compatible_with = [
+        "@platforms//cpu:wasm32",
+        "@platforms//os:wasi",
+    ],
+)
