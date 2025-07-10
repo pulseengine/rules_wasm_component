@@ -18,6 +18,7 @@ git_override(
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "rules_cc", version = "0.0.15")
 
 # Development dependencies
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
@@ -61,9 +62,5 @@ use_repo(wasi_sdk, "wasi_sdk")
 
 register_toolchains("@wasi_sdk//:all")
 
-# Register WASM C++ toolchains
-register_toolchains(
-    "//toolchains:wasm32_wasip1_cc_toolchain",
-    "//toolchains:wasm32_wasip2_cc_toolchain",
-    "//toolchains:wasm32_unknown_cc_toolchain",
-)
+# Register WASM C++ toolchains from WASI SDK
+register_toolchains("@wasi_sdk//:cc_toolchain")
