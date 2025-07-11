@@ -60,8 +60,9 @@ pub mod wit_bindgen {
 """
     
     # Concatenate wrapper content with generated bindings
+    # Also remove duplicate 'pub use' statements that wit-bindgen might generate
     ctx.actions.run_shell(
-        command = 'echo \'{}\' > {} && echo "" >> {} && cat {} >> {}'.format(
+        command = '''echo '{}' > {} && echo "" >> {} && cat {} | sed 's/^pub use __export_.*_cabi;$//' >> {}'''.format(
             wrapper_content.replace("'", "'\"'\"'"),
             out_file.path,
             out_file.path,
