@@ -202,7 +202,6 @@ def rust_wasm_component(
             srcs = all_srcs,
             crate_root = crate_root,
             deps = all_deps,
-            data = ["@wasi_sdk//:all_tools"],  # Include WASI SDK tools as data
             edition = "2021",
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags,

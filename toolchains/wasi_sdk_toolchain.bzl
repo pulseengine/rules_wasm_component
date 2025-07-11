@@ -195,8 +195,8 @@ def _create_wasi_sdk_build_file(repository_ctx):
     
     build_content = '''
 load("@rules_wasm_component//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_toolchain")
-load("@rules_wasm_component//toolchains:wasm_cc_toolchain.bzl", "wasm_cc_toolchain_config")
 load("@rules_cc//cc:defs.bzl", "cc_toolchain")
+load(":cc_toolchain_config.bzl", "wasm_cc_toolchain_config")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -328,6 +328,97 @@ alias(
 '''
     
     repository_ctx.file("BUILD.bazel", build_content)
+    
+    # Create cc_toolchain_config.bzl with proper path resolution
+    cc_config_content = '''
+load(
+    "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
+    "feature",
+    "flag_group", 
+    "flag_set",
+    "tool_path",
+)
+
+def _wasm_cc_toolchain_config_impl(ctx):
+    """C++ toolchain config for WASM using WASI SDK"""
+    
+    tool_paths = [
+        tool_path(name = "gcc", path = "bin/clang"),
+        tool_path(name = "ld", path = "bin/wasm-ld"),
+        tool_path(name = "ar", path = "bin/ar"),
+        tool_path(name = "cpp", path = "bin/clang"),
+        tool_path(name = "gcov", path = "/usr/bin/false"),
+        tool_path(name = "nm", path = "bin/llvm-nm"),
+        tool_path(name = "objdump", path = "bin/llvm-objdump"),
+        tool_path(name = "strip", path = "bin/llvm-strip"),
+    ]
+    
+    default_compile_flags_feature = feature(
+        name = "default_compile_flags",
+        enabled = True,
+        flag_sets = [
+            flag_set(
+                actions = ["c_compile", "cpp_compile"],
+                flag_groups = [
+                    flag_group(
+                        flags = [
+                            "--target=wasm32-wasi",
+                            "-fno-exceptions",
+                            "-nostdlib",
+                            "--sysroot", "share/wasi-sysroot",
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    
+    default_link_flags_feature = feature(
+        name = "default_link_flags",
+        enabled = True,
+        flag_sets = [
+            flag_set(
+                actions = ["cpp_link_dynamic_library", "cpp_link_executable"],
+                flag_groups = [
+                    flag_group(
+                        flags = [
+                            "--target=wasm32-wasi",
+                            "-nostdlib",
+                            "--sysroot", "share/wasi-sysroot",
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    
+    return cc_common.create_cc_toolchain_config_info(
+        ctx = ctx,
+        toolchain_identifier = "wasm-toolchain",
+        host_system_name = "local",
+        target_system_name = "wasm32-wasi",
+        target_cpu = "wasm32",
+        target_libc = "wasi",
+        compiler = "clang",
+        abi_version = "unknown",
+        abi_libc_version = "unknown",
+        tool_paths = tool_paths,
+        cxx_builtin_include_directories = [
+            "share/wasi-sysroot/include",
+            "share/wasi-sysroot/include/wasm32-wasi",
+            "lib/clang/19/include",
+        ],
+        features = [default_compile_flags_feature, default_link_flags_feature],
+    )
+
+wasm_cc_toolchain_config = rule(
+    implementation = _wasm_cc_toolchain_config_impl,
+    attrs = {},
+    provides = [CcToolchainConfigInfo],
+)
+'''
+    
+    repository_ctx.file("cc_toolchain_config.bzl", cc_config_content)
 
 wasi_sdk_repository = repository_rule(
     implementation = _wasi_sdk_repository_impl,

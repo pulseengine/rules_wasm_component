@@ -127,6 +127,9 @@ _wasm_rust_library = rule(
             cfg = wasm_transition,
             doc = "rust_library target to build for WASM",
         ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
     },
 )
 
@@ -210,7 +213,7 @@ def rust_wasm_component_bindgen(
     _wasm_rust_library(
         name = bindings_lib,
         target = ":" + bindings_lib_host,
-        visibility = ["//visibility:public"],
+        visibility = ["//visibility:private"],
     )
 
     # Build the WASM component with user sources depending on bindings

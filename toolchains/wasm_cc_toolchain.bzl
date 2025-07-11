@@ -14,8 +14,8 @@ load(
 def _wasm_cc_toolchain_config_impl(ctx):
     """C++ toolchain config for WASM using WASI SDK"""
 
-    # Simple approach: use paths relative to the external repository
-    # These paths are relative to the @wasi_sdk repository root
+    # The tools are in the same repository as the cc_toolchain
+    # When the cc_toolchain is in @wasi_sdk, these paths will be relative to that
     clang_path = "bin/clang"
     ar_path = "bin/ar"
     ld_path = "bin/wasm-ld"

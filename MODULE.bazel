@@ -12,7 +12,7 @@ bazel_dep(name = "rules_rust", version = "0.62.0")
 # Git override to use rules_rust fork with wasm32-wasip2 support  
 git_override(
     module_name = "rules_rust",
-    commit = "df1e8ac6",  # Use empty sources list for WASI allocator_library
+    commit = "1945773a",  # Fixed rust_toolchain for WASI SDK tools
     remote = "https://github.com/avrabe/rules_rust.git",
 )
 
@@ -60,7 +60,8 @@ wasi_sdk.register(
 )
 use_repo(wasi_sdk, "wasi_sdk")
 
-register_toolchains("@wasi_sdk//:all")
-
-# Register WASM C++ toolchains from WASI SDK
-register_toolchains("@wasi_sdk//:cc_toolchain")
+# Register both WASI SDK and C++ toolchains
+register_toolchains(
+    "@wasi_sdk//:wasi_sdk_toolchain",
+    "@wasi_sdk//:cc_toolchain",
+)
