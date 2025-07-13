@@ -20,6 +20,9 @@ def _wasm_toolchain_extension_impl(module_ctx):
             strategy = registration.strategy,
             version = registration.version,
             git_commit = registration.git_commit,
+            wasm_tools_commit = registration.wasm_tools_commit,
+            wac_commit = registration.wac_commit,
+            wit_bindgen_commit = registration.wit_bindgen_commit,
             wasm_tools_url = registration.wasm_tools_url,
             wac_url = registration.wac_url,
             wit_bindgen_url = registration.wit_bindgen_url,
@@ -32,6 +35,9 @@ def _wasm_toolchain_extension_impl(module_ctx):
             strategy = "system",
             version = "1.235.0",
             git_commit = "main",
+            wasm_tools_commit = "",
+            wac_commit = "",
+            wit_bindgen_commit = "",
             wasm_tools_url = "",
             wac_url = "",
             wit_bindgen_url = "",
@@ -48,17 +54,26 @@ wasm_toolchain = module_extension(
                     default = "wasm_tools",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'system', 'download', or 'build'",
+                    doc = "Tool acquisition strategy: 'system', 'download', 'build', or 'hybrid'",
                     default = "system",
-                    values = ["system", "download", "build"],
+                    values = ["system", "download", "build", "hybrid"],
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download/build strategies)",
                     default = "1.235.0",
                 ),
                 "git_commit": attr.string(
-                    doc = "Git commit/tag to build from (for build strategy)",
+                    doc = "Git commit/tag to build from (for build strategy) - fallback for all tools",
                     default = "main",
+                ),
+                "wasm_tools_commit": attr.string(
+                    doc = "Git commit/tag for wasm-tools (overrides git_commit)",
+                ),
+                "wac_commit": attr.string(
+                    doc = "Git commit/tag for wac (overrides git_commit)",
+                ),
+                "wit_bindgen_commit": attr.string(
+                    doc = "Git commit/tag for wit-bindgen (overrides git_commit)",
                 ),
                 "wasm_tools_url": attr.string(
                     doc = "Custom download URL for wasm-tools (optional)",
