@@ -89,8 +89,10 @@ def _wasm_toolchain_repository_impl(repository_ctx):
         _setup_downloaded_tools(repository_ctx)
     elif strategy == "build":
         _setup_built_tools(repository_ctx)
+    elif strategy == "hybrid":
+        _setup_hybrid_tools(repository_ctx)
     else:
-        fail("Unknown strategy: {}. Must be 'system', 'download', or 'build'".format(strategy))
+        fail("Unknown strategy: {}. Must be 'system', 'download', 'build', or 'hybrid'".format(strategy))
 
     # Create BUILD files for all strategies
     _create_build_files(repository_ctx)
@@ -184,22 +186,42 @@ def _setup_built_tools(repository_ctx):
 
     git_commit = repository_ctx.attr.git_commit
 
+    # Get per-tool commits or use fallback
+    wasm_tools_commit = repository_ctx.attr.wasm_tools_commit or git_commit
+    wac_commit = repository_ctx.attr.wac_commit or git_commit
+    wit_bindgen_commit = repository_ctx.attr.wit_bindgen_commit or git_commit
+
+    # Get custom URLs or use defaults
+    wasm_tools_url = repository_ctx.attr.wasm_tools_url or "https://github.com/bytecodealliance/wasm-tools.git"
+    wac_url = repository_ctx.attr.wac_url or "https://github.com/bytecodealliance/wac.git"  
+    wit_bindgen_url = repository_ctx.attr.wit_bindgen_url or "https://github.com/bytecodealliance/wit-bindgen.git"
+
     # Clone and build wasm-tools
-    repository_ctx.execute([
+    result = repository_ctx.execute([
         "git",
         "clone",
-        "--depth=1",
-        "--branch=" + git_commit,
-        "https://github.com/bytecodealliance/wasm-tools.git",
+        wasm_tools_url,
         "wasm-tools-src",
     ])
+    if result.return_code == 0:
+        result = repository_ctx.execute([
+            "git",
+            "-C",
+            "wasm-tools-src",
+            "checkout",
+            wasm_tools_commit,
+        ])
+    if result.return_code != 0:
+        fail("Failed to clone wasm-tools from {}: {}".format(wasm_tools_url, result.stderr))
 
-    repository_ctx.execute([
+    result = repository_ctx.execute([
         "cargo",
         "build",
         "--release",
         "--manifest-path=wasm-tools-src/Cargo.toml",
     ])
+    if result.return_code != 0:
+        fail("Failed to build wasm-tools: {}".format(result.stderr))
 
     repository_ctx.execute([
         "cp",
@@ -208,21 +230,31 @@ def _setup_built_tools(repository_ctx):
     ])
 
     # Clone and build wac
-    repository_ctx.execute([
+    result = repository_ctx.execute([
         "git",
         "clone",
-        "--depth=1",
-        "--branch=" + git_commit,
-        "https://github.com/bytecodealliance/wac.git",
+        wac_url,
         "wac-src",
     ])
+    if result.return_code == 0:
+        result = repository_ctx.execute([
+            "git",
+            "-C",
+            "wac-src",
+            "checkout",
+            wac_commit,
+        ])
+    if result.return_code != 0:
+        fail("Failed to clone wac from {}: {}".format(wac_url, result.stderr))
 
-    repository_ctx.execute([
+    result = repository_ctx.execute([
         "cargo",
         "build",
         "--release",
         "--manifest-path=wac-src/Cargo.toml",
     ])
+    if result.return_code != 0:
+        fail("Failed to build wac: {}".format(result.stderr))
 
     repository_ctx.execute([
         "cp",
@@ -231,27 +263,171 @@ def _setup_built_tools(repository_ctx):
     ])
 
     # Clone and build wit-bindgen
-    repository_ctx.execute([
+    result = repository_ctx.execute([
         "git",
         "clone",
-        "--depth=1",
-        "--branch=" + git_commit,
-        "https://github.com/bytecodealliance/wit-bindgen.git",
+        wit_bindgen_url,
         "wit-bindgen-src",
     ])
+    if result.return_code == 0:
+        result = repository_ctx.execute([
+            "git",
+            "-C",
+            "wit-bindgen-src",
+            "checkout",
+            wit_bindgen_commit,
+        ])
+    if result.return_code != 0:
+        fail("Failed to clone wit-bindgen from {}: {}".format(wit_bindgen_url, result.stderr))
 
-    repository_ctx.execute([
+    result = repository_ctx.execute([
         "cargo",
         "build",
         "--release",
         "--manifest-path=wit-bindgen-src/Cargo.toml",
     ])
+    if result.return_code != 0:
+        fail("Failed to build wit-bindgen: {}".format(result.stderr))
 
     repository_ctx.execute([
         "cp",
         "wit-bindgen-src/target/release/wit-bindgen",
         "wit-bindgen",
     ])
+
+def _setup_hybrid_tools(repository_ctx):
+    """Setup tools using hybrid build/download strategy"""
+    
+    # Determine which tools to build vs download based on custom URLs/commits
+    build_wasm_tools = repository_ctx.attr.wasm_tools_url != "" or repository_ctx.attr.wasm_tools_commit != ""
+    build_wac = repository_ctx.attr.wac_url != "" or repository_ctx.attr.wac_commit != ""
+    build_wit_bindgen = repository_ctx.attr.wit_bindgen_url != "" or repository_ctx.attr.wit_bindgen_commit != ""
+    
+    # Get commits and URLs for tools we're building
+    git_commit = repository_ctx.attr.git_commit
+    wasm_tools_commit = repository_ctx.attr.wasm_tools_commit or git_commit
+    wac_commit = repository_ctx.attr.wac_commit or git_commit
+    wit_bindgen_commit = repository_ctx.attr.wit_bindgen_commit or git_commit
+    
+    wasm_tools_url = repository_ctx.attr.wasm_tools_url or "https://github.com/bytecodealliance/wasm-tools.git"
+    wac_url = repository_ctx.attr.wac_url or "https://github.com/bytecodealliance/wac.git"
+    wit_bindgen_url = repository_ctx.attr.wit_bindgen_url or "https://github.com/bytecodealliance/wit-bindgen.git"
+    
+    # Build or download wasm-tools
+    if build_wasm_tools:
+        result = repository_ctx.execute([
+            "git", "clone", wasm_tools_url, "wasm-tools-src",
+        ])
+        if result.return_code == 0:
+            result = repository_ctx.execute([
+                "git", "-C", "wasm-tools-src", "checkout", wasm_tools_commit,
+            ])
+        if result.return_code != 0:
+            fail("Failed to clone wasm-tools from {}: {}".format(wasm_tools_url, result.stderr))
+        
+        result = repository_ctx.execute([
+            "cargo", "build", "--release", "--manifest-path=wasm-tools-src/Cargo.toml",
+        ])
+        if result.return_code != 0:
+            fail("Failed to build wasm-tools: {}".format(result.stderr))
+        
+        repository_ctx.execute(["cp", "wasm-tools-src/target/release/wasm-tools", "wasm-tools"])
+    else:
+        _download_wasm_tools(repository_ctx)
+    
+    # Build or download wac
+    if build_wac:
+        result = repository_ctx.execute([
+            "git", "clone", wac_url, "wac-src",
+        ])
+        if result.return_code == 0:
+            result = repository_ctx.execute([
+                "git", "-C", "wac-src", "checkout", wac_commit,
+            ])
+        if result.return_code != 0:
+            fail("Failed to clone wac from {}: {}".format(wac_url, result.stderr))
+        
+        result = repository_ctx.execute([
+            "cargo", "build", "--release", "--manifest-path=wac-src/Cargo.toml",
+        ])
+        if result.return_code != 0:
+            fail("Failed to build wac: {}".format(result.stderr))
+        
+        repository_ctx.execute(["cp", "wac-src/target/release/wac", "wac"])
+    else:
+        _download_wac(repository_ctx)
+    
+    # Build or download wit-bindgen
+    if build_wit_bindgen:
+        result = repository_ctx.execute([
+            "git", "clone", wit_bindgen_url, "wit-bindgen-src",
+        ])
+        if result.return_code == 0:
+            result = repository_ctx.execute([
+                "git", "-C", "wit-bindgen-src", "checkout", wit_bindgen_commit,
+            ])
+        if result.return_code != 0:
+            fail("Failed to clone wit-bindgen from {}: {}".format(wit_bindgen_url, result.stderr))
+        
+        result = repository_ctx.execute([
+            "cargo", "build", "--release", "--manifest-path=wit-bindgen-src/Cargo.toml",
+        ])
+        if result.return_code != 0:
+            fail("Failed to build wit-bindgen: {}".format(result.stderr))
+        
+        repository_ctx.execute(["cp", "wit-bindgen-src/target/release/wit-bindgen", "wit-bindgen"])
+    else:
+        _download_wit_bindgen(repository_ctx)
+
+def _download_wasm_tools(repository_ctx):
+    """Download wasm-tools only"""
+    platform = _detect_host_platform(repository_ctx)
+    version = repository_ctx.attr.version
+    platform_suffix = _get_platform_suffix(platform)
+    
+    wasm_tools_url = "https://github.com/bytecodealliance/wasm-tools/releases/download/v{}/wasm-tools-{}-{}.tar.gz".format(
+        version, version, platform_suffix,
+    )
+    
+    repository_ctx.download_and_extract(
+        url = wasm_tools_url,
+        stripPrefix = "wasm-tools-{}-{}".format(version, platform_suffix),
+    )
+
+def _download_wac(repository_ctx):
+    """Download wac only"""
+    platform = _detect_host_platform(repository_ctx)
+    platform_suffix = _get_platform_suffix(platform)
+    
+    wac_version = "0.7.0"
+    wac_platform_map = {
+        "aarch64-macos": "aarch64-apple-darwin",
+        "x86_64-macos": "x86_64-apple-darwin", 
+        "x86_64-linux": "x86_64-unknown-linux-musl",
+        "aarch64-linux": "aarch64-unknown-linux-musl",
+        "x86_64-windows": "x86_64-pc-windows-gnu",
+    }
+    wac_platform = wac_platform_map.get(platform_suffix, "x86_64-unknown-linux-musl")
+    wac_url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-cli-{}".format(
+        wac_version, wac_platform,
+    )
+    
+    repository_ctx.download(url = wac_url, output = "wac", executable = True)
+
+def _download_wit_bindgen(repository_ctx):
+    """Download wit-bindgen only"""
+    platform = _detect_host_platform(repository_ctx)
+    platform_suffix = _get_platform_suffix(platform)
+    
+    wit_bindgen_version = "0.43.0"
+    wit_bindgen_url = "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{}/wit-bindgen-{}-{}.tar.gz".format(
+        wit_bindgen_version, wit_bindgen_version, platform_suffix,
+    )
+    
+    repository_ctx.download_and_extract(
+        url = wit_bindgen_url,
+        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, platform_suffix),
+    )
 
 def _get_platform_suffix(platform):
     """Get platform suffix for download URLs"""
@@ -324,17 +500,29 @@ wasm_toolchain_repository = repository_rule(
     implementation = _wasm_toolchain_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Tool acquisition strategy: 'system', 'download', or 'build'",
+            doc = "Tool acquisition strategy: 'system', 'download', 'build', or 'hybrid'",
             default = "system",
-            values = ["system", "download", "build"],
+            values = ["system", "download", "build", "hybrid"],
         ),
         "version": attr.string(
             doc = "Version to use (for download/build strategies)",
             default = "1.235.0",
         ),
         "git_commit": attr.string(
-            doc = "Git commit/tag to build from (for build strategy)",
+            doc = "Git commit/tag to build from (for build strategy) - fallback for all tools",
             default = "main",
+        ),
+        "wasm_tools_commit": attr.string(
+            doc = "Git commit/tag for wasm-tools (overrides git_commit)",
+            default = "",
+        ),
+        "wac_commit": attr.string(
+            doc = "Git commit/tag for wac (overrides git_commit)",
+            default = "",
+        ),
+        "wit_bindgen_commit": attr.string(
+            doc = "Git commit/tag for wit-bindgen (overrides git_commit)",
+            default = "",
         ),
         "wasm_tools_url": attr.string(
             doc = "Custom download URL for wasm-tools (optional)",
