@@ -1,0 +1,15 @@
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+
+wit_library(
+    name = "hello_interfaces",
+    package_name = "example:hello@1.0.0",
+    srcs = ["hello.wit"],
+    interfaces = ["greeting"],
+)
+
+rust_wasm_component_bindgen(
+    name = "hello_component",
+    srcs = ["src/lib.rs"],
+    wit = ":hello_interfaces",
+)

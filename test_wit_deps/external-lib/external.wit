@@ -1,0 +1,9 @@
+package external:lib@1.0.0;
+
+interface utilities {
+    helper: func(input: string) -> string;
+}
+
+world external-world {
+    export utilities;
+}

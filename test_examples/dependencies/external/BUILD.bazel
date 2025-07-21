@@ -1,0 +1,9 @@
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "lib_interfaces",
+    package_name = "external:lib@1.0.0",
+    srcs = ["lib.wit"],
+    interfaces = ["utilities"],
+    visibility = ["//visibility:public"],
+)

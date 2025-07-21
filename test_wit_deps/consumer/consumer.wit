@@ -1,0 +1,11 @@
+package consumer:app@1.0.0;
+
+use external:lib/utilities@1.0.0;
+
+interface app {
+    run: func() -> string;
+}
+
+world consumer {
+    export app;
+}

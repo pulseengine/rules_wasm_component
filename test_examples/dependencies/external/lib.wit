@@ -1,0 +1,6 @@
+package external:lib@1.0.0;
+
+interface utilities {
+    format-message: func(msg: string) -> string;
+    get-timestamp: func() -> u64;
+}

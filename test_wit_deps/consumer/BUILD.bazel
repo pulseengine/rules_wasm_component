@@ -1,0 +1,24 @@
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+
+wit_library(
+    name = "consumer_interfaces",
+    package_name = "consumer:app@1.0.0", 
+    srcs = ["consumer.wit"],
+    deps = ["//test_wit_deps/external-lib:external_interfaces"],
+)
+
+rust_wasm_component_bindgen(
+    name = "consumer_component",
+    srcs = ["src/lib.rs"],
+    wit = ":consumer_interfaces",
+    profiles = ["release"],
+)
+
+# Dependency checking utility
+load("@rules_wasm_component//wit:wit_deps_check.bzl", "wit_deps_check")
+
+wit_deps_check(
+    name = "check_deps",
+    wit_file = "consumer.wit",
+)
