@@ -113,10 +113,19 @@ See the [`examples/`](examples/) directory for complete examples:
 
 ## Documentation
 
+### For Developers
 - [Rule Reference](docs/rules.md)
 - [Migration Guide](docs/migration.md)
 - [Best Practices](docs/best_practices.md)
 - [Troubleshooting](docs/troubleshooting.md)
+
+### For AI Agents
+- [**AI Agent Guide**](docs/ai_agent_guide.md) - Structured documentation for AI coding assistants
+- [**Rule Schemas**](docs/rule_schemas.json) - Machine-readable rule definitions
+- [Examples](docs/examples/) - Progressive complexity examples:
+  - [Basic](docs/examples/basic/) - Fundamental patterns
+  - [Intermediate](docs/examples/intermediate/) - Cross-package dependencies  
+  - [Advanced](docs/examples/advanced/) - Complex compositions and custom rules
 
 ## Contributing
 
