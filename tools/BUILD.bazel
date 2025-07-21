@@ -1,0 +1,6 @@
+# Use the Go tool directly - no shell wrappers needed
+alias(
+    name = "check_wit_deps",
+    actual = "//tools/wit_dependency_analyzer",
+    visibility = ["//visibility:public"],
+)

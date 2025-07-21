@@ -33,89 +33,87 @@ def _wit_library_impl(ctx):
         transitive = [wit_deps, all_wit_deps],
     )
 
-    # Create WIT directory structure with dependencies
-    dep_copy_commands = []
+    # Collect all transitive WIT dependencies properly using depsets
+    all_wit_files = depset(
+        direct = ctx.files.srcs,
+        transitive = [dep[WitInfo].wit_files for dep in ctx.attr.deps] + [dep[WitInfo].wit_deps for dep in ctx.attr.deps],
+    )
+
+    # Build dependency mapping for deps/ structure
+    dep_info_list = []
     for dep in ctx.attr.deps:
         dep_info = dep[WitInfo]
+        # Convert package name to directory name: external:lib@1.0.0 -> external-lib
+        simple_name = dep_info.package_name.split("@")[0].replace(":", "-")
+        dep_info_list.append({
+            "package_name": dep_info.package_name,
+            "simple_name": simple_name,
+            "wit_files": [f.path for f in dep_info.wit_files.to_list()],
+        })
 
-        # Convert package name with colons to directory path
-        dep_dir = dep_info.package_name.replace(":", "/")
-        dep_copy_commands.append(
-            "mkdir -p {out_dir}/deps/{dep_dir}".format(
-                out_dir = out_dir.path,
-                dep_dir = dep_dir,
-            ),
+    # Create deps.toml content for wit-deps tool compatibility (not required by wit-bindgen)
+    deps_toml_content = ""
+    if dep_info_list:
+        deps_toml_content = "[deps]\n"
+        for dep_info in dep_info_list:
+            deps_toml_content += '"{}"\npath = "./deps/{}"\n\n'.format(
+                dep_info["package_name"],
+                dep_info["simple_name"],
+            )
+
+    # Create configuration for wit_structure tool
+    config = {
+        "output_dir": out_dir.path,
+        "source_files": [f.path for f in ctx.files.srcs],
+        "dependencies": dep_info_list,
+        "deps_toml_content": deps_toml_content,
+    }
+
+    config_file = ctx.actions.declare_file(ctx.label.name + "_config.json")
+    ctx.actions.write(
+        output = config_file,
+        content = json.encode(config),
+    )
+
+    # Check for missing dependencies and provide helpful suggestions
+    if ctx.files.srcs:
+        analyzer_config = {
+            "analysis_mode": "check",
+            "workspace_dir": ".",  # Will be the workspace root
+            "wit_file": ctx.files.srcs[0].path,  # Analyze the first WIT file
+            "missing_packages": [],
+        }
+        
+        analyzer_config_file = ctx.actions.declare_file(ctx.label.name + "_analyzer_config.json")
+        ctx.actions.write(
+            output = analyzer_config_file,
+            content = json.encode(analyzer_config),
+        )
+        
+        analyzer_output = ctx.actions.declare_file(ctx.label.name + "_analysis.json")
+        
+        # Run dependency analysis (this will help debug missing deps)
+        ctx.actions.run(
+            executable = ctx.executable._wit_dependency_analyzer,
+            arguments = [analyzer_config_file.path],
+            inputs = depset(direct = [analyzer_config_file] + ctx.files.srcs),
+            outputs = [analyzer_output],
+            mnemonic = "AnalyzeWitDependencies",
+            progress_message = "Analyzing WIT dependencies for %s" % ctx.label,
+            # Note: This analysis runs but doesn't fail the build - it generates suggestions
         )
 
-        # Get the dependency's output directory (should be a single directory)
-        dep_output_dir = None
-        for file in dep[DefaultInfo].files.to_list():
-            if file.is_directory:
-                dep_output_dir = file
-                break
-
-        if dep_output_dir:
-            # Link all files from the dependency's output directory using absolute paths
-            dep_copy_commands.append(
-                "for f in {dep_out}/*; do ln -sf \"$(realpath \"$f\")\" {out_dir}/deps/{dep_dir}/; done".format(
-                    dep_out = dep_output_dir.path,
-                    out_dir = out_dir.path,
-                    dep_dir = dep_dir,
-                ),
-            )
-        else:
-            # Fallback to source files if no output directory found
-            for wit_file in dep_info.wit_files.to_list():
-                dep_copy_commands.append(
-                    "ln -sf {src} {out_dir}/deps/{dep_dir}/".format(
-                        src = wit_file.path,
-                        out_dir = out_dir.path,
-                        dep_dir = dep_dir,
-                    ),
-                )
-
-    # Create deps.toml if there are dependencies
-    deps_toml_content = ""
-    if ctx.attr.deps:
-        deps_toml_content = "[deps]\n"
-        for dep in ctx.attr.deps:
-            dep_info = dep[WitInfo]
-
-            # Convert package name with colons to directory path
-            dep_dir = dep_info.package_name.replace(":", "/")
-            deps_toml_content += '"{}"\npath = "./deps/{}"\n\n'.format(
-                dep_info.package_name,
-                dep_dir,
-            )
-
-    ctx.actions.run_shell(
-        inputs = all_inputs,
-        outputs = [out_dir],
-        command = """
-            mkdir -p {out_dir}
-            
-            # Copy source WIT files
-            for src in {srcs}; do
-                cp "$src" {out_dir}/
-            done
-            
-            # Create dependency structure using symlinks to save space
-            {dep_commands}
-            
-            # Create deps.toml if needed
-            if [ -n "{deps_toml}" ]; then
-                cat > {out_dir}/deps.toml << 'EOF'
-{deps_toml}
-EOF
-            fi
-        """.format(
-            out_dir = out_dir.path,
-            srcs = " ".join([f.path for f in ctx.files.srcs]),
-            dep_commands = "\n".join(dep_copy_commands),
-            deps_toml = deps_toml_content,
+    # Use custom tool instead of shell commands - this is the Bazel-native way
+    ctx.actions.run(
+        executable = ctx.executable._wit_structure_tool,
+        arguments = [config_file.path],
+        inputs = depset(
+            direct = [config_file] + ctx.files.srcs,
+            transitive = [dep[WitInfo].wit_files for dep in ctx.attr.deps],
         ),
-        mnemonic = "ProcessWit",
-        progress_message = "Processing WIT files for %s" % ctx.label,
+        outputs = [out_dir],
+        mnemonic = "CreateWitStructure",
+        progress_message = "Creating WIT directory structure for %s" % ctx.label,
     )
 
     # Create provider
@@ -152,6 +150,16 @@ wit_library = rule(
         ),
         "interfaces": attr.string_list(
             doc = "List of interface names defined in this library",
+        ),
+        "_wit_structure_tool": attr.label(
+            default = "//tools/wit_structure",
+            executable = True,
+            cfg = "exec",
+        ),
+        "_wit_dependency_analyzer": attr.label(
+            default = "//tools/wit_dependency_analyzer",
+            executable = True,
+            cfg = "exec",
         ),
     },
     doc = """
