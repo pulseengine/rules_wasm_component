@@ -1,0 +1,22 @@
+"""Example demonstrating potential wit-bindgen duplicate export issue"""
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+
+package(default_visibility = ["//visibility:public"])
+
+# WIT interfaces with world that exports
+wit_library(
+    name = "world_export_wit",
+    package_name = "test:world-export",
+    srcs = ["wit/world.wit"],
+    world = "simple",
+)
+
+# Build component with WIT bindings
+rust_wasm_component_bindgen(
+    name = "world_export_component",
+    srcs = ["src/lib.rs"],
+    wit = ":world_export_wit",
+    profiles = ["release"],
+)

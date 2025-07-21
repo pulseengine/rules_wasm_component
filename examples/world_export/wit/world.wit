@@ -1,0 +1,11 @@
+/// Example WIT file that might trigger duplicate exports
+package test:world-export@0.1.0;
+
+interface api {
+    hello: func(name: string) -> string;
+}
+
+/// World that directly exports functions
+world simple {
+    export hello: func(name: string) -> string;
+}
