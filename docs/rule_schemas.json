@@ -1,0 +1,204 @@
+{
+  "WitInfo": {
+    "name": "WitInfo",
+    "type": "provider",
+    "description": "Provider that contains information about WIT interfaces and their dependencies.",
+    "fields": {
+      "interface_names": {
+        "type": "string_list",
+        "description": "List of interface names defined in this library"
+      },
+      "package_name": {
+        "type": "string",
+        "description": "WIT package name (e.g., 'my:package@1.0.0')"
+      },
+      "wit_deps": {
+        "type": "depset",
+        "description": "Depset of transitive WIT dependencies"
+      },
+      "wit_files": {
+        "type": "depset",
+        "description": "Depset of WIT source files for this library"
+      },
+      "world_name": {
+        "type": "string",
+        "description": "World name exported by this library (optional)"
+      }
+    },
+    "examples": [
+      {
+        "title": "Using WitInfo in custom rules",
+        "description": "Access WIT metadata in rule implementations",
+        "code": "def _my_rule_impl(ctx):\n    wit_info = ctx.attr.wit[WitInfo]\n    package_name = wit_info.package_name\n    wit_files = wit_info.wit_files.to_list()\n    # Use wit_info..."
+      }
+    ],
+    "load_from": ""
+  },
+  "rust_wasm_component_bindgen": {
+    "name": "rust_wasm_component_bindgen",
+    "type": "rule",
+    "description": "Builds a Rust WebAssembly component with WIT binding generation. Compiles Rust source code into a WASM component and generates language bindings from WIT interfaces.",
+    "attributes": {
+      "deps": {
+        "type": "label_list",
+        "required": false,
+        "description": "Rust dependencies (crates)"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "profiles": {
+        "type": "string_list",
+        "required": false,
+        "default": "['release']",
+        "description": "Build profiles to generate",
+        "allowed_values": [
+          "debug",
+          "release",
+          "custom"
+        ]
+      },
+      "srcs": {
+        "type": "label_list",
+        "required": true,
+        "description": "Rust source files"
+      },
+      "wit": {
+        "type": "label",
+        "required": true,
+        "description": "WIT library target that provides interfaces for this component"
+      }
+    },
+    "examples": [
+      {
+        "title": "Basic Rust component",
+        "description": "Simple Rust WASM component with WIT bindings",
+        "code": "rust_wasm_component_bindgen(\n    name = \"my_component\",\n    srcs = [\"src/lib.rs\"],\n    wit = \":my_interfaces\",\n)"
+      },
+      {
+        "title": "Multi-profile component",
+        "description": "Component built with multiple optimization profiles",
+        "code": "rust_wasm_component_bindgen(\n    name = \"my_component\",\n    srcs = [\"src/lib.rs\"],\n    wit = \":my_interfaces\",\n    profiles = [\"debug\", \"release\"],\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//rust:defs.bzl"
+  },
+  "wac_compose": {
+    "name": "wac_compose",
+    "type": "rule",
+    "description": "Composes multiple WebAssembly components into a single application using WAC (WebAssembly Composition) format.",
+    "attributes": {
+      "components": {
+        "type": "string_dict",
+        "required": true,
+        "description": "Map of component targets to component names in composition"
+      },
+      "composition": {
+        "type": "string",
+        "required": false,
+        "description": "Inline WAC composition script"
+      },
+      "composition_file": {
+        "type": "label",
+        "required": false,
+        "description": "WAC composition file (alternative to inline composition)"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "profile": {
+        "type": "string",
+        "required": false,
+        "default": "'release'",
+        "description": "Build profile for components"
+      }
+    },
+    "examples": [
+      {
+        "title": "Simple composition",
+        "description": "Compose two components with inline WAC script",
+        "code": "wac_compose(\n    name = \"my_app\",\n    components = {\n        \":component_a\": \"comp_a\",\n        \":component_b\": \"comp_b\",\n    },\n    composition = '''\n        let a = new comp_a {};\n        let b = new comp_b {};\n        export a;\n    ''',\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wac:defs.bzl"
+  },
+  "wit_deps_check": {
+    "name": "wit_deps_check",
+    "type": "rule",
+    "description": "Analyzes a WIT file for missing dependencies and suggests fixes. Helps developers identify and resolve dependency issues.",
+    "attributes": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "wit_file": {
+        "type": "label",
+        "required": true,
+        "description": "WIT file to analyze for dependencies"
+      }
+    },
+    "examples": [
+      {
+        "title": "Dependency analysis",
+        "description": "Check a WIT file for missing dependencies",
+        "code": "wit_deps_check(\n    name = \"check_deps\",\n    wit_file = \"consumer.wit\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wit:wit_deps_check.bzl"
+  },
+  "wit_library": {
+    "name": "wit_library",
+    "type": "rule",
+    "description": "Defines a WIT (WebAssembly Interface Types) library. Processes WIT files and makes them available for use in WASM component builds and binding generation.",
+    "attributes": {
+      "deps": {
+        "type": "label_list",
+        "required": false,
+        "description": "WIT library dependencies. Each dependency must provide WitInfo."
+      },
+      "interfaces": {
+        "type": "string_list",
+        "required": false,
+        "description": "List of interface names defined in this library"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "package_name": {
+        "type": "string",
+        "required": false,
+        "description": "WIT package name (e.g., 'my:package@1.0.0'). Defaults to target name if not specified."
+      },
+      "srcs": {
+        "type": "label_list",
+        "required": true,
+        "description": "WIT source files (*.wit)"
+      },
+      "world": {
+        "type": "string",
+        "required": false,
+        "description": "Optional world name to export from this library"
+      }
+    },
+    "examples": [
+      {
+        "title": "Simple WIT library",
+        "description": "Basic WIT library with a single interface file",
+        "code": "wit_library(\n    name = \"my_interfaces\",\n    package_name = \"my:pkg@1.0.0\",\n    srcs = [\"interfaces.wit\"],\n)"
+      },
+      {
+        "title": "WIT library with dependencies",
+        "description": "WIT library that imports from another package",
+        "code": "wit_library(\n    name = \"consumer_interfaces\",\n    package_name = \"consumer:app@1.0.0\", \n    srcs = [\"consumer.wit\"],\n    deps = [\"//external:lib_interfaces\"],\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wit:defs.bzl"
+  }
+}
