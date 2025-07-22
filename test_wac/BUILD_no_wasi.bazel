@@ -1,0 +1,27 @@
+"""Test WAC composition with non-WASI components"""
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("//rust:rust_wasm_component.bzl", "_wasm_rust_library")
+
+# Simple WIT interface for testing
+wit_library(
+    name = "simple_interfaces",
+    package_name = "test:simple@1.0.0",
+    srcs = ["simple.wit"],
+)
+
+# Try to build a non-WASI component manually
+_wasm_rust_library(
+    name = "simple_no_wasi",
+    target = ":simple_rust_lib",
+    visibility = ["//visibility:public"],
+)
+
+# Rust library that will be transitioned to WASM
+native.rust_library(
+    name = "simple_rust_lib",
+    srcs = ["src/lib_no_wasi.rs"],
+    crate_name = "simple_no_wasi",
+    edition = "2021",
+    visibility = ["//visibility:private"],
+)

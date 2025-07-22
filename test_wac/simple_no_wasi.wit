@@ -1,0 +1,9 @@
+package test:nowasi@1.0.0;
+
+interface math {
+    add: func(a: s32, b: s32) -> s32;
+}
+
+world simple-no-wasi {
+    export math;
+}
