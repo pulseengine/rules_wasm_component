@@ -93,3 +93,48 @@ The fixes were implemented in the Bazel rule logic:
 - The Bazel rule logic now calls these tools correctly ✅
 
 All major blocking issues have been resolved, making the rules suitable for production use with complex WIT dependency scenarios.
+
+## AI Agent Troubleshooting Decision Tree
+
+### Build Failure Analysis
+
+```
+Build Failed?
+├─ wit_library target?
+│  ├─ "package not found" error?
+│  │  └─ ✅ Add missing dependency to `deps` attribute
+│  ├─ "No .wit files found" error?
+│  │  └─ ✅ Check `srcs` points to .wit files
+│  └─ "Failed to parse WIT" error?
+│     └─ ✅ Fix WIT syntax, validate `use` statements
+├─ rust_wasm_component_bindgen target?
+│  ├─ "Module not found" in Rust?
+│  │  └─ ✅ Use `{target_name}_bindings` import pattern
+│  ├─ "missing with mapping" error?
+│  │  └─ ✅ Update rules_wasm_component (auto-fixed)
+│  └─ External dependency issues?
+│     └─ ✅ Ensure wit_library has `package_name` set
+└─ wac_compose target?
+   ├─ "missing instantiation argument wasi:*"?
+   │  └─ ✅ Use `{ ... }` syntax for WASI components
+   ├─ "failed to create registry client"?
+   │  └─ ✅ Fixed in rules - update version
+   └─ "dangling symbolic link"?
+      └─ ✅ Fixed in rules - relative paths used
+```
+
+### Validation Workflow for AI Agents
+
+1. **Before building anything**: Read ai_agent_guide.md pitfalls
+2. **For each wit_library**: Run `wit_deps_check` if using external deps
+3. **For each component**: Build individually before composition
+4. **For wac_compose**: Verify components build first, then compose
+5. **On any error**: Match against decision tree above
+
+### Success Indicators
+
+- ✅ `bazel-bin/{target}_wit/` directory exists (wit_library)
+- ✅ `bazel-bin/{target}_{profile}.wasm` file exists (rust component)
+- ✅ `bazel-bin/{target}.wasm` file exists (wac_compose)
+- ✅ No "missing" or "not found" errors during build
+- ✅ Generated Rust bindings import successfully
