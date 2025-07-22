@@ -12,7 +12,7 @@ def _wac_compose_impl(ctx):
     # Output file
     composed_wasm = ctx.actions.declare_file(ctx.label.name + ".wasm")
 
-    # Create temporary directory for deps
+    # Create a deps directory for WAC to find components
     deps_dir = ctx.actions.declare_directory(ctx.label.name + "_deps")
 
     # Collect component files
@@ -66,74 +66,68 @@ def _wac_compose_impl(ctx):
             # Single profile component
             selected_file = comp_info.wasm_file
 
+        # Extract WIT package name from component
+        wit_package = "unknown:package@1.0.0"
+        if hasattr(comp_info, "wit_info") and comp_info.wit_info:
+            wit_package = comp_info.wit_info.package_name
+
         selected_components[comp_name] = {
             "file": selected_file,
             "info": comp_info,
             "profile": profile,
+            "wit_package": wit_package,
         }
 
-    # Choose linking strategy - use absolute paths for symlinks
-    copy_commands = []
-    for comp_name, comp_data in selected_components.items():
-        if ctx.attr.use_symlinks:
-            # Use absolute path for symlinks to avoid dangling links
-            copy_commands.append(
-                "ln -sf \"$(pwd)/{src}\" {deps_dir}/{comp_name}.wasm".format(
-                    src = comp_data["file"].path,
-                    deps_dir = deps_dir.path,
-                    comp_name = comp_name,
-                ),
-            )
-        else:
-            copy_commands.append(
-                "cp {src} {deps_dir}/{comp_name}.wasm".format(
-                    src = comp_data["file"].path,
-                    deps_dir = deps_dir.path,
-                    comp_name = comp_name,
-                ),
-            )
-
-    ctx.actions.run_shell(
+    # Use a Go tool to create the deps directory structure properly
+    ctx.actions.run(
+        executable = ctx.executable._wac_deps_tool,
+        arguments = [
+            "--output-dir", deps_dir.path,
+            "--manifest", _generate_component_manifest(selected_components),
+            "--profile-info", _generate_profile_info(selected_components),
+            "--use-symlinks", str(ctx.attr.use_symlinks).lower(),
+        ] + [
+            "--component={}={}".format(comp_name, comp_data["file"].path)
+            for comp_name, comp_data in selected_components.items()
+        ],
         inputs = [comp_data["file"] for comp_data in selected_components.values()],
         outputs = [deps_dir],
-        command = """
-            mkdir -p {deps_dir}
-            
-            # Link/copy components to deps directory
-            {copy_commands}
-            
-            # Create component manifest for WAC
-            cat > {deps_dir}/components.toml << 'EOF'
-{component_manifest}
-EOF
-            
-            # Create profile info for debugging
-            cat > {deps_dir}/profile_info.txt << 'EOF'
-{profile_info}
-EOF
-        """.format(
-            deps_dir = deps_dir.path,
-            copy_commands = "\n".join(copy_commands),
-            component_manifest = _generate_component_manifest(selected_components),
-            profile_info = _generate_profile_info(selected_components),
-        ),
-        mnemonic = "PrepareWacDeps",
+        mnemonic = "CreateWacDeps",
+        progress_message = "Creating WAC deps structure for %s" % ctx.label,
     )
 
-    # Run wac compose
+    # Run wac compose  
     args = ctx.actions.args()
     args.add("compose")
     args.add("--output", composed_wasm)
-    args.add("--deps-dir", deps_dir.path)
+    
+    # Use ONLY explicit package dependencies to avoid any registry lookups
+    # Don't use --deps-dir to avoid triggering registry resolver
+    # IMPORTANT: Use package names WITHOUT version for --dep overrides
+    # because WAC filesystem resolver only uses overrides when key.version.is_none()
+    for comp_name, comp_data in selected_components.items():
+        wit_package = comp_data.get("wit_package", "unknown:package@1.0.0")
+        # Remove version from package name for --dep override
+        package_name_no_version = wit_package.split("@")[0] if "@" in wit_package else wit_package
+        args.add("--dep", "{}={}".format(package_name_no_version, comp_data["file"].path))
+    
+    # Essential flags for local-only composition
+    args.add("--no-validate")  # Skip validation that might trigger registry
+    args.add("--import-dependencies")  # Allow WASI imports instead of requiring them as args
     args.add(composition_file)
 
     ctx.actions.run(
         executable = wac,
         arguments = [args],
-        inputs = [composition_file, deps_dir],
+        inputs = [composition_file] + [comp_data["file"] for comp_data in selected_components.values()],
         outputs = [composed_wasm],
         mnemonic = "WacCompose",
         progress_message = "Composing WASM components for %s" % ctx.label,
+        env = {
+            # Disable network access to prevent registry lookups
+            "NO_PROXY": "*",
+            "no_proxy": "*",
+        },
     )
 
     # Create provider
@@ -155,11 +149,12 @@ def _generate_composition(components):
 
     lines = []
     lines.append("// Auto-generated WAC composition")
+    lines.append("// Uses ... syntax to allow WASI import pass-through")
     lines.append("")
 
-    # Instantiate components
+    # Instantiate components with ... to allow missing WASI imports
     for comp_name in components:
-        lines.append("let {} = new {}:component {{}};".format(comp_name, comp_name))
+        lines.append("let {} = new {}:component {{ ... }};".format(comp_name, comp_name))
 
     lines.append("")
 
@@ -233,6 +228,11 @@ wac_compose = rule(
         "use_symlinks": attr.bool(
             default = True,
             doc = "Use symlinks instead of copying files to save space",
+        ),
+        "_wac_deps_tool": attr.label(
+            default = "//tools/wac_deps",
+            executable = True,
+            cfg = "exec",
         ),
     },
     toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
