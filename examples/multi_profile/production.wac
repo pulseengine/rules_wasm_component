@@ -1,14 +1,14 @@
-package prod:composition;
+package prod:composition@1.0.0;
 
 // Production WAC composition
 // Optimized configuration for deployment
 
-let camera = new camera:component {
+let camera = new adas:camera {
     frame-rate: 60,
     resolution: "4K",
 };
 
-let ai = new ai:component {
+let ai = new adas:detector {
     model: "yolov8x",
     confidence: 0.8,
     batch-size: 4,

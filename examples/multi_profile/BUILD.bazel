@@ -46,58 +46,55 @@ rust_wasm_component_bindgen(
 wac_compose(
     name = "development_system",
     component_profiles = {
-        "ai": "release",  # Use optimized AI component even in debug
+        "ai:interfaces": "release",  # Use optimized AI component even in debug
     },
     components = {
-        ":camera_sensor_debug": "camera",  # Use debug profile
-        ":object_detection_release": "ai",  # Use release profile
+        ":camera_sensor_debug": "sensor:interfaces",
+        ":object_detection_release": "ai:interfaces",
     },
     composition = """
-        package dev:composition;
+        package dev:composition@1.0.0;
         
-        let camera = new camera:component {};
-        let ai = new ai:component {};
+        let camera = new sensor:interfaces { ... };
+        let ai = new ai:interfaces { ... };
         
         export ai as main;
     """,
     profile = "debug",  # Default profile
-    tags = ["manual"],  # Skip in //... builds until WAC is properly configured
-    use_symlinks = False,  # Use copying instead of symlinks for CI compatibility
+    use_symlinks = True,
 )
 
 # Production composition - all release builds
 wac_compose(
     name = "production_system",
     components = {
-        ":camera_sensor_release": "camera",
-        ":object_detection_release": "ai",
+        ":camera_sensor_release": "adas:camera",
+        ":object_detection_release": "adas:detector",
     },
     composition_file = "production.wac",
     profile = "release",  # All components use release profile
-    tags = ["manual"],  # Skip in //... builds until WAC is properly configured
-    use_symlinks = False,  # Use copying instead of symlinks for CI compatibility
+    use_symlinks = False,  # Use copying for testing
 )
 
 # Custom mixed composition for testing
 wac_compose(
     name = "test_system",
     component_profiles = {
-        "camera": "debug",  # Debug camera for detailed logging
-        "ai": "custom",  # Custom optimized AI
+        "adas:camera": "debug",  # Debug camera for detailed logging
+        "adas:detector": "custom",  # Custom optimized AI
     },
     components = {
-        ":camera_sensor_debug": "camera",
-        ":object_detection_custom": "ai",
+        ":camera_sensor_debug": "adas:camera",
+        ":object_detection_custom": "adas:detector",
     },
     composition = """
-        package test:composition;
+        package test:composition@1.0.0;
         
-        let camera = new camera:component {};
-        let ai = new ai:component {};
+        let camera = new adas:camera { ... };
+        let ai = new adas:detector { ... };
         
         export camera;
         export ai;
     """,
-    tags = ["manual"],  # Skip in //... builds until WAC is properly configured
-    use_symlinks = False,  # Copy files for isolated testing
+    use_symlinks = False,  # Use copying for testing
 )
