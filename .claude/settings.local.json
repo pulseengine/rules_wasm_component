@@ -19,7 +19,14 @@
       "Bash(gh run watch:*)",
       "mcp__fetch__imageFetch",
       "Bash(curl:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh issue comment:*)",
+      "Bash(@wasm_tools_toolchains//:wit_bindgen_binary generate test_multi_interface.wit --world camera-front --out-dir /tmp/test_wit)",
+      "WebFetch(domain:bytecodealliance.github.io)",
+      "WebFetch(domain:bazelbuild.github.io)",
+      "Bash(mkdir:*)",
+      "Bash(wasm-tools component:*)",
+      "Bash(wac compose:*)"
     ],
     "deny": []
   }
