@@ -25,3 +25,5 @@ impl Guest for Camera {
         "Camera ready".to_string()
     }
 }
+
+camera_sensor_bindings::export!(Camera with_types_in camera_sensor_bindings);

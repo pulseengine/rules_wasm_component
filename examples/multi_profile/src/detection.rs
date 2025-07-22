@@ -43,3 +43,5 @@ impl Guest for Detector {
         Ok(())
     }
 }
+
+object_detection_bindings::export!(Detector with_types_in object_detection_bindings);
