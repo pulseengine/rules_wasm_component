@@ -1,0 +1,89 @@
+---
+# Buildkite postsubmit CI configuration for rules_wasm_component
+# Extended testing for main branch commits
+
+# Base configurations
+.postsubmit_base: &postsubmit_base
+  name: "postsubmit_base"
+  build_targets:
+    - "//..."
+  test_targets:
+    - "//..."
+  build_flags:
+    - "--spawn_strategy=standalone"
+    - "--genrule_strategy=standalone"
+    - "--test_output=errors"
+
+# Postsubmit tasks - more comprehensive than presubmit
+tasks:
+  # Core platforms with full testing
+  ubuntu2204_full:
+    <<: *postsubmit_base
+    name: "Ubuntu 22.04 (full)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+
+  macos_arm64_full:
+    <<: *postsubmit_base
+    name: "macOS ARM64 (full)"
+    platform: macos_arm64
+    bazel: "7.4.1"
+
+  windows_full:
+    <<: *postsubmit_base
+    name: "Windows (full)"
+    platform: windows
+    bazel: "7.4.1"
+    build_flags:
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+      - "--enable_runfiles"
+      - "--test_output=errors"
+
+  # Bzlmod validation
+  ubuntu2204_bzlmod_full:
+    <<: *postsubmit_base
+    name: "Ubuntu 22.04 (bzlmod full)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+    build_flags:
+      - "--enable_bzlmod"
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+      - "--test_output=errors"
+
+  # Rolling Bazel version
+  ubuntu2204_rolling:
+    <<: *postsubmit_base
+    name: "Ubuntu 22.04 (rolling)"
+    platform: ubuntu2204
+    bazel: "rolling"
+    soft_fail: true
+
+  # Performance testing with optimized builds
+  ubuntu2204_performance:
+    name: "Ubuntu 22.04 (performance)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+    build_targets:
+      - "//examples/..."
+      - "//test_examples/..."
+    test_targets:
+      - "//test/..."
+    build_flags:
+      - "--compilation_mode=opt"
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+      - "--test_output=all"
+
+  # RBE comprehensive testing
+  rbe_ubuntu2204_comprehensive:
+    <<: *postsubmit_base
+    name: "RBE Ubuntu 22.04 (comprehensive)"
+    platform: rbe_ubuntu2204
+    bazel: "7.4.1"
+    build_flags:
+      - "--config=remote"
+      - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
+      - "--remote_instance_name=projects/bazel-public/instances/default_instance"
+      - "--test_output=errors"

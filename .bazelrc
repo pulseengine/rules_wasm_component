@@ -1,5 +1,8 @@
 # Bazel configuration for rules_wasm_component
 
+# Import CI-specific configuration when in CI environment
+try-import %workspace%/.bazelrc.ci
+
 # Enable modern features
 common --enable_bzlmod
 common --experimental_google_legacy_api

@@ -1,0 +1,42 @@
+# Bazel configuration for CI environments
+# Imported by .bazelrc when CI environment is detected
+
+# Common CI flags
+common:ci --color=no
+common:ci --show_progress_rate_limit=5
+common:ci --curses=no
+common:ci --show_timestamps
+
+# Build settings for CI
+build:ci --verbose_failures
+build:ci --sandbox_debug
+build:ci --spawn_strategy=standalone
+build:ci --genrule_strategy=standalone
+
+# Test settings for CI
+test:ci --test_output=errors
+test:ci --test_summary=detailed
+test:ci --test_verbose_timeout_warnings
+
+# Remote Build Execution configuration
+build:remote --remote_executor=grpcs://remotebuildexecution.googleapis.com
+build:remote --remote_instance_name=projects/bazel-public/instances/default_instance
+build:remote --remote_upload_local_results=true
+build:remote --remote_download_minimal
+build:remote --remote_timeout=3600
+build:remote --jobs=100
+
+# RBE toolchain configuration
+build:remote --extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:toolchain
+build:remote --host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8
+build:remote --javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8
+build:remote --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+build:remote --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+
+# WebAssembly-specific CI settings
+build:ci --action_env=CARGO_NET_GIT_FETCH_WITH_CLI=true
+build:ci --action_env=RUST_BACKTRACE=1
+
+# Memory and resource limits for CI
+build:ci --ram_utilization_factor=80
+build:ci --experimental_scale_timeouts=2.0

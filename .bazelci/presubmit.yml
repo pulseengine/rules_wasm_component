@@ -1,0 +1,199 @@
+---
+# Buildkite CI configuration for rules_wasm_component
+# Follows patterns established by rules_rust and other major Bazel rules
+
+# Base configurations for reuse
+.base_config: &base_config
+  name: "base"
+  build_targets:
+    - "//..."
+    - "-//examples/world_export/..."
+  test_targets:
+    - "//test/..."
+    - "//test_examples/..."
+    - "//test_wit_deps/..."
+    - "//test_wac/..."
+  build_flags:
+    - "--spawn_strategy=standalone"
+    - "--genrule_strategy=standalone"
+
+.bzlmod_config: &bzlmod_config
+  name: "bzlmod"
+  build_targets:
+    - "//..."
+    - "-//examples/world_export/..."
+  test_targets:
+    - "//test/..."
+    - "//test_examples/..."
+    - "//test_wit_deps/..."
+    - "//test_wac/..."
+  build_flags:
+    - "--enable_bzlmod"
+    - "--spawn_strategy=standalone"
+    - "--genrule_strategy=standalone"
+
+.examples_config: &examples_config
+  name: "examples"
+  build_targets:
+    - "//examples/..."
+  test_targets:
+    - "//examples/..."
+  build_flags:
+    - "--spawn_strategy=standalone"
+    - "--genrule_strategy=standalone"
+
+# Platform and version matrix
+tasks:
+  # Ubuntu 22.04 - Primary platform
+  ubuntu2204:
+    <<: *base_config
+    name: "Ubuntu 22.04"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+
+  ubuntu2204_bzlmod:
+    <<: *bzlmod_config
+    name: "Ubuntu 22.04 (bzlmod)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+
+  ubuntu2204_rolling:
+    <<: *base_config
+    name: "Ubuntu 22.04 (rolling)"
+    platform: ubuntu2204
+    bazel: "rolling"
+    soft_fail: true
+
+  ubuntu2204_examples:
+    <<: *examples_config
+    name: "Ubuntu 22.04 (examples)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+
+  # Ubuntu 18.04 - Legacy support
+  ubuntu1804:
+    <<: *base_config
+    name: "Ubuntu 18.04"
+    platform: ubuntu1804
+    bazel: "7.4.1"
+
+  # macOS - ARM64 support
+  macos_arm64:
+    <<: *base_config
+    name: "macOS ARM64"
+    platform: macos_arm64
+    bazel: "7.4.1"
+
+  macos_arm64_bzlmod:
+    <<: *bzlmod_config
+    name: "macOS ARM64 (bzlmod)"
+    platform: macos_arm64
+    bazel: "7.4.1"
+
+  # Windows - Cross-platform compatibility
+  windows:
+    <<: *base_config
+    name: "Windows"
+    platform: windows
+    bazel: "7.4.1"
+    build_flags:
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+      - "--enable_runfiles"
+
+  # Remote Build Execution
+  rbe_ubuntu2204:
+    <<: *base_config
+    name: "RBE Ubuntu 22.04"
+    platform: rbe_ubuntu2204
+    bazel: "7.4.1"
+    build_flags:
+      - "--config=remote"
+      - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
+      - "--remote_instance_name=projects/bazel-public/instances/default_instance"
+
+  # Optimized build testing
+  ubuntu2204_opt:
+    name: "Ubuntu 22.04 (optimized)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+    build_targets:
+      - "//examples/..."
+    test_targets:
+      - "//test/unit/..."
+      - "//test/integration/..."
+    build_flags:
+      - "--compilation_mode=opt"
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+
+  # Multi-profile component testing
+  ubuntu2204_profiles:
+    name: "Ubuntu 22.04 (multi-profile)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+    build_targets:
+      - "//examples/multi_profile/..."
+    test_targets:
+      - "//test_wac/..."
+    build_flags:
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+
+  # WAC composition specific testing
+  ubuntu2204_wac:
+    name: "Ubuntu 22.04 (WAC composition)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+    build_targets:
+      - "//wac/..."
+      - "//test_wac/..."
+    test_targets:
+      - "//test_wac/..."
+      - "//test/integration:composition_build_test"
+      - "//test/integration:wasi_system_validation"
+    build_flags:
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+
+  # Toolchain validation
+  ubuntu2204_toolchain:
+    name: "Ubuntu 22.04 (toolchain)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+    build_targets:
+      - "//wasm/..."
+      - "//tools/..."
+    test_targets:
+      - "//test/toolchain/..."
+    build_flags:
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+
+  # Integration test focus
+  ubuntu2204_integration:
+    name: "Ubuntu 22.04 (integration)"
+    platform: ubuntu2204  
+    bazel: "7.4.1"
+    test_targets:
+      - "//test/integration:integration_tests"
+      - "//test/unit:unit_tests"
+    build_flags:
+      - "--test_output=errors"
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
+
+  # External dependency testing
+  ubuntu2204_deps:
+    name: "Ubuntu 22.04 (dependencies)"
+    platform: ubuntu2204
+    bazel: "7.4.1"
+    build_targets:
+      - "//test_examples/dependencies/..."
+      - "//test_wit_deps/..."
+    test_targets:
+      - "//test_wit_deps/..."
+      - "//test/integration:dependency_resolution_build_test"
+    build_flags:
+      - "--spawn_strategy=standalone"
+      - "--genrule_strategy=standalone"
