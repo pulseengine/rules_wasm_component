@@ -1,0 +1,11 @@
+package test:wasi-app@1.0.0;
+
+/// Simple application interface for integration testing
+interface app {
+    run: func() -> u32;
+    process-data: func(input: string) -> string;
+}
+
+world wasi-app {
+    export app;
+}

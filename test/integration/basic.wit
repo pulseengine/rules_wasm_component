@@ -1,0 +1,11 @@
+package test:basic@1.0.0;
+
+/// Basic interface for integration testing
+interface calculator {
+    add: func(a: u32, b: u32) -> u32;
+    multiply: func(a: u32, b: u32) -> u32;
+}
+
+world basic-component {
+    export calculator;
+}

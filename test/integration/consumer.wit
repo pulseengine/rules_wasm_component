@@ -1,0 +1,13 @@
+package test:consumer@1.0.0;
+
+use external:lib/utilities@1.0.0;
+
+/// Consumer interface that uses external dependencies
+interface processor {
+    process-data: func(input: string, number: u32) -> string;
+}
+
+world consumer-component {
+    import utilities;
+    export processor;
+}

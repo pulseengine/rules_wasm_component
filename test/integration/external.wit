@@ -1,0 +1,11 @@
+package external:lib@1.0.0;
+
+/// External library interface for dependency testing
+interface utilities {
+    hash-string: func(input: string) -> u64;
+    format-number: func(num: u32) -> string;
+}
+
+world external-utilities {
+    export utilities;
+}

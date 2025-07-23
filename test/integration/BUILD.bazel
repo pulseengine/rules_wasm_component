@@ -1,0 +1,185 @@
+"""Integration tests for rules_wasm_component
+
+This directory contains end-to-end integration tests that validate complete
+workflows from WIT interface definition through component composition.
+"""
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//wit:wit_deps_check.bzl", "wit_deps_check")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen") 
+load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
+
+# Test 1: Basic component workflow
+wit_library(
+    name = "basic_interface",
+    package_name = "test:basic@1.0.0",
+    srcs = ["basic.wit"],
+)
+
+rust_wasm_component_bindgen(
+    name = "basic_component",
+    srcs = ["src/basic.rs"],
+    wit = ":basic_interface",
+    profiles = ["debug", "release"],
+)
+
+# Test 2: Component with external dependencies
+wit_library(
+    name = "external_lib",
+    package_name = "external:lib@1.0.0",
+    srcs = ["external.wit"],
+)
+
+wit_library(
+    name = "consumer_interface",
+    package_name = "test:consumer@1.0.0", 
+    srcs = ["consumer.wit"],
+    deps = [":external_lib"],
+)
+
+rust_wasm_component_bindgen(
+    name = "consumer_component",
+    srcs = ["src/consumer.rs"],
+    wit = ":consumer_interface",
+)
+
+# Test 3: Multi-component composition
+wit_library(
+    name = "service_a_interface",
+    package_name = "test:service-a@1.0.0",
+    srcs = ["service_a.wit"],
+)
+
+wit_library(
+    name = "service_b_interface", 
+    package_name = "test:service-b@1.0.0",
+    srcs = ["service_b.wit"],
+    deps = [":service_a_interface"],
+)
+
+rust_wasm_component_bindgen(
+    name = "service_a_component",
+    srcs = ["src/service_a.rs"],
+    wit = ":service_a_interface",
+)
+
+rust_wasm_component_bindgen(
+    name = "service_b_component",
+    srcs = ["src/service_b.rs"], 
+    wit = ":service_b_interface",
+)
+
+# Multi-component composition
+wac_compose(
+    name = "multi_service_system",
+    components = {
+        ":service_a_component": "test:service-a",
+        ":service_b_component": "test:service-b",
+    },
+    composition = """
+        package test:multi-system@1.0.0;
+        
+        let service_a = new test:service-a { ... };
+        let service_b = new test:service-b { 
+            service-a: service_a,
+        };
+        
+        export service_b as main;
+    """,
+)
+
+# Test 4: WASI component integration
+wit_library(
+    name = "wasi_interface",
+    package_name = "test:wasi-app@1.0.0",
+    srcs = ["wasi_app.wit"],
+)
+
+rust_wasm_component_bindgen(
+    name = "wasi_component",
+    srcs = ["src/wasi_app.rs"],
+    wit = ":wasi_interface",
+)
+
+wac_compose(
+    name = "wasi_system",
+    components = {
+        ":wasi_component": "test:wasi-app",
+    },
+    composition = """
+        package test:wasi-system@1.0.0;
+        
+        let app = new test:wasi-app { ... };
+        export app as main;
+    """,
+)
+
+# Test 5: Dependency validation
+wit_deps_check(
+    name = "validate_consumer_deps",
+    wit_file = "consumer.wit",
+)
+
+# Bazel-native integration tests using build_test and analysis_test
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load(":integration_tests.bzl", "component_validation_test")
+
+# Test 1: Basic component build validation
+build_test(
+    name = "basic_component_build_test",
+    targets = [
+        ":basic_component_debug",
+        ":basic_component_release",
+    ],
+)
+
+# Test 2: Dependency resolution build validation  
+build_test(
+    name = "dependency_resolution_build_test",
+    targets = [
+        ":consumer_component",
+        ":validate_consumer_deps",
+    ],
+)
+
+# Test 3: Composition build validation
+build_test(
+    name = "composition_build_test",
+    targets = [
+        ":multi_service_system",
+        ":wasi_system",
+    ],
+)
+
+# Test 4: Component validation tests using custom rule
+component_validation_test(
+    name = "basic_component_validation",
+    component = ":basic_component_release",
+    expected_exports = ["calculator"],
+)
+
+component_validation_test(
+    name = "consumer_component_validation",
+    component = ":consumer_component",
+    expected_exports = ["processor"],
+    expected_imports = ["utilities"],
+)
+
+component_validation_test(
+    name = "wasi_system_validation",
+    component = ":wasi_system", 
+    expected_exports = ["wasi-app"],
+    expected_imports = ["wasi:"],  # Should preserve WASI imports
+)
+
+test_suite(
+    name = "integration_tests",
+    tests = [
+        ":basic_component_build_test",
+        ":dependency_resolution_build_test",
+        ":composition_build_test",
+        ":basic_component_validation",
+        ":consumer_component_validation", 
+        ":wasi_system_validation",
+    ],
+)
