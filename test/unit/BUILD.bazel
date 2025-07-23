@@ -50,7 +50,7 @@ wac_compose(
     composition = """
         package test:system@1.0.0;
         let comp = new test:simple { ... };
-        export comp;
+        export comp as main;
     """,
     testonly = True,
 )

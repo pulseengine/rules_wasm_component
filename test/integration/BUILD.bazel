@@ -79,12 +79,12 @@ wac_compose(
     composition = """
         package test:multi-system@1.0.0;
         
-        let service_a = new test:service-a { ... };
-        let service_b = new test:service-b { 
-            service-a: service_a,
+        let service-a = new test:service-a { ... };
+        let service-b = new test:service-b { 
+            storage: service-a,
         };
         
-        export service_b as main;
+        export service-b as main;
     """,
 )
 

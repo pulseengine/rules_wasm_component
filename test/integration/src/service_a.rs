@@ -1,8 +1,8 @@
 use service_a_component_bindings::exports::test::service_a::storage::Guest;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Mutex, LazyLock};
 
-static STORAGE: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+static STORAGE: LazyLock<Mutex<HashMap<String, String>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 struct Component;
 
