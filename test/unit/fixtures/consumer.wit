@@ -1,0 +1,13 @@
+package test:consumer@1.0.0;
+
+use test:simple/math@1.0.0;
+
+/// Consumer interface that uses simple math
+interface advanced {
+    compute: func(x: u32, y: u32) -> u32;
+}
+
+world consumer-world {
+    import math;
+    export advanced;
+}

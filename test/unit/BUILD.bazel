@@ -1,0 +1,106 @@
+"""Unit tests for rules_wasm_component rule implementations."""
+
+load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
+load(":unit_tests.bzl", 
+     "wit_library_test", 
+     "rust_component_test", 
+     "wac_compose_test",
+     "provider_test")
+
+package(default_testonly = True)
+
+# Test fixtures for unit tests
+wit_library(
+    name = "test_wit_simple",
+    package_name = "test:simple@1.0.0", 
+    srcs = ["fixtures/simple.wit"],
+    testonly = True,
+)
+
+wit_library(
+    name = "test_wit_with_deps",
+    package_name = "test:consumer@1.0.0",
+    srcs = ["fixtures/consumer.wit"],
+    deps = [":test_wit_simple"],
+    testonly = True,
+)
+
+rust_wasm_component_bindgen(
+    name = "test_component_simple",
+    srcs = ["fixtures/simple_impl.rs"],
+    wit = ":test_wit_simple",
+    testonly = True,
+)
+
+rust_wasm_component_bindgen(
+    name = "test_component_with_deps", 
+    srcs = ["fixtures/consumer_impl.rs"],
+    wit = ":test_wit_with_deps",
+    testonly = True,
+)
+
+wac_compose(
+    name = "test_composition",
+    components = {
+        ":test_component_simple": "test:simple",
+    },
+    composition = """
+        package test:system@1.0.0;
+        let comp = new test:simple { ... };
+        export comp;
+    """,
+    testonly = True,
+)
+
+# Unit test cases
+wit_library_test(
+    name = "test_wit_library_basic",
+    target_under_test = ":test_wit_simple",
+)
+
+wit_library_test(
+    name = "test_wit_library_with_deps",
+    target_under_test = ":test_wit_with_deps", 
+)
+
+rust_component_test(
+    name = "test_rust_component_basic",
+    target_under_test = ":test_component_simple",
+)
+
+rust_component_test(
+    name = "test_rust_component_with_deps",
+    target_under_test = ":test_component_with_deps",
+)
+
+wac_compose_test(
+    name = "test_wac_composition",
+    target_under_test = ":test_composition",
+)
+
+provider_test(
+    name = "test_wit_info_provider",
+    target_under_test = ":test_wit_simple",
+)
+
+provider_test(
+    name = "test_wasm_component_info_provider", 
+    target_under_test = ":test_component_simple",
+)
+
+# Test suite for all unit tests
+test_suite(
+    name = "unit_tests",
+    tests = [
+        ":test_wit_library_basic",
+        ":test_wit_library_with_deps",
+        ":test_rust_component_basic", 
+        ":test_rust_component_with_deps",
+        ":test_wac_composition",
+        ":test_wit_info_provider",
+        ":test_wasm_component_info_provider",
+    ],
+)

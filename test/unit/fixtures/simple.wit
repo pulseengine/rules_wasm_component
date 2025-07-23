@@ -1,0 +1,10 @@
+package test:simple@1.0.0;
+
+/// Simple interface for unit testing
+interface math {
+    add: func(a: u32, b: u32) -> u32;
+}
+
+world simple-world {
+    export math;
+}
