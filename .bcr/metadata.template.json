@@ -1,0 +1,12 @@
+{
+  "homepage": "https://github.com/pulseengine/rules_wasm_component",
+  "maintainers": [
+    {
+      "github": "r",
+      "name": "rules_wasm_component maintainer"
+    }
+  ],
+  "repository": [
+    "github:pulseengine/rules_wasm_component"
+  ]
+}

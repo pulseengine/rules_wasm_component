@@ -1,0 +1,5 @@
+{
+  "integrity": "**leave this alone**",
+  "strip_prefix": "rules_wasm_component-{VERSION}",
+  "url": "https://github.com/pulseengine/rules_wasm_component/releases/download/{TAG}/rules_wasm_component-{VERSION}.tar.gz"
+}
