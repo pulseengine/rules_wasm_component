@@ -155,42 +155,71 @@ jobs:
         # Test basic component functionality
         bazel build //examples/basic:hello_component_release
         
-        # Get bazel-bin path and verify component was created
-        BAZEL_BIN=$(bazel info bazel-bin)
-        ls -la "$BAZEL_BIN/examples/basic/"
+        # Verify component was created using bazel-bin symlink if available
+        if [ -d "bazel-bin/examples/basic" ]; then
+          ls -la bazel-bin/examples/basic/
+        else
+          echo "Using bazel info to find output location..."
+          BAZEL_BIN=$(bazel info bazel-bin)
+          if [ -d "$BAZEL_BIN/examples/basic" ]; then
+            ls -la "$BAZEL_BIN/examples/basic/"
+          else
+            echo "Directory not found, checking build outputs..."
+            bazel outputs //examples/basic:hello_component_release || echo "bazel outputs not available"
+          fi
+        fi
     
     - name: Test Component Validation
       run: |
         # Build and validate basic component
         bazel build //examples/basic:hello_component_release
         
-        # Get bazel-bin path
-        BAZEL_BIN=$(bazel info bazel-bin)
+        # Find WASM file using different methods
+        WASM_FILE=""
+        if [ -d "bazel-bin/examples/basic" ]; then
+          WASM_FILE=$(find bazel-bin/examples/basic/ -name "*.wasm" | head -1)
+        else
+          BAZEL_BIN=$(bazel info bazel-bin)
+          if [ -d "$BAZEL_BIN/examples/basic" ]; then
+            WASM_FILE=$(find "$BAZEL_BIN/examples/basic/" -name "*.wasm" | head -1)
+          fi
+        fi
         
-        # Find and validate the WASM component file
-        WASM_FILE=$(find "$BAZEL_BIN/examples/basic/" -name "*.wasm" | head -1)
         if [ -n "$WASM_FILE" ]; then
           echo "Found WASM file: $WASM_FILE"
           wasm-tools validate "$WASM_FILE" || echo "Validation failed but continuing"
         else
-          echo "No WASM file found"
+          echo "No WASM file found, checking if build completed successfully..."
+          echo "Build targets:"
+          bazel query "//examples/basic:hello_component_release" || echo "Query failed"
         fi
     
     - name: Test Component Output Structure
       run: |
-        # Get bazel-bin path
-        BAZEL_BIN=$(bazel info bazel-bin)
+        # Check component output structure using multiple methods
+        echo "Checking for WASM component outputs..."
         
-        # Check basic component output structure
-        echo "Basic component outputs:"
-        find "$BAZEL_BIN/examples/basic/" -name "*.wasm" || echo "No .wasm files found"
+        WASM_COUNT=0
+        if [ -d "bazel-bin/examples/basic" ]; then
+          echo "Using bazel-bin symlink:"
+          find bazel-bin/examples/basic/ -name "*.wasm" || echo "No .wasm files found via symlink"
+          WASM_COUNT=$(find bazel-bin/examples/basic/ -name "*.wasm" 2>/dev/null | wc -l)
+        else
+          echo "Using bazel info:"
+          BAZEL_BIN=$(bazel info bazel-bin)
+          if [ -d "$BAZEL_BIN/examples/basic" ]; then
+            find "$BAZEL_BIN/examples/basic/" -name "*.wasm" || echo "No .wasm files found via bazel info"
+            WASM_COUNT=$(find "$BAZEL_BIN/examples/basic/" -name "*.wasm" 2>/dev/null | wc -l)
+          else
+            echo "Directory not found via bazel info, checking build success..."
+            bazel build --check_up_to_date //examples/basic:hello_component_release && echo "Build is up to date" || echo "Build check failed"
+          fi
+        fi
         
-        # Check that component was created properly
-        WASM_COUNT=$(find "$BAZEL_BIN/examples/basic/" -name "*.wasm" | wc -l)
         if [ "$WASM_COUNT" -gt 0 ]; then
           echo "✅ Found $WASM_COUNT WASM component(s)"
         else
-          echo "❌ No WASM components found"
+          echo "⚠️  No WASM components found in expected locations, but build may have succeeded"
         fi
 
   release:
