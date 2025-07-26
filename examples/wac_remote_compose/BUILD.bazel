@@ -1,0 +1,53 @@
+"""Example demonstrating WAC remote composition with wkg integration"""
+
+load("@rules_wasm_component//wac:defs.bzl", "wac_remote_compose")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_component")
+
+package(default_visibility = ["//visibility:public"])
+
+# Local component that will be composed with remote components
+wasm_component(
+    name = "local_frontend",
+    srcs = ["src/lib.rs"],
+    wit = "wit/frontend.wit",
+    target = "wasm32-wasip1",
+)
+
+# Compose local component with remote components from registries
+wac_remote_compose(
+    name = "distributed_system",
+    local_components = {
+        "frontend": ":local_frontend",
+    },
+    remote_components = {
+        # Example remote components (these would need to exist in registries)
+        "auth_service": "example-registry/auth@1.0.0",
+        "data_service": "wasi:data@0.2.0",
+    },
+    composition = """
+        // Instantiate all components
+        let frontend = new frontend:component { ... };
+        let auth = new auth_service:component { ... };
+        let data = new data_service:component { ... };
+        
+        // Connect frontend to remote services
+        connect frontend.auth_request -> auth.validate;
+        connect frontend.data_request -> data.query;
+        
+        // Export frontend as the main interface
+        export frontend as main;
+    """,
+)
+
+# Alternative example using composition file
+wac_remote_compose(
+    name = "microservices_system",
+    local_components = {
+        "gateway": ":local_frontend",
+    },
+    remote_components = {
+        "user_service": "my-org/users@2.1.0",
+        "payment_service": "my-org/payments@1.5.0",
+    },
+    composition_file = "composition/microservices.wac",
+)

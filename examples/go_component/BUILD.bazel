@@ -1,0 +1,49 @@
+"""Example demonstrating Go WebAssembly components"""
+
+load("@rules_wasm_component//go:defs.bzl", "go_component", "go_wit_bindgen", "go_mod_download")
+
+package(default_visibility = ["//visibility:public"])
+
+# Download Go module dependencies
+go_mod_download(
+    name = "go_deps",
+    go_mod = "go.mod",
+)
+
+# Generate Go bindings from WIT
+go_wit_bindgen(
+    name = "calculator_bindings",
+    wit = "wit/calculator.wit",
+    go_package = "github.com/example/calculator",
+    world = "calculator",
+)
+
+# Build Go component
+go_component(
+    name = "calculator_go_component",
+    srcs = [
+        "main.go",
+        "calculator.go",
+    ],
+    wit = "wit/calculator.wit",
+    go_mod = "go.mod",
+    go_package = "github.com/example/calculator",
+    main_file = "main.go",
+    world = "calculator",
+    package_name = "example:calculator@1.0.0",
+)
+
+# HTTP service component example
+go_component(
+    name = "http_service_component",
+    srcs = [
+        "service.go",
+        "handlers.go",
+    ],
+    wit = "wit/http-service.wit",
+    go_mod = "go.mod",
+    go_package = "github.com/example/httpservice",
+    main_file = "service.go",
+    world = "http-service",
+    package_name = "example:http-service@1.0.0",
+)

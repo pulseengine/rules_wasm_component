@@ -1,0 +1,59 @@
+package example:calculator@1.0.0;
+
+interface calculator {
+    variant operation-type {
+        add,
+        subtract, 
+        multiply,
+        divide,
+        power,
+        sqrt,
+        factorial,
+    }
+    
+    record operation {
+        op: operation-type,
+        a: f64,
+        b: option<f64>,  // b is optional for unary operations like sqrt
+    }
+    
+    record calculation-result {
+        success: bool,
+        error: option<string>,
+        result: option<f64>,
+    }
+    
+    record component-info {
+        name: string,
+        version: string,
+        supported-operations: list<string>,
+        precision: string,
+        max-factorial: u32,
+    }
+    
+    // Basic arithmetic operations
+    add: func(a: f64, b: f64) -> f64;
+    subtract: func(a: f64, b: f64) -> f64;
+    multiply: func(a: f64, b: f64) -> f64;
+    divide: func(a: f64, b: f64) -> calculation-result;
+    
+    // Advanced operations
+    power: func(base: f64, exponent: f64) -> calculation-result;
+    sqrt: func(value: f64) -> calculation-result;
+    factorial: func(n: u32) -> calculation-result;
+    
+    // Batch calculation
+    calculate: func(operation: operation) -> calculation-result;
+    calculate-batch: func(operations: list<operation>) -> list<calculation-result>;
+    
+    // Component metadata
+    get-calculator-info: func() -> component-info;
+    
+    // Mathematical constants
+    get-pi: func() -> f64;
+    get-e: func() -> f64;
+}
+
+world calculator {
+    export calculator;
+}

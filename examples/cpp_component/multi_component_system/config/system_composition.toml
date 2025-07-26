@@ -1,0 +1,218 @@
+# Multi-Component System Composition Configuration
+# This file defines how the different C/C++ components are composed together
+
+[metadata]
+name = "enterprise-system"
+version = "1.0.0"
+description = "Complete enterprise system with auth, users, analytics, and API gateway"
+authors = ["Claude Code Team"]
+
+# Component definitions
+[components.auth-service]
+path = "auth_service_component.wasm"
+name = "auth-service"
+interface = "example:auth-service@1.0.0"
+
+[components.user-service]
+path = "user_service_component.wasm"
+name = "user-service"
+interface = "example:user-service@1.0.0"
+
+[components.analytics-service]
+path = "analytics_service_component.wasm"
+name = "analytics-service"
+interface = "example:analytics-service@1.0.0"
+
+[components.api-gateway]
+path = "api_gateway_component.wasm"
+name = "api-gateway"
+interface = "example:api-gateway@1.0.0"
+
+[components.orchestrator]
+path = "system_orchestrator.wasm"
+name = "orchestrator"
+interface = "example:orchestrator@1.0.0"
+
+# Service connections and dependencies
+[connections]
+
+# API Gateway imports from all services
+[[connections.imports]]
+component = "api-gateway"
+import = "example:auth-service@1.0.0"
+provider = "auth-service"
+
+[[connections.imports]]
+component = "api-gateway"
+import = "example:user-service@1.0.0"
+provider = "user-service"
+
+[[connections.imports]]
+component = "api-gateway"
+import = "example:analytics-service@1.0.0"
+provider = "analytics-service"
+
+# User service depends on auth for user validation
+[[connections.imports]]
+component = "user-service"
+import = "example:auth-service@1.0.0"
+provider = "auth-service"
+
+# Analytics service uses auth for session tracking
+[[connections.imports]]
+component = "analytics-service"
+import = "example:auth-service@1.0.0"
+provider = "auth-service"
+
+# Analytics service accesses user data
+[[connections.imports]]
+component = "analytics-service"
+import = "example:user-service@1.0.0"
+provider = "user-service"
+
+# Orchestrator manages all services
+[[connections.imports]]
+component = "orchestrator"
+import = "example:auth-service@1.0.0"
+provider = "auth-service"
+
+[[connections.imports]]
+component = "orchestrator"
+import = "example:user-service@1.0.0"
+provider = "user-service"
+
+[[connections.imports]]
+component = "orchestrator"
+import = "example:analytics-service@1.0.0"
+provider = "analytics-service"
+
+[[connections.imports]]
+component = "orchestrator"
+import = "example:api-gateway@1.0.0"
+provider = "api-gateway"
+
+# Resource limits and configuration
+[resources]
+
+[resources.memory]
+auth-service = "16MB"
+user-service = "32MB"
+analytics-service = "64MB"
+api-gateway = "32MB"
+orchestrator = "16MB"
+
+[resources.cpu]
+auth-service = "0.5"
+user-service = "1.0"
+analytics-service = "2.0"
+api-gateway = "1.5"
+orchestrator = "0.5"
+
+# Network configuration
+[network]
+enable_service_mesh = true
+load_balancing = "round_robin"
+circuit_breaker_enabled = true
+retry_policy = "exponential_backoff"
+
+[network.timeouts]
+auth-service = "5s"
+user-service = "10s" 
+analytics-service = "30s"
+api-gateway = "15s"
+orchestrator = "5s"
+
+[network.rate_limits]
+auth-service = "1000/min"
+user-service = "500/min"
+analytics-service = "100/min"
+api-gateway = "2000/min"
+
+# Security configuration
+[security]
+enable_tls = true
+require_authentication = true
+audit_logging = true
+encryption_at_rest = true
+
+[security.auth]
+jwt_secret = "${JWT_SECRET}"
+token_expiry = "24h"
+refresh_token_expiry = "7d"
+enable_mfa = true
+
+# Monitoring and observability
+[monitoring]
+enable_metrics = true
+enable_tracing = true
+enable_logging = true
+health_check_interval = "30s"
+
+[monitoring.metrics]
+collection_interval = "10s"
+retention_period = "7d"
+export_prometheus = true
+
+[monitoring.logging]
+level = "info"
+format = "json"
+enable_correlation_ids = true
+
+# Environment-specific overrides
+[environments.production]
+[environments.production.resources.memory]
+auth-service = "32MB"
+user-service = "64MB"
+analytics-service = "128MB"
+api-gateway = "64MB"
+orchestrator = "32MB"
+
+[environments.production.monitoring.logging]
+level = "warn"
+
+[environments.development]
+[environments.development.monitoring.logging]
+level = "debug"
+
+[environments.development.security]
+enable_tls = false
+require_authentication = false
+
+# Feature flags
+[features]
+enable_analytics = true
+enable_caching = true
+enable_rate_limiting = true
+enable_circuit_breaker = true
+enable_request_transformation = true
+enable_websocket_support = false
+
+# External dependencies (if any)
+[external]
+database_url = "${DATABASE_URL}"
+redis_url = "${REDIS_URL}"
+smtp_server = "${SMTP_SERVER}"
+
+# Startup and shutdown configuration
+[lifecycle]
+startup_timeout = "60s"
+shutdown_timeout = "30s"
+graceful_shutdown = true
+
+[lifecycle.startup_order]
+# Services start in this order
+services = [
+    "auth-service",
+    "user-service", 
+    "analytics-service",
+    "api-gateway",
+    "orchestrator"
+]
+
+[lifecycle.health_checks]
+# Health check endpoints for each service
+auth-service = "/health"
+user-service = "/health"
+analytics-service = "/health"
+api-gateway = "/health"
+orchestrator = "/health"

@@ -16,10 +16,96 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for WebAssembly Package Tools (wkg)
+toolchain_type(
+    name = "wkg_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+# Toolchain type for jco (JavaScript Component Tools)
+toolchain_type(
+    name = "jco_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+# Toolchain type for Go WebAssembly components
+toolchain_type(
+    name = "go_wasm_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+# Toolchain type for C/C++ WebAssembly components  
+toolchain_type(
+    name = "cpp_component_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for toolchain implementation
 bzl_library(
     name = "wasm_toolchain",
     srcs = ["wasm_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+)
+
+# Bzl library for wkg toolchain implementation
+bzl_library(
+    name = "wkg_toolchain",
+    srcs = ["wkg_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+)
+
+# Bzl library for jco toolchain implementation
+bzl_library(
+    name = "jco_toolchain",
+    srcs = ["jco_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":diagnostics",
+        ":tool_cache",
+        ":tool_versions",
+    ],
+)
+
+# Bzl library for Go WebAssembly toolchain implementation
+bzl_library(
+    name = "go_toolchain",
+    srcs = ["go_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":diagnostics",
+        ":tool_cache",
+        ":tool_versions",
+    ],
+)
+
+# Bzl library for C/C++ WebAssembly component toolchain implementation
+bzl_library(
+    name = "cpp_component_toolchain",
+    srcs = ["cpp_component_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":diagnostics",
+        ":tool_cache",
+        ":tool_versions",
+    ],
+)
+
+# Enhanced toolchain management libraries
+bzl_library(
+    name = "tool_versions",
+    srcs = ["tool_versions.bzl"],
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "diagnostics", 
+    srcs = ["diagnostics.bzl"],
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "tool_cache",
+    srcs = ["tool_cache.bzl"],
     visibility = ["//visibility:public"],
 )
 

@@ -4,20 +4,20 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 WASI_SDK_PLATFORMS = {
     "darwin_amd64": struct(
-        sha256 = "1234567890abcdef",  # TODO: Add real checksums
-        url_suffix = "darwin.tar.gz",
+        sha256 = "cf5f524de23f231756ec2f3754fc810ea3f6206841a968c45d8b7ea47cfc3a61",
+        url_suffix = "macos.tar.gz",
     ),
     "darwin_arm64": struct(
-        sha256 = "1234567890abcdef",
-        url_suffix = "darwin.tar.gz",
+        sha256 = "cf5f524de23f231756ec2f3754fc810ea3f6206841a968c45d8b7ea47cfc3a61",
+        url_suffix = "macos.tar.gz",
     ),
     "linux_amd64": struct(
-        sha256 = "1234567890abcdef",
+        sha256 = "fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8",
         url_suffix = "linux.tar.gz",
     ),
     "linux_arm64": struct(
-        sha256 = "1234567890abcdef",
-        url_suffix = "linux-arm64.tar.gz",
+        sha256 = "fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8",
+        url_suffix = "linux.tar.gz",
     ),
 }
 

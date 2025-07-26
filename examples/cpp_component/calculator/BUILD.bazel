@@ -1,0 +1,57 @@
+"""C/C++ Calculator Component Example"""
+
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_component", "cpp_wit_bindgen", "cc_component_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Generate C++ bindings from WIT
+cpp_wit_bindgen(
+    name = "calculator_bindings",
+    wit = "wit/calculator.wit",
+    world = "calculator",
+    string_encoding = "utf8",
+)
+
+# Math utilities library
+cc_component_library(
+    name = "math_utils",
+    srcs = ["src/math_utils.cpp"],
+    hdrs = ["src/math_utils.h"],
+    language = "cpp",
+    cxx_std = "c++20",
+    optimize = True,
+)
+
+# Calculator component (C++)
+cpp_component(
+    name = "calculator_cpp_component",
+    srcs = [
+        "src/calculator.cpp",
+    ],
+    hdrs = [
+        "src/calculator.h",
+    ],
+    wit = "wit/calculator.wit",
+    language = "cpp",
+    world = "calculator",
+    package_name = "example:calculator@1.0.0",
+    cxx_std = "c++20",
+    optimize = True,
+    deps = [":math_utils"],
+)
+
+# Pure C version of calculator
+cpp_component(
+    name = "calculator_c_component",
+    srcs = [
+        "src/calculator_c.c",
+    ],
+    hdrs = [
+        "src/calculator_c.h",
+    ],
+    wit = "wit/calculator.wit",
+    language = "c",
+    world = "calculator",
+    package_name = "example:calculator-c@1.0.0",
+    optimize = True,
+)

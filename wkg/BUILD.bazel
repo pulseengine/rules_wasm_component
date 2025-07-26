@@ -1,0 +1,15 @@
+"""WebAssembly Package Tools (wkg) rules"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Bzl library for wkg rules
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//toolchains:wkg_toolchain",
+    ],
+)

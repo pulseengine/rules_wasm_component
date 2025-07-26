@@ -18,7 +18,7 @@ git_override(
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "rules_cc", version = "0.0.15")
+bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "rules_go", version = "0.50.1")
 
 # Development dependencies
@@ -51,6 +51,17 @@ wasm_toolchain.register(
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
 register_toolchains("@wasm_tools_toolchains//:all")
+
+# WebAssembly Package Tools (wkg) toolchain
+wkg = use_extension("//wasm:extensions.bzl", "wkg")
+wkg.register(
+    name = "wkg",
+    strategy = "download",
+    version = "0.11.0",
+)
+use_repo(wkg, "wkg_toolchain")
+
+register_toolchains("@wkg_toolchain//:wkg_toolchain_def")
 
 # WASI SDK toolchain
 wasi_sdk = use_extension("//wasm:extensions.bzl", "wasi_sdk")

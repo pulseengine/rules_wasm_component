@@ -1,0 +1,19 @@
+"""Smoke tests for basic functionality"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Core functionality test - validates toolchain and component building
+build_test(
+    name = "wasm_component_smoke_test",
+    targets = ["//examples/basic:hello_component"],
+    visibility = ["//visibility:public"],
+)
+
+test_suite(
+    name = "all", 
+    tests = [
+        ":wasm_component_smoke_test",
+    ],
+)
