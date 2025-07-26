@@ -1,0 +1,119 @@
+load("//cpp:defs.bzl", "cpp_component", "cpp_wit_bindgen", "cc_component_library")
+
+# WIT bindings generation
+cpp_wit_bindgen(
+    name = "image_processing_bindings",
+    wit = "wit/image_processing.wit",
+    world = "image-processor",
+)
+
+# SIMD utilities library
+cc_component_library(
+    name = "simd_utils",
+    srcs = ["src/simd_utils.cpp"],
+    hdrs = ["src/simd_utils.h"],
+    copts = [
+        "-msimd128",  # Enable WebAssembly SIMD
+        "-O3",        # Optimize for performance
+    ],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Color space conversion library
+cc_component_library(
+    name = "color_space",
+    srcs = ["src/color_space.cpp"],
+    hdrs = ["src/color_space.h"],
+    deps = [":simd_utils"],
+    copts = ["-msimd128", "-O3"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Filtering algorithms library
+cc_component_library(
+    name = "filters",
+    srcs = ["src/filters.cpp"],
+    hdrs = ["src/filters.h"],
+    deps = [
+        ":simd_utils",
+        ":color_space",
+    ],
+    copts = ["-msimd128", "-O3"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Transform operations library
+cc_component_library(
+    name = "transforms",
+    srcs = ["src/transforms.cpp"],
+    hdrs = ["src/transforms.h"],
+    deps = [
+        ":simd_utils",
+        ":color_space",
+    ],
+    copts = ["-msimd128", "-O3"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Analysis algorithms library
+cc_component_library(
+    name = "analysis",
+    srcs = ["src/analysis.cpp"],
+    hdrs = ["src/analysis.h"],
+    deps = [
+        ":simd_utils",
+        ":color_space",
+    ],
+    copts = ["-msimd128", "-O3"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Main image processing component
+cpp_component(
+    name = "image_processing_component",
+    srcs = ["src/image_processor.cpp"],
+    hdrs = ["src/image_processor.h"],
+    wit = "wit/image_processing.wit",
+    world = "image-processor",
+    deps = [
+        ":simd_utils",
+        ":color_space",
+        ":filters",
+        ":transforms",
+        ":analysis",
+    ],
+    copts = ["-msimd128", "-O3"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+    visibility = ["//visibility:public"],
+)
+
+# Benchmark executable (runs on host, not WASM)
+cc_binary(
+    name = "image_processing_benchmark",
+    srcs = ["test/benchmark.cpp"],
+    deps = [
+        ":simd_utils",
+        ":color_space",
+        ":filters",
+        ":transforms",
+        ":analysis",
+    ],
+    copts = ["-O3"],
+)
+
+# Test executable (runs on host, not WASM)
+cc_test(
+    name = "image_processing_test",
+    srcs = ["test/image_processing_test.cpp"],
+    deps = [
+        ":simd_utils",
+        ":color_space", 
+        ":filters",
+        ":transforms",
+        ":analysis",
+    ],
+    data = [
+        "data/test_image_small.raw",
+        "data/test_image_large.raw",
+    ],
+)

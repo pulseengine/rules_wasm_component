@@ -1,0 +1,62 @@
+// User Service WIT Interface
+// Defines the Rust user management service API
+
+world user-service {
+  export user-service: interface {
+    
+    // User data structures
+    record user {
+      user-id: string,
+      username: string,
+      email: string,
+      display-name: string,
+      avatar-url: option<string>,
+      created-at: u64,
+      is-verified: bool,
+      is-active: bool,
+    }
+    
+    record create-user-request {
+      username: string,
+      email: string,
+      display-name: option<string>,
+      avatar-url: option<string>,
+    }
+    
+    record profile-update-request {
+      display-name: option<string>,
+      bio: option<string>,
+      location: option<string>,
+      website: option<string>,
+    }
+    
+    record search-query {
+      username: string,
+      email: string,
+      display-name: string,
+      limit: u32,
+    }
+    
+    variant user-result {
+      success(user),
+      not-found,
+      error(string),
+    }
+    
+    // Core user management functions
+    create-user: func(request: create-user-request) -> user-result;
+    get-user: func(user-id: string) -> user-result;
+    update-user: func(user-id: string, request: profile-update-request) -> bool;
+    delete-user: func(user-id: string) -> bool;
+    search-users: func(query: search-query) -> list<user>;
+    
+    // Social features
+    add-friend: func(user-id: string, friend-id: string) -> bool;
+    remove-friend: func(user-id: string, friend-id: string) -> bool;
+    get-friends: func(user-id: string) -> list<string>;
+    
+    // Service management
+    health-check: func() -> bool;
+    get-service-stats: func() -> string;
+  }
+}

@@ -1,0 +1,95 @@
+load("//cpp:defs.bzl", "cpp_component", "cpp_wit_bindgen", "cc_component_library")
+
+# WIT bindings generation
+cpp_wit_bindgen(
+    name = "data_structures_bindings",
+    wit = "wit/data_structures.wit",
+    world = "data-structures",
+)
+
+# Memory allocator library
+cc_component_library(
+    name = "memory_pool",
+    srcs = ["src/memory_pool.cpp"],
+    hdrs = ["src/memory_pool.h"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Hash table implementation
+cc_component_library(
+    name = "hash_table",
+    srcs = ["src/hash_table.cpp"],
+    hdrs = ["src/hash_table.h"],
+    deps = [":memory_pool"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# B-tree implementation
+cc_component_library(
+    name = "btree",
+    srcs = ["src/btree.cpp"],
+    hdrs = ["src/btree.h"],
+    deps = [":memory_pool"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Graph algorithms library
+cc_component_library(
+    name = "graph",
+    srcs = ["src/graph.cpp"],
+    hdrs = ["src/graph.h"],
+    deps = [":memory_pool"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Serialization library
+cc_component_library(
+    name = "serializer",
+    srcs = ["src/serializer.cpp"],
+    hdrs = ["src/serializer.h"],
+    deps = [":memory_pool"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Main data structures component
+cpp_component(
+    name = "data_structures_component",
+    srcs = ["src/data_structures.cpp"],
+    hdrs = ["src/data_structures.h"],
+    wit_bindgen = ":data_structures_bindings",
+    deps = [
+        ":memory_pool",
+        ":hash_table",
+        ":btree",
+        ":graph",
+        ":serializer",
+    ],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+    visibility = ["//visibility:public"],
+)
+
+# Performance benchmark
+cc_binary(
+    name = "data_structures_benchmark",
+    srcs = ["test/benchmark.cpp"],
+    deps = [
+        ":memory_pool",
+        ":hash_table",
+        ":btree",
+        ":graph",
+        ":serializer",
+    ],
+)
+
+# Test suite
+cc_test(
+    name = "data_structures_test",
+    srcs = ["test/data_structures_test.cpp"],
+    deps = [
+        ":memory_pool",
+        ":hash_table",
+        ":btree",
+        ":graph",
+        ":serializer",
+    ],
+)

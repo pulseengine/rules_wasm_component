@@ -1,0 +1,54 @@
+"""Example of WebAssembly Package Tools (wkg) integration"""
+
+load("//wkg:defs.bzl", "wkg_fetch", "wkg_lock", "wkg_publish")
+load("//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("//wit:defs.bzl", "wit_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Example: Fetch a component from a registry
+wkg_fetch(
+    name = "wasi_http_component",
+    package = "wasi:http",
+    version = "0.2.0",
+    # registry = "https://registry.example.com",  # Optional custom registry
+)
+
+# Example: Generate lock file for dependencies
+wkg_lock(
+    name = "dependencies_lock",
+    dependencies = [
+        "wasi:http:0.2.0",
+        "wasi:clocks:0.2.0",
+        "wasi:filesystem:0.2.0",
+    ],
+    # registry = "https://registry.example.com",  # Optional custom registry
+)
+
+# Define WIT interfaces for a custom component
+wit_library(
+    name = "example_interfaces",
+    package_name = "example:component",
+    srcs = ["wit/example.wit"],
+    world = "example",
+)
+
+# Build a custom component
+rust_wasm_component_bindgen(
+    name = "example_component",
+    srcs = ["src/lib.rs"],
+    wit = ":example_interfaces",
+    profiles = ["release"],
+)
+
+# Example: Publish the custom component
+wkg_publish(
+    name = "publish_example",
+    component = ":example_component_release",
+    package_name = "example:my-component",
+    version = "1.0.0",
+    description = "An example WebAssembly component",
+    authors = ["Example Developer"],
+    license = "Apache-2.0",
+    # registry = "https://registry.example.com",  # Optional custom registry
+)

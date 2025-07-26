@@ -1,0 +1,20 @@
+// Microservices composition connecting gateway to remote services
+// This demonstrates how to compose local and remote components
+
+// Instantiate the local gateway component
+let gateway = new gateway:component { ... };
+
+// Instantiate remote user service
+let user_service = new user_service:component { ... };
+
+// Instantiate remote payment service  
+let payment_service = new payment_service:component { ... };
+
+// Connect gateway authentication to user service
+connect gateway.auth_request -> user_service.authenticate;
+
+// Connect gateway payment requests to payment service
+connect gateway.payment_request -> payment_service.process_payment;
+
+// Export the gateway as the main entry point
+export gateway as main;

@@ -1,0 +1,24 @@
+// Example WIT interface for wkg integration demo
+
+package example:component@1.0.0;
+
+/// Example interface for a simple service
+interface example-service {
+    /// Service information record
+    record service-info {
+        name: string,
+        version: string,
+        description: string,
+    }
+    
+    /// Process a request and return a response
+    process-request: func(request: string) -> string;
+    
+    /// Get service metadata
+    get-metadata: func() -> service-info;
+}
+
+/// The main world for this component
+world example {
+    export example-service;
+}

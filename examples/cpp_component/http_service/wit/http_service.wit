@@ -1,0 +1,112 @@
+package example:http-service@1.0.0;
+
+interface http-service {
+    // HTTP methods
+    variant http-method {
+        get,
+        post,
+        put,
+        delete,
+        patch,
+        head,
+        options,
+    }
+    
+    // HTTP status codes
+    enum http-status {
+        ok,                    // 200
+        created,              // 201
+        no-content,           // 204
+        bad-request,          // 400
+        unauthorized,         // 401
+        forbidden,            // 403
+        not-found,            // 404
+        method-not-allowed,   // 405
+        internal-server-error, // 500
+        not-implemented,      // 501
+        service-unavailable,  // 503
+    }
+    
+    // HTTP headers as key-value pairs
+    record http-header {
+        name: string,
+        value: string,
+    }
+    
+    // HTTP request structure
+    record http-request {
+        method: http-method,
+        path: string,
+        query: option<string>,
+        headers: list<http-header>,
+        body: option<list<u8>>,
+    }
+    
+    // HTTP response structure
+    record http-response {
+        status: http-status,
+        headers: list<http-header>,
+        body: option<list<u8>>,
+    }
+    
+    // Route definition for the service
+    record route {
+        method: http-method,
+        path-pattern: string,  // Simple pattern matching with wildcards
+        handler-name: string,
+    }
+    
+    // Service configuration
+    record service-config {
+        name: string,
+        version: string,
+        supported-methods: list<http-method>,
+        max-request-size: u32,
+        timeout-ms: u32,
+    }
+    
+    // Request processing result
+    variant request-result {
+        success(http-response),
+        error(string),
+    }
+    
+    // Service statistics
+    record service-stats {
+        total-requests: u64,
+        successful-requests: u64,
+        failed-requests: u64,
+        average-response-time-ms: u32,
+        uptime-seconds: u64,
+    }
+    
+    // Main service interface
+    handle-request: func(request: http-request) -> request-result;
+    
+    // Route management
+    add-route: func(route: route) -> bool;
+    remove-route: func(method: http-method, path-pattern: string) -> bool;
+    list-routes: func() -> list<route>;
+    
+    // Service management
+    get-config: func() -> service-config;
+    get-stats: func() -> service-stats;
+    reset-stats: func();
+    
+    // Health check
+    health-check: func() -> bool;
+    
+    // Utility functions
+    parse-query-string: func(query: string) -> list<http-header>;
+    build-response: func(status: http-status, body: option<string>, 
+                        headers: option<list<http-header>>) -> http-response;
+    
+    // Content type helpers
+    get-content-type: func(file-extension: string) -> option<string>;
+    is-json-request: func(request: http-request) -> bool;
+    is-form-request: func(request: http-request) -> bool;
+}
+
+world http-service {
+    export http-service;
+}
