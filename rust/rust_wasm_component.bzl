@@ -33,6 +33,11 @@ def _rust_wasm_component_impl(ctx):
             
             # TODO: Add proper component detection logic here
             # For now, assume wasip2 outputs are already components
+            # Future: Use wasm-tools inspect to detect if module is already a component
+            # if wasm_module_is_component(wasm_module):
+            #     component_wasm = wasm_module  
+            # else:
+            #     component_wasm = convert_module_to_component(wasm_module, wit_bindgen)
             component_wasm = wasm_module
         else:
             # No WIT bindings, try to convert module to component
@@ -67,6 +72,9 @@ def _rust_wasm_component_impl(ctx):
     if ctx.attr.wit_bindgen:
         wit_info = ctx.attr.wit_bindgen[WitInfo]
         # TODO: Parse WIT to extract imports/exports
+        # Future: Use wit-parser or wasm-tools to extract interface definitions
+        # imports = parse_wit_imports(wit_info.wit_files)
+        # exports = parse_wit_exports(wit_info.wit_files)
 
     # Create provider
     component_info = WasmComponentInfo(

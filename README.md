@@ -16,7 +16,7 @@ Modern Bazel rules for building and composing WebAssembly components.
 Add to your `MODULE.bazel`:
 
 ```starlark
-bazel_dep(name = "rules_wasm_component", version = "0.1.0")
+bazel_dep(name = "rules_wasm_component", version = "1.0.0")
 
 # Optional: Configure WASM toolchain version
 wasm_toolchain = use_extension(
