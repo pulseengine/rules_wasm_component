@@ -9,6 +9,7 @@ bzl_library(
     srcs = ["defs.bzl"],
     deps = [
         ":wac_compose",
+        ":wac_remote_compose",
     ],
 )
 
@@ -17,5 +18,14 @@ bzl_library(
     srcs = ["wac_compose.bzl"],
     deps = [
         "//providers",
+    ],
+)
+
+bzl_library(
+    name = "wac_remote_compose",
+    srcs = ["wac_remote_compose.bzl"],
+    deps = [
+        "//providers",
+        "//wkg:defs",
     ],
 )
