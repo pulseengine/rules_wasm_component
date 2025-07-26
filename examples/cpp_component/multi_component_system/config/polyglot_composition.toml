@@ -1,0 +1,265 @@
+# Polyglot Multi-Component System Composition Configuration
+# Demonstrates C++, Rust, and Go components working together seamlessly
+
+[metadata]
+name = "polyglot-enterprise-system"
+version = "1.0.0"
+description = "Multi-language enterprise system showcasing C++, Rust, and Go components"
+authors = ["Claude Code Team"]
+languages = ["cpp", "rust", "go"]
+
+# Language-specific component definitions
+[components.auth-service-cpp]
+path = "auth_service_cpp.wasm"
+name = "auth-service"
+language = "cpp"
+interface = "example:auth-service@1.0.0"
+description = "High-performance C++ authentication service with crypto utilities"
+
+[components.user-service-rust]
+path = "user_service_rust.wasm"  
+name = "user-service"
+language = "rust"
+interface = "example:user-service@1.0.0"
+description = "Memory-safe Rust user management service with async capabilities"
+
+[components.analytics-service-go]
+path = "analytics_service_go.wasm"
+name = "analytics-service"
+language = "go"
+interface = "example:analytics-service@1.0.0"
+description = "Concurrent Go analytics service with built-in concurrency primitives"
+
+[components.api-gateway-cpp]
+path = "api_gateway_cpp.wasm"
+name = "api-gateway"
+language = "cpp"
+interface = "example:api-gateway@1.0.0"
+description = "High-throughput C++ API gateway with HTTP optimization"
+
+[components.orchestrator-cpp]
+path = "system_orchestrator_cpp.wasm"
+name = "orchestrator"
+language = "cpp"
+interface = "example:orchestrator@1.0.0"
+description = "C++ system orchestrator for monitoring and coordination"
+
+# Cross-language service connections
+[connections]
+
+# API Gateway (C++) imports from all services (Rust, Go, C++)
+[[connections.imports]]
+component = "api-gateway-cpp"
+import = "example:auth-service@1.0.0"
+provider = "auth-service-cpp"
+note = "C++ gateway ← C++ auth service"
+
+[[connections.imports]]
+component = "api-gateway-cpp"
+import = "example:user-service@1.0.0"
+provider = "user-service-rust"
+note = "C++ gateway ← Rust user service"
+
+[[connections.imports]]
+component = "api-gateway-cpp"
+import = "example:analytics-service@1.0.0"
+provider = "analytics-service-go"
+note = "C++ gateway ← Go analytics service"
+
+# User service (Rust) depends on auth (C++) for user validation
+[[connections.imports]]
+component = "user-service-rust"
+import = "example:auth-service@1.0.0"
+provider = "auth-service-cpp"
+note = "Rust user service ← C++ auth service"
+
+# Analytics service (Go) uses auth (C++) for session tracking
+[[connections.imports]]
+component = "analytics-service-go"
+import = "example:auth-service@1.0.0"
+provider = "auth-service-cpp"
+note = "Go analytics service ← C++ auth service"
+
+# Analytics service (Go) accesses user data (Rust)
+[[connections.imports]]
+component = "analytics-service-go"
+import = "example:user-service@1.0.0"
+provider = "user-service-rust"
+note = "Go analytics service ← Rust user service"
+
+# Orchestrator (C++) manages all services across languages
+[[connections.imports]]
+component = "orchestrator-cpp"
+import = "example:auth-service@1.0.0"
+provider = "auth-service-cpp"
+note = "C++ orchestrator ← C++ auth service"
+
+[[connections.imports]]
+component = "orchestrator-cpp"
+import = "example:user-service@1.0.0"
+provider = "user-service-rust"
+note = "C++ orchestrator ← Rust user service"
+
+[[connections.imports]]
+component = "orchestrator-cpp"
+import = "example:analytics-service@1.0.0"
+provider = "analytics-service-go"
+note = "C++ orchestrator ← Go analytics service"
+
+[[connections.imports]]
+component = "orchestrator-cpp"
+import = "example:api-gateway@1.0.0"
+provider = "api-gateway-cpp"
+note = "C++ orchestrator ← C++ API gateway"
+
+# Language-specific resource limits and configuration
+[resources]
+
+[resources.memory]
+auth-service-cpp = "32MB"      # C++ - efficient memory usage
+user-service-rust = "48MB"     # Rust - safe memory management
+analytics-service-go = "128MB" # Go - garbage collector overhead
+api-gateway-cpp = "64MB"       # C++ - high-throughput processing
+orchestrator-cpp = "24MB"      # C++ - lightweight monitoring
+
+[resources.cpu]
+auth-service-cpp = "1.0"       # C++ - CPU intensive crypto
+user-service-rust = "0.8"      # Rust - balanced performance
+analytics-service-go = "2.0"   # Go - concurrent processing
+api-gateway-cpp = "1.5"        # C++ - high-performance HTTP
+orchestrator-cpp = "0.3"       # C++ - lightweight coordination
+
+[resources.disk]
+auth-service-cpp = "100MB"     # Session storage
+user-service-rust = "200MB"    # User data storage
+analytics-service-go = "500MB" # Analytics data cache
+api-gateway-cpp = "50MB"       # Request/response cache
+orchestrator-cpp = "100MB"     # Logs and metrics
+
+# Language-specific performance characteristics
+[performance]
+
+[performance.latency_targets]
+auth-service-cpp = "10ms"      # C++ crypto operations
+user-service-rust = "50ms"     # Rust database operations
+analytics-service-go = "100ms" # Go data processing
+api-gateway-cpp = "5ms"        # C++ HTTP routing
+orchestrator-cpp = "200ms"     # Monitoring operations
+
+[performance.throughput_targets]
+auth-service-cpp = "10000 req/s"   # High-frequency auth
+user-service-rust = "5000 req/s"   # User operations
+analytics-service-go = "1000 req/s" # Complex analytics
+api-gateway-cpp = "20000 req/s"    # Gateway routing
+orchestrator-cpp = "100 req/s"     # Management operations
+
+# Cross-language communication configuration
+[communication]
+protocol = "wasm-component-model"
+serialization = "wit-canonical-abi"
+enable_async = true
+message_compression = true
+
+[communication.timeouts]
+cpp_to_rust = "30s"
+cpp_to_go = "45s"
+rust_to_cpp = "15s"
+rust_to_go = "60s"
+go_to_cpp = "20s"
+go_to_rust = "40s"
+
+# Language-specific optimizations
+[optimizations]
+
+[optimizations.cpp]
+enable_simd = true
+memory_pool_size = "64MB"
+thread_pool_size = 4
+compile_flags = ["-O3", "-march=native", "-msimd128"]
+
+[optimizations.rust]
+enable_async_runtime = true
+tokio_worker_threads = 4
+compile_flags = ["-C", "opt-level=3", "-C", "target-cpu=native"]
+
+[optimizations.go]
+enable_goroutine_pool = true
+max_goroutines = 1000
+gc_target_percentage = 50
+compile_flags = ["-ldflags=-s -w", "-gcflags=-B"]
+
+# Monitoring and observability per language
+[monitoring]
+enable_metrics = true
+enable_tracing = true
+enable_logging = true
+
+[monitoring.language_specific]
+cpp_profiling = true        # C++ performance profiling
+rust_memory_tracking = true # Rust memory safety tracking
+go_goroutine_monitoring = true # Go concurrency monitoring
+
+[monitoring.metrics_by_language]
+cpp_metrics = ["cpu_usage", "memory_usage", "cache_hits", "simd_usage"]
+rust_metrics = ["async_tasks", "memory_safety_checks", "zero_copy_ops"]
+go_metrics = ["goroutine_count", "gc_duration", "channel_operations"]
+
+# Security configuration per language
+[security]
+enable_sandboxing = true
+
+[security.language_constraints]
+cpp_stack_protection = true
+rust_memory_safety = true  
+go_escape_analysis = true
+
+# Development and debugging
+[development]
+enable_hot_reload = true
+debug_symbols = true
+
+[development.language_tools]
+cpp_debugger = "gdb"
+rust_debugger = "lldb"
+go_debugger = "delve"
+
+# Environment-specific overrides
+[environments.production]
+[environments.production.optimizations.cpp]
+compile_flags = ["-O3", "-DNDEBUG", "-flto", "-msimd128"]
+
+[environments.production.optimizations.rust]  
+compile_flags = ["-C", "opt-level=3", "-C", "lto=fat", "-C", "panic=abort"]
+
+[environments.production.optimizations.go]
+compile_flags = ["-ldflags=-s -w", "-trimpath"]
+
+[environments.development]
+[environments.development.monitoring]
+enable_detailed_tracing = true
+log_all_inter_component_calls = true
+
+# Feature flags for polyglot system
+[features]
+enable_cross_language_caching = true
+enable_language_specific_pools = true
+enable_polyglot_debugging = true
+enable_language_performance_comparison = true
+
+# Language interoperability testing
+[testing]
+enable_cross_language_tests = true
+enable_performance_comparison = true
+enable_memory_safety_validation = true
+
+[testing.language_combinations]
+cpp_rust_interop = true
+cpp_go_interop = true  
+rust_go_interop = true
+all_three_interop = true
+
+# Documentation and examples
+[documentation]
+include_language_comparison = true
+include_performance_benchmarks = true
+include_interop_examples = true

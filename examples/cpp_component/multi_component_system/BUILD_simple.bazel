@@ -1,0 +1,22 @@
+load("//cpp:defs.bzl", "cpp_component", "cpp_wit_bindgen")
+
+# Simple C++ component to test build system
+cpp_wit_bindgen(
+    name = "auth_service_bindings_cpp",
+    wit = "wit/auth_service.wit",
+    world = "auth-service",
+)
+
+cpp_component(
+    name = "auth_service_cpp",
+    srcs = ["test/simple_auth.cpp"],
+    wit_bindgen = ":auth_service_bindings_cpp",
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+)
+
+# Test binary
+cc_test(
+    name = "simple_build_test",
+    srcs = ["test/simple_test.cpp"],
+    deps = [],
+)

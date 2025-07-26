@@ -1,0 +1,32 @@
+package example:http-service@1.0.0;
+
+interface http-service {
+    record http-request {
+        method: string,
+        path: string,
+        headers: list<tuple<string, string>>,
+        body: string,
+    }
+    
+    record http-response {
+        status: u32,
+        headers: list<tuple<string, string>>,
+        body: string,
+    }
+    
+    record service-info {
+        name: string,
+        version: string,
+        description: string,
+        endpoints: list<string>,
+        uptime: u64,
+        requests: u64,
+    }
+    
+    handle-request: func(request: http-request) -> http-response;
+    get-service-info: func() -> service-info;
+}
+
+world http-service {
+    export http-service;
+}
