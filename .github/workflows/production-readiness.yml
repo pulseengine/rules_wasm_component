@@ -57,7 +57,8 @@ jobs:
     - name: Validate checksum format
       run: |
         # Ensure all checksums are proper SHA256 (64 hex chars)
-        if grep -rE 'sha256.*[^a-f0-9]' toolchains/ | grep -v '# '; then
+        # Look for sha256 lines that don't contain exactly 64 hex characters
+        if grep -rE 'sha256.*"[^"]*"' toolchains/ | grep -vE 'sha256.*"[a-f0-9]{64}"' | grep -v '# '; then
           echo "❌ Invalid checksum format found"
           exit 1
         else
