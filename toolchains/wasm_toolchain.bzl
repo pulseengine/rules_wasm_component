@@ -227,11 +227,36 @@ def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform,
     
     def download_operation():
         if is_tarball:
-            return repository_ctx.download_and_extract(
+            # For now, extract without stripPrefix to debug structure
+            result = repository_ctx.download_and_extract(
                 url = url,
                 sha256 = tool_info["sha256"],
-                stripPrefix = "{}-{}-{}".format(tool_name, version, tool_info.get("url_suffix", "").replace(".tar.gz", "")),
             )
+            
+            # After extraction, move the binary to the expected location
+            if tool_name == "wasm-tools":
+                # Look for the binary in common locations
+                possible_paths = [
+                    "{}-{}-{}/{}".format(tool_name, version, tool_info["url_suffix"].replace(".tar.gz", ""), tool_name),
+                    "{}-{}/{}".format(tool_name, version, tool_name),
+                    "{}".format(tool_name),
+                ]
+                for path in possible_paths:
+                    if repository_ctx.path(path).exists:
+                        repository_ctx.execute(["mv", path, tool_name])
+                        break
+            elif tool_name == "wit-bindgen":
+                possible_paths = [
+                    "{}-{}-{}/{}".format(tool_name, version, tool_info["url_suffix"].replace(".tar.gz", ""), tool_name),
+                    "{}-{}/{}".format(tool_name, version, tool_name),
+                    "{}".format(tool_name),
+                ]
+                for path in possible_paths:
+                    if repository_ctx.path(path).exists:
+                        repository_ctx.execute(["mv", path, tool_name])
+                        break
+                        
+            return result
         else:
             return repository_ctx.download(
                 url = url,
