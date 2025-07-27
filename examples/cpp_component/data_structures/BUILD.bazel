@@ -56,7 +56,8 @@ cpp_component(
     name = "data_structures_component",
     srcs = ["src/data_structures.cpp"],
     hdrs = ["src/data_structures.h"],
-    wit_bindgen = ":data_structures_bindings",
+    wit = "wit/data_structures.wit",
+    world = "data-structures",
     deps = [
         ":memory_pool",
         ":hash_table",

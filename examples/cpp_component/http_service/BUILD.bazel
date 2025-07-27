@@ -38,7 +38,9 @@ cpp_component(
     name = "http_service_component",
     srcs = ["src/http_service.c"],
     hdrs = ["src/http_service.h"],
-    wit_bindgen = ":http_service_bindings",
+    wit = "wit/http_service.wit",
+    world = "http-service",
+    language = "c",
     deps = [
         ":http_utils",
         ":request_parser", 
