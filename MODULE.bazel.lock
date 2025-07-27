@@ -161,7 +161,7 @@
   "moduleExtensions": {
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "GL/qlvYXd0U+z1+ZV2VeV9wRufEXJkj69i+qUch0hS0=",
+        "bzlTransitiveDigest": "MReyyyDcYcZGKFWIUdeuTrcrjn1ytA2MBXtGZD0zHuQ=",
         "usagesDigest": "alR+pUqsJ738YkyooBLo61S409k3zQk0DMrGQ+rPP0w=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -188,7 +188,7 @@
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "GL/qlvYXd0U+z1+ZV2VeV9wRufEXJkj69i+qUch0hS0=",
+        "bzlTransitiveDigest": "MReyyyDcYcZGKFWIUdeuTrcrjn1ytA2MBXtGZD0zHuQ=",
         "usagesDigest": "j2w0KsG/e6tltUI+WAeNH505251eBn4uleGJW2ExVag=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -222,7 +222,7 @@
     },
     "//wasm:extensions.bzl%wkg": {
       "general": {
-        "bzlTransitiveDigest": "GL/qlvYXd0U+z1+ZV2VeV9wRufEXJkj69i+qUch0hS0=",
+        "bzlTransitiveDigest": "MReyyyDcYcZGKFWIUdeuTrcrjn1ytA2MBXtGZD0zHuQ=",
         "usagesDigest": "mH3SUo8xNuIm+C21hj2zQVuSslC4w2RVQ5JRqzScS24=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
