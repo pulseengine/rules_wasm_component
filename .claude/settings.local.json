@@ -42,7 +42,8 @@
       "Bash(-//test/unit:test_component_with_deps_wasm_lib_release )",
       "Bash(-//test_examples/basic:hello_component_wasm_lib_release )",
       "Bash(-//test_examples/dependencies/consumer:consumer_component_wasm_lib_release )",
-      "Bash(-//test_wit_deps/consumer:consumer_component_wasm_lib_release)"
+      "Bash(-//test_wit_deps/consumer:consumer_component_wasm_lib_release)",
+      "mcp__puppeteer__puppeteer_screenshot"
     ],
     "deny": []
   }

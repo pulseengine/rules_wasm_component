@@ -8,7 +8,7 @@ package(default_visibility = ["//visibility:private"])
 # Core functionality tests
 build_test(
     name = "toolchain_registration_test",
-    targets = ["@+wasm_toolchain+wasm_tools_toolchains//:all"],
+    targets = ["@wasm_tools_toolchains//:all"],
 )
 
 build_test(
@@ -24,7 +24,7 @@ build_test(
 # Security validation tests
 genrule(
     name = "check_no_placeholder_checksums",
-    srcs = glob(["//toolchains:*.bzl"]),
+    srcs = ["//toolchains:wasm_toolchain.bzl", "//toolchains:tool_versions.bzl"],
     outs = ["checksum_validation.txt"],
     cmd = """
     if grep -r "1234567890abcdef" $(SRCS) > $@; then
@@ -67,7 +67,7 @@ genrule(
         exit 1
     fi
     """,
-    tools = ["@rules_foreign_cc//tools/build_defs:detect_root"],
+    # Note: tools removed due to dependency issues
 )
 
 # Test suite combining all production tests

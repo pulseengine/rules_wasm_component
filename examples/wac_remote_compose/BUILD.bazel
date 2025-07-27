@@ -1,16 +1,15 @@
 """Example demonstrating WAC remote composition with wkg integration"""
 
 load("@rules_wasm_component//wac:defs.bzl", "wac_remote_compose")
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_component")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 package(default_visibility = ["//visibility:public"])
 
 # Local component that will be composed with remote components
-wasm_component(
+rust_wasm_component_bindgen(
     name = "local_frontend",
     srcs = ["src/lib.rs"],
     wit = "wit/frontend.wit",
-    target = "wasm32-wasip1",
 )
 
 # Compose local component with remote components from registries
