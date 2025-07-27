@@ -113,7 +113,7 @@ def _wasm_toolchain_repository_impl(repository_ctx):
     if strategy == "system":
         _setup_system_tools_enhanced(repository_ctx)
     elif strategy == "download":
-        _setup_downloaded_tools_enhanced(repository_ctx)
+        _setup_downloaded_tools(repository_ctx)  # Use simple method for stability
     elif strategy == "build":
         _setup_built_tools_enhanced(repository_ctx)
     elif strategy == "hybrid":
@@ -342,8 +342,24 @@ def _download_wrpc_enhanced(repository_ctx):
     print("Successfully built and validated wrpc from source")
 
 def _setup_downloaded_tools(repository_ctx):
-    """Download prebuilt tools from GitHub releases (legacy)"""
-    _setup_downloaded_tools_enhanced(repository_ctx)
+    """Download prebuilt tools from GitHub releases (simple & reliable)"""
+    
+    platform = _detect_host_platform(repository_ctx)
+    print("Setting up tools for platform: {}".format(platform))
+    
+    # Download individual tools using simple, proven methods
+    _download_wasm_tools(repository_ctx)
+    _download_wac(repository_ctx)
+    _download_wit_bindgen(repository_ctx)
+    
+    # Create placeholder wrpc binary for compatibility
+    repository_ctx.file("wrpc", """#!/bin/bash
+echo "wrpc disabled for production stability"
+echo "Use system wrpc or enable building from source"
+exit 1
+""", executable = True)
+    
+    print("Successfully set up all tools")
 
 def _setup_built_tools_enhanced(repository_ctx):
     """Build tools from source with enhanced error handling"""
@@ -645,6 +661,7 @@ def _download_wasm_tools(repository_ctx):
         version, version, platform_info.url_suffix,
     )
     
+    # Download and extract tarball, letting Bazel handle the structure
     repository_ctx.download_and_extract(
         url = wasm_tools_url,
         sha256 = platform_info.sha256,
@@ -654,36 +671,42 @@ def _download_wasm_tools(repository_ctx):
 def _download_wac(repository_ctx):
     """Download wac only"""
     platform = _detect_host_platform(repository_ctx)
-    platform_suffix = _get_platform_suffix(platform)
-    
     wac_version = "0.7.0"
-    wac_platform_map = {
-        "aarch64-macos": "aarch64-apple-darwin",
-        "x86_64-macos": "x86_64-apple-darwin", 
-        "x86_64-linux": "x86_64-unknown-linux-musl",
-        "aarch64-linux": "aarch64-unknown-linux-musl",
-        "x86_64-windows": "x86_64-pc-windows-gnu",
-    }
-    wac_platform = wac_platform_map.get(platform_suffix, "x86_64-unknown-linux-musl")
+    
+    # Get checksum and platform info from tool_versions.bzl
+    tool_info = get_tool_info("wac", wac_version, platform)
+    if not tool_info:
+        fail("Unsupported platform {} for wac version {}".format(platform, wac_version))
+    
     wac_url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-cli-{}".format(
-        wac_version, wac_platform,
+        wac_version, tool_info["platform_name"],
     )
     
-    repository_ctx.download(url = wac_url, output = "wac", executable = True)
+    repository_ctx.download(
+        url = wac_url, 
+        output = "wac", 
+        sha256 = tool_info["sha256"],
+        executable = True
+    )
 
 def _download_wit_bindgen(repository_ctx):
     """Download wit-bindgen only"""
     platform = _detect_host_platform(repository_ctx)
-    platform_suffix = _get_platform_suffix(platform)
-    
     wit_bindgen_version = "0.43.0"
-    wit_bindgen_url = "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{}/wit-bindgen-{}-{}.tar.gz".format(
-        wit_bindgen_version, wit_bindgen_version, platform_suffix,
+    
+    # Get checksum and platform info from tool_versions.bzl
+    tool_info = get_tool_info("wit-bindgen", wit_bindgen_version, platform)
+    if not tool_info:
+        fail("Unsupported platform {} for wit-bindgen version {}".format(platform, wit_bindgen_version))
+    
+    wit_bindgen_url = "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{}/wit-bindgen-{}-{}".format(
+        wit_bindgen_version, wit_bindgen_version, tool_info["url_suffix"],
     )
     
     repository_ctx.download_and_extract(
         url = wit_bindgen_url,
-        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, platform_suffix),
+        sha256 = tool_info["sha256"],
+        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, tool_info["url_suffix"].replace(".tar.gz", "")),
     )
 
 def _download_wrpc(repository_ctx):
