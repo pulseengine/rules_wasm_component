@@ -17,7 +17,7 @@ interface calculator {
     record calculation-result {
         success: bool,
         error: option<string>,
-        result: option<f64>,
+        value: option<f64>,
     }
     
     record component-info {
@@ -35,6 +35,6 @@ interface calculator {
     get-calculator-info: func() -> component-info;
 }
 
-world calculator {
+world calculator-world {
     export calculator;
 }

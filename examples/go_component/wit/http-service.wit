@@ -27,6 +27,6 @@ interface http-service {
     get-service-info: func() -> service-info;
 }
 
-world http-service {
+world http-service-world {
     export http-service;
 }

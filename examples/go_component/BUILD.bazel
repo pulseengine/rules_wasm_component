@@ -1,49 +1,104 @@
-"""Example demonstrating Go WebAssembly components"""
+"""Example demonstrating TinyGo WASI Preview 2 WebAssembly components
 
-load("@rules_wasm_component//go:defs.bzl", "go_component", "go_wit_bindgen", "go_mod_download")
+This example shows state-of-the-art Go support for WebAssembly Component Model:
+- TinyGo v0.34.0+ with native WASI Preview 2 support
+- go.bytecodealliance.org/cmd/wit-bindgen-go for WIT bindings
+- Full Component Model and WASI 0.2 interface support
+"""
+
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component", "go_wit_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
 
 package(default_visibility = ["//visibility:public"])
 
-# Download Go module dependencies
-go_mod_download(
-    name = "go_deps",
-    go_mod = "go.mod",
+# WIT library definitions for calculator interface
+wit_library(
+    name = "calculator_wit",
+    srcs = ["wit/calculator.wit"],
+    world = "calculator-world",
 )
 
-# Generate Go bindings from WIT
+# WIT library definitions for HTTP service interface  
+wit_library(
+    name = "http_service_wit",
+    srcs = ["wit/http-service.wit"],
+    world = "http-service-world",
+)
+
+# Generate markdown documentation for calculator interface
+wit_markdown(
+    name = "calculator_docs",
+    wit = ":calculator_wit",
+)
+
+# Generate markdown documentation for HTTP service interface
+wit_markdown(
+    name = "http_service_docs", 
+    wit = ":http_service_wit",
+)
+
+# Generate Go bindings from WIT for calculator
 go_wit_bindgen(
     name = "calculator_bindings",
     wit = "wit/calculator.wit",
-    go_package = "github.com/example/calculator",
-    world = "calculator",
+    world = "calculator-world",
 )
 
-# Build Go component
-go_component(
-    name = "calculator_go_component",
+# Build calculator component using TinyGo + WASI Preview 2
+go_wasm_component(
+    name = "calculator_component",
     srcs = [
         "main.go",
         "calculator.go",
     ],
     wit = "wit/calculator.wit",
+    world = "calculator-world",
     go_mod = "go.mod",
-    go_package = "github.com/example/calculator",
-    main_file = "main.go",
-    world = "calculator",
-    package_name = "example:calculator@1.0.0",
+    optimization = "release",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
 )
 
-# HTTP service component example
-go_component(
+# Generate Go bindings for HTTP service
+go_wit_bindgen(
+    name = "http_service_bindings", 
+    wit = "wit/http-service.wit",
+    world = "http-service-world",
+)
+
+# Build HTTP service component using TinyGo + WASI Preview 2
+go_wasm_component(
     name = "http_service_component",
     srcs = [
-        "service.go",
+        "service.go", 
         "handlers.go",
     ],
     wit = "wit/http-service.wit",
+    world = "http-service-world",
     go_mod = "go.mod",
-    go_package = "github.com/example/httpservice",
-    main_file = "service.go",
-    world = "http-service",
-    package_name = "example:http-service@1.0.0",
+    optimization = "release",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+)
+
+# Debug version for development
+go_wasm_component(
+    name = "calculator_component_debug",
+    srcs = [
+        "main.go",
+        "calculator.go", 
+    ],
+    wit = "wit/calculator.wit",
+    world = "calculator-world",
+    go_mod = "go.mod",
+    optimization = "debug",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+)
+
+# Simple test without WIT bindings to isolate asyncify issues
+go_wasm_component(
+    name = "simple_test",
+    srcs = ["main.go"],
+    world = "simple-test",
+    go_mod = "go.mod",
+    optimization = "debug",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
 )
