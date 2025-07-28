@@ -1,0 +1,10 @@
+"""WASI adapters for WebAssembly component transformation"""
+
+package(default_visibility = ["//visibility:public"])
+
+# WASI Preview 1 to Preview 2 adapter
+# Downloaded from: https://github.com/bytecodealliance/wasmtime/releases/download/v25.0.1/wasi_snapshot_preview1.reactor.wasm
+filegroup(
+    name = "wasi_snapshot_preview1",
+    srcs = ["wasi_snapshot_preview1.reactor.wasm"],
+)

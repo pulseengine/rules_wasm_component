@@ -4,8 +4,8 @@ load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
 load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
 load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
 load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
-load("//toolchains:go_toolchain.bzl", "go_wasm_toolchain_repository")
 load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_repository")
+load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
 
 def _wasm_toolchain_extension_impl(module_ctx):
     """Implementation of wasm_toolchain module extension"""
@@ -273,55 +273,6 @@ jco = module_extension(
     },
 )
 
-def _go_wasm_extension_impl(module_ctx):
-    """Implementation of go_wasm module extension"""
-    
-    registrations = {}
-    
-    # Collect all Go WASM registrations
-    for mod in module_ctx.modules:
-        for registration in mod.tags.register:
-            registrations[registration.name] = registration
-    
-    # Create Go WASM repositories
-    for name, registration in registrations.items():
-        go_wasm_toolchain_repository(
-            name = name + "_toolchain",
-            strategy = registration.strategy,
-            wit_bindgen_go_version = registration.wit_bindgen_go_version,
-        )
-    
-    # If no registrations, create default system toolchain
-    if not registrations:
-        go_wasm_toolchain_repository(
-            name = "go_wasm_toolchain",
-            strategy = "system",
-            wit_bindgen_go_version = "0.1.0",
-        )
-
-# Module extension for Go WebAssembly components
-go_wasm = module_extension(
-    implementation = _go_wasm_extension_impl,
-    tag_classes = {
-        "register": tag_class(
-            attrs = {
-                "name": attr.string(
-                    doc = "Name for this Go WASM registration",
-                    default = "go_wasm",
-                ),
-                "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'system', 'download', or 'build'",
-                    default = "system",
-                    values = ["system", "download", "build"],
-                ),
-                "wit_bindgen_go_version": attr.string(
-                    doc = "wit-bindgen-go version to use",
-                    default = "0.1.0",
-                ),
-            },
-        ),
-    },
-)
 
 def _cpp_component_extension_impl(module_ctx):
     """Implementation of cpp_component module extension"""
@@ -367,6 +318,49 @@ cpp_component = module_extension(
                 "wasi_sdk_version": attr.string(
                     doc = "WASI SDK version to use",
                     default = "24",
+                ),
+            },
+        ),
+    },
+)
+
+def _tinygo_extension_impl(module_ctx):
+    """Implementation of TinyGo module extension"""
+    
+    registrations = {}
+    
+    # Collect all TinyGo registrations
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+    
+    # Create TinyGo repositories
+    for name, registration in registrations.items():
+        tinygo_toolchain_repository(
+            name = name + "_toolchain",
+            tinygo_version = registration.tinygo_version,
+        )
+    
+    # If no registrations, create default TinyGo toolchain
+    if not registrations:
+        tinygo_toolchain_repository(
+            name = "tinygo_toolchain",
+            tinygo_version = "0.38.0",
+        )
+
+# Module extension for TinyGo WASI Preview 2 WebAssembly components
+tinygo = module_extension(
+    implementation = _tinygo_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this TinyGo registration",
+                    default = "tinygo",
+                ),
+                "tinygo_version": attr.string(
+                    doc = "TinyGo version to download and use",
+                    default = "0.38.0",
                 ),
             },
         ),
