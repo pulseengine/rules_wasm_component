@@ -57,9 +57,14 @@ jobs:
     - name: Validate checksum format
       run: |
         # Ensure all checksums are proper SHA256 (64 hex chars)
-        # Look for sha256 lines that don't contain exactly 64 hex characters
-        if grep -rE 'sha256.*"[^"]*"' toolchains/ | grep -vE 'sha256.*"[a-f0-9]{64}"' | grep -v '# '; then
-          echo "❌ Invalid checksum format found"
+        # Look for hardcoded sha256 lines that don't contain exactly 64 hex characters
+        # Exclude variable references like tool_info["sha256"] and platform_info["sha256"]
+        if grep -rE '"sha256":\s*"[^"]*"' toolchains/ | grep -vE '"sha256":\s*"[a-f0-9]{64}"' | grep -v '# '; then
+          echo "❌ Invalid checksum format found:"
+          grep -rE '"sha256":\s*"[^"]*"' toolchains/ | grep -vE '"sha256":\s*"[a-f0-9]{64}"' | grep -v '# '
+          echo ""
+          echo "Found placeholder checksums that need real SHA256 values."
+          echo "These placeholder patterns are security risks and must be replaced."
           exit 1
         else
           echo "✅ All checksums properly formatted"
