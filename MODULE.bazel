@@ -19,7 +19,7 @@ git_override(
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.11")
 bazel_dep(name = "rules_cc", version = "0.1.1")
-bazel_dep(name = "rules_go", version = "0.50.1")
+bazel_dep(name = "rules_go", version = "0.55.1")
 
 # Development dependencies
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
@@ -77,3 +77,13 @@ register_toolchains(
     "@wasi_sdk//:wasi_sdk_toolchain",
     "@wasi_sdk//:cc_toolchain",
 )
+
+# TinyGo WASI Preview 2 toolchain
+tinygo = use_extension("//wasm:extensions.bzl", "tinygo")
+tinygo.register(
+    name = "tinygo",
+    tinygo_version = "0.38.0",
+)
+use_repo(tinygo, "tinygo_toolchain")
+
+register_toolchains("@tinygo_toolchain//:tinygo_toolchain_def")
