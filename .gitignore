@@ -19,4 +19,4 @@ test.xml
 
 # Temporary files
 *.tmp
-*.temp
+*.temp.claude/
