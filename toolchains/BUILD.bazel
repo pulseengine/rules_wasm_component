@@ -28,15 +28,16 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
-# Toolchain type for Go WebAssembly components
-toolchain_type(
-    name = "go_wasm_toolchain_type",
-    visibility = ["//visibility:public"],
-)
 
 # Toolchain type for C/C++ WebAssembly components  
 toolchain_type(
     name = "cpp_component_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+# Toolchain type for TinyGo WASI Preview 2 WebAssembly components
+toolchain_type(
+    name = "tinygo_toolchain_type",
     visibility = ["//visibility:public"],
 )
 
@@ -66,17 +67,6 @@ bzl_library(
     ],
 )
 
-# Bzl library for Go WebAssembly toolchain implementation
-bzl_library(
-    name = "go_toolchain",
-    srcs = ["go_toolchain.bzl"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":diagnostics",
-        ":tool_cache",
-        ":tool_versions",
-    ],
-)
 
 # Bzl library for C/C++ WebAssembly component toolchain implementation
 bzl_library(
@@ -86,6 +76,18 @@ bzl_library(
     deps = [
         ":diagnostics",
         ":tool_cache",
+        ":tool_versions",
+    ],
+)
+
+# Bzl library for TinyGo WASI Preview 2 toolchain implementation
+bzl_library(
+    name = "tinygo_toolchain",
+    srcs = ["tinygo_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":diagnostics",
+        ":tool_cache", 
         ":tool_versions",
     ],
 )
