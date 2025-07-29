@@ -87,3 +87,12 @@ tinygo.register(
 use_repo(tinygo, "tinygo_toolchain")
 
 register_toolchains("@tinygo_toolchain//:tinygo_toolchain_def")
+
+# Modernized WASM tool repositories using git_repository + rules_rust
+wasm_tool_repos = use_extension("//toolchains:extensions.bzl", "wasm_tool_repositories")
+use_repo(wasm_tool_repos, 
+    "wasm_tools_src", 
+    "wac_src", 
+    "wit_bindgen_src", 
+    "wrpc_src"
+)

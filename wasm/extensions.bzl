@@ -6,6 +6,7 @@ load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
 load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
 load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_repository")
 load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
+load("//toolchains:wizer_toolchain.bzl", "wizer_toolchain_repository")
 
 def _wasm_toolchain_extension_impl(module_ctx):
     """Implementation of wasm_toolchain module extension"""
@@ -361,6 +362,56 @@ tinygo = module_extension(
                 "tinygo_version": attr.string(
                     doc = "TinyGo version to download and use",
                     default = "0.38.0",
+                ),
+            },
+        ),
+    },
+)
+
+def _wizer_extension_impl(module_ctx):
+    """Implementation of Wizer module extension"""
+    
+    registrations = {}
+    
+    # Collect all Wizer registrations
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+    
+    # Create Wizer repositories
+    for name, registration in registrations.items():
+        wizer_toolchain_repository(
+            name = name + "_toolchain",
+            version = registration.version,
+            strategy = registration.strategy,
+        )
+    
+    # If no registrations, create default Wizer toolchain
+    if not registrations:
+        wizer_toolchain_repository(
+            name = "wizer_toolchain",
+            version = "9.0.0",
+            strategy = "cargo",
+        )
+
+# Module extension for Wizer WebAssembly pre-initialization
+wizer = module_extension(
+    implementation = _wizer_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this Wizer registration",
+                    default = "wizer",
+                ),
+                "version": attr.string(
+                    doc = "Wizer version to install",
+                    default = "9.0.0",
+                ),
+                "strategy": attr.string(
+                    doc = "Installation strategy: 'cargo' (install via cargo) or 'system' (use system install)",
+                    default = "cargo",
+                    values = ["cargo", "system"],
                 ),
             },
         ),
