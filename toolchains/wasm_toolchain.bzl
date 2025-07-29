@@ -243,7 +243,8 @@ def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform,
                 ]
                 for path in possible_paths:
                     if repository_ctx.path(path).exists:
-                        repository_ctx.execute(["mv", path, tool_name])
+                        # Use Bazel-native symlink instead of shell mv command
+                        repository_ctx.symlink(path, tool_name)
                         break
             elif tool_name == "wit-bindgen":
                 possible_paths = [
@@ -253,7 +254,8 @@ def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform,
                 ]
                 for path in possible_paths:
                     if repository_ctx.path(path).exists:
-                        repository_ctx.execute(["mv", path, tool_name])
+                        # Use Bazel-native symlink instead of shell mv command
+                        repository_ctx.symlink(path, tool_name)
                         break
                         
             return result
@@ -324,7 +326,8 @@ def _download_wrpc_enhanced(repository_ctx):
         ))
 
     # Copy built binary
-    repository_ctx.execute(["cp", "wrpc-src/target/release/wrpc-wasmtime", "wrpc"])
+    # Use Bazel-native symlink instead of shell cp command
+    repository_ctx.symlink("wrpc-src/target/release/wrpc-wasmtime", "wrpc")
     
     # Validate built tool
     validation_result = validate_tool_functionality(repository_ctx, "wrpc", "wrpc")
@@ -430,11 +433,8 @@ def _setup_built_tools_original(repository_ctx):
     if result.return_code != 0:
         fail("Failed to build wasm-tools: {}".format(result.stderr))
 
-    repository_ctx.execute([
-        "cp",
-        "wasm-tools-src/target/release/wasm-tools",
-        "wasm-tools",
-    ])
+    # Use Bazel-native symlink instead of shell cp command
+    repository_ctx.symlink("wasm-tools-src/target/release/wasm-tools", "wasm-tools")
 
     # Clone and build wac
     result = repository_ctx.execute([
@@ -463,11 +463,8 @@ def _setup_built_tools_original(repository_ctx):
     if result.return_code != 0:
         fail("Failed to build wac: {}".format(result.stderr))
 
-    repository_ctx.execute([
-        "cp",
-        "wac-src/target/release/wac",
-        "wac",
-    ])
+    # Use Bazel-native symlink instead of shell cp command
+    repository_ctx.symlink("wac-src/target/release/wac", "wac")
 
     # Clone and build wit-bindgen
     result = repository_ctx.execute([
@@ -496,11 +493,8 @@ def _setup_built_tools_original(repository_ctx):
     if result.return_code != 0:
         fail("Failed to build wit-bindgen: {}".format(result.stderr))
 
-    repository_ctx.execute([
-        "cp",
-        "wit-bindgen-src/target/release/wit-bindgen",
-        "wit-bindgen",
-    ])
+    # Use Bazel-native symlink instead of shell cp command
+    repository_ctx.symlink("wit-bindgen-src/target/release/wit-bindgen", "wit-bindgen")
 
     # Clone and build wrpc
     result = repository_ctx.execute([
@@ -531,11 +525,8 @@ def _setup_built_tools_original(repository_ctx):
     if result.return_code != 0:
         fail("Failed to build wrpc: {}".format(result.stderr))
 
-    repository_ctx.execute([
-        "cp",
-        "wrpc-src/target/release/wrpc",
-        "wrpc",
-    ])
+    # Use Bazel-native symlink instead of shell cp command
+    repository_ctx.symlink("wrpc-src/target/release/wrpc", "wrpc")
 
 def _setup_hybrid_tools_original(repository_ctx):
     """Setup tools using hybrid build/download strategy"""
@@ -558,91 +549,36 @@ def _setup_hybrid_tools_original(repository_ctx):
     wit_bindgen_url = repository_ctx.attr.wit_bindgen_url or "https://github.com/bytecodealliance/wit-bindgen.git"
     wrpc_url = repository_ctx.attr.wrpc_url or "https://github.com/bytecodealliance/wrpc.git"
     
-    # Build or download wasm-tools
+    # Build or download wasm-tools - MODERNIZED: Use git_repository + rules_rust
     if build_wasm_tools:
-        result = repository_ctx.execute([
-            "git", "clone", wasm_tools_url, "wasm-tools-src",
-        ])
-        if result.return_code == 0:
-            result = repository_ctx.execute([
-                "git", "-C", "wasm-tools-src", "checkout", wasm_tools_commit,
-            ])
-        if result.return_code != 0:
-            fail("Failed to clone wasm-tools from {}: {}".format(wasm_tools_url, result.stderr))
-        
-        result = repository_ctx.execute([
-            "cargo", "build", "--release", "--manifest-path=wasm-tools-src/Cargo.toml",
-        ])
-        if result.return_code != 0:
-            fail("Failed to build wasm-tools: {}".format(result.stderr))
-        
-        repository_ctx.execute(["cp", "wasm-tools-src/target/release/wasm-tools", "wasm-tools"])
+        # Link to modernized git_repository-based wasm-tools build
+        repository_ctx.symlink("../wasm_tools_src/bazel-bin/wasm-tools", "wasm-tools")
+        print("Using modernized wasm-tools from @wasm_tools_src git repository")
     else:
         _download_wasm_tools(repository_ctx)
     
-    # Build or download wac
+    # Build or download wac - MODERNIZED: Use git_repository + rules_rust  
     if build_wac:
-        result = repository_ctx.execute([
-            "git", "clone", wac_url, "wac-src",
-        ])
-        if result.return_code == 0:
-            result = repository_ctx.execute([
-                "git", "-C", "wac-src", "checkout", wac_commit,
-            ])
-        if result.return_code != 0:
-            fail("Failed to clone wac from {}: {}".format(wac_url, result.stderr))
-        
-        result = repository_ctx.execute([
-            "cargo", "build", "--release", "--manifest-path=wac-src/Cargo.toml",
-        ])
-        if result.return_code != 0:
-            fail("Failed to build wac: {}".format(result.stderr))
-        
-        repository_ctx.execute(["cp", "wac-src/target/release/wac", "wac"])
+        # Link to modernized git_repository-based wac build
+        repository_ctx.symlink("../wac_src/bazel-bin/wac", "wac")
+        print("Using modernized wac from @wac_src git repository")
     else:
         _download_wac(repository_ctx)
     
-    # Build or download wit-bindgen
+    # Build or download wit-bindgen - MODERNIZED: Use git_repository + rules_rust
     if build_wit_bindgen:
-        result = repository_ctx.execute([
-            "git", "clone", wit_bindgen_url, "wit-bindgen-src",
-        ])
-        if result.return_code == 0:
-            result = repository_ctx.execute([
-                "git", "-C", "wit-bindgen-src", "checkout", wit_bindgen_commit,
-            ])
-        if result.return_code != 0:
-            fail("Failed to clone wit-bindgen from {}: {}".format(wit_bindgen_url, result.stderr))
-        
-        result = repository_ctx.execute([
-            "cargo", "build", "--release", "--manifest-path=wit-bindgen-src/Cargo.toml",
-        ])
-        if result.return_code != 0:
-            fail("Failed to build wit-bindgen: {}".format(result.stderr))
-        
-        repository_ctx.execute(["cp", "wit-bindgen-src/target/release/wit-bindgen", "wit-bindgen"])
+        # Link to modernized git_repository-based wit-bindgen build
+        repository_ctx.symlink("../wit_bindgen_src/bazel-bin/wit-bindgen", "wit-bindgen")
+        print("Using modernized wit-bindgen from @wit_bindgen_src git repository")
     else:
         _download_wit_bindgen(repository_ctx)
     
-    # Build or download wrpc
+    # Build or download wrpc - MODERNIZED: Use git_repository + rules_rust
     if build_wrpc:
-        result = repository_ctx.execute([
-            "git", "clone", wrpc_url, "wrpc-src",
-        ])
-        if result.return_code == 0:
-            result = repository_ctx.execute([
-                "git", "-C", "wrpc-src", "checkout", wrpc_commit,
-            ])
-        if result.return_code != 0:
-            fail("Failed to clone wrpc from {}: {}".format(wrpc_url, result.stderr))
-        
-        result = repository_ctx.execute([
-            "cargo", "build", "--release", "--bin", "wrpc", "--manifest-path=wrpc-src/Cargo.toml",
-        ])
-        if result.return_code != 0:
-            fail("Failed to build wrpc: {}".format(result.stderr))
-        
-        repository_ctx.execute(["cp", "wrpc-src/target/release/wrpc", "wrpc"])
+        # Link to modernized git_repository-based wrpc build
+        repository_ctx.symlink("../wrpc_src/bazel-bin/wrpc-wasmtime", "wrpc")
+        print("Using modernized wrpc from @wrpc_src git repository")
+        repository_ctx.symlink("wrpc-src/target/release/wrpc", "wrpc")
     else:
         _download_wrpc(repository_ctx)
 
@@ -732,11 +668,8 @@ def _download_wrpc(repository_ctx):
     if result.return_code != 0:
         fail("Failed to build wrpc: {}".format(result.stderr))
 
-    repository_ctx.execute([
-        "cp",
-        "wrpc-src/target/release/wrpc",
-        "wrpc",
-    ])
+    # Use Bazel-native symlink instead of shell cp command
+    repository_ctx.symlink("wrpc-src/target/release/wrpc", "wrpc")
 
 def _get_platform_suffix(platform):
     """Get platform suffix for download URLs"""
