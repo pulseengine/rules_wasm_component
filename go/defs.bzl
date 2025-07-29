@@ -1,9 +1,10 @@
 """TinyGo WASI Preview 2 WebAssembly component rules
 
 State-of-the-art Go support for WebAssembly Component Model using:
-- TinyGo v0.34.0+ with native WASI Preview 2 support
+- TinyGo v0.38.0 with WASI Preview 2 support
 - go.bytecodealliance.org/cmd/wit-bindgen-go for WIT bindings  
 - Full Component Model and WASI 0.2 interface support
+- Optional Wizer pre-initialization for 1.35-6x startup performance
 
 Example usage:
 
@@ -13,6 +14,16 @@ Example usage:
         wit = "wit/component.wit",
         world = "my-world",
         go_mod = "go.mod",
+    )
+
+    # With Wizer pre-initialization
+    go_wasm_component_wizer(
+        name = "optimized_component",
+        srcs = ["main.go", "handlers.go"],
+        wit = "wit/component.wit",
+        world = "my-world",
+        go_mod = "go.mod",
+        wizer_init_function = "wizer.initialize",
     )
 """
 
@@ -438,5 +449,212 @@ Go code that implements or uses the interfaces defined in WIT files.
 
 The generated bindings are compatible with TinyGo and support the 
 full WebAssembly Component Model.
+""",
+)
+
+def _go_wasm_component_wizer_impl(ctx):
+    """Implementation of go_wasm_component_wizer rule with Wizer pre-initialization"""
+    
+    # First, create the base component using go_wasm_component logic
+    # Get toolchains
+    tinygo_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:tinygo_toolchain_type"]
+    wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
+    wizer_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wizer_toolchain_type"]
+    
+    tinygo = tinygo_toolchain.tinygo
+    wit_bindgen_go = tinygo_toolchain.wit_bindgen_go
+    wasm_tools = wasm_tools_toolchain.wasm_tools
+    wizer = wizer_toolchain.wizer
+    
+    # Output files - component before and after Wizer
+    base_component = ctx.actions.declare_file(ctx.attr.name + "_base_component.wasm")
+    wizer_component = ctx.outputs.wizer_component
+    
+    # Step 1: Generate bindings (if WIT provided)
+    inputs = list(ctx.files.srcs)
+    if ctx.file.wit:
+        inputs.append(ctx.file.wit)
+        
+    if ctx.file.go_mod:
+        inputs.append(ctx.file.go_mod)
+        
+    if ctx.file.adapter:
+        inputs.append(ctx.file.adapter)
+    
+    # Create working directory for build
+    build_dir = ctx.actions.declare_directory(ctx.attr.name + "_build")
+    tinygo_wasm = ctx.actions.declare_file(ctx.attr.name + "_module.wasm")
+    
+    # Step 1: Create module directory with sources and bindings
+    ctx.actions.run_shell(
+        outputs = [build_dir],
+        inputs = inputs,
+        command = """
+        mkdir -p "{build_dir}"
+        cp {srcs} "{build_dir}/"
+        if [[ -n "{wit_file}" ]]; then
+            # Generate bindings if WIT file provided
+            "{wit_bindgen_go}" generate --world "{world}" --out "{build_dir}" "{wit_file}"
+        fi
+        if [[ -n "{go_mod}" ]]; then
+            cp "{go_mod}" "{build_dir}/go.mod"
+        fi
+        """.format(
+            build_dir = build_dir.path,
+            srcs = " ".join([f.path for f in ctx.files.srcs]),
+            wit_file = ctx.file.wit.path if ctx.file.wit else "",
+            world = ctx.attr.world,
+            wit_bindgen_go = wit_bindgen_go.path,
+            go_mod = ctx.file.go_mod.path if ctx.file.go_mod else "",
+        ),
+        mnemonic = "GoModulePrepWizer",
+        progress_message = "Preparing Go module with Wizer support: {}".format(ctx.label.name),
+        use_default_shell_env = False,
+    )
+    
+    # Step 2: Compile using TinyGo
+    optimization_flags = "-opt=2 -gc=leaking" if ctx.attr.optimization == "release" else "-opt=0"
+    
+    ctx.actions.run_shell(
+        outputs = [tinygo_wasm],
+        inputs = [build_dir],
+        tools = [tinygo],
+        command = """
+        cd "{build_dir}"
+        "{tinygo}" build -target=wasi -scheduler=none -o "{output}" {optimization_flags} .
+        """.format(
+            build_dir = build_dir.path,
+            tinygo = tinygo.path,
+            output = tinygo_wasm.path,
+            optimization_flags = optimization_flags,
+        ),
+        mnemonic = "TinyGoCompileWizer",
+        progress_message = "Compiling Go to WASM module with Wizer support: {}".format(ctx.label.name),
+        use_default_shell_env = False,
+    )
+    
+    # Step 3: Transform WASM module to component
+    component_args = [
+        "component", "new", tinygo_wasm.path,
+        "-o", base_component.path,
+    ]
+    if ctx.file.adapter:
+        component_args.extend(["--adapt", ctx.file.adapter.path])
+        
+    ctx.actions.run(
+        executable = wasm_tools,
+        arguments = component_args,
+        inputs = [tinygo_wasm] + ([ctx.file.adapter] if ctx.file.adapter else []),
+        outputs = [base_component],
+        mnemonic = "WasmComponentNewWizer",
+        progress_message = "Creating WebAssembly component for Wizer: {}".format(ctx.label.name),
+    )
+    
+    # Step 4: Apply Wizer pre-initialization
+    wizer_args = [
+        "--allow-wasi",
+        "--inherit-stdio",
+        "--init-func", ctx.attr.wizer_init_function,
+        "--output", wizer_component.path,
+        base_component.path,
+    ]
+    
+    ctx.actions.run(
+        executable = wizer,
+        arguments = wizer_args,
+        inputs = [base_component],
+        outputs = [wizer_component],
+        mnemonic = "WizerPreInit",
+        progress_message = "Pre-initializing component with Wizer: {}".format(ctx.label.name),
+        use_default_shell_env = False,
+        env = {"RUST_BACKTRACE": "1"},
+    )
+    
+    return [
+        DefaultInfo(
+            files = depset([wizer_component]),
+            runfiles = ctx.runfiles(files = [wizer_component]),
+        ),
+        WasmComponentInfo(
+            wasm = wizer_component,
+            wit_info = None,
+            component_type = "component",
+            imports = [],
+            exports = [ctx.attr.world],
+            metadata = {
+                "optimization": ctx.attr.optimization,
+                "wizer_enabled": True,
+                "wizer_init_function": ctx.attr.wizer_init_function,
+            },
+            profile = ctx.attr.optimization,
+            profile_variants = {},
+        ),
+    ]
+
+# TinyGo WebAssembly Component rule with Wizer pre-initialization
+go_wasm_component_wizer = rule(
+    implementation = _go_wasm_component_wizer_impl,
+    attrs = {
+        "srcs": attr.label_list(
+            allow_files = [".go"],
+            doc = "Go source files",
+            mandatory = True,
+        ),
+        "wit": attr.label(
+            allow_single_file = [".wit"],
+            doc = "WIT file defining the component interface",
+        ),
+        "world": attr.string(
+            doc = "WIT world name to implement",
+            mandatory = True,
+        ),
+        "go_mod": attr.label(
+            allow_single_file = ["go.mod"],
+            doc = "Go module file",
+        ),
+        "optimization": attr.string(
+            doc = "Optimization level: 'debug' or 'release'",
+            default = "release",
+            values = ["debug", "release"],
+        ),
+        "adapter": attr.label(
+            allow_single_file = [".wasm"],
+            doc = "WASI Preview 1 adapter for component transformation (optional)",
+        ),
+        "wizer_init_function": attr.string(
+            doc = "Name of the Wizer initialization function",
+            default = "wizer.initialize",
+        ),
+    },
+    outputs = {
+        "wizer_component": "%{name}_wizer.wasm",
+    },
+    toolchains = [
+        "@rules_wasm_component//toolchains:tinygo_toolchain_type",
+        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
+        "@rules_wasm_component//toolchains:wizer_toolchain_type",
+    ],
+    doc = """Builds a pre-initialized WebAssembly component from Go source using TinyGo + Wizer.
+
+This rule combines TinyGo WebAssembly component generation with Wizer pre-initialization
+for dramatically improved startup performance (1.35-6x faster):
+
+- Uses TinyGo v0.38.0 with WASI Preview 2 support  
+- Generates Go bindings from WIT using go.bytecodealliance.org/cmd/wit-bindgen-go
+- Compiles to WASM module, transforms to component
+- Applies Wizer pre-initialization to snapshot the initialized state
+
+Your Go code must export a Wizer initialization function (default: "wizer.initialize")
+that performs expensive setup work at build time rather than runtime.
+
+Example Go code:
+    //export wizer.initialize
+    func wizerInitialize() {
+        // Expensive initialization work here
+        // This runs at build time, not runtime
+    }
+
+The resulting component will start much faster as the initialization overhead
+has been eliminated through pre-computation.
 """,
 )

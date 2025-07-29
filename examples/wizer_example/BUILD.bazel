@@ -1,0 +1,66 @@
+"""Example demonstrating Wizer pre-initialization for startup optimization"""
+
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//wasm:defs.bzl", "wizer_chain")
+
+package(default_visibility = ["//visibility:public"])
+
+# Basic component with expensive initialization
+rust_wasm_component(
+    name = "expensive_init_component",
+    srcs = ["src/lib.rs"],
+    wit = "wit/expensive-init.wit",
+    edition = "2021",
+    deps = [
+        "@crates//:wit-bindgen",
+    ],
+)
+
+# Pre-initialized version using Wizer
+wizer_chain(
+    name = "optimized_component",
+    component = ":expensive_init_component",
+    init_function_name = "wizer.initialize",
+)
+
+# Pure Bazel validation - just check that components were built
+filegroup(
+    name = "components_built",
+    srcs = [
+        ":expensive_init_component",
+        ":optimized_component",
+    ],
+)
+
+# Use wasm-tools validate directly as separate actions (no shell scripting)
+genrule(
+    name = "validate_normal_component",
+    srcs = [":expensive_init_component"],
+    outs = ["normal_component_valid.marker"],
+    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
+    cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) validate $(location :expensive_init_component) && touch $@",
+)
+
+genrule(
+    name = "validate_wizer_component", 
+    srcs = [":optimized_component"],
+    outs = ["wizer_component_valid.marker"],
+    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
+    cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) validate $(location :optimized_component) && touch $@",
+)
+
+# Test that both components are valid (depends on validation markers)
+filegroup(
+    name = "validation_test",
+    srcs = [
+        ":validate_normal_component",
+        ":validate_wizer_component",
+    ],
+)
+
+# Build test - simply ensure both components can be built successfully
+# This is the most reliable cross-platform test
+alias(
+    name = "build_test",
+    actual = ":components_built",
+)
