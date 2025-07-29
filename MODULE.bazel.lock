@@ -159,9 +159,59 @@
   },
   "selectedYankedVersions": {},
   "moduleExtensions": {
+    "//toolchains:extensions.bzl%wasm_tool_repositories": {
+      "general": {
+        "bzlTransitiveDigest": "P0lv9AnXHk86Du9Gg58JsYCboqO7OaPV4bGZAB5eL+4=",
+        "usagesDigest": "clQqyOwvm/I5edLjq5P4LnONWTjXO0N1AnoQTVKRaOY=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "wasm_tools_src": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:git.bzl%git_repository",
+            "attributes": {
+              "remote": "https://github.com/bytecodealliance/wasm-tools.git",
+              "tag": "v1.235.0",
+              "build_file": "@@//toolchains:BUILD.wasm_tools"
+            }
+          },
+          "wac_src": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:git.bzl%git_repository",
+            "attributes": {
+              "remote": "https://github.com/bytecodealliance/wac.git",
+              "tag": "v0.7.0",
+              "build_file": "@@//toolchains:BUILD.wac"
+            }
+          },
+          "wit_bindgen_src": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:git.bzl%git_repository",
+            "attributes": {
+              "remote": "https://github.com/bytecodealliance/wit-bindgen.git",
+              "tag": "v0.43.0",
+              "build_file": "@@//toolchains:BUILD.wit_bindgen"
+            }
+          },
+          "wrpc_src": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:git.bzl%git_repository",
+            "attributes": {
+              "remote": "https://github.com/bytecodealliance/wrpc.git",
+              "tag": "v0.1.0",
+              "build_file": "@@//toolchains:BUILD.wrpc"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "//wasm:extensions.bzl%tinygo": {
       "general": {
-        "bzlTransitiveDigest": "z5vqq7GY6UTLMQ7jB4+D0K7ADmJQ0LVgtF1A78rCjzY=",
+        "bzlTransitiveDigest": "l1MRVt1rJav/NHEmPfCNjUi8oWxeoxajIIn9hKX8nrc=",
         "usagesDigest": "tE5hZWIXf+a1hThQOIcRRVjPbVQjFDb2aj5a1eEhvaA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -190,7 +240,7 @@
     },
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "z5vqq7GY6UTLMQ7jB4+D0K7ADmJQ0LVgtF1A78rCjzY=",
+        "bzlTransitiveDigest": "l1MRVt1rJav/NHEmPfCNjUi8oWxeoxajIIn9hKX8nrc=",
         "usagesDigest": "alR+pUqsJ738YkyooBLo61S409k3zQk0DMrGQ+rPP0w=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -222,7 +272,7 @@
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "z5vqq7GY6UTLMQ7jB4+D0K7ADmJQ0LVgtF1A78rCjzY=",
+        "bzlTransitiveDigest": "l1MRVt1rJav/NHEmPfCNjUi8oWxeoxajIIn9hKX8nrc=",
         "usagesDigest": "j2w0KsG/e6tltUI+WAeNH505251eBn4uleGJW2ExVag=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -261,7 +311,7 @@
     },
     "//wasm:extensions.bzl%wkg": {
       "general": {
-        "bzlTransitiveDigest": "z5vqq7GY6UTLMQ7jB4+D0K7ADmJQ0LVgtF1A78rCjzY=",
+        "bzlTransitiveDigest": "l1MRVt1rJav/NHEmPfCNjUi8oWxeoxajIIn9hKX8nrc=",
         "usagesDigest": "mH3SUo8xNuIm+C21hj2zQVuSslC4w2RVQ5JRqzScS24=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
