@@ -25,28 +25,6 @@ TOOL_VERSIONS = {
                 "sha256": "ecf9f2064c2096df134c39c2c97af2c025e974cc32e3c76eb2609156c1690a74",
             },
         },
-        "1.234.0": {
-            "darwin_amd64": {
-                "url_suffix": "x86_64-macos.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wasm_tools_1234_darwin_amd64",
-            },
-            "darwin_arm64": {
-                "url_suffix": "aarch64-macos.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wasm_tools_1234_darwin_arm64",
-            },
-            "linux_amd64": {
-                "url_suffix": "x86_64-linux.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wasm_tools_1234_linux_amd64",
-            },
-            "linux_arm64": {
-                "url_suffix": "aarch64-linux.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wasm_tools_1234_linux_arm64",
-            },
-            "windows_amd64": {
-                "url_suffix": "x86_64-windows.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wasm_tools_1234_windows_amd64",
-            },
-        },
     },
     "wac": {
         "0.7.0": {
@@ -69,28 +47,6 @@ TOOL_VERSIONS = {
             "windows_amd64": {
                 "platform_name": "x86_64-pc-windows-gnu",
                 "sha256": "d8c65e5471fc242d8c4993e2125912e10e9373f1e38249157491b3c851bd1336",
-            },
-        },
-        "0.6.1": {
-            "darwin_amd64": {
-                "platform_name": "x86_64-apple-darwin",
-                "sha256": "NEED_REAL_CHECKSUM_wac_061_darwin_amd64",
-            },
-            "darwin_arm64": {
-                "platform_name": "aarch64-apple-darwin",
-                "sha256": "NEED_REAL_CHECKSUM_wac_061_darwin_arm64",
-            },
-            "linux_amd64": {
-                "platform_name": "x86_64-unknown-linux-musl",
-                "sha256": "NEED_REAL_CHECKSUM_wac_061_linux_amd64",
-            },
-            "linux_arm64": {
-                "platform_name": "aarch64-unknown-linux-musl",
-                "sha256": "NEED_REAL_CHECKSUM_wac_061_linux_arm64",
-            },
-            "windows_amd64": {
-                "platform_name": "x86_64-pc-windows-gnu",
-                "sha256": "NEED_REAL_CHECKSUM_wac_061_windows_amd64",
             },
         },
     },
@@ -117,28 +73,6 @@ TOOL_VERSIONS = {
                 "sha256": "e133d9f18bc0d8a3d848df78960f9974a4333bee7ed3f99b4c9e900e9e279029",
             },
         },
-        "0.42.1": {
-            "darwin_amd64": {
-                "url_suffix": "x86_64-macos.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wit_bindgen_0421_darwin_amd64",
-            },
-            "darwin_arm64": {
-                "url_suffix": "aarch64-macos.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wit_bindgen_0421_darwin_arm64",
-            },
-            "linux_amd64": {
-                "url_suffix": "x86_64-linux.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wit_bindgen_0421_linux_amd64",
-            },
-            "linux_arm64": {
-                "url_suffix": "aarch64-linux.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wit_bindgen_0421_linux_arm64",
-            },
-            "windows_amd64": {
-                "url_suffix": "x86_64-windows.tar.gz",
-                "sha256": "NEED_REAL_CHECKSUM_wit_bindgen_0421_windows_amd64",
-            },
-        },
     },
     "wkg": {
         "0.11.0": {
@@ -163,28 +97,6 @@ TOOL_VERSIONS = {
                 "sha256": "c2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1",
             },
         },
-        "0.10.0": {
-            "darwin_amd64": {
-                "binary_name": "wkg-x86_64-apple-darwin",
-                "sha256": "NEED_REAL_CHECKSUM_wkg_0100_darwin_amd64",
-            },
-            "darwin_arm64": {
-                "binary_name": "wkg-aarch64-apple-darwin",
-                "sha256": "NEED_REAL_CHECKSUM_wkg_0100_darwin_arm64",
-            },
-            "linux_amd64": {
-                "binary_name": "wkg-x86_64-unknown-linux-musl",
-                "sha256": "NEED_REAL_CHECKSUM_wkg_0100_linux_amd64",
-            },
-            "linux_arm64": {
-                "binary_name": "wkg-aarch64-unknown-linux-musl",
-                "sha256": "NEED_REAL_CHECKSUM_wkg_0100_linux_arm64",
-            },
-            "windows_amd64": {
-                "binary_name": "wkg-x86_64-pc-windows-gnu.exe",
-                "sha256": "NEED_REAL_CHECKSUM_wkg_0100_windows_amd64",
-            },
-        },
     },
 }
 
@@ -195,11 +107,6 @@ COMPATIBILITY_MATRIX = {
             "wac": ["0.7.0"],
             "wit-bindgen": ["0.43.0"],
             "wkg": ["0.11.0"],
-        },
-        "1.234.0": {
-            "wac": ["0.7.0", "0.6.1"],
-            "wit-bindgen": ["0.43.0", "0.42.1"],
-            "wkg": ["0.11.0", "0.10.0"],
         },
     },
 }
@@ -213,10 +120,10 @@ DEFAULT_VERSIONS = {
         "wkg": "0.11.0",
     },
     "latest": {
-        "wasm-tools": "1.234.0",
-        "wac": "0.6.1",
-        "wit-bindgen": "0.42.1", 
-        "wkg": "0.10.0",
+        "wasm-tools": "1.235.0",
+        "wac": "0.7.0",
+        "wit-bindgen": "0.43.0", 
+        "wkg": "0.11.0",
     },
 }
 

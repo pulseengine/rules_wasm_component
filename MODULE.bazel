@@ -41,6 +41,13 @@ use_repo(rust, "rust_toolchains")
 # Register toolchains
 register_toolchains("@rust_toolchains//:all")
 
+# Go toolchain setup
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.24.4")
+use_repo(go_sdk, "go_toolchains")
+
+register_toolchains("@go_toolchains//:all")
+
 # WebAssembly toolchains
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
