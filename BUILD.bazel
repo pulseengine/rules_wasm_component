@@ -38,4 +38,12 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
+# Clippy linting for all Rust code - replaces scripts/clippy.sh
+# Usage: bazel build //:clippy (runs clippy on all Rust targets)
+alias(
+    name = "clippy",
+    actual = "//test/clippy:test_lib_clippy",
+    visibility = ["//visibility:public"],
+)
+
 cc_library(name="test_archive",srcs=["test_cpp_archive.cpp"],target_compatible_with=["@platforms//cpu:wasm32","@platforms//os:wasi"])
