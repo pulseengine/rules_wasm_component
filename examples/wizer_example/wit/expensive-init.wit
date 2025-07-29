@@ -1,0 +1,10 @@
+package expensive-init:api@1.0.0;
+
+interface expensive-init {
+    /// Compute a result using pre-initialized data
+    compute: func(input: s32) -> s32;
+}
+
+world expensive-init {
+    export expensive-init;
+}
