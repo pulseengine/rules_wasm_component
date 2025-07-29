@@ -269,8 +269,8 @@ def _setup_system_sysroot(repository_ctx):
     ]
     
     for location in possible_locations:
-        result = repository_ctx.execute(["test", "-d", location])
-        if result.return_code == 0:
+        # Use Bazel-native path existence check instead of shell test
+        if repository_ctx.path(location).exists:
             # Create symlink to sysroot
             repository_ctx.symlink(location, "sysroot")
             print("Using WASI sysroot at: {}".format(location))
@@ -278,8 +278,9 @@ def _setup_system_sysroot(repository_ctx):
     
     # If not found, create minimal sysroot structure
     print("Warning: WASI sysroot not found, creating minimal structure")
-    repository_ctx.execute(["mkdir", "-p", "sysroot/include"])
-    repository_ctx.execute(["mkdir", "-p", "sysroot/lib"])
+    # Note: Create minimal directories using Bazel-native file operations
+    repository_ctx.file("sysroot/include/.gitkeep", "")  # Creates directory
+    repository_ctx.file("sysroot/lib/.gitkeep", "")      # Creates directory
 
 def _create_cpp_build_files(repository_ctx):
     """Create BUILD files for C/C++ toolchain"""

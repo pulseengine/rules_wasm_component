@@ -151,8 +151,8 @@ toolchain(
         if result.return_code != 0:
             fail("Failed to build wkg: {}".format(result.stderr))
         
-        # Copy the binary
-        ctx.execute(["cp", "target/release/wkg", "wkg"])
+        # Copy the binary using Bazel-native operations
+        ctx.symlink("target/release/wkg", "wkg")
         
         ctx.file("BUILD.bazel", """
 load("@rules_wasm_component//toolchains:wkg_toolchain.bzl", "wkg_toolchain")
