@@ -106,9 +106,9 @@ def get_build_error_suggestion(tool_name, error_output):
 def validate_system_tool(ctx, tool_name, expected_version = None):
     """Validate a system-installed tool with comprehensive checking"""
     
-    # Check if tool exists
-    result = ctx.execute(["which", tool_name])
-    if result.return_code != 0:
+    # Check if tool exists using Bazel-native function
+    tool_path = ctx.which(tool_name)
+    if not tool_path:
         return {
             "valid": False,
             "error": format_diagnostic_error(
@@ -118,11 +118,8 @@ def validate_system_tool(ctx, tool_name, expected_version = None):
             ),
         }
     
-    tool_path = result.stdout.strip()
-    
-    # Check if tool is executable
-    result = ctx.execute(["test", "-x", tool_path])
-    if result.return_code != 0:
+    # Check if tool is accessible using Bazel-native path operations
+    if not ctx.path(tool_path).exists:
         return {
             "valid": False,
             "error": format_diagnostic_error(

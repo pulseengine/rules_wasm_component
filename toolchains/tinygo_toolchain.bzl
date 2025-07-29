@@ -18,15 +18,15 @@ load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "log_diagnostic_
 def _detect_host_platform(repository_ctx):
     """Detect the host platform for tool downloads"""
     os_name = repository_ctx.os.name.lower()
+    arch = repository_ctx.os.arch.lower()
+    
+    # Use Bazel's native architecture detection instead of uname -m
     if "mac" in os_name or "darwin" in os_name:
-        # Detect Apple Silicon vs Intel
-        result = repository_ctx.execute(["uname", "-m"])
-        if result.return_code == 0 and "arm64" in result.stdout:
+        if arch == "aarch64" or "arm64" in arch:
             return "darwin_arm64"
         return "darwin_amd64"
     elif "linux" in os_name:
-        result = repository_ctx.execute(["uname", "-m"])
-        if result.return_code == 0 and ("aarch64" in result.stdout or "arm64" in result.stdout):
+        if arch == "aarch64" or "arm64" in arch:
             return "linux_arm64"
         return "linux_amd64"
     elif "windows" in os_name:
@@ -133,10 +133,9 @@ exit 1
             gopath = gopath_result.stdout.strip()
             wit_bindgen_go_path = "{}/bin/wit-bindgen-go".format(gopath)
             
-            # Copy to our bin directory
-            repository_ctx.execute(["mkdir", "-p", "bin"])
-            repository_ctx.execute(["cp", wit_bindgen_go_path, "bin/wit-bindgen-go"])
-            repository_ctx.execute(["chmod", "+x", "bin/wit-bindgen-go"])
+            # Copy to our bin directory using Bazel-native file operations
+            # Note: repository_ctx.symlink automatically handles executable permissions
+            repository_ctx.symlink(wit_bindgen_go_path, "bin/wit-bindgen-go")
 
 def _tinygo_toolchain_repository_impl(repository_ctx):
     """Implementation of TinyGo toolchain repository rule"""

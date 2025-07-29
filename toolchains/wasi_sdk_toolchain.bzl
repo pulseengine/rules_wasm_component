@@ -176,7 +176,7 @@ def _create_wasi_sdk_build_file(repository_ctx):
     """Create BUILD file for WASI SDK"""
     
     # Create a tools directory with proper symlinks for Rust builds
-    repository_ctx.execute(["mkdir", "-p", "tools"])
+    # Note: Directory will be created automatically when symlinks are created
     
     # Create symlinks in the tools directory that Rust can find
     tools = [

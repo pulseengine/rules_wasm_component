@@ -85,131 +85,30 @@ def _verify_cache_integrity(ctx, cache_path, tool_name):
     }
 
 def cache_tool(ctx, tool_name, tool_binary, version, platform, strategy, checksum = None):
-    """Cache a tool binary for future use"""
+    """Cache a tool binary for future use - SIMPLIFIED: Rely on Bazel's native caching"""
     
-    cache_info = get_cache_info(ctx, tool_name, version, platform, strategy)
-    cache_path = cache_info["cache_path"]
-    cache_dir = cache_info["cache_dir"]
+    # Note: This function is simplified to rely on Bazel's repository caching
+    # instead of implementing a custom cache system with shell operations.
+    # The repository rule itself provides caching through Bazel's mechanisms.
     
-    # Create cache directory
-    ctx.execute(["mkdir", "-p", cache_dir])
-    ctx.execute(["mkdir", "-p", cache_path])
-    
-    # Copy tool binary to cache
-    cached_binary = "{}/{}".format(cache_path, tool_name)
-    result = ctx.execute(["cp", str(tool_binary), cached_binary])
-    if result.return_code != 0:
-        # Cache operation failed, but don't fail the build
-        print("Warning: Failed to cache tool {}: {}".format(tool_name, result.stderr))
-        return False
-    
-    # Make cached binary executable
-    ctx.execute(["chmod", "+x", cached_binary])
-    
-    # Create integrity file
-    # Use a simple timestamp placeholder since Starlark doesn't have time module
-    integrity_info = [
-        "tool_name={}".format(tool_name),
-        "version={}".format(version),
-        "platform={}".format(platform),
-        "strategy={}".format(strategy),
-        "timestamp={}".format(hash(tool_name + version + platform)),  # Simple deterministic value
-    ]
-    
-    if checksum:
-        integrity_info.append("checksum={}".format(checksum))
-    
-    integrity_file = "{}/integrity.txt".format(cache_path)
-    ctx.file(integrity_file, "\n".join(integrity_info))
-    
-    print("Tool {} cached successfully at {}".format(tool_name, cache_path))
+    print("Tool {} setup completed (relying on Bazel repository cache)".format(tool_name))
     return True
 
 def retrieve_cached_tool(ctx, tool_name, version, platform, strategy):
-    """Retrieve a tool from cache if available and valid"""
+    """Retrieve a tool from cache if available and valid - SIMPLIFIED: Always return None"""
     
-    cache_info = get_cache_info(ctx, tool_name, version, platform, strategy)
+    # Note: This function is simplified to always return None, causing tools to be
+    # downloaded/built fresh each time. Bazel's repository caching handles this efficiently.
+    # This eliminates the need for complex shell-based cache management.
     
-    if not cache_info["exists"]:
-        return None
-    
-    integrity_result = _verify_cache_integrity(ctx, cache_info["cache_path"], tool_name)
-    if not integrity_result["valid"]:
-        print("Warning: Cached tool {} is invalid ({}), will re-download".format(
-            tool_name, integrity_result["reason"]
-        ))
-        # Clean up invalid cache
-        ctx.execute(["rm", "-rf", cache_info["cache_path"]])
-        return None
-    
-    # Copy from cache to current repository
-    cached_binary = integrity_result["binary_path"]
-    local_binary = tool_name
-    
-    result = ctx.execute(["cp", cached_binary, local_binary])
-    if result.return_code != 0:
-        print("Warning: Failed to retrieve cached tool {}: {}".format(tool_name, result.stderr))
-        return None
-    
-    # Make local copy executable
-    ctx.execute(["chmod", "+x", local_binary])
-    
-    print("Retrieved {} from cache ({})".format(tool_name, cache_info["cache_key"]))
-    return local_binary
+    return None
 
 def clean_expired_cache(ctx, max_age_days = 30):
-    """Clean up expired cache entries"""
+    """Clean up expired cache entries - SIMPLIFIED: No-op function"""
     
-    cache_dir = "/tmp/bazel_wasm_tool_cache"
-    
-    # Check if cache directory exists
-    result = ctx.execute(["test", "-d", cache_dir])
-    if result.return_code != 0:
-        return  # No cache directory exists
-    
-    # Find and clean expired entries
-    # Use a simple cache management approach for Starlark compatibility
-    # In practice, external cleanup tools would manage cache expiration
-    cleanup_threshold = max_age_days  # Simplified threshold
-    
-    # List cache entries
-    result = ctx.execute(["find", cache_dir, "-maxdepth", "1", "-type", "d", "-name", "tool_cache_*"])
-    if result.return_code != 0:
-        return
-    
-    cache_entries = result.stdout.strip().split("\n") if result.stdout.strip() else []
-    cleaned_count = 0
-    
-    for entry_path in cache_entries:
-        if not entry_path:
-            continue
-        
-        integrity_file = "{}/integrity.txt".format(entry_path)
-        result = ctx.execute(["test", "-f", integrity_file])
-        if result.return_code != 0:
-            # No integrity file, remove entry
-            ctx.execute(["rm", "-rf", entry_path])
-            cleaned_count += 1
-            continue
-        
-        # Check timestamp with Starlark-compatible validation
-        result = ctx.execute(["grep", "timestamp=", integrity_file])
-        if result.return_code == 0:
-            timestamp_line = result.stdout.strip()
-            if "=" in timestamp_line:
-                timestamp_str = timestamp_line.split("=")[1]
-                # Simple validation - if timestamp is numeric, consider it valid
-                # More sophisticated cache management would use external tools
-                if timestamp_str.isdigit():
-                    # For now, keep all timestamped entries (simplified cache management)
-                    pass
-                else:
-                    # Invalid timestamp format, remove entry
-                    ctx.execute(["rm", "-rf", entry_path])
-                    cleaned_count += 1
-    
-    if cleaned_count > 0:
-        print("Cleaned {} expired cache entries".format(cleaned_count))
+    # Note: This function is simplified to do nothing since we rely on
+    # Bazel's repository caching instead of a custom cache system.
+    pass
 
 def validate_tool_functionality(ctx, tool_binary, tool_name):
     """Validate that a tool binary is functional"""
@@ -251,35 +150,12 @@ def validate_tool_functionality(ctx, tool_binary, tool_name):
     }
 
 def get_cache_statistics(ctx):
-    """Get statistics about the tool cache"""
+    """Get statistics about the tool cache - SIMPLIFIED: Return empty stats"""
     
-    cache_dir = "/tmp/bazel_wasm_tool_cache"
-    
-    # Check if cache directory exists
-    result = ctx.execute(["test", "-d", cache_dir])
-    if result.return_code != 0:
-        return {
-            "exists": False,
-            "total_entries": 0,
-            "total_size": "0B",
-        }
-    
-    # Count entries
-    result = ctx.execute(["find", cache_dir, "-maxdepth", "1", "-type", "d", "-name", "tool_cache_*"])
-    entries = result.stdout.strip().split("\n") if result.stdout.strip() else []
-    entry_count = len([e for e in entries if e])
-    
-    # Calculate total size
-    result = ctx.execute(["du", "-sh", cache_dir])
-    total_size = "unknown"
-    if result.return_code == 0:
-        size_line = result.stdout.strip()
-        if size_line:
-            total_size = size_line.split()[0]
-    
+    # Note: This function is simplified since we rely on Bazel's repository caching
+    # instead of a custom cache system.
     return {
-        "exists": True,
-        "total_entries": entry_count,
-        "total_size": total_size,
-        "cache_dir": cache_dir,
+        "exists": False,
+        "total_entries": 0,
+        "total_size": "0B (using Bazel repository cache)",
     }
