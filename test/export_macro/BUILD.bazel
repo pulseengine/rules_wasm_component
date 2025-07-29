@@ -17,12 +17,12 @@ rust_wasm_component_bindgen(
     wit = ":test_interface",
 )
 
-# Test that we can build it successfully
-# The test passes if the component builds without errors
-sh_test(
+# Test that we can build it successfully - replaces test.sh
+# The test passes if the component builds without errors (export! macro accessible)
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+build_test(
     name = "export_macro_test",
-    srcs = ["test.sh"],
-    data = [":test_component"],
+    targets = [":test_component"],
 )
 
 # Simple test to verify export macro is accessible

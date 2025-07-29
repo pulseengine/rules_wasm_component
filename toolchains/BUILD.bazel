@@ -41,6 +41,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for Wizer WebAssembly pre-initialization
+toolchain_type(
+    name = "wizer_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for toolchain implementation
 bzl_library(
     name = "wasm_toolchain",
@@ -88,6 +94,18 @@ bzl_library(
     deps = [
         ":diagnostics",
         ":tool_cache", 
+        ":tool_versions",
+    ],
+)
+
+# Bzl library for Wizer WebAssembly pre-initialization toolchain implementation
+bzl_library(
+    name = "wizer_toolchain",
+    srcs = ["wizer_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":diagnostics",
+        ":tool_cache",
         ":tool_versions",
     ],
 )
