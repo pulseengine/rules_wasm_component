@@ -1,12 +1,12 @@
 # Go WebAssembly Components with TinyGo + WASI Preview 2
 
-This example demonstrates **state-of-the-art Go support** for WebAssembly Component Model using TinyGo with native WASI Preview 2 support.
+This example demonstrates **state-of-the-art Go support** for WebAssembly Component Model using TinyGo v0.38.0 with proper component transformation.
 
 ## Architecture
 
-- **TinyGo v0.34.0+**: Compiler with native WASI Preview 2 support (`--target=wasip2`)
+- **TinyGo v0.38.0**: Compiler with dual-step component generation (WASI → Component)
 - **go.bytecodealliance.org**: Official BytecodeAlliance Go modules for WIT bindings
-- **Full Component Model**: Complete WASI 0.2 interface support
+- **WASI Adapter**: Preview 1 to Preview 2 transformation using official adapter
 - **Production Ready**: Optimized builds with proper component transformation
 
 ## Features
@@ -19,9 +19,10 @@ This example demonstrates **state-of-the-art Go support** for WebAssembly Compon
 
 ## Prerequisites
 
-1. **TinyGo v0.34.0+** (automatically downloaded by Bazel)
-2. **Go 1.24+** (for wit-bindgen-go tool)
+1. **TinyGo v0.38.0** (automatically downloaded by Bazel)
+2. **Go 1.24+** (for wit-bindgen-go and module management)
 3. **wasm-tools** (for component transformation)
+4. **WASI Preview 1 Adapter** (automatically provided by Bazel)
 
 The Bazel toolchain automatically handles tool downloads and setup.
 
@@ -57,8 +58,8 @@ bazel build //examples/go_component:calculator_bindings
 
 1. **WIT Definition** → Define component interfaces in `wit/*.wit`
 2. **Go Bindings** → `wit-bindgen-go` generates Go code from WIT
-3. **TinyGo Compilation** → Compile to WASM with `--target=wasip2`
-4. **Component Transformation** → `wasm-tools component new` creates final component
+3. **TinyGo Compilation** → Compile to WASM module with `--target=wasi --scheduler=none`
+4. **Component Transformation** → `wasm-tools component new` with WASI adapter creates final component
 
 ### Example Structure
 
@@ -87,6 +88,7 @@ go_wasm_component(
     world = "my-world",
     go_mod = "go.mod",
     optimization = "release",  # or "debug"
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",  # Required
 )
 ```
 

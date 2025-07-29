@@ -1,98 +1,120 @@
 # WebAssembly Examples
 
-This directory contains examples demonstrating different approaches to building WebAssembly modules and components.
+This directory contains examples demonstrating different approaches to building WebAssembly modules and components with full support for multiple languages.
 
 ## Examples Overview
 
-### 1. `simple_module/` - Basic WASM Module
+### 1. `basic/` - Simple Rust Component
 **Status: ✅ Working**
 
-A simple Rust library compiled to a core WebAssembly module without component model features.
+A basic WebAssembly component using Rust with WIT interfaces and generated bindings.
 
 ```bash
-bazel build //examples/simple_module:simple_wasm --config=wasi
+bazel build //examples/basic:basic_component
+bazel test //examples/basic:basic_test
 ```
 
 **Use this when:**
-- You need a basic WASM module with simple numeric functions
-- You don't need component model features like interface types
-- You want to avoid complex WIT interface definitions
-- You're targeting environments that don't support the component model yet
-
-### 2. `basic/` - Component with WIT Bindings  
-**Status: ⚠️ Partially Working (Rust toolchain issue)**
-
-A WebAssembly component using WIT interfaces and generated bindings.
-
-```bash
-# WIT bindings generation works:
-bazel build //examples/basic:hello_component_bindings --config=wasi
-
-# Full component build blocked by Rust toolchain configuration issue
-bazel build //examples/basic:hello_component --config=wasi  # Currently fails
-```
-
-**Use this when:**
+- You need a simple component with WIT interfaces
+- You want to learn the basic component model workflow
 - You need rich interface types (strings, records, enums)
-- You want language-agnostic interfaces via WIT
-- You need component composition and linking
-- You're building for component model runtimes
 
-### 3. `multi_profile/` - Advanced Component Composition
-**Status: ⚠️ Manual (tags = ["manual"])**
+### 2. `go_component/` - TinyGo Components
+**Status: ✅ Working**
 
-Advanced example showing multi-profile builds and component composition.
-
-## Rule Differences
-
-### `rust_wasm_component` vs `rust_wasm_component_bindgen`
-
-**`rust_wasm_component`:**
-- Basic rule that compiles Rust to WASM and converts to component
-- Requires manual WIT interface implementation
-- More control but more setup required
-
-**`rust_wasm_component_bindgen`:**
-- High-level macro with automatic WIT binding generation
-- Creates separate bindings library automatically
-- Provides wit_bindgen runtime without external dependencies
-- Recommended for component development
-
-### `rust_shared_library` (Direct)
-- Builds core WASM modules only
-- No component model features
-- Simpler and more reliable for basic use cases
-- Works around current Rust toolchain configuration issues
-
-## Current Status
-
-### ✅ Working Examples
-- **C++ toolchain**: Full path resolution fixed, builds successfully
-- **Simple WASM modules**: Core Rust → WASM compilation works
-- **WIT binding generation**: wit-bindgen command fixed, generates proper bindings
-
-### ⚠️ Known Issues
-- **Rust component builds**: Blocked by Rust toolchain trying to use WASI SDK tools without proper inputs
-- **Full component pipeline**: WIT embedding works, but Rust compilation fails due to toolchain configuration
-
-### 🔧 Recent Fixes
-1. Fixed C++ toolchain path resolution issues
-2. Fixed "decoding a component is not supported" by implementing proper WIT embedding
-3. Fixed wit-bindgen CLI syntax (--world instead of --with)
-4. Added working simple WASM module example
-
-## Building Examples
-
-Use the WASI configuration for all WebAssembly builds:
+Advanced Go WebAssembly components using TinyGo v0.38.0 with WASI Preview 2 support.
 
 ```bash
-# Working examples:
-bazel build //test/toolchain:test_cc --config=wasi                    # C++ → WASM  
-bazel build //examples/simple_module:simple_wasm --config=wasi       # Rust → WASM module
-bazel build //examples/basic:hello_component_bindings --config=wasi  # WIT bindings
-
-# Currently blocked (Rust toolchain issue):
-bazel build //examples/basic:hello_component --config=wasi           # Full component
+bazel build //examples/go_component:calculator_component
+bazel build //examples/go_component:http_service_component
 ```
 
-The toolchain infrastructure is now solid - the remaining work is resolving the Rust toolchain configuration to properly include WASI SDK tools in Rust build actions.
+**Use this when:**
+- You want to write components in Go
+- You need WASI Preview 2 functionality
+- You want automatic WIT binding generation for Go
+
+### 3. `cpp_component/` - C++ Components
+**Status: ✅ Working**
+
+WebAssembly components written in C++ with WASI SDK toolchain.
+
+```bash
+bazel build //examples/cpp_component/calculator:calculator_component
+bazel build //examples/cpp_component/http_service:http_service_component
+```
+
+**Use this when:**
+- You have existing C++ code to port
+- You need high performance components
+- You want to leverage C++ ecosystem libraries
+
+### 4. `js_component/` - JavaScript/TypeScript Components
+**Status: ✅ Working**
+
+WebAssembly components using ComponentizeJS for JavaScript/TypeScript.
+
+```bash
+bazel build //examples/js_component:calculator_component
+```
+
+**Use this when:**
+- You want to write components in JavaScript/TypeScript
+- You need rapid prototyping capabilities
+- You want to leverage npm ecosystem
+
+## Language Support
+
+### Rust Components
+- **Full WebAssembly Component Model support**
+- **Advanced WIT binding generation**
+- **Production-ready toolchain**
+- **Optimized for size and performance**
+
+### Go Components (TinyGo)
+- **TinyGo v0.38.0 with WASI Preview 2**
+- **Dual-step compilation (WASM module → Component)**
+- **WASI Preview 1 adapter integration**
+- **Full go.bytecodealliance.org support**
+
+### C++ Components
+- **WASI SDK toolchain**
+- **C-style WIT bindings**
+- **High performance native code**
+- **Extensive C/C++ ecosystem support**
+
+### JavaScript/TypeScript Components  
+- **ComponentizeJS integration**
+- **Full npm ecosystem access**
+- **TypeScript type safety**
+- **Rapid development workflow**
+
+## Key Features
+
+### 🚀 **Multi-Language Support**
+All major languages supported with first-class toolchain integration.
+
+### 🎯 **WIT Interface Generation**
+Automatic binding generation from WIT interface definitions for all languages.
+
+### 📦 **Component Composition**
+Full support for composing components across languages using WAC.
+
+### ⚡ **Production Ready**
+Optimized toolchains with proper caching, parallel builds, and platform constraints.
+
+## Building All Examples
+
+```bash
+# Build all working examples
+bazel build //examples/basic:basic_component
+bazel build //examples/go_component:calculator_component
+bazel build //examples/cpp_component/calculator:calculator_component  
+bazel build //examples/js_component:calculator_component
+
+# Run tests
+bazel test //examples/basic:basic_test
+bazel test //examples/go_component:...
+```
+
+All examples are **production ready** and demonstrate best practices for WebAssembly Component Model development! 🎉
