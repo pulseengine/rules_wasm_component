@@ -9,11 +9,11 @@ module(
 # Dependencies for WebAssembly tooling
 bazel_dep(name = "rules_rust", version = "0.62.0")
 
-# Git override to use rules_rust fork with wasm32-wasip2 support  
+# Git override to use upstream rules_rust with WASI Preview 2 support
 git_override(
     module_name = "rules_rust",
-    commit = "1945773a",  # Fixed rust_toolchain for WASI SDK tools
-    remote = "https://github.com/avrabe/rules_rust.git",
+    commit = "7d7d3ac00ad013c94e7a9d0db0732c20ffe8eab7",  # WASI Preview 2 support
+    remote = "https://github.com/bazelbuild/rules_rust.git",
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
@@ -95,11 +95,32 @@ use_repo(tinygo, "tinygo_toolchain")
 
 register_toolchains("@tinygo_toolchain//:tinygo_toolchain_def")
 
+# Wizer WebAssembly pre-initialization toolchain
+wizer = use_extension("//wasm:extensions.bzl", "wizer")
+wizer.register(
+    name = "wizer",
+    strategy = "cargo",
+    version = "9.0.0",
+)
+use_repo(wizer, "wizer_toolchain")
+
+register_toolchains("@wizer_toolchain//:wizer_toolchain_def")
+
+# Rust crates for wizer_initializer tool
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+crate.from_cargo(
+    name = "wizer_crates",
+    cargo_lockfile = "//tools/wizer_initializer:Cargo.lock",
+    manifests = ["//tools/wizer_initializer:Cargo.toml"],
+)
+use_repo(crate, "wizer_crates")
+
 # Modernized WASM tool repositories using git_repository + rules_rust
 wasm_tool_repos = use_extension("//toolchains:extensions.bzl", "wasm_tool_repositories")
-use_repo(wasm_tool_repos, 
-    "wasm_tools_src", 
-    "wac_src", 
-    "wit_bindgen_src", 
-    "wrpc_src"
+use_repo(
+    wasm_tool_repos,
+    "wac_src",
+    "wasm_tools_src",
+    "wit_bindgen_src",
+    "wrpc_src",
 )
