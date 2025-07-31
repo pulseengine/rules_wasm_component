@@ -2,7 +2,7 @@
 
 State-of-the-art Go support for WebAssembly Component Model using:
 - TinyGo v0.38.0 with WASI Preview 2 support
-- go.bytecodealliance.org/cmd/wit-bindgen-go for WIT bindings  
+- go.bytecodealliance.org/cmd/wit-bindgen-go for WIT bindings
 - Full Component Model and WASI 0.2 interface support
 - Optional Wizer pre-initialization for 1.35-6x startup performance
 
@@ -35,7 +35,7 @@ def _go_wasm_component_impl(ctx):
     # Get toolchains
     tinygo_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:tinygo_toolchain_type"]
     wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    
+
     tinygo = tinygo_toolchain.tinygo
     wit_bindgen_go = tinygo_toolchain.wit_bindgen_go
     wasm_tools = wasm_tools_toolchain.wasm_tools
@@ -43,7 +43,7 @@ def _go_wasm_component_impl(ctx):
     # Output files - First TinyGo creates a WASM module, then we transform to component
     tinygo_wasm = ctx.actions.declare_file(ctx.attr.name + "_module.wasm")
     component_wasm = ctx.actions.declare_file(ctx.attr.name + "_component.wasm")
-    
+
     # Input files
     go_sources = ctx.files.srcs
     wit_file = ctx.file.wit
@@ -51,7 +51,7 @@ def _go_wasm_component_impl(ctx):
 
     # Generated bindings directory (only if WIT file provided)
     bindings_dir = None
-    
+
     # Prepared Go module directory with resolved dependencies
     go_module_dir = ctx.actions.declare_directory(ctx.attr.name + "_gomod")
 
@@ -59,7 +59,7 @@ def _go_wasm_component_impl(ctx):
     if wit_file:
         # Generated bindings directory
         bindings_dir = ctx.actions.declare_directory(ctx.attr.name + "_bindings")
-        
+
         # Create a simple go.mod file for wit-bindgen-go
         temp_go_mod = ctx.actions.declare_file(ctx.attr.name + "_temp_go.mod")
         ctx.actions.write(
@@ -78,7 +78,7 @@ require go.bytecodealliance.org v0.0.0
             command = """
             # Copy go.mod to current directory
             cp {temp_go_mod} go.mod
-            
+
             # Run wit-bindgen-go
             {wit_bindgen_go} generate --world {world} --out {bindings_dir} {wit_file}
             """.format(
@@ -99,30 +99,30 @@ require go.bytecodealliance.org v0.0.0
         go_module_inputs.append(go_mod)
     if bindings_dir:
         go_module_inputs.append(bindings_dir)
-    
+
     ctx.actions.run_shell(
         outputs = [go_module_dir],
         inputs = go_module_inputs,
         command = """
         # Create module preparation directory
         mkdir -p {go_module_dir}
-        
+
         # Copy Go source files
         {copy_sources}
-        
+
         # Copy generated bindings if they exist
         {copy_bindings}
-        
+
         # Copy go.mod if available
         {copy_go_mod}
-        
+
         # Change to module directory
         cd {go_module_dir}
-        
+
         # Use system Go (execution platform) for module resolution
         if [ -f go.mod ]; then
             echo "Resolving Go modules on execution platform..."
-            
+
             # Try to find system Go binary
             GO_BINARY=""
             if command -v go >/dev/null 2>&1; then
@@ -135,30 +135,30 @@ require go.bytecodealliance.org v0.0.0
                 echo "Warning: No Go binary found for module operations"
                 exit 0  # Continue without module resolution
             fi
-            
+
             echo "Using Go binary: $GO_BINARY"
             "$GO_BINARY" version || echo "Go version check failed"
-            
+
             # Set up Go environment variables
             export GOMODCACHE="$(mktemp -d)"
             export GOPROXY="https://proxy.golang.org,direct"
-            
+
             echo "Set GOMODCACHE to: $GOMODCACHE"
-            
-            # Download dependencies  
+
+            # Download dependencies
             "$GO_BINARY" mod download github.com/bytecodealliance/wasm-tools-go@latest || echo "Module download failed"
-            
-            # Tidy up modules  
+
+            # Tidy up modules
             "$GO_BINARY" mod tidy || echo "Module tidy failed"
-            
+
             echo "Go module resolution complete"
             [ -f go.sum ] && echo "go.sum created" || echo "No go.sum created"
         fi
         """.format(
             go_module_dir = go_module_dir.path,
-            copy_sources = " ".join(['cp "{}" "{go_module_dir}/"'.format(src.path, go_module_dir=go_module_dir.path) for src in go_sources]),
-            copy_bindings = 'if [ -d "{}" ]; then cp -r "{}"/* "{go_module_dir}/" 2>/dev/null || true; fi'.format(bindings_dir.path, bindings_dir.path, go_module_dir=go_module_dir.path) if bindings_dir else "echo '# No bindings to copy'",
-            copy_go_mod = 'cp "{}" "{go_module_dir}/go.mod"'.format(go_mod.path, go_module_dir=go_module_dir.path) if go_mod else "echo '# No go.mod to copy'",
+            copy_sources = " ".join(['cp "{}" "{go_module_dir}/"'.format(src.path, go_module_dir = go_module_dir.path) for src in go_sources]),
+            copy_bindings = 'if [ -d "{}" ]; then cp -r "{}"/* "{go_module_dir}/" 2>/dev/null || true; fi'.format(bindings_dir.path, bindings_dir.path, go_module_dir = go_module_dir.path) if bindings_dir else "echo '# No bindings to copy'",
+            copy_go_mod = 'cp "{}" "{go_module_dir}/go.mod"'.format(go_mod.path, go_module_dir = go_module_dir.path) if go_mod else "echo '# No go.mod to copy'",
         ),
         mnemonic = "GoModulePrep",
         progress_message = "Preparing Go modules for %s" % ctx.attr.name,
@@ -173,11 +173,10 @@ require go.bytecodealliance.org v0.0.0
     # Step 3: Compile Go code to WebAssembly Component using TinyGo with WASI Preview 2
     # TinyGo automatically handles component creation with wasip2 target
     compile_inputs = [go_module_dir]
-    
+
     # Add TinyGo installation files to ensure complete toolchain is available
     tinygo_files = tinygo_toolchain.tinygo_files.files.to_list()
     compile_inputs.extend(tinygo_files)
-    
 
     # Step 3a: Compile using TinyGo with the prepared module directory (creates WASM module)
     ctx.actions.run_shell(
@@ -187,43 +186,43 @@ require go.bytecodealliance.org v0.0.0
         command = """
         # Get the execroot for path construction
         EXECROOT="$(pwd)"
-        
+
         # Set TINYGOROOT by deriving from binary path
         TINYGO_BIN_PATH="$EXECROOT/{tinygo}"
         export TINYGOROOT="${{TINYGO_BIN_PATH%/bin/tinygo}}"
-        
+
         # Use the prepared module directory with resolved dependencies
         cd "{go_module_dir}"
         echo "Using prepared module directory: $(pwd)"
-        
+
         echo "Module directory contents:"
         ls -la
-        
+
         # Debug: show Go files and module state
         echo "Go files:"
         find . -name "*.go" || echo "No Go files found"
-        
+
         echo "Module files:"
         [ -f go.mod ] && echo "go.mod present" || echo "No go.mod"
         [ -f go.sum ] && echo "go.sum present" || echo "No go.sum"
-        
+
         # Environment setup
         echo "Using TINYGOROOT: $TINYGOROOT"
         echo "TinyGo binary: $TINYGO_BIN_PATH"
-        
+
         # Set up PATH with wasm-tools and system Go for TinyGo
         WASM_TOOLS_BINARY="$EXECROOT/{wasm_tools}"
         WASM_TOOLS_DIR="$(dirname "$WASM_TOOLS_BINARY")"
         export PATH="$WASM_TOOLS_DIR:/opt/homebrew/bin:/usr/local/bin:/usr/bin:$PATH"
-        
+
         # Set up Go environment for module support
         export GOMODCACHE="$(mktemp -d)"
         export GOPROXY="https://proxy.golang.org,direct"
-        
+
         # Verify Go is available for TinyGo
         echo "Checking Go availability for TinyGo:"
         go version || echo "Go command not found - TinyGo may have limited module support"
-        
+
         # Create a robust dummy wasm-opt to satisfy TinyGo
         WASM_OPT_DIR="$(mktemp -d)"
         cat > "$WASM_OPT_DIR/wasm-opt" << 'EOF'
@@ -289,10 +288,10 @@ EOF
         chmod +x "$WASM_OPT_DIR/wasm-opt"
         export PATH="$WASM_OPT_DIR:$PATH"
         echo "Created robust wasm-opt at: $WASM_OPT_DIR/wasm-opt"
-        
+
         # Verify TinyGo is ready for compilation
         echo "TinyGo ready for WASM module compilation"
-        
+
         # Build with TinyGo - creates WASM module with WASI interfaces (no auto-component)
         "$TINYGO_BIN_PATH" build -target=wasi -scheduler=none -o "$EXECROOT/{tinygo_wasm}" {optimization_flags} .
         """.format(
@@ -307,7 +306,7 @@ EOF
         env = {
             "CGO_ENABLED": "0",
             "HOME": "/tmp",  # TinyGo needs HOME for cache directory
-            "GO111MODULE": "on",   # Enable Go modules for bytecodealliance dependencies
+            "GO111MODULE": "on",  # Enable Go modules for bytecodealliance dependencies
             # WASMOPT will be set by PATH to our dummy wasm-opt
         },
     )
@@ -315,16 +314,18 @@ EOF
     # Step 3b: Transform WASM module to WebAssembly component using wasm-tools
     component_inputs = [tinygo_wasm]
     component_args = [
-        "component", "new",
+        "component",
+        "new",
         tinygo_wasm.path,
-        "-o", component_wasm.path,
+        "-o",
+        component_wasm.path,
     ]
-    
+
     # Add adapter if provided (needed for WASI Preview 1 modules)
     if ctx.file.adapter:
         component_args.extend(["--adapt", ctx.file.adapter.path])
         component_inputs.append(ctx.file.adapter)
-    
+
     ctx.actions.run(
         executable = wasm_tools,
         arguments = component_args,
@@ -391,7 +392,7 @@ This rule provides state-of-the-art Go support for WebAssembly Component Model:
 - Compiles to WASM module with --target=wasip2 for full WASI 0.2 compatibility
 - Transforms WASM module to WebAssembly Component using wasm-tools component new
 
-The generated component is fully compatible with WASI Preview 2 and the 
+The generated component is fully compatible with WASI Preview 2 and the
 WebAssembly Component Model specification.
 """,
 )
@@ -413,8 +414,10 @@ def _go_wit_bindgen_impl(ctx):
         executable = wit_bindgen_go,
         arguments = [
             "generate",
-            "--world", ctx.attr.world,
-            "--out", bindings_dir.path,
+            "--world",
+            ctx.attr.world,
+            "--out",
+            bindings_dir.path,
             ctx.file.wit.path,
         ],
         mnemonic = "WitBindgenGo",
@@ -444,47 +447,47 @@ go_wit_bindgen = rule(
     ],
     doc = """Generates Go bindings from WIT files using wit-bindgen-go.
 
-This rule uses go.bytecodealliance.org/cmd/wit-bindgen-go to generate 
+This rule uses go.bytecodealliance.org/cmd/wit-bindgen-go to generate
 Go code that implements or uses the interfaces defined in WIT files.
 
-The generated bindings are compatible with TinyGo and support the 
+The generated bindings are compatible with TinyGo and support the
 full WebAssembly Component Model.
 """,
 )
 
 def _go_wasm_component_wizer_impl(ctx):
     """Implementation of go_wasm_component_wizer rule with Wizer pre-initialization"""
-    
+
     # First, create the base component using go_wasm_component logic
     # Get toolchains
     tinygo_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:tinygo_toolchain_type"]
     wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     wizer_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wizer_toolchain_type"]
-    
+
     tinygo = tinygo_toolchain.tinygo
     wit_bindgen_go = tinygo_toolchain.wit_bindgen_go
     wasm_tools = wasm_tools_toolchain.wasm_tools
     wizer = wizer_toolchain.wizer
-    
+
     # Output files - component before and after Wizer
     base_component = ctx.actions.declare_file(ctx.attr.name + "_base_component.wasm")
     wizer_component = ctx.outputs.wizer_component
-    
+
     # Step 1: Generate bindings (if WIT provided)
     inputs = list(ctx.files.srcs)
     if ctx.file.wit:
         inputs.append(ctx.file.wit)
-        
+
     if ctx.file.go_mod:
         inputs.append(ctx.file.go_mod)
-        
+
     if ctx.file.adapter:
         inputs.append(ctx.file.adapter)
-    
+
     # Create working directory for build
     build_dir = ctx.actions.declare_directory(ctx.attr.name + "_build")
     tinygo_wasm = ctx.actions.declare_file(ctx.attr.name + "_module.wasm")
-    
+
     # Step 1: Create module directory with sources and bindings
     ctx.actions.run_shell(
         outputs = [build_dir],
@@ -511,10 +514,10 @@ def _go_wasm_component_wizer_impl(ctx):
         progress_message = "Preparing Go module with Wizer support: {}".format(ctx.label.name),
         use_default_shell_env = False,
     )
-    
+
     # Step 2: Compile using TinyGo
     optimization_flags = "-opt=2 -gc=leaking" if ctx.attr.optimization == "release" else "-opt=0"
-    
+
     ctx.actions.run_shell(
         outputs = [tinygo_wasm],
         inputs = [build_dir],
@@ -532,15 +535,18 @@ def _go_wasm_component_wizer_impl(ctx):
         progress_message = "Compiling Go to WASM module with Wizer support: {}".format(ctx.label.name),
         use_default_shell_env = False,
     )
-    
+
     # Step 3: Transform WASM module to component
     component_args = [
-        "component", "new", tinygo_wasm.path,
-        "-o", base_component.path,
+        "component",
+        "new",
+        tinygo_wasm.path,
+        "-o",
+        base_component.path,
     ]
     if ctx.file.adapter:
         component_args.extend(["--adapt", ctx.file.adapter.path])
-        
+
     ctx.actions.run(
         executable = wasm_tools,
         arguments = component_args,
@@ -549,16 +555,18 @@ def _go_wasm_component_wizer_impl(ctx):
         mnemonic = "WasmComponentNewWizer",
         progress_message = "Creating WebAssembly component for Wizer: {}".format(ctx.label.name),
     )
-    
+
     # Step 4: Apply Wizer pre-initialization
     wizer_args = [
         "--allow-wasi",
         "--inherit-stdio",
-        "--init-func", ctx.attr.wizer_init_function,
-        "--output", wizer_component.path,
+        "--init-func",
+        ctx.attr.wizer_init_function,
+        "--output",
+        wizer_component.path,
         base_component.path,
     ]
-    
+
     ctx.actions.run(
         executable = wizer,
         arguments = wizer_args,
@@ -569,7 +577,7 @@ def _go_wasm_component_wizer_impl(ctx):
         use_default_shell_env = False,
         env = {"RUST_BACKTRACE": "1"},
     )
-    
+
     return [
         DefaultInfo(
             files = depset([wizer_component]),
@@ -639,7 +647,7 @@ go_wasm_component_wizer = rule(
 This rule combines TinyGo WebAssembly component generation with Wizer pre-initialization
 for dramatically improved startup performance (1.35-6x faster):
 
-- Uses TinyGo v0.38.0 with WASI Preview 2 support  
+- Uses TinyGo v0.38.0 with WASI Preview 2 support
 - Generates Go bindings from WIT using go.bytecodealliance.org/cmd/wit-bindgen-go
 - Compiles to WASM module, transforms to component
 - Applies Wizer pre-initialization to snapshot the initialized state

@@ -9,7 +9,7 @@ TOOL_VERSIONS = {
                 "sha256": "154e9ea5f5477aa57466cfb10e44bc62ef537e32bf13d1c35ceb4fedd9921510",
             },
             "darwin_arm64": {
-                "url_suffix": "aarch64-macos.tar.gz", 
+                "url_suffix": "aarch64-macos.tar.gz",
                 "sha256": "17035deade9d351df6183d87ad9283ce4ae7d3e8e93724ae70126c87188e96b2",
             },
             "linux_amd64": {
@@ -33,7 +33,7 @@ TOOL_VERSIONS = {
                 "sha256": "023645743cfcc167a3004d3c3a62e8209a55cde438e6561172bafcaaafc33a40",
             },
             "darwin_arm64": {
-                "platform_name": "aarch64-apple-darwin", 
+                "platform_name": "aarch64-apple-darwin",
                 "sha256": "4e2d22c65c51f0919b10c866ef852038b804d3dbcf515c696412566fc1eeec66",
             },
             "linux_amd64": {
@@ -115,72 +115,80 @@ COMPATIBILITY_MATRIX = {
 DEFAULT_VERSIONS = {
     "stable": {
         "wasm-tools": "1.235.0",
-        "wac": "0.7.0", 
+        "wac": "0.7.0",
         "wit-bindgen": "0.43.0",
         "wkg": "0.11.0",
     },
     "latest": {
         "wasm-tools": "1.235.0",
         "wac": "0.7.0",
-        "wit-bindgen": "0.43.0", 
+        "wit-bindgen": "0.43.0",
         "wkg": "0.11.0",
     },
 }
 
 def get_tool_info(tool_name, version, platform):
     """Get tool information for a specific version and platform"""
-    
+
     if tool_name not in TOOL_VERSIONS:
         fail("Unknown tool: {}. Supported tools: {}".format(
-            tool_name, 
-            ", ".join(TOOL_VERSIONS.keys())
+            tool_name,
+            ", ".join(TOOL_VERSIONS.keys()),
         ))
-    
+
     tool_versions = TOOL_VERSIONS[tool_name]
     if version not in tool_versions:
         available_versions = ", ".join(tool_versions.keys())
         fail("Unsupported version {} for tool {}. Available versions: {}".format(
-            version, tool_name, available_versions
+            version,
+            tool_name,
+            available_versions,
         ))
-    
+
     version_info = tool_versions[version]
     if platform not in version_info:
         available_platforms = ", ".join(version_info.keys())
         fail("Unsupported platform {} for tool {} version {}. Available platforms: {}".format(
-            platform, tool_name, version, available_platforms
+            platform,
+            tool_name,
+            version,
+            available_platforms,
         ))
-    
+
     return version_info[platform]
 
 def validate_tool_compatibility(tools_config):
     """Validate that tool versions are compatible with each other"""
-    
+
     warnings = []
-    
+
     if "wasm-tools" in tools_config:
         wasm_tools_version = tools_config["wasm-tools"]
         if wasm_tools_version in COMPATIBILITY_MATRIX:
             compat_info = COMPATIBILITY_MATRIX[wasm_tools_version]
-            
+
             for tool, version in tools_config.items():
                 if tool != "wasm-tools" and tool in compat_info:
                     if version not in compat_info[tool]:
                         warnings.append(
                             "Warning: {} version {} may not be compatible with wasm-tools {}. " +
                             "Recommended versions: {}".format(
-                                tool, version, wasm_tools_version, 
-                                ", ".join(compat_info[tool])
-                            )
+                                tool,
+                                version,
+                                wasm_tools_version,
+                                ", ".join(compat_info[tool]),
+                            ),
                         )
-    
+
     return warnings
 
 def get_recommended_versions(stability = "stable"):
     """Get recommended tool versions for a given stability level"""
-    
+
     if stability not in DEFAULT_VERSIONS:
         fail("Unknown stability level: {}. Available: {}".format(
-            stability, ", ".join(DEFAULT_VERSIONS.keys())
+            stability,
+            ", ".join(DEFAULT_VERSIONS.keys()),
         ))
-    
+
     return DEFAULT_VERSIONS[stability]

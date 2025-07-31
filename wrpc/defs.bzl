@@ -2,27 +2,27 @@
 
 def _wrpc_bindgen_impl(ctx):
     """Implementation of wrpc_bindgen rule"""
-    
+
     # Get the wasm toolchain (which includes wrpc)
     wasm_toolchain = ctx.toolchains["//toolchains:wasm_tools_toolchain_type"]
     wrpc = wasm_toolchain.wrpc
-    
+
     # Output files
     output_dir = ctx.actions.declare_directory(ctx.attr.name + "_bindings")
-    
+
     # Input WIT file
     wit_file = ctx.file.wit
-    
+
     # Build command arguments
     args = ctx.actions.args()
     args.add("generate")
     args.add("--world", ctx.attr.world)
     args.add("--wit", wit_file.path)
     args.add("--output", output_dir.path)
-    
+
     if ctx.attr.language:
         args.add("--language", ctx.attr.language)
-    
+
     # Run wrpc generate
     ctx.actions.run(
         executable = wrpc,
@@ -32,7 +32,7 @@ def _wrpc_bindgen_impl(ctx):
         mnemonic = "WrpcBindgen",
         progress_message = "Generating wrpc bindings for {}".format(ctx.attr.name),
     )
-    
+
     return [
         DefaultInfo(files = depset([output_dir])),
         OutputGroupInfo(
@@ -64,17 +64,17 @@ wrpc_bindgen = rule(
 
 def _wrpc_serve_impl(ctx):
     """Implementation of wrpc_serve rule"""
-    
+
     # Get the wasm toolchain (which includes wrpc)
     wasm_toolchain = ctx.toolchains["//toolchains:wasm_tools_toolchain_type"]
     wrpc = wasm_toolchain.wrpc
-    
+
     # Component to serve
     component = ctx.file.component
-    
+
     # Create serve script
     serve_script = ctx.actions.declare_file(ctx.attr.name + "_serve.sh")
-    
+
     script_content = '''#!/bin/bash
 set -e
 
@@ -84,7 +84,7 @@ ADDRESS="{address}"
 
 echo "Starting wrpc server..."
 echo "Component: $COMPONENT"
-echo "Transport: $TRANSPORT"  
+echo "Transport: $TRANSPORT"
 echo "Address: $ADDRESS"
 
 # Run wrpc serve
@@ -95,13 +95,13 @@ echo "Address: $ADDRESS"
         address = ctx.attr.address,
         wrpc_path = wrpc.path,
     )
-    
+
     ctx.actions.write(
         output = serve_script,
         content = script_content,
         is_executable = True,
     )
-    
+
     return [
         DefaultInfo(
             files = depset([serve_script]),
@@ -134,14 +134,14 @@ wrpc_serve = rule(
 
 def _wrpc_invoke_impl(ctx):
     """Implementation of wrpc_invoke rule"""
-    
+
     # Get the wasm toolchain (which includes wrpc)
     wasm_toolchain = ctx.toolchains["//toolchains:wasm_tools_toolchain_type"]
     wrpc = wasm_toolchain.wrpc
-    
+
     # Create invoke script
     invoke_script = ctx.actions.declare_file(ctx.attr.name + "_invoke.sh")
-    
+
     script_content = '''#!/bin/bash
 set -e
 
@@ -168,13 +168,13 @@ eval {wrpc_path} invoke --function "$FUNCTION" --transport "$TRANSPORT" --addres
         address = ctx.attr.address,
         wrpc_path = wrpc.path,
     )
-    
+
     ctx.actions.write(
         output = invoke_script,
         content = script_content,
         is_executable = True,
     )
-    
+
     return [
         DefaultInfo(
             files = depset([invoke_script]),

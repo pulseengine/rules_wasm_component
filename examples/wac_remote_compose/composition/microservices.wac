@@ -7,7 +7,7 @@ let gateway = new gateway:component { ... };
 // Instantiate remote user service
 let user_service = new user_service:component { ... };
 
-// Instantiate remote payment service  
+// Instantiate remote payment service
 let payment_service = new payment_service:component { ... };
 
 // Connect gateway authentication to user service

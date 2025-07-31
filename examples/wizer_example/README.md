@@ -5,6 +5,7 @@ This example demonstrates how to use Wizer for WebAssembly component pre-initial
 ## What is Wizer?
 
 Wizer is a WebAssembly pre-initialization tool that:
+
 - Runs your component's initialization code at **build time** instead of runtime
 - Snapshots the initialized state into the WebAssembly binary
 - Provides **1.35-6x startup performance improvements** depending on initialization complexity
@@ -12,13 +13,14 @@ Wizer is a WebAssembly pre-initialization tool that:
 ## Example Overview
 
 This example shows a component with expensive initialization:
+
 - **Normal component**: Performs expensive computations on every startup
 - **Wizer component**: Pre-computes everything at build time
 
 ## Files
 
 - `src/lib.rs` - Rust component with expensive initialization logic
-- `wit/expensive-init.wit` - WIT interface definition  
+- `wit/expensive-init.wit` - WIT interface definition
 - `BUILD.bazel` - Bazel build configuration showing both normal and Wizer builds
 
 ## Building
@@ -27,7 +29,7 @@ This example shows a component with expensive initialization:
 # Build normal component (with runtime initialization)
 bazel build //examples/wizer_example:expensive_init_component
 
-# Build Wizer pre-initialized component  
+# Build Wizer pre-initialized component
 bazel build //examples/wizer_example:optimized_component
 
 # Cross-platform build validation (ensures both components build successfully)
@@ -44,6 +46,7 @@ bazel build //examples/wizer_example:validation_test
 ## Performance Results
 
 The benchmark typically shows:
+
 - **Normal component**: ~50-100ms startup (includes initialization overhead)
 - **Wizer component**: ~15-30ms startup (initialization already done)
 - **Improvement**: 2-6x faster startup depending on initialization complexity
@@ -55,16 +58,16 @@ The benchmark typically shows:
 Your Rust code exports a special initialization function:
 
 ```rust
-#[export_name = "wizer.initialize"]  
+#[export_name = "wizer.initialize"]
 pub extern "C" fn wizer_initialize() {
     // Expensive initialization work here
     // This runs at BUILD TIME, not runtime
-    
+
     let mut data = HashMap::new();
     for i in 1..1000 {
         data.insert(format!("key_{}", i), expensive_computation(i));
     }
-    
+
     unsafe { EXPENSIVE_DATA = Some(data); }
 }
 ```
@@ -75,14 +78,14 @@ pub extern "C" fn wizer_initialize() {
 # Normal component - initialization runs at runtime
 rust_wasm_component(
     name = "expensive_init_component",
-    srcs = ["src/lib.rs"],  
+    srcs = ["src/lib.rs"],
     wit = "wit/expensive-init.wit",
 )
 
 # Wizer component - initialization runs at build time
 wizer_chain(
     name = "optimized_component",
-    component = ":expensive_init_component", 
+    component = ":expensive_init_component",
     init_function_name = "wizer.initialize",
 )
 ```
@@ -101,7 +104,7 @@ go_wasm_component_wizer(
     name = "go_optimized_component",
     srcs = ["main.go"],
     wit = "component.wit",
-    world = "my-world", 
+    world = "my-world",
     wizer_init_function = "wizer.initialize",
 )
 ```
@@ -119,13 +122,15 @@ func wizerInitialize() {
 ## When to Use Wizer
 
 ✅ **Great for:**
+
 - Components with expensive startup computations
-- Large data structure initialization  
+- Large data structure initialization
 - Complex configuration parsing
 - Machine learning model loading
 - Database connection setup
 
 ❌ **Not suitable for:**
+
 - Components that need runtime-specific data
 - Initialization that depends on external resources
 - Time-sensitive initialization (uses current timestamp)

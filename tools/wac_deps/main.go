@@ -43,7 +43,7 @@ func main() {
 	// Create component files
 	for name, path := range components {
 		destPath := filepath.Join(*outputDir, name+".wasm")
-		
+
 		if *useSymlinks {
 			// Create relative symlink
 			relPath, err := filepath.Rel(filepath.Dir(destPath), path)

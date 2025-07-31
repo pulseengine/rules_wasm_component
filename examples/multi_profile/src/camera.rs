@@ -15,12 +15,12 @@ impl Guest for Camera {
             timestamp: 0,
         })
     }
-    
+
     fn configure(_frame_rate: u32, _resolution: String) -> Result<(), String> {
         // Configuration would happen here
         Ok(())
     }
-    
+
     fn get_status() -> String {
         "Camera ready".to_string()
     }

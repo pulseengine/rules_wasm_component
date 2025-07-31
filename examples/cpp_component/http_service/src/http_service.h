@@ -13,7 +13,7 @@ typedef struct http_service http_service_t;
 typedef struct route_handler route_handler_t;
 
 // Route handler function type
-typedef request_result_t (*route_handler_func_t)(const http_request_t* request, 
+typedef request_result_t (*route_handler_func_t)(const http_request_t* request,
                                                  void* user_data);
 
 // Route handler structure
@@ -28,48 +28,48 @@ struct route_handler {
 struct http_service {
     service_config_t config;
     service_stats_t stats;
-    
+
     // Route management
     route_handler_t* routes;
     size_t route_count;
-    
+
     // Middleware chain
     route_handler_func_t* middleware;
     size_t middleware_count;
     size_t middleware_capacity;
-    
+
     // Request parser
     http_parser_t* parser;
-    
+
     // Service state
     bool initialized;
     bool running;
     uint64_t start_time;
-    
+
     // Error handling
     route_handler_func_t error_handler;
     void* error_handler_data;
-    
+
     // Configuration
     size_t max_request_size;
     size_t max_response_size;
     uint32_t default_timeout_ms;
-    
+
     // Static file serving
     char* static_root;
     bool enable_directory_listing;
-    
+
     // CORS settings
     char* cors_origins;
     char* cors_methods;
     char* cors_headers;
     bool cors_credentials;
-    
+
     // Security settings
     bool enable_security_headers;
     char* csp_policy;
     bool require_https;
-    
+
     // Logging
     bool enable_request_logging;
     void (*log_func)(const char* message, void* user_data);
@@ -117,7 +117,7 @@ bool http_service_remove_route(http_service_t* service, http_method_t method,
 http_route_t* http_service_list_routes(http_service_t* service, size_t* count);
 
 // Find matching route for request
-route_handler_t* http_service_find_route(http_service_t* service, 
+route_handler_t* http_service_find_route(http_service_t* service,
                                         const http_request_t* request);
 
 // Middleware management
@@ -131,7 +131,7 @@ bool http_service_remove_middleware(http_service_t* service, route_handler_func_
 // Request processing
 
 // Main request handler (implements WIT interface)
-request_result_t http_service_handle_request(http_service_t* service, 
+request_result_t http_service_handle_request(http_service_t* service,
                                            const http_request_t* request);
 
 // Process request through middleware chain
@@ -143,7 +143,7 @@ request_result_t http_service_process_middleware(http_service_t* service,
 // Error handling
 
 // Set custom error handler
-void http_service_set_error_handler(http_service_t* service, 
+void http_service_set_error_handler(http_service_t* service,
                                    route_handler_func_t error_handler,
                                    void* user_data);
 
@@ -222,7 +222,7 @@ request_result_t http_service_handle_health_check(http_service_t* service,
 // Utility functions
 
 // Parse query parameters from request
-http_header_t* http_service_parse_query_params(const http_request_t* request, 
+http_header_t* http_service_parse_query_params(const http_request_t* request,
                                               size_t* count);
 
 // Parse form data from request body
@@ -233,7 +233,7 @@ http_header_t* http_service_parse_form_data(const http_request_t* request,
 const char* http_service_get_header(const http_request_t* request, const char* name);
 
 // Check if request accepts content type
-bool http_service_accepts_content_type(const http_request_t* request, 
+bool http_service_accepts_content_type(const http_request_t* request,
                                       const char* content_type);
 
 // Get client IP address

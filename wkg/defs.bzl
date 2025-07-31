@@ -2,15 +2,15 @@
 
 def _wkg_fetch_impl(ctx):
     """Implementation of wkg_fetch rule"""
-    
+
     wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
     wkg = wkg_toolchain.wkg
-    
+
     # Output files
     component_file = ctx.actions.declare_file(ctx.attr.name + ".wasm")
     wit_dir = ctx.actions.declare_directory(ctx.attr.name + "_wit")
     lock_file = ctx.actions.declare_file("wkg.lock")
-    
+
     # Create config file if registry is specified
     config_content = ""
     if ctx.attr.registry:
@@ -21,7 +21,7 @@ default = "{registry}"
 [registries."{registry}"]
 url = "{registry}"
 """.format(registry = ctx.attr.registry)
-    
+
     config_file = None
     if config_content:
         config_file = ctx.actions.declare_file("wkg_config.toml")
@@ -29,27 +29,27 @@ url = "{registry}"
             output = config_file,
             content = config_content,
         )
-    
+
     # Build command arguments
     args = ctx.actions.args()
     args.add("fetch")
     args.add(ctx.attr.package)
-    
+
     if ctx.attr.version:
         args.add("--version", ctx.attr.version)
-    
+
     if config_file:
         args.add("--config", config_file.path)
-    
+
     # Output directory for fetched components
     output_dir = ctx.actions.declare_directory(ctx.attr.name + "_fetched")
     args.add("--output", output_dir.path)
-    
+
     # Run wkg fetch
     inputs = []
     if config_file:
         inputs.append(config_file)
-    
+
     ctx.actions.run(
         executable = wkg,
         arguments = [args],
@@ -58,7 +58,7 @@ url = "{registry}"
         mnemonic = "WkgFetch",
         progress_message = "Fetching WebAssembly component {}".format(ctx.attr.package),
     )
-    
+
     # Extract component and WIT files from fetched directory
     ctx.actions.run_shell(
         command = '''
@@ -70,7 +70,7 @@ url = "{registry}"
                 echo "No component file found in fetched package" >&2
                 exit 1
             fi
-            
+
             # Copy WIT files
             if [ -d {fetched_dir}/wit ]; then
                 cp -r {fetched_dir}/wit/* {wit_output}/
@@ -85,7 +85,7 @@ url = "{registry}"
         mnemonic = "WkgExtract",
         progress_message = "Extracting component from fetched package",
     )
-    
+
     return [
         DefaultInfo(files = depset([component_file, wit_dir, lock_file])),
         OutputGroupInfo(
@@ -115,13 +115,13 @@ wkg_fetch = rule(
 
 def _wkg_lock_impl(ctx):
     """Implementation of wkg_lock rule to generate lock files"""
-    
+
     wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
     wkg = wkg_toolchain.wkg
-    
+
     # Output lock file
     lock_file = ctx.actions.declare_file("wkg.lock")
-    
+
     # Create wkg.toml file with dependencies
     deps_content = "[dependencies]\n"
     for dep in ctx.attr.dependencies:
@@ -132,13 +132,13 @@ def _wkg_lock_impl(ctx):
             deps_content += '{} = "{}"\n'.format(name, version)
         else:
             deps_content += '{} = "*"\n'.format(dep)
-    
+
     wkg_toml = ctx.actions.declare_file("wkg.toml")
     ctx.actions.write(
         output = wkg_toml,
         content = deps_content,
     )
-    
+
     # Registry config
     config_content = ""
     if ctx.attr.registry:
@@ -149,7 +149,7 @@ default = "{registry}"
 [registries."{registry}"]
 url = "{registry}"
 """.format(registry = ctx.attr.registry)
-    
+
     config_file = None
     if config_content:
         config_file = ctx.actions.declare_file("wkg_config.toml")
@@ -157,21 +157,21 @@ url = "{registry}"
             output = config_file,
             content = config_content,
         )
-    
+
     # Build command arguments
     args = ctx.actions.args()
     args.add("lock")
     args.add("--manifest", wkg_toml.path)
     args.add("--output", lock_file.path)
-    
+
     if config_file:
         args.add("--config", config_file.path)
-    
+
     # Run wkg lock
     inputs = [wkg_toml]
     if config_file:
         inputs.append(config_file)
-    
+
     ctx.actions.run(
         executable = wkg,
         arguments = [args],
@@ -180,7 +180,7 @@ url = "{registry}"
         mnemonic = "WkgLock",
         progress_message = "Generating wkg.lock file",
     )
-    
+
     return [DefaultInfo(files = depset([lock_file]))]
 
 wkg_lock = rule(
@@ -200,13 +200,13 @@ wkg_lock = rule(
 
 def _wkg_publish_impl(ctx):
     """Implementation of wkg_publish rule"""
-    
+
     wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
     wkg = wkg_toolchain.wkg
-    
+
     # Component file to publish
     component = ctx.file.component
-    
+
     # Create wkg.toml metadata file
     metadata_content = """
 [package]
@@ -216,23 +216,23 @@ version = "{version}"
         name = ctx.attr.package_name,
         version = ctx.attr.version,
     )
-    
+
     if ctx.attr.description:
         metadata_content += 'description = "{}"\n'.format(ctx.attr.description)
-    
+
     if ctx.attr.authors:
         authors_str = ", ".join(['"{}"'.format(a) for a in ctx.attr.authors])
         metadata_content += "authors = [{}]\n".format(authors_str)
-    
+
     if ctx.attr.license:
         metadata_content += 'license = "{}"\n'.format(ctx.attr.license)
-    
+
     wkg_toml = ctx.actions.declare_file("wkg.toml")
     ctx.actions.write(
         output = wkg_toml,
         content = metadata_content,
     )
-    
+
     # Registry config
     config_content = ""
     if ctx.attr.registry:
@@ -243,7 +243,7 @@ default = "{registry}"
 [registries."{registry}"]
 url = "{registry}"
 """.format(registry = ctx.attr.registry)
-    
+
     config_file = None
     if config_content:
         config_file = ctx.actions.declare_file("wkg_config.toml")
@@ -251,7 +251,7 @@ url = "{registry}"
             output = config_file,
             content = config_content,
         )
-    
+
     # Create publish script (since we can't directly publish in Bazel)
     publish_script = ctx.actions.declare_file(ctx.attr.name + "_publish.sh")
     script_content = '''#!/bin/bash
@@ -271,18 +271,18 @@ echo "Metadata file: {metadata_path}"
         metadata_path = wkg_toml.path,
         wkg_path = wkg.path,
     )
-    
+
     if config_file:
-        script_content += '# --config {}\n'.format(config_file.path)
-    
+        script_content += "# --config {}\n".format(config_file.path)
+
     script_content += 'echo "Publish script ready. Run this script to publish the component."\n'
-    
+
     ctx.actions.write(
         output = publish_script,
         content = script_content,
         is_executable = True,
     )
-    
+
     return [DefaultInfo(
         files = depset([publish_script, wkg_toml]),
         executable = publish_script,

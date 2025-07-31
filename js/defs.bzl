@@ -18,7 +18,7 @@ def _js_component_impl(ctx):
     # Input source files
     source_files = ctx.files.srcs
     wit_file = ctx.file.wit
-    
+
     # Package.json file (required for Node.js projects)
     package_json = ctx.file.package_json
     if not package_json:
@@ -45,14 +45,14 @@ def _js_component_impl(ctx):
     args.add("--wit", wit_file.path)
     args.add("--package-json", package_json.path)
     args.add("--entry-point", ctx.attr.entry_point)
-    
+
     # Add optimization flags
     if ctx.attr.optimize:
         args.add("--optimize")
-    
+
     if ctx.attr.minify:
         args.add("--minify")
-    
+
     # Add source files
     for src in source_files:
         args.add("--src", src.path)
@@ -77,7 +77,7 @@ for (let i = 0; i < args.length; i += 2) {
     }
 }
 
-// Create working directory structure  
+// Create working directory structure
 fs.mkdirSync(config.workDir, { recursive: true });
 
 // Copy package.json
@@ -117,14 +117,14 @@ console.log('Prepared JavaScript component sources in', config.workDir);
     jco_args.add(work_dir.path)
     jco_args.add("--wit", paths.join(work_dir.path, "component.wit"))
     jco_args.add("--out", component_wasm.path)
-    
+
     if ctx.attr.world:
         jco_args.add("--world", ctx.attr.world)
-    
+
     # Add jco-specific flags
     if ctx.attr.disable_feature_detection:
         jco_args.add("--disable-feature-detection")
-    
+
     if ctx.attr.compat:
         jco_args.add("--compat")
 
@@ -204,10 +204,10 @@ js_component = rule(
     toolchains = ["@rules_wasm_component//toolchains:jco_toolchain_type"],
     doc = """
     Builds a WebAssembly component from JavaScript/TypeScript sources using jco.
-    
+
     This rule compiles JavaScript or TypeScript code into a WebAssembly component
     that implements the specified WIT interface.
-    
+
     Example:
         js_component(
             name = "my_js_component",
@@ -243,20 +243,20 @@ def _jco_transpile_impl(ctx):
     args.add("transpile")
     args.add(component.path)
     args.add("--out", output_dir.path)
-    
+
     if ctx.attr.name_override:
         args.add("--name", ctx.attr.name_override)
-    
+
     if ctx.attr.no_typescript:
         args.add("--no-typescript")
-    
+
     if ctx.attr.instantiation:
         args.add("--instantiation", ctx.attr.instantiation)
-    
+
     # Add map options
     for mapping in ctx.attr.map:
         args.add("--map", mapping)
-    
+
     if ctx.attr.world_name:
         args.add("--world-name", ctx.attr.world_name)
 
@@ -305,10 +305,10 @@ jco_transpile = rule(
     toolchains = ["@rules_wasm_component//toolchains:jco_toolchain_type"],
     doc = """
     Transpiles a WebAssembly component to JavaScript using jco.
-    
+
     This rule takes a compiled WebAssembly component and generates JavaScript
     bindings that can be used in Node.js or browser environments.
-    
+
     Example:
         jco_transpile(
             name = "my_component_js",
@@ -400,10 +400,10 @@ npm_install = rule(
     toolchains = ["@rules_wasm_component//toolchains:jco_toolchain_type"],
     doc = """
     Installs NPM dependencies for JavaScript components.
-    
+
     This rule runs npm install to fetch dependencies specified in package.json,
     making them available for JavaScript component builds.
-    
+
     Example:
         npm_install(
             name = "npm_deps",

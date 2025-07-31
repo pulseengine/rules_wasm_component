@@ -54,10 +54,10 @@ wac_compose(
     },
     composition = """
         package dev:composition@1.0.0;
-        
+
         let camera = new sensor:interfaces { ... };
         let ai = new ai:interfaces { ... };
-        
+
         export ai as main;
     """,
     profile = "debug",  # Default profile
@@ -89,10 +89,10 @@ wac_compose(
     },
     composition = """
         package test:composition@1.0.0;
-        
+
         let camera = new adas:camera { ... };
         let ai = new adas:detector { ... };
-        
+
         export camera;
         export ai;
     """,

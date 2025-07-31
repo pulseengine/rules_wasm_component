@@ -3,17 +3,17 @@
 
 world analytics-service {
   export analytics-service: interface {
-    
+
     // Analytics data structures
     record event-context {
       user-agent: string,
-      ip-address: string, 
+      ip-address: string,
       referrer: string,
       page: string,
       country: string,
       device-type: string,
     }
-    
+
     record analytics-event {
       event-id: string,
       user-id: string,
@@ -22,7 +22,7 @@ world analytics-service {
       timestamp: u64,
       context: event-context,
     }
-    
+
     record metric-aggregation {
       metric-name: string,
       time-window: string,
@@ -30,27 +30,27 @@ world analytics-service {
       count: u64,
       aggregation-type: string,
     }
-    
+
     record funnel-step {
       step-name: string,
       event-type: string,
       timeout-hours: u32,
     }
-    
+
     record funnel-analysis {
       funnel-id: string,
       name: string,
       steps: list<funnel-step>,
     }
-    
+
     // Core analytics functions
     track-event: func(event-data: list<u8>) -> bool;
     get-metrics: func(time-window: string) -> list<u8>;
-    
+
     // Funnel analysis
     create-funnel: func(funnel-data: list<u8>) -> string;
     get-funnel-results: func(funnel-id: string) -> list<u8>;
-    
+
     // Service management
     health-check: func() -> bool;
     get-service-stats: func() -> string;

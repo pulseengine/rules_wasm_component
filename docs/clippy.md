@@ -48,6 +48,7 @@ bazel test //path/to:my_component_clippy
 ### Default Lints
 
 By default, clippy is configured with the following lints as errors:
+
 - `warnings` - All compiler warnings
 - `clippy::all` - All default clippy lints
 - `clippy::correctness` - Code that is likely incorrect or useless

@@ -2,12 +2,12 @@ name: Production Readiness
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
     # Run daily to catch dependency issues
-    - cron: '0 10 * * *'
+    - cron: "0 10 * * *"
 
 jobs:
   smoke-tests:
@@ -16,101 +16,101 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Bazel
-      uses: bazel-contrib/setup-bazel@0.8.1
-      with:
-        bazelisk-cache: true
-        disk-cache: true
-        repository-cache: true
-        
-    - name: Build info
-      run: bazel info
-      
-    - name: Run smoke tests
-      run: bazel test //test/smoke:all --test_output=errors
-      
-    - name: Validate WebAssembly output
-      run: |
-        bazel build //examples/basic:hello_component
-        find bazel-out -name "*.wasm" -type f | head -5
+      - uses: actions/checkout@v4
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.8.1
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+
+      - name: Build info
+        run: bazel info
+
+      - name: Run smoke tests
+        run: bazel test //test/smoke:all --test_output=errors
+
+      - name: Validate WebAssembly output
+        run: |
+          bazel build //examples/basic:hello_component
+          find bazel-out -name "*.wasm" -type f | head -5
 
   security-validation:
     name: Security Validation
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Check for placeholder checksums
-      run: |
-        if grep -r "1234567890abcdef" toolchains/; then
-          echo "❌ Found placeholder checksums - security risk!"
-          exit 1
-        else
-          echo "✅ No placeholder checksums found"
-        fi
-        
-    - name: Validate checksum format
-      run: |
-        # Ensure all checksums are proper SHA256 (64 hex chars)
-        # Look for hardcoded sha256 lines that don't contain exactly 64 hex characters
-        # Exclude variable references like tool_info["sha256"] and platform_info["sha256"]
-        if grep -rE '"sha256":\s*"[^"]*"' toolchains/ | grep -vE '"sha256":\s*"[a-f0-9]{64}"' | grep -v '# '; then
-          echo "❌ Invalid checksum format found:"
-          grep -rE '"sha256":\s*"[^"]*"' toolchains/ | grep -vE '"sha256":\s*"[a-f0-9]{64}"' | grep -v '# '
-          echo ""
-          echo "Found placeholder checksums that need real SHA256 values."
-          echo "These placeholder patterns are security risks and must be replaced."
-          exit 1
-        else
-          echo "✅ All checksums properly formatted"
-        fi
+      - uses: actions/checkout@v4
+
+      - name: Check for placeholder checksums
+        run: |
+          if grep -r "1234567890abcdef" toolchains/; then
+            echo "❌ Found placeholder checksums - security risk!"
+            exit 1
+          else
+            echo "✅ No placeholder checksums found"
+          fi
+
+      - name: Validate checksum format
+        run: |
+          # Ensure all checksums are proper SHA256 (64 hex chars)
+          # Look for hardcoded sha256 lines that don't contain exactly 64 hex characters
+          # Exclude variable references like tool_info["sha256"] and platform_info["sha256"]
+          if grep -rE '"sha256":\s*"[^"]*"' toolchains/ | grep -vE '"sha256":\s*"[a-f0-9]{64}"' | grep -v '# '; then
+            echo "❌ Invalid checksum format found:"
+            grep -rE '"sha256":\s*"[^"]*"' toolchains/ | grep -vE '"sha256":\s*"[a-f0-9]{64}"' | grep -v '# '
+            echo ""
+            echo "Found placeholder checksums that need real SHA256 values."
+            echo "These placeholder patterns are security risks and must be replaced."
+            exit 1
+          else
+            echo "✅ All checksums properly formatted"
+          fi
 
   performance-benchmark:
     name: Performance Benchmark
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Bazel
-      uses: bazel-contrib/setup-bazel@0.8.1
-      with:
-        bazelisk-cache: true
-        disk-cache: true
-        repository-cache: true
-        
-    - name: Cold build benchmark
-      run: |
-        start_time=$(date +%s)
-        bazel build //examples/basic:hello_component
-        end_time=$(date +%s)
-        duration=$((end_time - start_time))
-        echo "Cold build time: ${duration}s"
-        
-        if [ $duration -gt 120 ]; then
-          echo "⚠️ Cold build took longer than 2 minutes"
-        else
-          echo "✅ Cold build completed in reasonable time"
-        fi
-        
-    - name: Incremental build benchmark  
-      run: |
-        start_time=$(date +%s)
-        bazel build //examples/basic:hello_component
-        end_time=$(date +%s)
-        duration=$((end_time - start_time))
-        echo "Incremental build time: ${duration}s"
-        
-        if [ $duration -gt 10 ]; then
-          echo "⚠️ Incremental build took longer than 10 seconds"
-        else
-          echo "✅ Incremental build fast"
-        fi
+      - uses: actions/checkout@v4
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.8.1
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+
+      - name: Cold build benchmark
+        run: |
+          start_time=$(date +%s)
+          bazel build //examples/basic:hello_component
+          end_time=$(date +%s)
+          duration=$((end_time - start_time))
+          echo "Cold build time: ${duration}s"
+
+          if [ $duration -gt 120 ]; then
+            echo "⚠️ Cold build took longer than 2 minutes"
+          else
+            echo "✅ Cold build completed in reasonable time"
+          fi
+
+      - name: Incremental build benchmark
+        run: |
+          start_time=$(date +%s)
+          bazel build //examples/basic:hello_component
+          end_time=$(date +%s)
+          duration=$((end_time - start_time))
+          echo "Incremental build time: ${duration}s"
+
+          if [ $duration -gt 10 ]; then
+            echo "⚠️ Incremental build took longer than 10 seconds"
+          else
+            echo "✅ Incremental build fast"
+          fi
 
   compatibility-matrix:
     name: Compatibility Tests
@@ -118,31 +118,37 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-22.04, macos-12, macos-13]
-        
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Bazel
-      uses: bazel-contrib/setup-bazel@0.8.1
-      with:
-        bazelisk-cache: true
-        
-    - name: Test basic functionality
-      run: bazel test //test/smoke:all --test_output=summary
-      
+      - uses: actions/checkout@v4
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.8.1
+        with:
+          bazelisk-cache: true
+
+      - name: Test basic functionality
+        run: bazel test //test/smoke:all --test_output=summary
+
   production-readiness:
     name: Production Ready ✅
     runs-on: ubuntu-latest
-    needs: [smoke-tests, security-validation, performance-benchmark, compatibility-matrix]
+    needs:
+      [
+        smoke-tests,
+        security-validation,
+        performance-benchmark,
+        compatibility-matrix,
+      ]
     if: success()
-    
+
     steps:
-    - name: Mark as production ready
-      run: |
-        echo "🎉 All production readiness checks passed!"
-        echo "✅ Smoke tests: PASS"
-        echo "✅ Security validation: PASS" 
-        echo "✅ Performance benchmarks: PASS"
-        echo "✅ Compatibility matrix: PASS"
-        echo ""
-        echo "System is ready for production deployment! 🚀"
+      - name: Mark as production ready
+        run: |
+          echo "🎉 All production readiness checks passed!"
+          echo "✅ Smoke tests: PASS"
+          echo "✅ Security validation: PASS"
+          echo "✅ Performance benchmarks: PASS"
+          echo "✅ Compatibility matrix: PASS"
+          echo ""
+          echo "System is ready for production deployment! 🚀"

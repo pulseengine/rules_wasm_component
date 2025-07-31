@@ -10,10 +10,10 @@ interface example-service {
         version: string,
         description: string,
     }
-    
+
     /// Process a request and return a response
     process-request: func(request: string) -> string;
-    
+
     /// Get service metadata
     get-metadata: func() -> service-info;
 }

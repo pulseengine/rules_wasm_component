@@ -1,4 +1,4 @@
-load("//cpp:defs.bzl", "cpp_component", "cpp_wit_bindgen", "cc_component_library")
+load("//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen")
 
 # WIT bindings generation
 cpp_wit_bindgen(
@@ -20,8 +20,8 @@ cc_component_library(
     name = "request_parser",
     srcs = ["src/request_parser.c"],
     hdrs = ["src/request_parser.h"],
-    deps = [":http_utils"],
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    deps = [":http_utils"],
 )
 
 # Response builder library
@@ -29,8 +29,8 @@ cc_component_library(
     name = "response_builder",
     srcs = ["src/response_builder.c"],
     hdrs = ["src/response_builder.h"],
-    deps = [":http_utils"],
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    deps = [":http_utils"],
 )
 
 # Main HTTP service component (C implementation)
@@ -38,16 +38,16 @@ cpp_component(
     name = "http_service_component",
     srcs = ["src/http_service.c"],
     hdrs = ["src/http_service.h"],
-    wit = "wit/http_service.wit",
-    world = "http-service",
     language = "c",
-    deps = [
-        ":http_utils",
-        ":request_parser", 
-        ":response_builder",
-    ],
     target_compatible_with = ["@platforms//cpu:wasm32"],
     visibility = ["//visibility:public"],
+    wit = "wit/http_service.wit",
+    world = "http-service",
+    deps = [
+        ":http_utils",
+        ":request_parser",
+        ":response_builder",
+    ],
 )
 
 # Test executable (runs on host, not WASM)

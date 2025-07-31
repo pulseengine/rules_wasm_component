@@ -2,7 +2,7 @@
 
 load("//toolchains:tool_versions.bzl", "get_tool_info")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
-load("//toolchains:tool_cache.bzl", "retrieve_cached_tool", "cache_tool", "validate_tool_functionality")
+load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
 
 # jco platform mapping
 JCO_PLATFORMS = {
@@ -51,14 +51,14 @@ jco_toolchain = rule(
         ),
         "node": attr.label(
             allow_single_file = True,
-            executable = True,  
+            executable = True,
             cfg = "exec",
             doc = "Node.js binary",
         ),
         "npm": attr.label(
             allow_single_file = True,
             executable = True,
-            cfg = "exec", 
+            cfg = "exec",
             doc = "npm binary",
         ),
     },
@@ -98,7 +98,7 @@ def _jco_toolchain_repository_impl(repository_ctx):
         fail(format_diagnostic_error(
             "E001",
             "Unknown jco strategy: {}".format(strategy),
-            "Must be 'system', 'download', or 'npm'"
+            "Must be 'system', 'download', or 'npm'",
         ))
 
     # Create BUILD files
@@ -109,24 +109,25 @@ def _setup_system_jco_tools(repository_ctx):
 
     # Validate system tools
     tools = [("jco", "jco"), ("node", "node"), ("npm", "npm")]
-    
+
     for tool_name, binary_name in tools:
         validation_result = validate_system_tool(repository_ctx, binary_name)
-        
+
         if not validation_result["valid"]:
             fail(validation_result["error"])
-        
+
         if "warning" in validation_result:
             print(validation_result["warning"])
-        
+
         # Create wrapper executable
         repository_ctx.file(tool_name, """#!/bin/bash
 exec {} "$@"
 """.format(binary_name), executable = True)
-        
+
         print("Using system {}: {} at {}".format(
-            tool_name, binary_name,
-            validation_result.get("path", "system PATH")
+            tool_name,
+            binary_name,
+            validation_result.get("path", "system PATH"),
         ))
 
 def _setup_downloaded_jco_tools(repository_ctx, platform, version):
@@ -140,43 +141,44 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, version):
             fail(format_diagnostic_error(
                 "E001",
                 "Unsupported platform {} for jco".format(platform),
-                "Use 'npm' or 'system' strategy instead"
+                "Use 'npm' or 'system' strategy instead",
             ))
-        
+
         platform_info = JCO_PLATFORMS[platform]
         binary_name = platform_info["binary_name"]
-        
+
         # jco releases are available from GitHub
         jco_url = "https://github.com/bytecodealliance/jco/releases/download/v{}/{}".format(
-            version, binary_name
+            version,
+            binary_name,
         )
-        
+
         result = repository_ctx.download(
             url = jco_url,
             output = "jco",
             sha256 = platform_info["sha256"],
             executable = True,
         )
-        if not result or (hasattr(result, 'return_code') and result.return_code != 0):
+        if not result or (hasattr(result, "return_code") and result.return_code != 0):
             fail(format_diagnostic_error(
                 "E003",
                 "Failed to download jco",
-                "Try 'npm' strategy: npm install -g @bytecodealliance/jco"
+                "Try 'npm' strategy: npm install -g @bytecodealliance/jco",
             ))
-        
+
         # Validate downloaded tool
         validation_result = validate_tool_functionality(repository_ctx, "jco", "jco")
         if not validation_result["valid"]:
             fail(format_diagnostic_error(
                 "E007",
                 "Downloaded jco failed validation: {}".format(validation_result["error"]),
-                "Try npm strategy or check platform compatibility"
+                "Try npm strategy or check platform compatibility",
             ))
-        
+
         # Cache the tool
         tool_binary = repository_ctx.path("jco")
         cache_tool(repository_ctx, "jco", tool_binary, version, platform, "download", platform_info["sha256"])
-    
+
     # Set up Node.js and npm (assume system installation)
     _setup_node_tools_system(repository_ctx)
 
@@ -189,29 +191,32 @@ def _setup_npm_jco_tools(repository_ctx):
         fail(format_diagnostic_error(
             "E006",
             "npm not found for jco installation",
-            "Install Node.js and npm, then try again"
+            "Install Node.js and npm, then try again",
         ))
-    
+
     # Install jco globally via npm
     result = repository_ctx.execute([
-        "npm", "install", "-g", "@bytecodealliance/jco@{}".format(repository_ctx.attr.version)
+        "npm",
+        "install",
+        "-g",
+        "@bytecodealliance/jco@{}".format(repository_ctx.attr.version),
     ])
-    
+
     if result.return_code != 0:
         fail(format_diagnostic_error(
             "E003",
             "Failed to install jco via npm: {}".format(result.stderr),
-            "Check npm configuration and network connectivity"
+            "Check npm configuration and network connectivity",
         ))
-    
+
     # Create wrapper that uses globally installed jco
     repository_ctx.file("jco", """#!/bin/bash
 exec jco "$@"
 """, executable = True)
-    
+
     # Set up Node.js and npm
     _setup_node_tools_system(repository_ctx)
-    
+
     print("Installed jco via npm globally")
 
 def _setup_node_tools_system(repository_ctx):
@@ -221,25 +226,25 @@ def _setup_node_tools_system(repository_ctx):
     node_validation = validate_system_tool(repository_ctx, "node")
     if not node_validation["valid"]:
         fail(format_diagnostic_error(
-            "E006", 
+            "E006",
             "Node.js not found",
-            "Install Node.js to use JavaScript component features"
+            "Install Node.js to use JavaScript component features",
         ))
-    
+
     # Validate npm
     npm_validation = validate_system_tool(repository_ctx, "npm")
     if not npm_validation["valid"]:
         fail(format_diagnostic_error(
             "E006",
-            "npm not found", 
-            "Install npm (usually comes with Node.js)"
+            "npm not found",
+            "Install npm (usually comes with Node.js)",
         ))
-    
+
     # Create wrapper executables
     repository_ctx.file("node", """#!/bin/bash
 exec node "$@"
 """, executable = True)
-    
+
     repository_ctx.file("npm", """#!/bin/bash
 exec npm "$@"
 """, executable = True)
@@ -266,7 +271,7 @@ filegroup(
 )
 
 filegroup(
-    name = "npm_binary", 
+    name = "npm_binary",
     srcs = ["npm"],
     visibility = ["//visibility:public"],
 )

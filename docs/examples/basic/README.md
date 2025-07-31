@@ -42,7 +42,7 @@ load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 wit_library(
     name = "hello_interfaces",
-    package_name = "example:hello@1.0.0", 
+    package_name = "example:hello@1.0.0",
     srcs = ["hello.wit"],
 )
 

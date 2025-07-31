@@ -17,18 +17,21 @@ This example demonstrates how to create WebAssembly components using C and C++ w
 The example includes both C and C++ implementations:
 
 ### C++ Implementation (`calculator.cpp`, `calculator.h`)
+
 - Object-oriented design with the `Calculator` class
 - Uses modern C++ features like `std::optional` and `enum class`
 - Comprehensive error handling with custom result types
 - Template-based utility functions
 
 ### C Implementation (`calculator_c.c`, `calculator_c.h`)
+
 - Procedural design with C-style structs and functions
 - Manual memory management with explicit cleanup functions
 - Compatible with C99 standard
 - Comprehensive error handling with result structures
 
 ### Shared Utilities (`math_utils.cpp`, `math_utils.h`)
+
 - Safe mathematical operations with overflow protection
 - Precision control and rounding
 - Input validation and error checking
@@ -37,6 +40,7 @@ The example includes both C and C++ implementations:
 ## Building and Running
 
 ### Build the Component
+
 ```bash
 # Build C++ version
 bazel build //examples/cpp_component/calculator:calculator_cpp_component
@@ -49,11 +53,13 @@ bazel build //examples/cpp_component/calculator:calculator_test
 ```
 
 ### Run Tests
+
 ```bash
 bazel test //examples/cpp_component/calculator:calculator_test
 ```
 
 ### Inspect the Generated Component
+
 ```bash
 # View component structure
 wasm-tools component wit examples/cpp_component/calculator/bazel-bin/calculator_cpp_component.wasm
@@ -72,20 +78,20 @@ interface calculator {
     add: func(a: f64, b: f64) -> f64;
     subtract: func(a: f64, b: f64) -> f64;
     multiply: func(a: f64, b: f64) -> f64;
-    
+
     // Operations that can fail
     divide: func(a: f64, b: f64) -> calculation-result;
     power: func(base: f64, exponent: f64) -> calculation-result;
     sqrt: func(value: f64) -> calculation-result;
     factorial: func(n: u32) -> calculation-result;
-    
+
     // Batch operations
     calculate: func(operation: operation) -> calculation-result;
     calculate-batch: func(operations: list<operation>) -> list<calculation-result>;
-    
+
     // Component metadata
     get-calculator-info: func() -> component-info;
-    
+
     // Mathematical constants
     get-pi: func() -> f64;
     get-e: func() -> f64;
@@ -95,6 +101,7 @@ interface calculator {
 ## Usage Examples
 
 ### Basic Operations
+
 ```cpp
 // C++ usage
 calculator::Calculator calc;
@@ -105,6 +112,7 @@ double result = calculator_c_add(2.0, 3.0);  // 5.0
 ```
 
 ### Error Handling
+
 ```cpp
 // C++ usage
 auto result = calc.divide(10.0, 0.0);
@@ -121,6 +129,7 @@ if (!result.success) {
 ```
 
 ### Batch Operations
+
 ```cpp
 // C++ usage
 std::vector<calculator::Calculator::Operation> ops = {
@@ -142,22 +151,26 @@ calculator_c_free_results(results, count);
 ## Key Implementation Details
 
 ### Preview2 Direct Compilation
+
 - Compiles directly to `wasm32-wasip2` target
 - No Preview1 → Preview2 adapters needed
 - Uses component model interface types
 
 ### Memory Management
+
 - **C++**: RAII and smart pointers for automatic cleanup
 - **C**: Explicit cleanup functions to prevent memory leaks
 - All error messages are dynamically allocated and must be freed
 
 ### Error Handling
+
 - Comprehensive validation of all inputs
 - Clear error messages for all failure cases
 - Safe operations that prevent undefined behavior
 - Overflow protection for large calculations
 
 ### Mathematical Precision
+
 - IEEE 754 double precision (15-17 decimal digits)
 - Configurable rounding to prevent floating-point drift
 - Approximate equality comparisons with configurable epsilon
@@ -166,6 +179,7 @@ calculator_c_free_results(results, count);
 ## Testing
 
 The example includes comprehensive tests covering:
+
 - All basic and advanced operations
 - Error conditions and edge cases
 - Batch operation functionality
@@ -174,6 +188,7 @@ The example includes comprehensive tests covering:
 - Both C and C++ implementations
 
 Run the tests to verify functionality:
+
 ```bash
 bazel test //examples/cpp_component/calculator:calculator_test --test_output=all
 ```
@@ -181,6 +196,7 @@ bazel test //examples/cpp_component/calculator:calculator_test --test_output=all
 ## Integration
 
 This component can be integrated into larger systems:
+
 - **Compose with other components** using WAC (WebAssembly Composition)
 - **Call from host applications** using wasmtime or other component runtimes
 - **Export to registries** using wasm-pkg-tools (wkg)

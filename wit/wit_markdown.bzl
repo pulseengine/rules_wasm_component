@@ -8,17 +8,17 @@ load("//providers:providers.bzl", "WitInfo")
 
 def _wit_markdown_impl(ctx):
     """Implementation of wit_markdown rule for generating documentation"""
-    
+
     # Get wit-bindgen from toolchain
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     wit_bindgen = toolchain.wit_bindgen
-    
+
     # Get WIT info from input
     wit_info = ctx.attr.wit[WitInfo]
-    
+
     # Output directory for markdown generation (wit-bindgen uses --out-dir)
     output_dir = ctx.actions.declare_directory(ctx.attr.name + "_markdown")
-    
+
     # Get the WIT library directory for dependency resolution
     wit_library_dir = None
     if hasattr(ctx.attr.wit[DefaultInfo], "files"):
@@ -26,35 +26,35 @@ def _wit_markdown_impl(ctx):
             if file.is_directory:
                 wit_library_dir = file
                 break
-    
+
     if not wit_library_dir:
         fail("No WIT library directory found for markdown generation")
-    
+
     # Build wit-bindgen markdown command
     cmd_args = ["markdown"]
-    
+
     # Add world if specified
     if wit_info.world_name:
         cmd_args.extend(["--world", wit_info.world_name])
-    
+
     # Add output directory
     cmd_args.extend(["--out-dir", output_dir.path])
-    
+
     # Add WIT library directory as input
     cmd_args.append(wit_library_dir.path)
-    
+
     ctx.actions.run(
         executable = wit_bindgen,
         arguments = cmd_args,
         inputs = depset(
             direct = [wit_library_dir],
-            transitive = [wit_info.wit_files, wit_info.wit_deps]
+            transitive = [wit_info.wit_files, wit_info.wit_deps],
         ),
         outputs = [output_dir],
         mnemonic = "WitMarkdown",
         progress_message = "Generating markdown documentation for %s" % ctx.attr.name,
     )
-    
+
     return [
         DefaultInfo(files = depset([output_dir])),
     ]
@@ -85,55 +85,64 @@ Example:
 
 def _wit_docs_collection_impl(ctx):
     """Implementation for collecting multiple WIT documentation files"""
-    
+
     # Collect all documentation directories from dependencies
     doc_dirs = []
     for target in ctx.attr.docs:
         doc_dirs.extend(target[DefaultInfo].files.to_list())
-    
+
     # Create a consolidated documentation directory
     docs_dir = ctx.actions.declare_directory(ctx.attr.name)
-    
-    # Copy all markdown files from directories to the documentation directory
-    ctx.actions.run_shell(
-        command = """
-        mkdir -p {output_dir}
-        
-        # Copy all markdown and HTML files from source directories
-        for doc_dir in {docs}; do
-            if [ -d "$doc_dir" ]; then
-                cp "$doc_dir"/*.md {output_dir}/ 2>/dev/null || true
-                cp "$doc_dir"/*.html {output_dir}/ 2>/dev/null || true
-            fi
-        done
-        
-        # Generate index.md with links to all documentation
-        cat > {output_dir}/index.md << 'EOF'
-# WIT Interface Documentation
+
+    # Modern approach: Generate index content and copy files in a single action
+
+    # Generate index.md content
+    index_content = """# WIT Interface Documentation
 
 This directory contains automatically generated documentation for all WIT interfaces in the examples.
 
 ## Available Interfaces
 
-EOF
-        
-        # List all markdown files and create links
-        for md_file in {output_dir}/*.md; do
-            if [ -f "$md_file" ] && [ "$(basename "$md_file")" != "index.md" ]; then
-                basename_doc=$(basename "$md_file" .md)
-                echo "- [$basename_doc](./$basename_doc.md)" >> {output_dir}/index.md
+"""
+
+    # Create list of available docs based on input directories
+    for doc_dir in doc_dirs:
+        doc_name = doc_dir.basename.replace("_markdown", "").replace("_", " ").title()
+        index_content += "- [{}](./{}.md)\n".format(doc_name, doc_dir.basename)
+
+    # Create pre-generated index file
+    index_file = ctx.actions.declare_file(ctx.attr.name + "_index.md")
+    ctx.actions.write(
+        output = index_file,
+        content = index_content,
+    )
+
+    # Copy all files and create index in one cleaner action
+    ctx.actions.run_shell(
+        command = """
+        mkdir -p {output_dir}
+
+        # Copy documentation files using find (more reliable than glob)
+        for doc_dir in {docs}; do
+            if [ -d "$doc_dir" ]; then
+                find "$doc_dir" -name "*.md" -exec cp {{}} {output_dir}/ \\; 2>/dev/null || true
+                find "$doc_dir" -name "*.html" -exec cp {{}} {output_dir}/ \\; 2>/dev/null || true
             fi
         done
+
+        # Copy pre-generated index
+        cp {index_file} {output_dir}/index.md
         """.format(
             output_dir = docs_dir.path,
-            docs = " ".join([f.path for f in doc_dirs])
+            docs = " ".join([f.path for f in doc_dirs]),
+            index_file = index_file.path,
         ),
-        inputs = doc_dirs,
+        inputs = doc_dirs + [index_file],
         outputs = [docs_dir],
         mnemonic = "WitDocsCollection",
         progress_message = "Collecting WIT documentation for %s" % ctx.attr.name,
     )
-    
+
     return [
         DefaultInfo(files = depset([docs_dir])),
     ]

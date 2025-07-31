@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   BAZEL_VERSION: 8.3.1
@@ -14,263 +14,264 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Bazelisk
-      run: |
-        curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
-        chmod +x bazelisk-linux-amd64
-        sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
-    
-    - name: Check Buildifier Formatting
-      run: |
-        echo "Checking Bazel file formatting..."
-        # Check only formatting, not lint warnings
-        bazel run //:buildifier -- --lint=off --mode=check -r .
-    
-    - name: Show Lint Warnings (Informational)
-      run: |
-        echo "Showing lint warnings (informational only - won't fail the build)..."
-        # Show warnings but don't fail the CI
-        bazel run //:buildifier -- --lint=warn --mode=check -r . || true
+      - uses: actions/checkout@v4
+
+      - name: Install Bazelisk
+        run: |
+          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          chmod +x bazelisk-linux-amd64
+          sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+
+      - name: Check Buildifier Formatting
+        run: |
+          echo "Checking Bazel file formatting..."
+          # Check only formatting, not lint warnings
+          bazel run //:buildifier -- --lint=off --mode=check -r .
+
+      - name: Show Lint Warnings (Informational)
+        run: |
+          echo "Showing lint warnings (informational only - won't fail the build)..."
+          # Show warnings but don't fail the CI
+          bazel run //:buildifier -- --lint=warn --mode=check -r . || true
 
   test:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: lint  # Run tests only after lint passes
+    needs: lint # Run tests only after lint passes
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: false
-    
-    - name: Cache Bazel
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/bazel
-          ~/.cache/bazelisk
-        key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'WORKSPACE.bazel', '**/*.bzl') }}
-        restore-keys: |
-          ${{ runner.os }}-bazel-
-    
-    - name: Install Bazelisk
-      run: |
-        if [[ "$RUNNER_OS" == "Linux" ]]; then
-          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
-          chmod +x bazelisk-linux-amd64
-          sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
-        elif [[ "$RUNNER_OS" == "macOS" ]]; then
-          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-darwin-amd64
-          chmod +x bazelisk-darwin-amd64
-          sudo mv bazelisk-darwin-amd64 /usr/local/bin/bazel
-        fi
-    
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
-        components: clippy
-    
-    - name: Install WASM tools
-      run: |
-        cargo install wasm-tools wac-cli wit-bindgen-cli
-    
-    - name: Verify Bazel Installation
-      run: bazel version
-    
-    - name: Build All Targets  
-      run: |
-        # Build core working targets, exclude incomplete/problematic examples
-        bazel build -- //... \
-          -//examples/world_export/... \
-          -//examples/multi_profile/... \
-          -//examples/cpp_component/... \
-          -//examples/js_component/... \
-          -//examples/go_component/... \
-          -//examples/wac_remote_compose/... \
-          -//examples/wkg_integration/... \
-          -//test_wac/... \
-          -//test/production/... \
-          -//examples/basic:hello_component_wasm_lib_release \
-          -//test/export_macro:test_component_wasm_lib_release \
-          -//test/integration:basic_component_wasm_lib_debug \
-          -//test/integration:basic_component_wasm_lib_release \
-          -//test/integration:consumer_component_wasm_lib_release \
-          -//test/integration:service_a_component_wasm_lib_release \
-          -//test/integration:service_b_component_wasm_lib_release \
-          -//test/integration:wasi_component_wasm_lib_release \
-          -//test/integration:multi_service_system \
-          -//test/integration:wasi_system \
-          -//test/integration:composition_build_test \
-          -//test/integration:integration_tests \
-          -//test/unit:test_component_simple_wasm_lib_release \
-          -//test/unit:test_component_with_deps_wasm_lib_release \
-          -//test/unit:test_composition \
-          -//test_examples/basic:hello_component_wasm_lib_release \
-          -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
-          -//test_wit_deps/consumer:consumer_component_wasm_lib_release
-    
-    - name: Run Tests
-      run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
-    
-    - name: Run Clippy
-      run: echo "Skipping clippy for now due to target triple issues"
-    
-    - name: Validate Toolchain Download Fix
-      run: echo "Skipping toolchain download validation test due to network dependency"
-    
-    - name: Build Examples
-      run: |
-        bazel build //examples/basic:hello_component
-    
-    - name: Validate Generated Files
-      run: |
-        # Check that WASM files are valid
-        bazel build //examples/basic:hello_component
-        wasm-tools validate bazel-bin/examples/basic/hello_component.wasm || true
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'WORKSPACE.bazel', '**/*.bzl') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+
+      - name: Install Bazelisk
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+            chmod +x bazelisk-linux-amd64
+            sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-darwin-amd64
+            chmod +x bazelisk-darwin-amd64
+            sudo mv bazelisk-darwin-amd64 /usr/local/bin/bazel
+          fi
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
+          components: clippy
+
+      - name: Install WASM tools
+        run: |
+          cargo install wasm-tools wac-cli wit-bindgen-cli
+
+      - name: Verify Bazel Installation
+        run: bazel version
+
+      - name: Build All Targets
+        run: |
+          # Build core working targets, exclude incomplete/problematic examples
+          bazel build -- //... \
+            -//examples/world_export/... \
+            -//examples/multi_profile/... \
+            -//examples/cpp_component/... \
+            -//examples/js_component/... \
+            -//examples/go_component/... \
+            -//examples/wac_remote_compose/... \
+            -//examples/wkg_integration/... \
+            -//examples/wizer_example/... \
+            -//test_wac/... \
+            -//test/production/... \
+            -//examples/basic:hello_component_wasm_lib_release \
+            -//test/export_macro:test_component_wasm_lib_release \
+            -//test/integration:basic_component_wasm_lib_debug \
+            -//test/integration:basic_component_wasm_lib_release \
+            -//test/integration:consumer_component_wasm_lib_release \
+            -//test/integration:service_a_component_wasm_lib_release \
+            -//test/integration:service_b_component_wasm_lib_release \
+            -//test/integration:wasi_component_wasm_lib_release \
+            -//test/integration:multi_service_system \
+            -//test/integration:wasi_system \
+            -//test/integration:composition_build_test \
+            -//test/integration:integration_tests \
+            -//test/unit:test_component_simple_wasm_lib_release \
+            -//test/unit:test_component_with_deps_wasm_lib_release \
+            -//test/unit:test_composition \
+            -//test_examples/basic:hello_component_wasm_lib_release \
+            -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
+            -//test_wit_deps/consumer:consumer_component_wasm_lib_release
+
+      - name: Run Tests
+        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
+
+      - name: Run Clippy
+        run: echo "Skipping clippy for now due to target triple issues"
+
+      - name: Validate Toolchain Download Fix
+        run: echo "Skipping toolchain download validation test due to network dependency"
+
+      - name: Build Examples
+        run: |
+          bazel build //examples/basic:hello_component
+
+      - name: Validate Generated Files
+        run: |
+          # Check that WASM files are valid
+          bazel build //examples/basic:hello_component
+          wasm-tools validate bazel-bin/examples/basic/hello_component.wasm || true
 
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: false
-    
-    - name: Install Dependencies
-      run: |
-        curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
-        chmod +x bazelisk-linux-amd64
-        sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
-        
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        source ~/.cargo/env
-        rustup target add wasm32-wasip2 wasm32-wasip1
-        cargo install wasm-tools wac-cli wit-bindgen-cli
-    
-    - name: Test Core Component Build
-      run: |
-        # Test basic component functionality
-        bazel build //examples/basic:hello_component_release
-        
-        # Verify component was created using bazel-bin symlink if available
-        if [ -d "bazel-bin/examples/basic" ]; then
-          ls -la bazel-bin/examples/basic/
-        else
-          echo "Using bazel info to find output location..."
-          BAZEL_BIN=$(bazel info bazel-bin)
-          if [ -d "$BAZEL_BIN/examples/basic" ]; then
-            ls -la "$BAZEL_BIN/examples/basic/"
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Install Dependencies
+        run: |
+          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          chmod +x bazelisk-linux-amd64
+          sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source ~/.cargo/env
+          rustup target add wasm32-wasip2 wasm32-wasip1
+          cargo install wasm-tools wac-cli wit-bindgen-cli
+
+      - name: Test Core Component Build
+        run: |
+          # Test basic component functionality
+          bazel build //examples/basic:hello_component_release
+
+          # Verify component was created using bazel-bin symlink if available
+          if [ -d "bazel-bin/examples/basic" ]; then
+            ls -la bazel-bin/examples/basic/
           else
-            echo "Directory not found, checking build outputs..."
-            bazel outputs //examples/basic:hello_component_release || echo "bazel outputs not available"
+            echo "Using bazel info to find output location..."
+            BAZEL_BIN=$(bazel info bazel-bin)
+            if [ -d "$BAZEL_BIN/examples/basic" ]; then
+              ls -la "$BAZEL_BIN/examples/basic/"
+            else
+              echo "Directory not found, checking build outputs..."
+              bazel outputs //examples/basic:hello_component_release || echo "bazel outputs not available"
+            fi
           fi
-        fi
-    
-    - name: Test Component Validation
-      run: |
-        # Build and validate basic component
-        bazel build //examples/basic:hello_component_release
-        
-        # Find WASM file using different methods
-        WASM_FILE=""
-        if [ -d "bazel-bin/examples/basic" ]; then
-          WASM_FILE=$(find bazel-bin/examples/basic/ -name "*.wasm" | head -1)
-        else
-          BAZEL_BIN=$(bazel info bazel-bin)
-          if [ -d "$BAZEL_BIN/examples/basic" ]; then
-            WASM_FILE=$(find "$BAZEL_BIN/examples/basic/" -name "*.wasm" | head -1)
-          fi
-        fi
-        
-        if [ -n "$WASM_FILE" ]; then
-          echo "Found WASM file: $WASM_FILE"
-          wasm-tools validate "$WASM_FILE" || echo "Validation failed but continuing"
-        else
-          echo "No WASM file found, checking if build completed successfully..."
-          echo "Build targets:"
-          bazel query "//examples/basic:hello_component_release" || echo "Query failed"
-        fi
-    
-    - name: Test Component Output Structure
-      run: |
-        # Check component output structure using multiple methods
-        echo "Checking for WASM component outputs..."
-        
-        WASM_COUNT=0
-        if [ -d "bazel-bin/examples/basic" ]; then
-          echo "Using bazel-bin symlink:"
-          find bazel-bin/examples/basic/ -name "*.wasm" || echo "No .wasm files found via symlink"
-          WASM_COUNT=$(find bazel-bin/examples/basic/ -name "*.wasm" 2>/dev/null | wc -l)
-        else
-          echo "Using bazel info:"
-          BAZEL_BIN=$(bazel info bazel-bin)
-          if [ -d "$BAZEL_BIN/examples/basic" ]; then
-            find "$BAZEL_BIN/examples/basic/" -name "*.wasm" || echo "No .wasm files found via bazel info"
-            WASM_COUNT=$(find "$BAZEL_BIN/examples/basic/" -name "*.wasm" 2>/dev/null | wc -l)
+
+      - name: Test Component Validation
+        run: |
+          # Build and validate basic component
+          bazel build //examples/basic:hello_component_release
+
+          # Find WASM file using different methods
+          WASM_FILE=""
+          if [ -d "bazel-bin/examples/basic" ]; then
+            WASM_FILE=$(find bazel-bin/examples/basic/ -name "*.wasm" | head -1)
           else
-            echo "Directory not found via bazel info, checking build success..."
-            bazel build --check_up_to_date //examples/basic:hello_component_release && echo "Build is up to date" || echo "Build check failed"
+            BAZEL_BIN=$(bazel info bazel-bin)
+            if [ -d "$BAZEL_BIN/examples/basic" ]; then
+              WASM_FILE=$(find "$BAZEL_BIN/examples/basic/" -name "*.wasm" | head -1)
+            fi
           fi
-        fi
-        
-        if [ "$WASM_COUNT" -gt 0 ]; then
-          echo "✅ Found $WASM_COUNT WASM component(s)"
-        else
-          echo "⚠️  No WASM components found in expected locations, but build may have succeeded"
-        fi
+
+          if [ -n "$WASM_FILE" ]; then
+            echo "Found WASM file: $WASM_FILE"
+            wasm-tools validate "$WASM_FILE" || echo "Validation failed but continuing"
+          else
+            echo "No WASM file found, checking if build completed successfully..."
+            echo "Build targets:"
+            bazel query "//examples/basic:hello_component_release" || echo "Query failed"
+          fi
+
+      - name: Test Component Output Structure
+        run: |
+          # Check component output structure using multiple methods
+          echo "Checking for WASM component outputs..."
+
+          WASM_COUNT=0
+          if [ -d "bazel-bin/examples/basic" ]; then
+            echo "Using bazel-bin symlink:"
+            find bazel-bin/examples/basic/ -name "*.wasm" || echo "No .wasm files found via symlink"
+            WASM_COUNT=$(find bazel-bin/examples/basic/ -name "*.wasm" 2>/dev/null | wc -l)
+          else
+            echo "Using bazel info:"
+            BAZEL_BIN=$(bazel info bazel-bin)
+            if [ -d "$BAZEL_BIN/examples/basic" ]; then
+              find "$BAZEL_BIN/examples/basic/" -name "*.wasm" || echo "No .wasm files found via bazel info"
+              WASM_COUNT=$(find "$BAZEL_BIN/examples/basic/" -name "*.wasm" 2>/dev/null | wc -l)
+            else
+              echo "Directory not found via bazel info, checking build success..."
+              bazel build --check_up_to_date //examples/basic:hello_component_release && echo "Build is up to date" || echo "Build check failed"
+            fi
+          fi
+
+          if [ "$WASM_COUNT" -gt 0 ]; then
+            echo "✅ Found $WASM_COUNT WASM component(s)"
+          else
+            echo "⚠️  No WASM components found in expected locations, but build may have succeeded"
+          fi
 
   release:
     name: Release
     runs-on: ubuntu-latest
     needs: [test, integration]
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        submodules: false
-    
-    - name: Install git-cliff
-      uses: taiki-e/install-action@v2
-      with:
-        tool: git-cliff
-    
-    - name: Generate Release Notes
-      run: |
-        # Generate changelog for the latest changes
-        git-cliff --latest --strip header -o release_notes.md
-        echo "Generated release notes:"
-        cat release_notes.md
-    
-    - name: Create Release Archive
-      run: |
-        # Create a clean directory for the release
-        mkdir -p release_tmp
-        
-        # Copy files excluding Bazel and git directories
-        rsync -av \
-          --exclude='.git*' \
-          --exclude='bazel-*' \
-          --exclude='*.tar.gz' \
-          --exclude='.bazel*' \
-          --exclude='release_tmp' \
-          . release_tmp/
-        
-        # Create the archive from the clean directory
-        tar -czf rules_wasm_component.tar.gz -C release_tmp .
-    
-    - name: Upload Release Asset
-      uses: actions/upload-artifact@v4
-      with:
-        name: rules_wasm_component
-        path: rules_wasm_component.tar.gz
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
+
+      - name: Generate Release Notes
+        run: |
+          # Generate changelog for the latest changes
+          git-cliff --latest --strip header -o release_notes.md
+          echo "Generated release notes:"
+          cat release_notes.md
+
+      - name: Create Release Archive
+        run: |
+          # Create a clean directory for the release
+          mkdir -p release_tmp
+
+          # Copy files excluding Bazel and git directories
+          rsync -av \
+            --exclude='.git*' \
+            --exclude='bazel-*' \
+            --exclude='*.tar.gz' \
+            --exclude='.bazel*' \
+            --exclude='release_tmp' \
+            . release_tmp/
+
+          # Create the archive from the clean directory
+          tar -czf rules_wasm_component.tar.gz -C release_tmp .
+
+      - name: Upload Release Asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: rules_wasm_component
+          path: rules_wasm_component.tar.gz

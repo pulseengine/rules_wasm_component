@@ -7,7 +7,7 @@ impl Guest for Component {
         // Simple application that always succeeds
         42
     }
-    
+
     fn process_data(input: String) -> String {
         // Simple data processing
         format!("Processed: {}", input.to_uppercase())

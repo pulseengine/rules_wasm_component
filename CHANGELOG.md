@@ -5,11 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [0.1.0] - 2025-07-09
 
 ### Features
+
 - Add configurable multi-strategy WASM toolchain
 - Add support for wasm32-wasip2 target in rules_rust
 - Implement Bazel linting with buildifier
 
 ### Bug Fixes
+
 - Use valid WASM target triples for rules_rust compatibility
 - Resolve rules_rust compatibility issues
 - Use rust_shared_library for WASM component builds
@@ -22,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Improve tar command for release archive
 
 ### Miscellaneous Tasks
+
 - Initial setup of rules_wasm_component
 - Add comprehensive CI workflow
 - Configure git-cliff for changelog generation

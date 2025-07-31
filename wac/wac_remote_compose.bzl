@@ -37,10 +37,10 @@ def _wac_remote_compose_impl(ctx):
         parts = remote_spec.split("@")
         if len(parts) != 2:
             fail("Invalid remote component spec '{}'. Expected format: 'package@version' or 'registry/package@version'".format(remote_spec))
-        
+
         package = parts[0]
         version = parts[1]
-        
+
         # Determine registry (default to empty for default registry)
         registry = ""
         if "/" in package and not package.startswith("wasi:"):
@@ -52,10 +52,10 @@ def _wac_remote_compose_impl(ctx):
 
         # Create a unique name for the fetched component
         fetch_name = "{}_remote_{}".format(ctx.label.name, comp_name)
-        
+
         # Declare the fetched component file
         fetched_component = ctx.actions.declare_file("{}/{}.wasm".format(fetch_name, comp_name))
-        
+
         # Build wkg fetch command
         args = ctx.actions.args()
         args.add("fetch")
@@ -64,7 +64,7 @@ def _wac_remote_compose_impl(ctx):
         if registry:
             args.add("--registry", registry)
         args.add("--output", fetched_component.path)
-        
+
         # Fetch the remote component
         ctx.actions.run(
             executable = wkg,
@@ -73,7 +73,7 @@ def _wac_remote_compose_impl(ctx):
             mnemonic = "WkgFetch",
             progress_message = "Fetching remote component {} from {}".format(comp_name, remote_spec),
         )
-        
+
         # Create a synthetic WasmComponentInfo for the remote component
         remote_component_infos[comp_name] = struct(
             wasm_file = fetched_component,
@@ -85,7 +85,7 @@ def _wac_remote_compose_impl(ctx):
     all_components = {}
     all_components.update(local_component_infos)
     all_components.update(remote_component_infos)
-    
+
     all_component_files = local_component_files + remote_component_files
 
     # Create composition file
@@ -116,7 +116,7 @@ def _wac_remote_compose_impl(ctx):
 
     # Prepare component files for WAC
     selected_components = {}
-    
+
     # Add local components
     for comp_target, comp_name in ctx.attr.local_components.items():
         comp_info = comp_target[WasmComponentInfo]
@@ -126,7 +126,7 @@ def _wac_remote_compose_impl(ctx):
             "profile": ctx.attr.profile,
             "wit_package": _extract_wit_package(comp_info),
         }
-    
+
     # Add remote components
     for comp_name, comp_info in remote_component_infos.items():
         selected_components[comp_name] = {
@@ -140,10 +140,14 @@ def _wac_remote_compose_impl(ctx):
     ctx.actions.run(
         executable = ctx.executable._wac_deps_tool,
         arguments = [
-            "--output-dir", deps_dir.path,
-            "--manifest", _generate_component_manifest(selected_components),
-            "--profile-info", _generate_profile_info(selected_components),
-            "--use-symlinks", str(ctx.attr.use_symlinks).lower(),
+            "--output-dir",
+            deps_dir.path,
+            "--manifest",
+            _generate_component_manifest(selected_components),
+            "--profile-info",
+            _generate_profile_info(selected_components),
+            "--use-symlinks",
+            str(ctx.attr.use_symlinks).lower(),
         ] + [
             "--component={}={}".format(comp_name, comp_data["file"].path)
             for comp_name, comp_data in selected_components.items()
@@ -154,18 +158,19 @@ def _wac_remote_compose_impl(ctx):
         progress_message = "Creating WAC deps structure with remote components for %s" % ctx.label,
     )
 
-    # Run wac compose  
+    # Run wac compose
     args = ctx.actions.args()
     args.add("compose")
     args.add("--output", composed_wasm)
-    
+
     # Use explicit package dependencies
     for comp_name, comp_data in selected_components.items():
         wit_package = comp_data.get("wit_package", "unknown:package@1.0.0")
+
         # Remove version from package name for --dep override
         package_name_no_version = wit_package.split("@")[0] if "@" in wit_package else wit_package
         args.add("--dep", "{}={}".format(package_name_no_version, comp_data["file"].path))
-    
+
     # Essential flags for local-only composition
     args.add("--no-validate")  # Skip validation that might trigger registry
     args.add("--import-dependencies")  # Allow WASI imports instead of requiring them as args
@@ -300,10 +305,10 @@ wac_remote_compose = rule(
     ],
     doc = """
     Composes WebAssembly components using WAC with support for remote components via wkg.
-    
+
     This rule extends wac_compose to support fetching remote components from registries
     using wkg before composing them with local components.
-    
+
     Example:
         wac_remote_compose(
             name = "my_distributed_system",
@@ -318,10 +323,10 @@ wac_remote_compose = rule(
                 let frontend = new frontend:component { ... };
                 let backend = new backend:component { ... };
                 let auth = new auth:component { ... };
-                
+
                 connect frontend.auth_request -> auth.validate;
                 connect frontend.api_request -> backend.handler;
-                
+
                 export frontend as main;
             ''',
         )

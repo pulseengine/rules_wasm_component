@@ -10,6 +10,6 @@ rust_library(
 
 rust_clippy(
     name = "test_lib_clippy",
-    deps = [":test_lib"],
     visibility = ["//visibility:public"],
+    deps = [":test_lib"],
 )

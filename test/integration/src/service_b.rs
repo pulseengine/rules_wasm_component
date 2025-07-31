@@ -10,7 +10,7 @@ impl Guest for Component {
         storage::store(&id.to_string(), &user_data);
         id
     }
-    
+
     fn get_user(id: u32) -> Option<String> {
         storage::retrieve(&id.to_string())
     }

@@ -5,23 +5,23 @@ interface gateway {
         username: string,
         password: string,
     }
-    
+
     record auth-response {
         user-id: string,
         token: string,
         expires-at: u64,
     }
-    
+
     record data-request {
         query: string,
         limit: option<u32>,
     }
-    
+
     record data-response {
         data: string,
         count: u32,
     }
-    
+
     handle-request: func(request: string) -> string;
     authenticate-user: func(auth-req: auth-request) -> result<auth-response, string>;
     query-data: func(data-req: data-request) -> result<data-response, string>;

@@ -20,57 +20,109 @@ def _wasm_validate_impl(ctx):
     # Output validation log
     validation_log = ctx.actions.declare_file(ctx.label.name + "_validation.log")
 
-    # Run validation
+    # Create validation report with modern Bazel approach
+    # Step 1: Create report header
+    report_header = """=== WASM Validation Report ===
+File: {}
+Date: $(date)
+
+""".format(wasm_file.short_path)
+
+    header_file = ctx.actions.declare_file(ctx.label.name + "_header.txt")
+    ctx.actions.write(
+        output = header_file,
+        content = report_header,
+    )
+
+    # Step 2: Run validation and capture results
+    validation_result = ctx.actions.declare_file(ctx.label.name + "_validation.txt")
     ctx.actions.run_shell(
-        inputs = [wasm_file],
-        outputs = [validation_log],
-        tools = [wasm_tools],
         command = """
-            set +e  # Don't exit on validation errors
-            
-            echo "=== WASM Validation Report ===" > {log}
-            echo "File: {wasm_file}" >> {log}
-            echo "Size: $(wc -c < {wasm_file}) bytes" >> {log}
-            echo "Date: $(date)" >> {log}
-            echo "" >> {log}
-            
-            # Basic validation
-            echo "=== Basic Validation ===" >> {log}
-            if {wasm_tools} validate {wasm_file} 2>&1; then
-                echo "✅ WASM file is valid" >> {log}
-                VALID=true
+            echo "=== Basic Validation ===" > {}
+            if {} validate {} 2>&1; then
+                echo "✅ WASM file is valid" >> {}
+                echo "SUCCESS" > {}.status
             else
-                echo "❌ WASM validation failed" >> {log}
-                VALID=false
+                echo "❌ WASM validation failed" >> {}
+                echo "FAILED" > {}.status
             fi
-            echo "" >> {log}
-            
-            # Component inspection (if it's a component)
-            echo "=== Component Inspection ===" >> {log}
-            if {wasm_tools} component wit {wasm_file} >> {log} 2>&1; then
-                echo "✅ Component WIT extracted successfully" >> {log}
-            else
-                echo "ℹ️  Not a component or WIT extraction failed" >> {log}
-            fi
-            echo "" >> {log}
-            
-            # Module info
-            echo "=== Module Information ===" >> {log}
-            {wasm_tools} print {wasm_file} --skeleton >> {log} 2>&1 || echo "Could not extract module info" >> {log}
-            
-            # Set exit code based on validation result
-            if [ "$VALID" = "true" ]; then
-                exit 0
-            else
-                exit 1
-            fi
+            echo "" >> {}
         """.format(
-            wasm_tools = wasm_tools.path,
-            wasm_file = wasm_file.path,
-            log = validation_log.path,
+            validation_result.path,
+            wasm_tools.path,
+            wasm_file.path,
+            validation_result.path,
+            validation_result.path,
+            validation_result.path,
+            validation_result.path,
         ),
-        mnemonic = "WasmValidate",
+        inputs = [wasm_file],
+        outputs = [validation_result],
+        tools = [wasm_tools],
+        mnemonic = "WasmValidateCore",
         progress_message = "Validating WASM file %s" % ctx.label,
+    )
+
+    # Step 3: Run component inspection
+    component_result = ctx.actions.declare_file(ctx.label.name + "_component.txt")
+    ctx.actions.run_shell(
+        command = """
+            echo "=== Component Inspection ===" > {}
+            if {} component wit {} >> {} 2>&1; then
+                echo "✅ Component WIT extracted successfully" >> {}
+            else
+                echo "ℹ️  Not a component or WIT extraction failed" >> {}
+            fi
+            echo "" >> {}
+        """.format(
+            component_result.path,
+            wasm_tools.path,
+            wasm_file.path,
+            component_result.path,
+            component_result.path,
+            component_result.path,
+            component_result.path,
+        ),
+        inputs = [wasm_file],
+        outputs = [component_result],
+        tools = [wasm_tools],
+        mnemonic = "WasmInspectComponent",
+        progress_message = "Inspecting WASM component %s" % ctx.label,
+    )
+
+    # Step 4: Get module information
+    module_result = ctx.actions.declare_file(ctx.label.name + "_module.txt")
+    ctx.actions.run_shell(
+        command = """
+            echo "=== Module Information ===" > {}
+            {} print {} --skeleton >> {} 2>&1 || echo "Could not extract module info" >> {}
+        """.format(
+            module_result.path,
+            wasm_tools.path,
+            wasm_file.path,
+            module_result.path,
+            module_result.path,
+        ),
+        inputs = [wasm_file],
+        outputs = [module_result],
+        tools = [wasm_tools],
+        mnemonic = "WasmModuleInfo",
+        progress_message = "Extracting module info from %s" % ctx.label,
+    )
+
+    # Step 5: Combine all results into final report
+    ctx.actions.run_shell(
+        command = "cat {} {} {} {} > {}".format(
+            header_file.path,
+            validation_result.path,
+            component_result.path,
+            module_result.path,
+            validation_log.path,
+        ),
+        inputs = [header_file, validation_result, component_result, module_result],
+        outputs = [validation_log],
+        mnemonic = "WasmCombineReport",
+        progress_message = "Generating validation report for %s" % ctx.label,
     )
 
     # Create validation info provider
@@ -101,16 +153,16 @@ wasm_validate = rule(
     toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
     doc = """
     Validates a WebAssembly file or component.
-    
+
     This rule uses wasm-tools to validate WASM files and extract
     information about components, imports, exports, etc.
-    
+
     Example:
         wasm_validate(
             name = "validate_my_component",
             component = ":my_component",
         )
-        
+
         wasm_validate(
             name = "validate_wasm_file",
             wasm_file = "my_file.wasm",

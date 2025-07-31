@@ -1,5 +1,7 @@
 // Local frontend component that will interact with remote services
-use frontend_bindings::exports::example::frontend::gateway::{Guest, AuthRequest, DataRequest, AuthResponse, DataResponse};
+use frontend_bindings::exports::example::frontend::gateway::{
+    AuthRequest, AuthResponse, DataRequest, DataResponse, Guest,
+};
 
 struct Component;
 
@@ -7,7 +9,7 @@ impl Guest for Component {
     fn handle_request(request: String) -> String {
         format!("Frontend processing: {}", request)
     }
-    
+
     fn authenticate_user(auth_req: AuthRequest) -> Result<AuthResponse, String> {
         // This would normally call out to remote auth service
         // For now, return a mock response
@@ -17,7 +19,7 @@ impl Guest for Component {
             expires_at: 3600,
         })
     }
-    
+
     fn query_data(data_req: DataRequest) -> Result<DataResponse, String> {
         // This would normally call out to remote data service
         // For now, return a mock response

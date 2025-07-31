@@ -311,14 +311,14 @@ void simd_memcpy(void* dest, const void* src, size_t size) {
 #if SIMD_SUPPORTED
     const uint8_t* src_ptr = static_cast<const uint8_t*>(src);
     uint8_t* dest_ptr = static_cast<uint8_t*>(dest);
-    
+
     // Process 16-byte chunks with SIMD
     size_t simd_chunks = size / 16;
     for (size_t i = 0; i < simd_chunks; i++) {
         v128_t chunk = simd_load_unaligned(src_ptr + i * 16);
         simd_store_unaligned(dest_ptr + i * 16, chunk);
     }
-    
+
     // Handle remaining bytes
     size_t remaining = size - (simd_chunks * 16);
     if (remaining > 0) {
@@ -333,13 +333,13 @@ void simd_memset(void* dest, uint8_t value, size_t size) {
 #if SIMD_SUPPORTED
     uint8_t* dest_ptr = static_cast<uint8_t*>(dest);
     v128_t value_vec = simd_splat_u8(value);
-    
+
     // Process 16-byte chunks with SIMD
     size_t simd_chunks = size / 16;
     for (size_t i = 0; i < simd_chunks; i++) {
         simd_store_unaligned(dest_ptr + i * 16, value_vec);
     }
-    
+
     // Handle remaining bytes
     size_t remaining = size - (simd_chunks * 16);
     if (remaining > 0) {
@@ -353,12 +353,12 @@ void simd_memset(void* dest, uint8_t value, size_t size) {
 void simd_rgb_to_rgba(const uint8_t* rgb, uint8_t* rgba, size_t pixel_count, uint8_t alpha) {
 #if SIMD_SUPPORTED
     v128_t alpha_vec = simd_splat_u8(alpha);
-    
+
     for (size_t i = 0; i < pixel_count; i += 4) {  // Process 4 pixels at a time
         if (i + 4 <= pixel_count) {
             // Load 12 bytes (4 RGB pixels)
             v128_t rgb_data = simd_load_unaligned(rgb + i * 3);
-            
+
             // Shuffle to create RGBA layout
             // This is a simplified version - actual implementation would need careful shuffling
             for (int j = 0; j < 4 && (i + j) < pixel_count; j++) {
@@ -396,17 +396,17 @@ void simd_rgb_to_grayscale(const uint8_t* rgb, uint8_t* gray, size_t pixel_count
     v128_t coeff_r = simd_splat_u16(54);
     v128_t coeff_g = simd_splat_u16(183);
     v128_t coeff_b = simd_splat_u16(19);
-    
+
     for (size_t i = 0; i < pixel_count; i += 16) {
         size_t remaining = std::min(size_t(16), pixel_count - i);
-        
+
         if (remaining >= 5) {  // Need at least 5 pixels for SIMD efficiency
             // Load RGB data (this is simplified - real implementation needs careful loading)
             for (size_t j = 0; j < remaining && (i + j) < pixel_count; j++) {
                 uint16_t r = rgb[(i + j) * 3 + 0];
                 uint16_t g = rgb[(i + j) * 3 + 1];
                 uint16_t b = rgb[(i + j) * 3 + 2];
-                
+
                 uint16_t luma = (54 * r + 183 * g + 19 * b) >> 8;
                 gray[i + j] = static_cast<uint8_t>(std::min(luma, uint16_t(255)));
             }
@@ -416,7 +416,7 @@ void simd_rgb_to_grayscale(const uint8_t* rgb, uint8_t* gray, size_t pixel_count
                 uint16_t r = rgb[j * 3 + 0];
                 uint16_t g = rgb[j * 3 + 1];
                 uint16_t b = rgb[j * 3 + 2];
-                
+
                 gray[j] = static_cast<uint8_t>((54 * r + 183 * g + 19 * b) >> 8);
             }
             break;
@@ -427,7 +427,7 @@ void simd_rgb_to_grayscale(const uint8_t* rgb, uint8_t* gray, size_t pixel_count
         uint16_t r = rgb[i * 3 + 0];
         uint16_t g = rgb[i * 3 + 1];
         uint16_t b = rgb[i * 3 + 2];
-        
+
         gray[i] = static_cast<uint8_t>((54 * r + 183 * g + 19 * b) >> 8);
     }
 #endif
@@ -436,7 +436,7 @@ void simd_rgb_to_grayscale(const uint8_t* rgb, uint8_t* gray, size_t pixel_count
 void simd_add_pixels(const uint8_t* src1, const uint8_t* src2, uint8_t* dest, size_t pixel_count) {
 #if SIMD_SUPPORTED
     size_t simd_count = pixel_count - (pixel_count % 16);
-    
+
     // Process 16 pixels at a time with SIMD
     for (size_t i = 0; i < simd_count; i += 16) {
         v128_t a = simd_load_unaligned(src1 + i);
@@ -444,7 +444,7 @@ void simd_add_pixels(const uint8_t* src1, const uint8_t* src2, uint8_t* dest, si
         v128_t result = simd_adds_u8(a, b);  // Saturated add
         simd_store_unaligned(dest + i, result);
     }
-    
+
     // Handle remaining pixels
     for (size_t i = simd_count; i < pixel_count; i++) {
         uint16_t sum = static_cast<uint16_t>(src1[i]) + static_cast<uint16_t>(src2[i]);
@@ -460,11 +460,11 @@ void simd_add_pixels(const uint8_t* src1, const uint8_t* src2, uint8_t* dest, si
 
 PixelStats simd_calculate_stats(const uint8_t* pixels, size_t pixel_count, int channels) {
     PixelStats stats = {0};
-    
+
     if (channels < 3) {
         return stats;  // Need at least RGB
     }
-    
+
 #if SIMD_SUPPORTED
     v128_t sum_r_vec = simd_splat_u32(0);
     v128_t sum_g_vec = simd_splat_u32(0);
@@ -475,21 +475,21 @@ PixelStats simd_calculate_stats(const uint8_t* pixels, size_t pixel_count, int c
     v128_t max_r_vec = simd_splat_u8(0);
     v128_t max_g_vec = simd_splat_u8(0);
     v128_t max_b_vec = simd_splat_u8(0);
-    
+
     // Process pixels in chunks
     for (size_t i = 0; i < pixel_count; i++) {
         uint8_t r = pixels[i * channels + 0];
         uint8_t g = pixels[i * channels + 1];
         uint8_t b = pixels[i * channels + 2];
-        
+
         stats.sum_r += r;
         stats.sum_g += g;
         stats.sum_b += b;
-        
+
         stats.min_r = std::min(stats.min_r, static_cast<uint32_t>(r));
         stats.min_g = std::min(stats.min_g, static_cast<uint32_t>(g));
         stats.min_b = std::min(stats.min_b, static_cast<uint32_t>(b));
-        
+
         stats.max_r = std::max(stats.max_r, static_cast<uint32_t>(r));
         stats.max_g = std::max(stats.max_g, static_cast<uint32_t>(g));
         stats.max_b = std::max(stats.max_b, static_cast<uint32_t>(b));
@@ -497,26 +497,26 @@ PixelStats simd_calculate_stats(const uint8_t* pixels, size_t pixel_count, int c
 #else
     stats.min_r = stats.min_g = stats.min_b = 255;
     stats.max_r = stats.max_g = stats.max_b = 0;
-    
+
     for (size_t i = 0; i < pixel_count; i++) {
         uint8_t r = pixels[i * channels + 0];
         uint8_t g = pixels[i * channels + 1];
         uint8_t b = pixels[i * channels + 2];
-        
+
         stats.sum_r += r;
         stats.sum_g += g;
         stats.sum_b += b;
-        
+
         stats.min_r = std::min(stats.min_r, static_cast<uint32_t>(r));
         stats.min_g = std::min(stats.min_g, static_cast<uint32_t>(g));
         stats.min_b = std::min(stats.min_b, static_cast<uint32_t>(b));
-        
+
         stats.max_r = std::max(stats.max_r, static_cast<uint32_t>(r));
         stats.max_g = std::max(stats.max_g, static_cast<uint32_t>(g));
         stats.max_b = std::max(stats.max_b, static_cast<uint32_t>(b));
     }
 #endif
-    
+
     stats.pixel_count = static_cast<uint32_t>(pixel_count);
     return stats;
 }
@@ -543,7 +543,7 @@ double SIMDTimer::megapixels_per_second(size_t pixel_count) const {
 }
 
 // Memory pool implementation
-SIMDMemoryPool::SIMDMemoryPool(size_t pool_size) 
+SIMDMemoryPool::SIMDMemoryPool(size_t pool_size)
     : pool_size_(align_size(pool_size)), used_size_(0) {
     pool_ = static_cast<uint8_t*>(aligned_malloc(pool_size_));
     if (pool_) {
@@ -557,19 +557,19 @@ SIMDMemoryPool::~SIMDMemoryPool() {
 
 void* SIMDMemoryPool::allocate(size_t size) {
     if (!pool_) return nullptr;
-    
+
     size = align_size(size);
-    
+
     if (used_size_ + size > pool_size_) {
         return nullptr;  // Not enough space
     }
-    
+
     void* ptr = pool_ + used_size_;
     used_size_ += size;
-    
+
     Block block = {ptr, size, false};
     blocks_.push_back(block);
-    
+
     return ptr;
 }
 

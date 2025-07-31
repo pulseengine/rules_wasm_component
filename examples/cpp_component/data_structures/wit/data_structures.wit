@@ -5,7 +5,7 @@ interface data-structures {
     type key-type = string;
     type value-type = list<u8>;
     type node-id = u64;
-    
+
     // Hash table operations
     record hash-table-config {
         initial-capacity: u32,
@@ -13,7 +13,7 @@ interface data-structures {
         enable-resize: bool,
         hash-algorithm: string,  // "fnv", "murmur", "sip", "xxhash"
     }
-    
+
     record hash-table-stats {
         size: u32,
         capacity: u32,
@@ -22,13 +22,13 @@ interface data-structures {
         resize-count: u32,
         memory-usage: u32,
     }
-    
+
     variant hash-result {
         success(value-type),
         not-found,
         error(string),
     }
-    
+
     // B-tree operations
     record btree-config {
         order: u32,           // Maximum children per node
@@ -36,7 +36,7 @@ interface data-structures {
         cache-size: u32,
         page-size: u32,
     }
-    
+
     record btree-stats {
         height: u32,
         node-count: u32,
@@ -46,13 +46,13 @@ interface data-structures {
         memory-usage: u32,
         cache-hit-ratio: f32,
     }
-    
+
     variant btree-result {
         success(value-type),
         not-found,
         error(string),
     }
-    
+
     // Graph operations
     enum graph-type {
         directed,
@@ -60,21 +60,21 @@ interface data-structures {
         weighted,
         unweighted,
     }
-    
+
     record edge {
         from: node-id,
         to: node-id,
         weight: f64,
         data: option<value-type>,
     }
-    
+
     record graph-config {
         graph-type: graph-type,
         initial-nodes: u32,
         allow-self-loops: bool,
         allow-parallel-edges: bool,
     }
-    
+
     record graph-stats {
         node-count: u32,
         edge-count: u32,
@@ -84,14 +84,14 @@ interface data-structures {
         has-cycles: bool,
         memory-usage: u32,
     }
-    
+
     record path-result {
         exists: bool,
         distance: f64,
         path: list<node-id>,
         edge-count: u32,
     }
-    
+
     // Serialization formats
     enum serialization-format {
         binary,
@@ -100,7 +100,7 @@ interface data-structures {
         protobuf,
         custom,
     }
-    
+
     record serialization-result {
         success: bool,
         data: option<list<u8>>,
@@ -108,7 +108,7 @@ interface data-structures {
         compression-ratio: f32,
         error: option<string>,
     }
-    
+
     // Memory pool operations
     record memory-stats {
         total-allocated: u32,
@@ -118,7 +118,7 @@ interface data-structures {
         allocation-count: u32,
         fragmentation-ratio: f32,
     }
-    
+
     // Collection operations
     record collection-info {
         name: string,
@@ -128,167 +128,167 @@ interface data-structures {
         created-timestamp: u64,
         last-accessed: u64,
     }
-    
+
     // Hash Table Interface
-    
+
     create-hash-table: func(name: string, config: hash-table-config) -> bool;
-    
+
     hash-put: func(table-name: string, key: key-type, value: value-type) -> bool;
-    
+
     hash-get: func(table-name: string, key: key-type) -> hash-result;
-    
+
     hash-remove: func(table-name: string, key: key-type) -> bool;
-    
+
     hash-contains: func(table-name: string, key: key-type) -> bool;
-    
+
     hash-clear: func(table-name: string) -> bool;
-    
+
     hash-keys: func(table-name: string) -> list<key-type>;
-    
+
     hash-values: func(table-name: string) -> list<value-type>;
-    
+
     hash-size: func(table-name: string) -> u32;
-    
+
     hash-stats: func(table-name: string) -> option<hash-table-stats>;
-    
+
     // B-Tree Interface
-    
+
     create-btree: func(name: string, config: btree-config) -> bool;
-    
+
     btree-insert: func(tree-name: string, key: key-type, value: value-type) -> bool;
-    
+
     btree-search: func(tree-name: string, key: key-type) -> btree-result;
-    
+
     btree-delete: func(tree-name: string, key: key-type) -> bool;
-    
-    btree-range-query: func(tree-name: string, start-key: key-type, 
+
+    btree-range-query: func(tree-name: string, start-key: key-type,
                            end-key: key-type) -> list<tuple<key-type, value-type>>;
-    
+
     btree-min-key: func(tree-name: string) -> option<key-type>;
-    
+
     btree-max-key: func(tree-name: string) -> option<key-type>;
-    
+
     btree-predecessor: func(tree-name: string, key: key-type) -> option<key-type>;
-    
+
     btree-successor: func(tree-name: string, key: key-type) -> option<key-type>;
-    
+
     btree-stats: func(tree-name: string) -> option<btree-stats>;
-    
+
     // Graph Interface
-    
+
     create-graph: func(name: string, config: graph-config) -> bool;
-    
-    graph-add-node: func(graph-name: string, node-id: node-id, 
+
+    graph-add-node: func(graph-name: string, node-id: node-id,
                         data: option<value-type>) -> bool;
-    
+
     graph-remove-node: func(graph-name: string, node-id: node-id) -> bool;
-    
+
     graph-add-edge: func(graph-name: string, edge: edge) -> bool;
-    
+
     graph-remove-edge: func(graph-name: string, from: node-id, to: node-id) -> bool;
-    
+
     graph-has-node: func(graph-name: string, node-id: node-id) -> bool;
-    
+
     graph-has-edge: func(graph-name: string, from: node-id, to: node-id) -> bool;
-    
+
     graph-get-neighbors: func(graph-name: string, node-id: node-id) -> list<node-id>;
-    
+
     graph-get-edges: func(graph-name: string, node-id: node-id) -> list<edge>;
-    
-    graph-shortest-path: func(graph-name: string, start: node-id, 
+
+    graph-shortest-path: func(graph-name: string, start: node-id,
                               end: node-id) -> path-result;
-    
+
     graph-dfs: func(graph-name: string, start: node-id) -> list<node-id>;
-    
+
     graph-bfs: func(graph-name: string, start: node-id) -> list<node-id>;
-    
+
     graph-connected-components: func(graph-name: string) -> list<list<node-id>>;
-    
+
     graph-minimum-spanning-tree: func(graph-name: string) -> list<edge>;
-    
+
     graph-stats: func(graph-name: string) -> option<graph-stats>;
-    
+
     // Serialization Interface
-    
-    serialize-hash-table: func(table-name: string, 
+
+    serialize-hash-table: func(table-name: string,
                               format: serialization-format) -> serialization-result;
-    
-    deserialize-hash-table: func(name: string, data: list<u8>, 
+
+    deserialize-hash-table: func(name: string, data: list<u8>,
                                 format: serialization-format) -> bool;
-    
-    serialize-btree: func(tree-name: string, 
+
+    serialize-btree: func(tree-name: string,
                          format: serialization-format) -> serialization-result;
-    
-    deserialize-btree: func(name: string, data: list<u8>, 
+
+    deserialize-btree: func(name: string, data: list<u8>,
                            format: serialization-format) -> bool;
-    
-    serialize-graph: func(graph-name: string, 
+
+    serialize-graph: func(graph-name: string,
                          format: serialization-format) -> serialization-result;
-    
-    deserialize-graph: func(name: string, data: list<u8>, 
+
+    deserialize-graph: func(name: string, data: list<u8>,
                            format: serialization-format) -> bool;
-    
+
     // Memory Management Interface
-    
+
     get-memory-stats: func() -> memory-stats;
-    
+
     defragment-memory: func() -> bool;
-    
+
     set-memory-limit: func(limit-bytes: u32) -> bool;
-    
+
     garbage-collect: func() -> u32;  // Returns bytes freed
-    
+
     // Collection Management Interface
-    
+
     list-collections: func() -> list<collection-info>;
-    
+
     collection-exists: func(name: string) -> bool;
-    
+
     delete-collection: func(name: string) -> bool;
-    
+
     rename-collection: func(old-name: string, new-name: string) -> bool;
-    
+
     clone-collection: func(source-name: string, dest-name: string) -> bool;
-    
+
     // Batch Operations Interface
-    
+
     record batch-operation {
         operation-type: string,  // "put", "get", "delete"
         collection-name: string,
         key: key-type,
         value: option<value-type>,
     }
-    
+
     record batch-result {
         success: bool,
         results: list<option<value-type>>,
         error-count: u32,
         processing-time-ms: u32,
     }
-    
+
     execute-batch: func(operations: list<batch-operation>) -> batch-result;
-    
+
     // Transaction Interface (for ACID operations)
-    
+
     type transaction-id = u64;
-    
+
     begin-transaction: func() -> transaction-id;
-    
+
     commit-transaction: func(tx-id: transaction-id) -> bool;
-    
+
     rollback-transaction: func(tx-id: transaction-id) -> bool;
-    
+
     transaction-put: func(tx-id: transaction-id, collection: string,
                          key: key-type, value: value-type) -> bool;
-    
+
     transaction-get: func(tx-id: transaction-id, collection: string,
                          key: key-type) -> hash-result;
-    
+
     transaction-delete: func(tx-id: transaction-id, collection: string,
                             key: key-type) -> bool;
-    
+
     // Query Interface (SQL-like operations)
-    
+
     record query-result {
         success: bool,
         rows: list<list<value-type>>,
@@ -296,20 +296,20 @@ interface data-structures {
         execution-time-ms: u32,
         error: option<string>,
     }
-    
+
     execute-query: func(collection: string, query: string) -> query-result;
-    
+
     // Index Management
-    
-    create-index: func(collection: string, field-name: string, 
+
+    create-index: func(collection: string, field-name: string,
                       index-type: string) -> bool;  // "btree", "hash", "bitmap"
-    
+
     drop-index: func(collection: string, field-name: string) -> bool;
-    
+
     list-indexes: func(collection: string) -> list<string>;
-    
+
     // Performance and Monitoring
-    
+
     record performance-metrics {
         operations-per-second: f64,
         average-latency-ms: f64,
@@ -317,13 +317,13 @@ interface data-structures {
         cache-hit-ratio: f64,
         error-rate: f64,
     }
-    
+
     get-performance-metrics: func(collection: string) -> performance-metrics;
-    
+
     reset-performance-metrics: func(collection: string) -> bool;
-    
+
     // Configuration and Tuning
-    
+
     record system-config {
         memory-limit: u32,
         cache-size: u32,
@@ -332,19 +332,19 @@ interface data-structures {
         enable-encryption: bool,
         log-level: string,
     }
-    
+
     get-system-config: func() -> system-config;
-    
+
     update-system-config: func(config: system-config) -> bool;
-    
+
     // Health Check and Diagnostics
-    
+
     health-check: func() -> bool;
-    
+
     validate-collection: func(name: string) -> bool;
-    
+
     repair-collection: func(name: string) -> bool;
-    
+
     export-diagnostics: func() -> list<u8>;
 }
 

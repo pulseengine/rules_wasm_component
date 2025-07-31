@@ -4,9 +4,9 @@ load("//cpp:defs.bzl", "cpp_component")
 cpp_component(
     name = "auth_service_cpp",
     srcs = ["test/simple_auth.cpp"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
     wit = "wit/auth_service.wit",
     world = "auth-service",
-    target_compatible_with = ["@platforms//cpu:wasm32"],
 )
 
 # Test binary

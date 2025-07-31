@@ -71,6 +71,7 @@ js_component(
 The jco toolchain can be configured using different strategies:
 
 ### System Installation
+
 ```starlark
 # MODULE.bazel
 jco = use_extension("@rules_wasm_component//wasm:extensions.bzl", "jco")
@@ -78,13 +79,15 @@ jco.register(strategy = "system")
 ```
 
 ### NPM Installation
+
 ```starlark
-# MODULE.bazel  
+# MODULE.bazel
 jco = use_extension("@rules_wasm_component//wasm:extensions.bzl", "jco")
 jco.register(strategy = "npm", version = "1.4.0")
 ```
 
 ### Direct Download
+
 ```starlark
 # MODULE.bazel
 jco = use_extension("@rules_wasm_component//wasm:extensions.bzl", "jco")
@@ -97,7 +100,7 @@ jco.register(strategy = "download", version = "1.4.0")
 # Build JavaScript component
 bazel build //examples/js_component:hello_js_component
 
-# Build TypeScript component  
+# Build TypeScript component
 bazel build //examples/js_component:calc_ts_component
 
 # Generate JavaScript bindings from component
@@ -110,32 +113,35 @@ bazel build //examples/js_component:npm_deps
 ## Features
 
 ### NPM Dependencies
+
 Components can use NPM packages by specifying them in `npm_dependencies` or `package.json`:
 
 ```javascript
-import _ from 'lodash';
+import _ from "lodash";
 
 export function processName(name) {
-    return _.capitalize(name);
+  return _.capitalize(name);
 }
 ```
 
 ### TypeScript Support
+
 Full TypeScript support with type checking and compilation:
 
 ```typescript
 interface Operation {
-    op: 'add' | 'subtract' | 'multiply' | 'divide';
-    a: number;
-    b: number;
+  op: "add" | "subtract" | "multiply" | "divide";
+  a: number;
+  b: number;
 }
 
 export function calculate(operation: Operation): CalculationResult {
-    // Implementation...
+  // Implementation...
 }
 ```
 
 ### WIT Interface Binding
+
 Components automatically implement WIT interfaces:
 
 ```wit
@@ -146,6 +152,7 @@ interface hello {
 ```
 
 ### Component Optimization
+
 Built-in optimization and minification:
 
 ```starlark
@@ -160,7 +167,7 @@ js_component(
 ## Requirements
 
 - **jco**: JavaScript Component Tools
-- **Node.js**: Runtime for JavaScript execution  
+- **Node.js**: Runtime for JavaScript execution
 - **npm**: Package manager for dependencies
 - **TypeScript**: For TypeScript component support (optional)
 
@@ -192,7 +199,7 @@ wac_compose(
 wac_remote_compose(
     name = "distributed_app",
     local_components = {
-        "ui": ":hello_js_component", 
+        "ui": ":hello_js_component",
     },
     remote_components = {
         "auth": "registry/auth@1.0.0",

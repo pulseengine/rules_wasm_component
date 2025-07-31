@@ -41,10 +41,10 @@ wac_remote_compose(
         let frontend = new frontend:component { ... };
         let auth = new auth_service:component { ... };
         let data = new data_service:component { ... };
-        
+
         connect frontend.auth_request -> auth.validate;
         connect frontend.data_request -> data.query;
-        
+
         export frontend as main;
     """,
 )
@@ -69,10 +69,12 @@ wac_remote_compose(
 ## Remote Component Specifications
 
 Remote components are specified using the format:
+
 - `"package@version"` - Uses default registry
 - `"registry/package@version"` - Uses specific registry
 
 Examples:
+
 - `"auth@1.0.0"` - Package "auth" version 1.0.0 from default registry
 - `"my-registry/auth@1.0.0"` - Package "auth" from "my-registry"
 - `"wasi:http@0.2.0"` - WASI HTTP interface version 0.2.0

@@ -10,7 +10,7 @@ wit_bindgen::generate!({
 pub use exports::example::user_service::user_service::*;
 
 /// Rust User Service Component
-/// 
+///
 /// Demonstrates Rust's memory safety and async capabilities in a WebAssembly component.
 /// This service manages user profiles, preferences, and relationships with zero-copy
 /// optimizations and safe concurrency patterns.
@@ -166,7 +166,11 @@ impl UserServiceImpl {
         }
 
         // Check for existing user (zero-copy string comparison)
-        if self.users.values().any(|u| u.username == request.username || u.email == request.email) {
+        if self
+            .users
+            .values()
+            .any(|u| u.username == request.username || u.email == request.email)
+        {
             return Err("User already exists".to_string());
         }
 
@@ -180,7 +184,10 @@ impl UserServiceImpl {
             user_id: user_id.clone(),
             username: request.username.clone(),
             email: request.email.clone(),
-            display_name: request.display_name.clone().unwrap_or_else(|| request.username.clone()),
+            display_name: request
+                .display_name
+                .clone()
+                .unwrap_or_else(|| request.username.clone()),
             avatar_url: request.avatar_url.clone(),
             bio: None,
             location: None,
@@ -227,7 +234,7 @@ impl UserServiceImpl {
         // Insert with move semantics (Rust ownership)
         self.users.insert(user_id.clone(), profile.clone());
         self.metrics.total_users += 1;
-        
+
         Ok(profile)
     }
 
@@ -235,19 +242,25 @@ impl UserServiceImpl {
     fn get_user_profile(&mut self, user_id: &str) -> Option<&UserProfile> {
         // Use Rust's Option type for safe null handling
         let profile = self.users.get(user_id);
-        
+
         if profile.is_some() {
             self.metrics.cache_hits += 1;
         } else {
             self.metrics.cache_misses += 1;
         }
-        
+
         profile
     }
 
     // Memory-safe profile updates using Rust's borrow checker
-    fn update_user_profile(&mut self, user_id: &str, updates: &ProfileUpdateRequest) -> Result<(), String> {
-        let user = self.users.get_mut(user_id)
+    fn update_user_profile(
+        &mut self,
+        user_id: &str,
+        updates: &ProfileUpdateRequest,
+    ) -> Result<(), String> {
+        let user = self
+            .users
+            .get_mut(user_id)
             .ok_or_else(|| "User not found".to_string())?;
 
         let now = std::time::SystemTime::now()
@@ -271,24 +284,29 @@ impl UserServiceImpl {
 
         user.updated_at = now;
         self.metrics.profile_updates += 1;
-        
+
         Ok(())
     }
 
     // Concurrent-safe relationship management
-    fn create_relationship(&mut self, from_user_id: &str, to_user_id: &str, 
-                          relationship_type: RelationshipType) -> Result<String, String> {
+    fn create_relationship(
+        &mut self,
+        from_user_id: &str,
+        to_user_id: &str,
+        relationship_type: RelationshipType,
+    ) -> Result<String, String> {
         // Validate users exist
         if !self.users.contains_key(from_user_id) || !self.users.contains_key(to_user_id) {
             return Err("One or both users not found".to_string());
         }
 
         // Check for existing relationship using iterator patterns
-        if self.relationships.iter().any(|r| 
-            r.from_user_id == from_user_id && 
-            r.to_user_id == to_user_id &&
-            std::mem::discriminant(&r.relationship_type) == std::mem::discriminant(&relationship_type)
-        ) {
+        if self.relationships.iter().any(|r| {
+            r.from_user_id == from_user_id
+                && r.to_user_id == to_user_id
+                && std::mem::discriminant(&r.relationship_type)
+                    == std::mem::discriminant(&relationship_type)
+        }) {
             return Err("Relationship already exists".to_string());
         }
 
@@ -315,9 +333,13 @@ impl UserServiceImpl {
     }
 
     // Efficient relationship queries using Rust's iterator adaptors
-    fn get_user_relationships(&self, user_id: &str, relationship_type: Option<RelationshipType>) 
-                             -> Vec<&UserRelationship> {
-        self.relationships.iter()
+    fn get_user_relationships(
+        &self,
+        user_id: &str,
+        relationship_type: Option<RelationshipType>,
+    ) -> Vec<&UserRelationship> {
+        self.relationships
+            .iter()
             .filter(|r| r.from_user_id == user_id || r.to_user_id == user_id)
             .filter(|r| {
                 if let Some(ref rt) = relationship_type {
@@ -393,7 +415,8 @@ impl GuestUserService for UserServiceImpl {
     }
 
     fn search_users(&mut self, query: SearchQuery) -> Vec<User> {
-        self.users.values()
+        self.users
+            .values()
             .filter(|user| {
                 // Rust's safe string operations
                 if !query.username.is_empty() && !user.username.contains(&query.username) {
@@ -402,7 +425,9 @@ impl GuestUserService for UserServiceImpl {
                 if !query.email.is_empty() && !user.email.contains(&query.email) {
                     return false;
                 }
-                if !query.display_name.is_empty() && !user.display_name.contains(&query.display_name) {
+                if !query.display_name.is_empty()
+                    && !user.display_name.contains(&query.display_name)
+                {
                     return false;
                 }
                 true
@@ -422,17 +447,18 @@ impl GuestUserService for UserServiceImpl {
     }
 
     fn add_friend(&mut self, user_id: String, friend_id: String) -> bool {
-        self.create_relationship(&user_id, &friend_id, RelationshipType::Friend).is_ok()
+        self.create_relationship(&user_id, &friend_id, RelationshipType::Friend)
+            .is_ok()
     }
 
     fn remove_friend(&mut self, user_id: String, friend_id: String) -> bool {
         // Safe removal using Rust's retain method
         let initial_len = self.relationships.len();
-        self.relationships.retain(|r| !(
-            r.from_user_id == user_id && 
-            r.to_user_id == friend_id &&
-            matches!(r.relationship_type, RelationshipType::Friend)
-        ));
+        self.relationships.retain(|r| {
+            !(r.from_user_id == user_id
+                && r.to_user_id == friend_id
+                && matches!(r.relationship_type, RelationshipType::Friend))
+        });
         self.relationships.len() < initial_len
     }
 

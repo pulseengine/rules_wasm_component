@@ -13,7 +13,7 @@ interface image-processor {
         yuv420,
         yuv444,
     }
-    
+
     // Image data structure
     record image {
         width: u32,
@@ -22,7 +22,7 @@ interface image-processor {
         data: list<u8>,
         stride: u32,  // Bytes per row
     }
-    
+
     // Image metadata
     record image-info {
         width: u32,
@@ -33,7 +33,7 @@ interface image-processor {
         has-alpha: bool,
         size-bytes: u32,
     }
-    
+
     // Rectangle region
     record rect {
         x: u32,
@@ -41,13 +41,13 @@ interface image-processor {
         width: u32,
         height: u32,
     }
-    
+
     // Point coordinate
     record point {
         x: f32,
         y: f32,
     }
-    
+
     // Filter types
     enum filter-type {
         box-blur,
@@ -61,7 +61,7 @@ interface image-processor {
         laplacian,
         unsharp-mask,
     }
-    
+
     // Filter parameters
     record filter-params {
         filter: filter-type,
@@ -70,7 +70,7 @@ interface image-processor {
         angle: f32,      // For motion blur
         threshold: f32,  // For edge detection
     }
-    
+
     // Transform operations
     enum transform-type {
         rotate,
@@ -82,7 +82,7 @@ interface image-processor {
         resize,
         perspective,
     }
-    
+
     // Transform parameters
     record transform-params {
         transform: transform-type,
@@ -96,13 +96,13 @@ interface image-processor {
         target-height: u32,
         corner-points: option<list<point>>,  // For perspective (4 points)
     }
-    
+
     // Processing result
     variant processing-result {
         success(image),
         error(string),
     }
-    
+
     // Histogram data
     record histogram {
         bins: u32,
@@ -112,7 +112,7 @@ interface image-processor {
         alpha-channel: option<list<u32>>,
         luminance: list<u32>,
     }
-    
+
     // Image statistics
     record image-stats {
         mean-r: f32,
@@ -129,7 +129,7 @@ interface image-processor {
         max-b: u8,
         total-pixels: u32,
     }
-    
+
     // Performance metrics
     record performance-metrics {
         operation-name: string,
@@ -139,7 +139,7 @@ interface image-processor {
         simd-acceleration: bool,
         memory-usage-bytes: u32,
     }
-    
+
     // Component capabilities
     record processor-capabilities {
         supported-formats: list<color-format>,
@@ -150,107 +150,107 @@ interface image-processor {
         parallel-processing: bool,
         version: string,
     }
-    
+
     // Basic image operations
-    
+
     create-image: func(width: u32, height: u32, format: color-format) -> processing-result;
-    
+
     get-image-info: func(image: image) -> image-info;
-    
+
     clone-image: func(image: image) -> processing-result;
-    
+
     crop-image: func(image: image, region: rect) -> processing-result;
-    
+
     // Color space conversions
-    
+
     convert-color-format: func(image: image, target-format: color-format) -> processing-result;
-    
+
     rgb-to-grayscale: func(image: image) -> processing-result;
-    
+
     rgb-to-hsv: func(image: image) -> processing-result;
-    
+
     hsv-to-rgb: func(image: image) -> processing-result;
-    
+
     rgb-to-yuv: func(image: image) -> processing-result;
-    
+
     yuv-to-rgb: func(image: image) -> processing-result;
-    
+
     // Filtering operations
-    
+
     apply-filter: func(image: image, params: filter-params) -> processing-result;
-    
+
     gaussian-blur: func(image: image, radius: f32) -> processing-result;
-    
+
     box-blur: func(image: image, radius: u32) -> processing-result;
-    
+
     sharpen: func(image: image, strength: f32) -> processing-result;
-    
+
     edge-detect: func(image: image, threshold: f32) -> processing-result;
-    
+
     unsharp-mask: func(image: image, radius: f32, strength: f32, threshold: f32) -> processing-result;
-    
+
     // Transform operations
-    
+
     apply-transform: func(image: image, params: transform-params) -> processing-result;
-    
+
     rotate: func(image: image, angle: f32) -> processing-result;
-    
+
     scale: func(image: image, scale-x: f32, scale-y: f32) -> processing-result;
-    
+
     resize: func(image: image, width: u32, height: u32) -> processing-result;
-    
+
     flip-horizontal: func(image: image) -> processing-result;
-    
+
     flip-vertical: func(image: image) -> processing-result;
-    
+
     // Analysis operations
-    
+
     calculate-histogram: func(image: image, bins: u32) -> histogram;
-    
+
     calculate-statistics: func(image: image) -> image-stats;
-    
+
     detect-edges: func(image: image, threshold: f32) -> processing-result;
-    
+
     find-contours: func(image: image, threshold: f32) -> list<list<point>>;
-    
+
     // Batch operations
-    
-    process-batch: func(images: list<image>, operation: string, 
+
+    process-batch: func(images: list<image>, operation: string,
                        params: string) -> list<processing-result>;
-    
+
     // Performance and capabilities
-    
+
     get-capabilities: func() -> processor-capabilities;
-    
-    benchmark-operation: func(operation: string, image-size: u32, 
+
+    benchmark-operation: func(operation: string, image-size: u32,
                              iterations: u32) -> performance-metrics;
-    
+
     // Memory management
-    
+
     get-memory-usage: func() -> u32;
-    
+
     optimize-memory: func() -> bool;
-    
+
     // Utility functions
-    
+
     validate-image: func(image: image) -> bool;
-    
+
     get-pixel: func(image: image, x: u32, y: u32) -> option<list<u8>>;
-    
+
     set-pixel: func(image: image, x: u32, y: u32, color: list<u8>) -> bool;
-    
+
     compare-images: func(image1: image, image2: image) -> f32;  // Returns similarity score
-    
+
     // Advanced operations
-    
+
     noise-reduction: func(image: image, strength: f32) -> processing-result;
-    
+
     auto-contrast: func(image: image) -> processing-result;
-    
+
     auto-white-balance: func(image: image) -> processing-result;
-    
+
     brightness-contrast: func(image: image, brightness: f32, contrast: f32) -> processing-result;
-    
+
     hue-saturation: func(image: image, hue-shift: f32, saturation: f32) -> processing-result;
 }
 

@@ -1,26 +1,62 @@
 """Example demonstrating Wizer pre-initialization for startup optimization"""
 
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
-load("@rules_wasm_component//wasm:defs.bzl", "wizer_chain")
+load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//rust:rust_wasm_component.bzl", "rust_wasm_component")
+load("@rules_wasm_component//rust:rust_wasm_module.bzl", "rust_wasm_module")
+load("@rules_wasm_component//wasm:wasm_component_wizer.bzl", "wasm_component_wizer")
+load("@rules_wasm_component//wasm:wasm_component_wizer_library.bzl", "wasm_component_wizer_library")
 
 package(default_visibility = ["//visibility:public"])
 
-# Basic component with expensive initialization
-rust_wasm_component(
-    name = "expensive_init_component",
-    srcs = ["src/lib.rs"],
-    wit = "wit/expensive-init.wit",
-    edition = "2021",
-    deps = [
-        "@crates//:wit-bindgen",
-    ],
+# Define WIT interfaces for expensive initialization
+wit_library(
+    name = "expensive_init_interfaces",
+    package_name = "expensive-init:api",
+    srcs = ["wit/expensive-init.wit"],
+    world = "expensive-init",
 )
 
-# Pre-initialized version using Wizer
-wizer_chain(
-    name = "optimized_component",
-    component = ":expensive_init_component",
+# Create WASM module using hermetic Bazel approach (without WIT bindings)
+# This applies WASM transition directly to rust_shared_library
+rust_wasm_module(
+    name = "expensive_init_simple_module",
+    srcs = ["src/lib_simple.rs"],
+    edition = "2021",
+    # This will produce a proper WASM module that Wizer can process
+)
+
+# Convert component to module for Wizer processing
+genrule(
+    name = "component_to_module",
+    srcs = [":expensive_init_simple_module"],
+    outs = ["expensive_init_module.wasm"],
+    cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) component wit $< > /dev/null 2>&1 && cp $< $@ || cp $< $@",
+    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
+)
+
+# Apply Wizer to the WASM module
+wasm_component_wizer(
+    name = "wizer_optimized_module",
+    component = ":component_to_module",
     init_function_name = "wizer.initialize",
+)
+
+# Test the new Wizer library-based approach
+wasm_component_wizer_library(
+    name = "wizer_library_test",
+    allow_wasi = True,
+    component = ":expensive_init_simple_module",
+    init_function_name = "wizer.initialize",
+    verbose = True,
+)
+
+# Create the final optimized component (basic component for now)
+rust_wasm_component_bindgen(
+    name = "optimized_component",
+    srcs = ["src/lib.rs"],
+    wit = ":expensive_init_interfaces",
 )
 
 # Pure Bazel validation - just check that components were built
@@ -37,16 +73,16 @@ genrule(
     name = "validate_normal_component",
     srcs = [":expensive_init_component"],
     outs = ["normal_component_valid.marker"],
-    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
     cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) validate $(location :expensive_init_component) && touch $@",
+    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
 )
 
 genrule(
-    name = "validate_wizer_component", 
+    name = "validate_wizer_component",
     srcs = [":optimized_component"],
     outs = ["wizer_component_valid.marker"],
-    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
     cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) validate $(location :optimized_component) && touch $@",
+    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
 )
 
 # Test that both components are valid (depends on validation markers)

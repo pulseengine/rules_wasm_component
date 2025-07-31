@@ -3,34 +3,34 @@ package example:calculator@1.0.0;
 interface calculator {
     variant operation-type {
         add,
-        subtract, 
+        subtract,
         multiply,
         divide,
     }
-    
+
     record operation {
         op: operation-type,
         a: f64,
         b: f64,
     }
-    
+
     record calculation-result {
         success: bool,
         error: option<string>,
         value: option<f64>,
     }
-    
+
     record component-info {
         name: string,
         version: string,
         supported-operations: list<string>,
     }
-    
+
     add: func(a: f64, b: f64) -> f64;
     subtract: func(a: f64, b: f64) -> f64;
     multiply: func(a: f64, b: f64) -> f64;
     divide: func(a: f64, b: f64) -> calculation-result;
-    
+
     calculate: func(operation: operation) -> calculation-result;
     get-calculator-info: func() -> component-info;
 }

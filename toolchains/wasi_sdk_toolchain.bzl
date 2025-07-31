@@ -23,7 +23,7 @@ WASI_SDK_PLATFORMS = {
 
 def _wasi_sdk_toolchain_impl(ctx):
     """Implementation of wasi_sdk_toolchain rule"""
-    
+
     toolchain_info = platform_common.ToolchainInfo(
         wasi_sdk_root = ctx.attr.wasi_sdk_root,
         clang = ctx.file.clang,
@@ -35,7 +35,7 @@ def _wasi_sdk_toolchain_impl(ctx):
         sysroot = ctx.attr.sysroot,
         clang_version = ctx.attr.clang_version,
     )
-    
+
     return [toolchain_info]
 
 wasi_sdk_toolchain = rule(
@@ -93,50 +93,50 @@ wasi_sdk_toolchain = rule(
 
 def _detect_host_platform(repository_ctx):
     """Detect the host platform"""
-    
+
     os_name = repository_ctx.os.name.lower()
     arch = repository_ctx.os.arch.lower()
-    
+
     if os_name == "mac os x":
         os_name = "darwin"
-    
+
     if arch == "x86_64":
         arch = "amd64"
     elif arch == "aarch64":
         arch = "arm64"
-    
+
     return "{}_{}".format(os_name, arch)
 
 def _wasi_sdk_repository_impl(repository_ctx):
     """Create WASI SDK repository"""
-    
+
     strategy = repository_ctx.attr.strategy
-    
+
     if strategy == "system":
         _setup_system_wasi_sdk(repository_ctx)
     elif strategy == "download":
         _setup_downloaded_wasi_sdk(repository_ctx)
     else:
         fail("Unknown strategy: {}. Must be 'system' or 'download'".format(strategy))
-    
+
     # Create BUILD file
     _create_wasi_sdk_build_file(repository_ctx)
 
 def _setup_system_wasi_sdk(repository_ctx):
     """Use system-installed WASI SDK"""
-    
+
     # Default to /usr/local/wasi-sdk
     wasi_sdk_root = repository_ctx.attr.wasi_sdk_root or "/usr/local/wasi-sdk"
-    
+
     # Create symlinks to system tools
     repository_ctx.symlink(wasi_sdk_root, "wasi-sdk")
 
 def _setup_downloaded_wasi_sdk(repository_ctx):
     """Download WASI SDK from GitHub releases"""
-    
+
     version = repository_ctx.attr.version
     platform = _detect_host_platform(repository_ctx)
-    
+
     # Download WASI SDK
     url = repository_ctx.attr.url
     if not url:
@@ -144,40 +144,40 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
         # Convert platform format from "darwin_arm64" to "arm64-macos"
         platform_mapping = {
             "darwin_amd64": "x86_64-macos",
-            "darwin_arm64": "arm64-macos", 
+            "darwin_arm64": "arm64-macos",
             "linux_amd64": "x86_64-linux",
             "linux_arm64": "arm64-linux",
             "windows_amd64": "x86_64-mingw",
         }
-        
+
         if platform not in platform_mapping:
             fail("Unsupported platform: {}. Supported: {}".format(platform, platform_mapping.keys()))
-        
+
         platform_suffix = platform_mapping[platform]
         full_version = version + ".0" if "." not in version else version
-        
+
         url = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-{}/wasi-sdk-{}-{}.tar.gz".format(
             version,
             full_version,
             platform_suffix,
         )
-    
+
     # The archive contains the full version and platform in the prefix
     strip_prefix = "wasi-sdk-{}-{}".format(full_version, platform_suffix)
-    
+
     repository_ctx.download_and_extract(
         url = url,
         stripPrefix = strip_prefix,
     )
-    
+
     # No need for symlink, use direct paths in BUILD file
 
 def _create_wasi_sdk_build_file(repository_ctx):
     """Create BUILD file for WASI SDK"""
-    
+
     # Create a tools directory with proper symlinks for Rust builds
     # Note: Directory will be created automatically when symlinks are created
-    
+
     # Create symlinks in the tools directory that Rust can find
     tools = [
         ("bin/ar", "tools/ar"),
@@ -188,11 +188,11 @@ def _create_wasi_sdk_build_file(repository_ctx):
         ("bin/llvm-objdump", "tools/llvm-objdump"),
         ("bin/llvm-strip", "tools/llvm-strip"),
     ]
-    
+
     for src, dst in tools:
         if repository_ctx.path(src).exists:
             repository_ctx.symlink(src, dst)
-    
+
     build_content = '''
 load("@rules_wasm_component//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_toolchain")
 load("@rules_cc//cc:defs.bzl", "cc_toolchain")
@@ -299,7 +299,7 @@ wasi_sdk_toolchain(
     name = "wasi_sdk_impl",
     wasi_sdk_root = ":sysroot",
     clang = ":clang",
-    ar = ":ar", 
+    ar = ":ar",
     ld = ":wasm_ld",
     nm = ":llvm_nm",
     objdump = ":llvm_objdump",
@@ -326,22 +326,22 @@ alias(
     actual = ":wasi_sdk_toolchain",
 )
 '''
-    
+
     repository_ctx.file("BUILD.bazel", build_content)
-    
+
     # Create cc_toolchain_config.bzl with proper path resolution
     cc_config_content = '''
 load(
     "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
     "feature",
-    "flag_group", 
+    "flag_group",
     "flag_set",
     "tool_path",
 )
 
 def _wasm_cc_toolchain_config_impl(ctx):
     """C++ toolchain config for WASM using WASI SDK"""
-    
+
     tool_paths = [
         tool_path(name = "gcc", path = "bin/clang"),
         tool_path(name = "ld", path = "bin/wasm-ld"),
@@ -352,7 +352,7 @@ def _wasm_cc_toolchain_config_impl(ctx):
         tool_path(name = "objdump", path = "bin/llvm-objdump"),
         tool_path(name = "strip", path = "bin/llvm-strip"),
     ]
-    
+
     default_compile_flags_feature = feature(
         name = "default_compile_flags",
         enabled = True,
@@ -372,7 +372,7 @@ def _wasm_cc_toolchain_config_impl(ctx):
             ),
         ],
     )
-    
+
     default_link_flags_feature = feature(
         name = "default_link_flags",
         enabled = True,
@@ -391,7 +391,7 @@ def _wasm_cc_toolchain_config_impl(ctx):
             ),
         ],
     )
-    
+
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,
         toolchain_identifier = "wasm-toolchain",
@@ -417,7 +417,7 @@ wasm_cc_toolchain_config = rule(
     provides = [CcToolchainConfigInfo],
 )
 '''
-    
+
     repository_ctx.file("cc_toolchain_config.bzl", cc_config_content)
 
 wasi_sdk_repository = repository_rule(

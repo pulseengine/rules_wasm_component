@@ -2,10 +2,10 @@
 
 def _component_validation_test_impl(ctx):
     """Implementation for component validation test."""
-    
+
     component_file = ctx.file.component
     test_script = ctx.actions.declare_file(ctx.label.name + "_test.sh")
-    
+
     # Create test script content
     script_content = [
         "#!/bin/bash",
@@ -38,7 +38,7 @@ def _component_validation_test_impl(ctx):
         "    if wasm-tools component wit \"$COMPONENT\" > /tmp/component.wit 2>/dev/null; then",
         "        echo \"Component WIT interface:\"",
     ]
-    
+
     # Add export validation
     for export in ctx.attr.expected_exports:
         script_content.extend([
@@ -49,7 +49,7 @@ def _component_validation_test_impl(ctx):
             "            exit 1",
             "        fi",
         ])
-    
+
     # Add import validation
     for import_name in ctx.attr.expected_imports:
         script_content.extend([
@@ -60,7 +60,7 @@ def _component_validation_test_impl(ctx):
             "            exit 1",
             "        fi",
         ])
-    
+
     script_content.extend([
         "    else",
         "        echo \"Could not extract WIT interface (might be core module)\"",
@@ -71,13 +71,13 @@ def _component_validation_test_impl(ctx):
         "",
         "echo \"✓ Component validation passed!\"",
     ])
-    
+
     ctx.actions.write(
         output = test_script,
         content = "\n".join(script_content),
         is_executable = True,
     )
-    
+
     # Create test runner that passes the component path
     runner = ctx.actions.declare_file(ctx.label.name + "_runner.sh")
     ctx.actions.write(
@@ -87,7 +87,7 @@ exec "{}" "{}"
 """.format(test_script.short_path, component_file.short_path),
         is_executable = True,
     )
-    
+
     return DefaultInfo(
         executable = runner,
         runfiles = ctx.runfiles(files = [component_file, test_script]),

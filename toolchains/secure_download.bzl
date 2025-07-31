@@ -22,20 +22,20 @@ VERIFIED_TOOL_CHECKSUMS = {
 
 def secure_download_tool(ctx, tool_name, version, platform):
     """Download tool with mandatory checksum verification"""
-    
+
     # Get verified checksum
     tool_checksums = VERIFIED_TOOL_CHECKSUMS.get(tool_name)
     if not tool_checksums:
         fail("SECURITY: Tool '{}' not in verified checksum database".format(tool_name))
-    
+
     version_checksums = tool_checksums.get(version)
     if not version_checksums:
         fail("SECURITY: Version '{}' of '{}' not verified".format(version, tool_name))
-    
+
     expected_checksum = version_checksums.get(platform)
     if not expected_checksum:
         fail("SECURITY: Platform '{}' not supported for {}-{}".format(platform, tool_name, version))
-    
+
     # Download with verification
     url = _build_download_url(tool_name, version, platform)
     return ctx.download_and_extract(
@@ -46,22 +46,22 @@ def secure_download_tool(ctx, tool_name, version, platform):
 
 def _build_download_url(tool_name, version, platform):
     """Build download URL from verified patterns"""
-    
+
     base_urls = {
         "wasm-tools": "https://github.com/bytecodealliance/wasm-tools/releases/download/v{version}",
         "wit-bindgen": "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{version}",
     }
-    
+
     platform_suffixes = {
         "linux_x86_64": "x86_64-linux.tar.gz",
-        "linux_arm64": "aarch64-linux.tar.gz", 
+        "linux_arm64": "aarch64-linux.tar.gz",
         "darwin_x86_64": "x86_64-macos.tar.gz",
         "darwin_arm64": "aarch64-macos.tar.gz",
     }
-    
-    base_url = base_urls[tool_name].format(version=version)
+
+    base_url = base_urls[tool_name].format(version = version)
     suffix = platform_suffixes[platform]
-    
+
     return "{base_url}/{tool_name}-{version}-{suffix}".format(
         base_url = base_url,
         tool_name = tool_name,

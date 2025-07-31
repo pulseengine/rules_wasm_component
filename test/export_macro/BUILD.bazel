@@ -20,6 +20,7 @@ rust_wasm_component_bindgen(
 # Test that we can build it successfully - replaces test.sh
 # The test passes if the component builds without errors (export! macro accessible)
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
 build_test(
     name = "export_macro_test",
     targets = [":test_component"],
@@ -27,9 +28,10 @@ build_test(
 
 # Simple test to verify export macro is accessible
 load("@rules_rust//rust:defs.bzl", "rust_binary")
+
 rust_binary(
     name = "macro_accessibility_test",
     srcs = ["macro_test.rs"],
-    deps = [":test_component_bindings"],
     edition = "2021",
+    deps = [":test_component_bindings"],
 )

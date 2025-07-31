@@ -7,7 +7,10 @@ impl Guest for Component {
     fn process_data(input: String, number: u32) -> String {
         let hash = utilities::hash_string(&input);
         let formatted = utilities::format_number(number);
-        format!("Processed: {} (hash: {}, formatted: {})", input, hash, formatted)
+        format!(
+            "Processed: {} (hash: {}, formatted: {})",
+            input, hash, formatted
+        )
     }
 }
 
