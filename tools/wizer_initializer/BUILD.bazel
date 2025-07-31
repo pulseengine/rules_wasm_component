@@ -1,0 +1,17 @@
+"""Wizer library-based initializer tool (Bazel-native proof of concept)"""
+
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Simplified Wizer library placeholder demonstrating architecture
+# This version uses basic dependencies and serves as proof-of-concept
+rust_binary(
+    name = "wizer_initializer",
+    srcs = ["src/main.rs"],
+    edition = "2021",
+    deps = [
+        "@wizer_crates//:anyhow",
+        "@wizer_crates//:clap",
+    ],
+)
