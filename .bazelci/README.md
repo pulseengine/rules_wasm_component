@@ -10,6 +10,7 @@ This directory contains Buildkite CI configuration for `rules_wasm_component`, f
 ## Test Matrix
 
 ### Platforms
+
 - **Ubuntu 22.04** - Primary Linux platform
 - **Ubuntu 18.04** - Legacy Linux support
 - **macOS ARM64** - Apple Silicon support
@@ -17,10 +18,12 @@ This directory contains Buildkite CI configuration for `rules_wasm_component`, f
 - **RBE** - Remote Build Execution for scalability
 
 ### Bazel Versions
+
 - **7.4.1** - Minimum supported LTS version
 - **rolling** - Latest Bazel version (soft fail)
 
 ### Build Configurations
+
 - **Standard** - Default build and test
 - **Bzlmod** - Modern dependency management
 - **Optimized** - Performance validation
@@ -30,12 +33,14 @@ This directory contains Buildkite CI configuration for `rules_wasm_component`, f
 ## Specialized Test Jobs
 
 ### WebAssembly Component Specific
+
 - **WAC Composition** - Component composition validation
 - **Multi-profile** - Debug/release build variants
 - **Toolchain** - WASM toolchain validation
 - **Dependencies** - External dependency resolution
 
 ### Quality Assurance
+
 - **Integration Tests** - End-to-end workflow validation
 - **Unit Tests** - Rule implementation testing
 - **Examples** - Real-world usage scenarios
@@ -43,6 +48,7 @@ This directory contains Buildkite CI configuration for `rules_wasm_component`, f
 ## Integration with GitHub Actions
 
 The project uses a hybrid CI approach:
+
 - **GitHub Actions** - Community accessibility, formatting, documentation
 - **Buildkite** - Industry standard for Bazel rules, comprehensive platform matrix
 
@@ -51,6 +57,7 @@ This follows the pattern established by `rules_rust` and other major Bazel rules
 ## BCR Compatibility
 
 The CI configuration is designed to meet BCR submission requirements:
+
 - Multi-platform testing
 - Multiple Bazel version support
 - Comprehensive test coverage

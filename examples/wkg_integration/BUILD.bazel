@@ -37,18 +37,18 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "example_component",
     srcs = ["src/lib.rs"],
-    wit = ":example_interfaces",
     profiles = ["release"],
+    wit = ":example_interfaces",
 )
 
 # Example: Publish the custom component
 wkg_publish(
     name = "publish_example",
-    component = ":example_component_release",
     package_name = "example:my-component",
-    version = "1.0.0",
-    description = "An example WebAssembly component",
     authors = ["Example Developer"],
+    component = ":example_component_release",
+    description = "An example WebAssembly component",
     license = "Apache-2.0",
+    version = "1.0.0",
     # registry = "https://registry.example.com",  # Optional custom registry
 )

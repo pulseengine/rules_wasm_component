@@ -117,7 +117,7 @@ retry_policy = "exponential_backoff"
 
 [network.timeouts]
 auth-service = "5s"
-user-service = "10s" 
+user-service = "10s"
 analytics-service = "30s"
 api-gateway = "15s"
 orchestrator = "5s"
@@ -203,7 +203,7 @@ graceful_shutdown = true
 # Services start in this order
 services = [
     "auth-service",
-    "user-service", 
+    "user-service",
     "analytics-service",
     "api-gateway",
     "orchestrator"

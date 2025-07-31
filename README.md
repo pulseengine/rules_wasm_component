@@ -32,7 +32,7 @@ wasm_toolchain.register(
 # Optional: Configure TinyGo toolchain version
 tinygo = use_extension("//wasm:extensions.bzl", "tinygo")
 tinygo.register(
-    name = "tinygo", 
+    name = "tinygo",
     tinygo_version = "0.38.0"  # Optional, defaults to 0.38.0
 )
 ```
@@ -95,9 +95,9 @@ wac_compose(
     composition = """
         let frontend = new frontend:component { ... };
         let backend = new backend:component { ... };
-        
+
         connect frontend.request -> backend.handler;
-        
+
         export frontend as main;
     """,
 )
@@ -142,22 +142,42 @@ See the [`examples/`](examples/) directory for complete examples:
 ## Documentation
 
 ### For Developers
+
 - [Rule Reference](docs/rules.md)
 - [Migration Guide](docs/migration.md)
 - [Best Practices](docs/best_practices.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
 ### For AI Agents
+
 - [**AI Agent Guide**](docs/ai_agent_guide.md) - Structured documentation for AI coding assistants
 - [**Rule Schemas**](docs/rule_schemas.json) - Machine-readable rule definitions
 - [Examples](docs/examples/) - Progressive complexity examples:
   - [Basic](docs/examples/basic/) - Fundamental patterns
-  - [Intermediate](docs/examples/intermediate/) - Cross-package dependencies  
+  - [Intermediate](docs/examples/intermediate/) - Cross-package dependencies
   - [Advanced](docs/examples/advanced/) - Complex compositions and custom rules
 
 ## Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
+
+### Development Setup
+
+This project uses pre-commit hooks for code quality:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks
+pre-commit install
+pre-commit install --hook-type commit-msg
+
+# Test setup
+pre-commit run --all-files
+```
+
+See [Pre-commit Instructions](.pre-commit-instructions.md) for detailed setup.
 
 ## License
 

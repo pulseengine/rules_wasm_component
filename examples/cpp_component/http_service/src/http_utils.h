@@ -112,7 +112,7 @@ const char* http_status_to_reason_phrase(http_status_t status);
 
 // Header utilities
 http_header_t* http_find_header(const http_header_t* headers, size_t count, const char* name);
-bool http_add_header(http_header_t** headers, size_t* count, size_t* capacity, 
+bool http_add_header(http_header_t** headers, size_t* count, size_t* capacity,
                     const char* name, const char* value);
 void http_free_headers(http_header_t* headers, size_t count);
 

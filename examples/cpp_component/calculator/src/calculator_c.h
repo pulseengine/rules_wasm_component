@@ -56,8 +56,8 @@ calculation_result_t calculator_c_factorial(uint32_t n);
 
 // Batch operations
 calculation_result_t calculator_c_calculate(const operation_t* operation);
-calculation_result_t* calculator_c_calculate_batch(const operation_t* operations, 
-                                                   size_t count, 
+calculation_result_t* calculator_c_calculate_batch(const operation_t* operations,
+                                                   size_t count,
                                                    size_t* result_count);
 
 // Component metadata

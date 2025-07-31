@@ -15,13 +15,13 @@ interface api-gateway {
         remote-addr: string,
         user-agent: string,
     }
-    
+
     record http-response {
         status: u32,
         headers: list<tuple<string, string>>,
         body: option<list<u8>>,
     }
-    
+
     // Route configuration
     record route-config {
         path-pattern: string,
@@ -34,13 +34,13 @@ interface api-gateway {
         timeout-ms: u32,
         retry-attempts: u32,
     }
-    
+
     record rate-limit-config {
         requests-per-minute: u32,
         burst-limit: u32,
         window-size-minutes: u32,
     }
-    
+
     // Load balancing
     enum load-balance-strategy {
         round-robin,
@@ -49,7 +49,7 @@ interface api-gateway {
         ip-hash,
         health-based,
     }
-    
+
     record upstream-server {
         id: string,
         address: string,
@@ -60,7 +60,7 @@ interface api-gateway {
         connection-count: u32,
         response-time-ms: u32,
     }
-    
+
     record service-config {
         name: string,
         load-balance-strategy: load-balance-strategy,
@@ -69,7 +69,7 @@ interface api-gateway {
         circuit-breaker-threshold: u32,
         circuit-breaker-timeout-seconds: u32,
     }
-    
+
     // Request processing pipeline
     enum middleware-type {
         authentication,
@@ -82,7 +82,7 @@ interface api-gateway {
         circuit-breaker,
         custom,
     }
-    
+
     record middleware-config {
         middleware-type: middleware-type,
         name: string,
@@ -90,7 +90,7 @@ interface api-gateway {
         enabled: bool,
         order: u32,
     }
-    
+
     // API versioning
     record api-version {
         version: string,
@@ -98,14 +98,14 @@ interface api-gateway {
         deprecation-date: option<u64>,
         migration-guide-url: option<string>,
     }
-    
+
     // Response transformation
     record transform-rule {
         match-condition: string,  // JSONPath or regex
         transformation: string,   // Transformation expression
         apply-to: string,        // "request" or "response"
     }
-    
+
     // Gateway metrics
     record gateway-metrics {
         total-requests: u64,
@@ -117,7 +117,7 @@ interface api-gateway {
         circuit-breaker-trips: u32,
         cache-hit-ratio: f64,
     }
-    
+
     record service-metrics {
         service-name: string,
         request-count: u64,
@@ -128,7 +128,7 @@ interface api-gateway {
         throughput-rps: f64,
         circuit-breaker-state: string,  // "closed", "open", "half-open"
     }
-    
+
     // Caching
     record cache-config {
         enabled: bool,
@@ -137,7 +137,7 @@ interface api-gateway {
         strategy: string,  // "lru", "lfu", "ttl"
         cache-key-pattern: string,
     }
-    
+
     record cache-stats {
         hit-count: u64,
         miss-count: u64,
@@ -145,7 +145,7 @@ interface api-gateway {
         eviction-count: u64,
         memory-usage-mb: u32,
     }
-    
+
     // Security and CORS
     record cors-config {
         allowed-origins: list<string>,
@@ -155,7 +155,7 @@ interface api-gateway {
         allow-credentials: bool,
         max-age-seconds: u32,
     }
-    
+
     record security-headers {
         content-security-policy: option<string>,
         x-frame-options: option<string>,
@@ -163,115 +163,115 @@ interface api-gateway {
         strict-transport-security: option<string>,
         referrer-policy: option<string>,
     }
-    
+
     // Main gateway operations
     handle-request: func(request: http-request) -> http-response;
-    
+
     // Route management
     add-route: func(route: route-config) -> bool;
-    
+
     remove-route: func(path-pattern: string, method: string) -> bool;
-    
-    update-route: func(path-pattern: string, method: string, 
+
+    update-route: func(path-pattern: string, method: string,
                       route: route-config) -> bool;
-    
+
     list-routes: func() -> list<route-config>;
-    
+
     // Service management
     register-service: func(service: service-config) -> bool;
-    
+
     unregister-service: func(service-name: string) -> bool;
-    
+
     update-service: func(service: service-config) -> bool;
-    
+
     list-services: func() -> list<service-config>;
-    
+
     // Server health management
     check-server-health: func(service-name: string, server-id: string) -> bool;
-    
+
     mark-server-unhealthy: func(service-name: string, server-id: string) -> bool;
-    
+
     mark-server-healthy: func(service-name: string, server-id: string) -> bool;
-    
+
     get-healthy-servers: func(service-name: string) -> list<upstream-server>;
-    
+
     // Middleware management
     add-middleware: func(middleware: middleware-config) -> bool;
-    
+
     remove-middleware: func(name: string) -> bool;
-    
+
     update-middleware: func(middleware: middleware-config) -> bool;
-    
+
     list-middleware: func() -> list<middleware-config>;
-    
+
     // Rate limiting
     check-rate-limit: func(client-id: string, endpoint: string) -> bool;
-    
-    get-rate-limit-status: func(client-id: string, endpoint: string) -> 
+
+    get-rate-limit-status: func(client-id: string, endpoint: string) ->
                           tuple<u32, u32>;  // remaining, reset-time
-    
+
     // Caching
     configure-cache: func(path-pattern: string, config: cache-config) -> bool;
-    
+
     invalidate-cache: func(key-pattern: string) -> u32;  // Returns count invalidated
-    
+
     get-cache-stats: func() -> cache-stats;
-    
+
     // API versioning
     add-api-version: func(path-prefix: string, version: api-version) -> bool;
-    
-    deprecate-api-version: func(path-prefix: string, version: string, 
+
+    deprecate-api-version: func(path-prefix: string, version: string,
                                deprecation-date: u64) -> bool;
-    
+
     list-api-versions: func() -> list<tuple<string, api-version>>;
-    
+
     // Request/Response transformation
     add-transform-rule: func(path-pattern: string, rule: transform-rule) -> bool;
-    
+
     remove-transform-rule: func(path-pattern: string, rule-id: string) -> bool;
-    
+
     // Security
     configure-cors: func(path-pattern: string, config: cors-config) -> bool;
-    
+
     set-security-headers: func(headers: security-headers) -> bool;
-    
+
     // Circuit breaker
     get-circuit-breaker-state: func(service-name: string) -> string;
-    
+
     reset-circuit-breaker: func(service-name: string) -> bool;
-    
+
     configure-circuit-breaker: func(service-name: string, failure-threshold: u32,
                                    timeout-seconds: u32) -> bool;
-    
+
     // Metrics and monitoring
     get-gateway-metrics: func() -> gateway-metrics;
-    
+
     get-service-metrics: func(service-name: string) -> option<service-metrics>;
-    
+
     get-all-service-metrics: func() -> list<service-metrics>;
-    
+
     reset-metrics: func() -> bool;
-    
+
     // Request tracing
     enable-tracing: func(sample-rate: f32) -> bool;
-    
+
     get-trace: func(trace-id: string) -> option<string>;  // JSON trace data
-    
+
     // Configuration management
     reload-config: func() -> bool;
-    
+
     export-config: func() -> string;  // JSON configuration
-    
+
     import-config: func(config: string) -> bool;  // JSON configuration
-    
+
     // Health and diagnostics
     health-check: func() -> bool;
-    
+
     get-system-info: func() -> string;  // JSON system information
-    
+
     // WebSocket support (for future)
     handle-websocket-upgrade: func(request: http-request) -> http-response;
-    
+
     // Batch operations for efficiency
     handle-batch-requests: func(requests: list<http-request>) -> list<http-response>;
 }

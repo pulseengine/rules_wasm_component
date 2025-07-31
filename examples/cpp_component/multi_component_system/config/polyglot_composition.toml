@@ -17,7 +17,7 @@ interface = "example:auth-service@1.0.0"
 description = "High-performance C++ authentication service with crypto utilities"
 
 [components.user-service-rust]
-path = "user_service_rust.wasm"  
+path = "user_service_rust.wasm"
 name = "user-service"
 language = "rust"
 interface = "example:user-service@1.0.0"
@@ -210,7 +210,7 @@ enable_sandboxing = true
 
 [security.language_constraints]
 cpp_stack_protection = true
-rust_memory_safety = true  
+rust_memory_safety = true
 go_escape_analysis = true
 
 # Development and debugging
@@ -228,7 +228,7 @@ go_debugger = "delve"
 [environments.production.optimizations.cpp]
 compile_flags = ["-O3", "-DNDEBUG", "-flto", "-msimd128"]
 
-[environments.production.optimizations.rust]  
+[environments.production.optimizations.rust]
 compile_flags = ["-C", "opt-level=3", "-C", "lto=fat", "-C", "panic=abort"]
 
 [environments.production.optimizations.go]
@@ -254,7 +254,7 @@ enable_memory_safety_validation = true
 
 [testing.language_combinations]
 cpp_rust_interop = true
-cpp_go_interop = true  
+cpp_go_interop = true
 rust_go_interop = true
 all_three_interop = true
 

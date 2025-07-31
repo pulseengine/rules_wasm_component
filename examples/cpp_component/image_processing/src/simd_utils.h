@@ -20,7 +20,7 @@ namespace simd_utils {
 
 /**
  * SIMD utilities for high-performance image processing
- * 
+ *
  * This module provides WebAssembly SIMD-accelerated functions for common
  * image processing operations, with automatic fallback to scalar code
  * when SIMD is not available.
@@ -152,7 +152,7 @@ void simd_rgb_to_grayscale(const uint8_t* rgb, uint8_t* gray, size_t pixel_count
 void simd_rgba_to_grayscale(const uint8_t* rgba, uint8_t* gray, size_t pixel_count);
 
 // Color channel operations
-void simd_extract_channel(const uint8_t* src, uint8_t* dest, size_t pixel_count, 
+void simd_extract_channel(const uint8_t* src, uint8_t* dest, size_t pixel_count,
                          int channel, int channels_per_pixel);
 void simd_merge_channels(const uint8_t* r, const uint8_t* g, const uint8_t* b,
                         uint8_t* rgb, size_t pixel_count);
@@ -166,7 +166,7 @@ void simd_mul_pixels(const uint8_t* src, uint8_t* dest, float multiplier, size_t
 void simd_add_scalar(const uint8_t* src, uint8_t* dest, uint8_t value, size_t pixel_count);
 
 // Blend operations
-void simd_alpha_blend(const uint8_t* src, const uint8_t* dest, uint8_t* result, 
+void simd_alpha_blend(const uint8_t* src, const uint8_t* dest, uint8_t* result,
                      size_t pixel_count, float alpha);
 void simd_multiply_blend(const uint8_t* src1, const uint8_t* src2, uint8_t* dest, size_t pixel_count);
 void simd_screen_blend(const uint8_t* src1, const uint8_t* src2, uint8_t* dest, size_t pixel_count);
@@ -183,7 +183,7 @@ PixelStats simd_calculate_stats(const uint8_t* pixels, size_t pixel_count, int c
 
 // Histogram calculation
 void simd_calculate_histogram(const uint8_t* pixels, size_t pixel_count, int channels,
-                             uint32_t* hist_r, uint32_t* hist_g, uint32_t* hist_b, 
+                             uint32_t* hist_r, uint32_t* hist_g, uint32_t* hist_b,
                              uint32_t* hist_a = nullptr);
 
 // Convolution helper (for filters)
@@ -191,9 +191,9 @@ void simd_convolve_3x3(const uint8_t* src, uint8_t* dest, int width, int height,
                       const float kernel[9], float bias = 0.0f, bool normalize = true);
 
 // Box filter (separable)
-void simd_box_filter_horizontal(const uint8_t* src, uint8_t* dest, int width, int height, 
+void simd_box_filter_horizontal(const uint8_t* src, uint8_t* dest, int width, int height,
                                int channels, int radius);
-void simd_box_filter_vertical(const uint8_t* src, uint8_t* dest, int width, int height, 
+void simd_box_filter_vertical(const uint8_t* src, uint8_t* dest, int width, int height,
                              int channels, int radius);
 
 // Transpose operation (useful for separable filters)
@@ -209,7 +209,7 @@ public:
     void stop();
     double elapsed_ms() const;
     double megapixels_per_second(size_t pixel_count) const;
-    
+
 private:
     uint64_t start_time_;
     uint64_t end_time_;
@@ -220,15 +220,15 @@ class SIMDMemoryPool {
 public:
     SIMDMemoryPool(size_t pool_size = 1024 * 1024);  // 1MB default
     ~SIMDMemoryPool();
-    
+
     void* allocate(size_t size);
     void deallocate(void* ptr);
     void reset();
-    
+
     size_t total_size() const { return pool_size_; }
     size_t used_size() const { return used_size_; }
     size_t available_size() const { return pool_size_ - used_size_; }
-    
+
 private:
     uint8_t* pool_;
     size_t pool_size_;

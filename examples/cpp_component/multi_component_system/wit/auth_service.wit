@@ -7,7 +7,7 @@ interface auth-service {
         password: string,
         multi-factor-token: option<string>,
     }
-    
+
     record user-identity {
         user-id: string,
         username: string,
@@ -17,7 +17,7 @@ interface auth-service {
         session-id: string,
         expires-at: u64,  // timestamp
     }
-    
+
     // JWT token structure
     record jwt-token {
         token: string,
@@ -26,7 +26,7 @@ interface auth-service {
         refresh-token: option<string>,
         scope: list<string>,
     }
-    
+
     // Authentication results
     variant auth-result {
         success(jwt-token),
@@ -36,7 +36,7 @@ interface auth-service {
         expired-password,
         error(string),
     }
-    
+
     variant token-validation-result {
         valid(user-identity),
         expired,
@@ -44,7 +44,7 @@ interface auth-service {
         revoked,
         error(string),
     }
-    
+
     // Session management
     record session-info {
         session-id: string,
@@ -55,7 +55,7 @@ interface auth-service {
         user-agent: string,
         is-active: bool,
     }
-    
+
     // Security policies
     record password-policy {
         min-length: u32,
@@ -66,13 +66,13 @@ interface auth-service {
         max-age-days: u32,
         history-count: u32,  // Previous passwords to remember
     }
-    
+
     record account-lockout-policy {
         max-failed-attempts: u32,
         lockout-duration-minutes: u32,
         reset-count-after-minutes: u32,
     }
-    
+
     // Audit logging
     record auth-event {
         event-type: string,  // "login", "logout", "failed_login", "password_change"
@@ -84,7 +84,7 @@ interface auth-service {
         success: bool,
         details: string,
     }
-    
+
     // Multi-factor authentication
     enum mfa-method {
         totp,      // Time-based One-Time Password
@@ -93,7 +93,7 @@ interface auth-service {
         hardware,  // Hardware token
         biometric, // Fingerprint, face recognition
     }
-    
+
     record mfa-setup {
         method: mfa-method,
         secret: option<string>,  // For TOTP
@@ -101,114 +101,114 @@ interface auth-service {
         email: option<string>,   // For email
         backup-codes: list<string>,
     }
-    
+
     // Rate limiting
     record rate-limit-info {
         requests-remaining: u32,
         reset-time: u64,
         retry-after: option<u32>,
     }
-    
+
     // Core authentication operations
     authenticate: func(credentials: credentials) -> auth-result;
-    
+
     validate-token: func(token: string) -> token-validation-result;
-    
+
     refresh-token: func(refresh-token: string) -> auth-result;
-    
+
     revoke-token: func(token: string) -> bool;
-    
+
     revoke-all-tokens: func(user-id: string) -> bool;
-    
+
     // Session management
-    create-session: func(user-id: string, ip-address: string, 
+    create-session: func(user-id: string, ip-address: string,
                         user-agent: string) -> option<session-info>;
-    
+
     get-session: func(session-id: string) -> option<session-info>;
-    
+
     update-session-activity: func(session-id: string) -> bool;
-    
+
     end-session: func(session-id: string) -> bool;
-    
+
     get-user-sessions: func(user-id: string) -> list<session-info>;
-    
+
     end-all-user-sessions: func(user-id: string) -> u32;  // Returns count ended
-    
+
     // Password management
-    change-password: func(user-id: string, old-password: string, 
+    change-password: func(user-id: string, old-password: string,
                          new-password: string) -> bool;
-    
-    reset-password: func(user-id: string, reset-token: string, 
+
+    reset-password: func(user-id: string, reset-token: string,
                         new-password: string) -> bool;
-    
+
     generate-password-reset-token: func(username-or-email: string) -> option<string>;
-    
+
     validate-password-strength: func(password: string) -> bool;
-    
+
     // Multi-factor authentication
     setup-mfa: func(user-id: string, method: mfa-method) -> option<mfa-setup>;
-    
+
     verify-mfa: func(user-id: string, token: string, method: mfa-method) -> bool;
-    
+
     disable-mfa: func(user-id: string, verification-code: string) -> bool;
-    
+
     generate-backup-codes: func(user-id: string) -> list<string>;
-    
+
     // User management
-    create-user: func(username: string, email: string, password: string, 
+    create-user: func(username: string, email: string, password: string,
                      roles: list<string>) -> option<string>;  // Returns user-id
-    
+
     update-user-roles: func(user-id: string, roles: list<string>) -> bool;
-    
+
     update-user-permissions: func(user-id: string, permissions: list<string>) -> bool;
-    
+
     disable-user: func(user-id: string, reason: string) -> bool;
-    
+
     enable-user: func(user-id: string) -> bool;
-    
+
     delete-user: func(user-id: string) -> bool;
-    
+
     // Permission checking
     has-permission: func(user-id: string, permission: string) -> bool;
-    
+
     has-role: func(user-id: string, role: string) -> bool;
-    
+
     check-access: func(user-id: string, resource: string, action: string) -> bool;
-    
+
     // Rate limiting
     check-rate-limit: func(user-id: string, action: string) -> rate-limit-info;
-    
+
     // Security policies
     get-password-policy: func() -> password-policy;
-    
+
     set-password-policy: func(policy: password-policy) -> bool;
-    
+
     get-lockout-policy: func() -> account-lockout-policy;
-    
+
     set-lockout-policy: func(policy: account-lockout-policy) -> bool;
-    
+
     // Audit and monitoring
     log-auth-event: func(event: auth-event) -> bool;
-    
-    get-auth-events: func(user-id: option<string>, start-time: u64, 
+
+    get-auth-events: func(user-id: option<string>, start-time: u64,
                          end-time: u64) -> list<auth-event>;
-    
+
     get-failed-login-attempts: func(username: string, time-window-minutes: u32) -> u32;
-    
+
     // Health and diagnostics
     health-check: func() -> bool;
-    
+
     get-service-stats: func() -> string;  // JSON formatted stats
-    
+
     // Encryption and hashing utilities
     hash-password: func(password: string, salt: option<string>) -> string;
-    
+
     verify-password-hash: func(password: string, hash: string) -> bool;
-    
+
     generate-secure-token: func(length: u32) -> string;
-    
+
     encrypt-data: func(data: list<u8>, key: string) -> option<list<u8>>;
-    
+
     decrypt-data: func(encrypted-data: list<u8>, key: string) -> option<list<u8>>;
 }
 

@@ -3,7 +3,7 @@
 load(
     "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
     "env_entry",
-    "env_set", 
+    "env_set",
     "feature",
     "flag_group",
     "flag_set",
@@ -23,7 +23,7 @@ def _wasm_cc_toolchain_config_impl(ctx):
     objdump_path = "bin/llvm-objdump"
     strip_path = "bin/llvm-strip"
     sysroot_path = "share/wasi-sysroot"
-    
+
     tool_paths = [
         tool_path(
             name = "gcc",
@@ -75,17 +75,21 @@ def _wasm_cc_toolchain_config_impl(ctx):
                             "-nostdlib",
                             "--sysroot=external/+wasi_sdk+wasi_sdk/share/wasi-sysroot",
                             # Use -isystem for WASI SDK includes to allow absolute paths
-                            "-isystem", "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include",
-                            "-isystem", "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include/wasm32-wasi",
-                            "-isystem", "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1",
-                            "-isystem", "external/+wasi_sdk+wasi_sdk/lib/clang/19/include",
+                            "-isystem",
+                            "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include",
+                            "-isystem",
+                            "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include/wasm32-wasi",
+                            "-isystem",
+                            "external/+wasi_sdk+wasi_sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1",
+                            "-isystem",
+                            "external/+wasi_sdk+wasi_sdk/lib/clang/19/include",
                         ],
                     ),
                 ],
             ),
         ],
     )
-    
+
     # Add environment variables for Rust builds
     env_feature = feature(
         name = "env",
@@ -110,9 +114,9 @@ def _wasm_cc_toolchain_config_impl(ctx):
             ),
         ],
     )
-    
+
     default_link_flags_feature = feature(
-        name = "default_link_flags", 
+        name = "default_link_flags",
         enabled = True,
         flag_sets = [
             flag_set(
@@ -129,7 +133,7 @@ def _wasm_cc_toolchain_config_impl(ctx):
             ),
         ],
     )
-    
+
     # Disable layering check to allow absolute paths in system headers
     no_layering_check_feature = feature(
         name = "no_layering_check",

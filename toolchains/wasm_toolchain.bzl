@@ -1,10 +1,10 @@
 """WebAssembly toolchain definitions with enhanced tool management"""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//toolchains:tool_versions.bzl", "get_tool_info", "validate_tool_compatibility", "get_recommended_versions")
-load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool", "create_retry_wrapper", "log_diagnostic_info")
-load("//toolchains:tool_cache.bzl", "retrieve_cached_tool", "cache_tool", "validate_tool_functionality", "clean_expired_cache")
-load("//toolchains:monitoring.bzl", "log_build_metrics", "create_health_check", "add_build_telemetry")
+load("//toolchains:tool_versions.bzl", "get_recommended_versions", "get_tool_info", "validate_tool_compatibility")
+load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error", "log_diagnostic_info", "validate_system_tool")
+load("//toolchains:tool_cache.bzl", "cache_tool", "clean_expired_cache", "retrieve_cached_tool", "validate_tool_functionality")
+load("//toolchains:monitoring.bzl", "add_build_telemetry", "create_health_check", "log_build_metrics")
 
 WASM_TOOLS_PLATFORMS = {
     "darwin_amd64": struct(
@@ -122,7 +122,7 @@ def _wasm_toolchain_repository_impl(repository_ctx):
         fail(format_diagnostic_error(
             "E001",
             "Unknown strategy: {}".format(strategy),
-            "Must be 'system', 'download', 'build', or 'hybrid'"
+            "Must be 'system', 'download', 'build', or 'hybrid'",
         ))
 
     # Create BUILD files for all strategies
@@ -132,25 +132,25 @@ def _setup_system_tools_enhanced(repository_ctx):
     """Set up system-installed tools from PATH with validation"""
 
     tools = ["wasm-tools", "wac", "wit-bindgen", "wrpc"]
-    
+
     for tool_name in tools:
         # Validate system tool
         validation_result = validate_system_tool(repository_ctx, tool_name)
-        
+
         if not validation_result["valid"]:
             fail(validation_result["error"])
-        
+
         if "warning" in validation_result:
             print(validation_result["warning"])
-        
+
         # Create wrapper executable
         repository_ctx.file(tool_name, """#!/bin/bash
 exec {} "$@"
 """.format(tool_name), executable = True)
-        
+
         print("Using system tool: {} at {}".format(
-            tool_name, 
-            validation_result.get("path", "system PATH")
+            tool_name,
+            validation_result.get("path", "system PATH"),
         ))
 
 def _setup_system_tools(repository_ctx):
@@ -162,36 +162,36 @@ def _setup_downloaded_tools_enhanced(repository_ctx):
 
     platform = _detect_host_platform(repository_ctx)
     version = repository_ctx.attr.version
-    
+
     tools_to_download = [
         ("wasm-tools", version, True),  # True = is tarball
-        ("wac", "0.7.0", False),        # False = is single binary
+        ("wac", "0.7.0", False),  # False = is single binary
         ("wit-bindgen", "0.43.0", True),
         # ("wrpc", "latest", None),     # Disabled for production stability
     ]
-    
+
     # Create placeholder wrpc binary for compatibility
     repository_ctx.file("wrpc", """#!/bin/bash
 echo "wrpc disabled for production stability"
 echo "Use system wrpc or enable building from source"
 exit 1
 """, executable = True)
-    
+
     # Add monitoring and telemetry
     add_build_telemetry(repository_ctx, tools_to_download)
-    
+
     # Create health checks for each tool
     for tool_name, _, _ in tools_to_download:
         create_health_check(repository_ctx, tool_name)
-    
+
     for tool_name, tool_version, is_tarball in tools_to_download:
         print("Setting up tool: {} version {}".format(tool_name, tool_version))
-        
+
         # Skip caching for now due to Bazel restrictions
         # cached_tool = retrieve_cached_tool(repository_ctx, tool_name, tool_version, platform, "download")
         # if cached_tool:
         #     continue  # Tool retrieved from cache successfully
-        
+
         if tool_name == "wrpc":
             # Special handling for wrpc (build from source)
             _download_wrpc_enhanced(repository_ctx)
@@ -201,30 +201,35 @@ exit 1
 
 def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform, is_tarball):
     """Download a single tool with enhanced error handling"""
-    
+
     tool_info = get_tool_info(tool_name, version, platform)
     if not tool_info:
         fail(format_diagnostic_error(
             "E001",
             "Unsupported platform {} for tool {} version {}".format(platform, tool_name, version),
-            "Check supported platforms or use build strategy"
+            "Check supported platforms or use build strategy",
         ))
-    
+
     # Construct URL based on tool type
     if tool_name == "wasm-tools" or tool_name == "wit-bindgen":
         # These use tarball releases
         url = "https://github.com/bytecodealliance/{}/releases/download/v{}/{}-{}-{}".format(
-            tool_name, version, tool_name, version, tool_info["url_suffix"]
+            tool_name,
+            version,
+            tool_name,
+            version,
+            tool_info["url_suffix"],
         )
     elif tool_name == "wac":
         # wac uses single binary releases
         url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-cli-{}".format(
-            version, tool_info["platform_name"]
+            version,
+            tool_info["platform_name"],
         )
-    
+
     # Create retry wrapper for downloads
     retry_download = create_retry_wrapper(repository_ctx, "Download {}".format(tool_name))
-    
+
     def download_operation():
         if is_tarball:
             # For now, extract without stripPrefix to debug structure
@@ -232,7 +237,7 @@ def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform,
                 url = url,
                 sha256 = tool_info["sha256"],
             )
-            
+
             # After extraction, move the binary to the expected location
             if tool_name == "wasm-tools":
                 # Look for the binary in common locations
@@ -257,7 +262,7 @@ def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform,
                         # Use Bazel-native symlink instead of shell mv command
                         repository_ctx.symlink(path, tool_name)
                         break
-                        
+
             return result
         else:
             return repository_ctx.download(
@@ -266,44 +271,47 @@ def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform,
                 sha256 = tool_info["sha256"],
                 executable = True,
             )
-    
+
     # Execute download with retry
     result = retry_download(download_operation)
-    if not result or (hasattr(result, 'return_code') and result.return_code != 0):
+    if not result or (hasattr(result, "return_code") and result.return_code != 0):
         fail(format_diagnostic_error(
             "E003",
             "Failed to download tool {}".format(tool_name),
-            "Check network connectivity or try build strategy"
+            "Check network connectivity or try build strategy",
         ))
-    
+
     # Validate downloaded tool
     validation_result = validate_tool_functionality(repository_ctx, tool_name, tool_name)
     if not validation_result["valid"]:
         fail(format_diagnostic_error(
             "E007",
             "Downloaded tool {} failed validation: {}".format(tool_name, validation_result["error"]),
-            "Try re-downloading or use build strategy"
+            "Try re-downloading or use build strategy",
         ))
-    
+
     # Skip caching for now due to Bazel restrictions
     # tool_binary = repository_ctx.path(tool_name)
     # cache_tool(repository_ctx, tool_name, tool_binary, version, platform, "download", tool_info["sha256"])
-    
+
     print("Successfully downloaded and validated tool: {}".format(tool_name))
 
 def _download_wrpc_enhanced(repository_ctx):
     """Download wrpc with enhanced error handling"""
-    
+
     platform = _detect_host_platform(repository_ctx)
-    
+
     # Try to retrieve from cache first
     cached_tool = retrieve_cached_tool(repository_ctx, "wrpc", "latest", platform, "build")
     if cached_tool:
         return
-    
+
     # Build from source since wrpc doesn't have simple releases
     result = repository_ctx.execute([
-        "git", "clone", "--depth", "1",
+        "git",
+        "clone",
+        "--depth",
+        "1",
         "https://github.com/bytecodealliance/wrpc.git",
         "wrpc-src",
     ])
@@ -311,81 +319,85 @@ def _download_wrpc_enhanced(repository_ctx):
         fail(format_diagnostic_error(
             "E003",
             "Failed to clone wrpc repository: {}".format(result.stderr),
-            "Check network connectivity or git installation"
+            "Check network connectivity or git installation",
         ))
 
     result = repository_ctx.execute([
-        "cargo", "build", "--release", "--bin", "wrpc-wasmtime",
+        "cargo",
+        "build",
+        "--release",
+        "--bin",
+        "wrpc-wasmtime",
         "--manifest-path=wrpc-src/Cargo.toml",
     ])
     if result.return_code != 0:
         fail(format_diagnostic_error(
             "E005",
             "Failed to build wrpc: {}".format(result.stderr),
-            "Ensure Rust toolchain is installed and try again"
+            "Ensure Rust toolchain is installed and try again",
         ))
 
     # Copy built binary
     # Use Bazel-native symlink instead of shell cp command
     repository_ctx.symlink("wrpc-src/target/release/wrpc-wasmtime", "wrpc")
-    
+
     # Validate built tool
     validation_result = validate_tool_functionality(repository_ctx, "wrpc", "wrpc")
     if not validation_result["valid"]:
         fail(format_diagnostic_error(
             "E007",
             "Built wrpc tool failed validation: {}".format(validation_result["error"]),
-            "Check build environment and dependencies"
+            "Check build environment and dependencies",
         ))
-    
+
     # Cache the built tool
     tool_binary = repository_ctx.path("wrpc")
     cache_tool(repository_ctx, "wrpc", tool_binary, "latest", platform, "build")
-    
+
     print("Successfully built and validated wrpc from source")
 
 def _setup_downloaded_tools(repository_ctx):
     """Download prebuilt tools from GitHub releases (simple & reliable)"""
-    
+
     platform = _detect_host_platform(repository_ctx)
     print("Setting up tools for platform: {}".format(platform))
-    
+
     # Download individual tools using simple, proven methods
     _download_wasm_tools(repository_ctx)
     _download_wac(repository_ctx)
     _download_wit_bindgen(repository_ctx)
-    
+
     # Create placeholder wrpc binary for compatibility
     repository_ctx.file("wrpc", """#!/bin/bash
 echo "wrpc disabled for production stability"
 echo "Use system wrpc or enable building from source"
 exit 1
 """, executable = True)
-    
+
     print("Successfully set up all tools")
 
 def _setup_built_tools_enhanced(repository_ctx):
     """Build tools from source with enhanced error handling"""
-    
+
     platform = _detect_host_platform(repository_ctx)
     tools = ["wasm-tools", "wac", "wit-bindgen", "wrpc"]
-    
+
     for tool_name in tools:
         # Try to retrieve from cache first
         cached_tool = retrieve_cached_tool(repository_ctx, tool_name, "latest", platform, "build")
         if cached_tool:
             continue
-            
+
         print("Building tool {} from source...".format(tool_name))
         # Use existing build logic but with enhanced error handling
         # This would be implemented similar to the download enhancement
-        
+
     # For now, fall back to existing implementation
     _setup_built_tools_original(repository_ctx)
 
 def _setup_hybrid_tools_enhanced(repository_ctx):
     """Setup tools using hybrid strategy with enhanced features"""
-    
+
     # Use existing implementation with enhanced error handling
     _setup_hybrid_tools_original(repository_ctx)
 
@@ -402,7 +414,7 @@ def _setup_built_tools_original(repository_ctx):
 
     # Get custom URLs or use defaults
     wasm_tools_url = repository_ctx.attr.wasm_tools_url or "https://github.com/bytecodealliance/wasm-tools.git"
-    wac_url = repository_ctx.attr.wac_url or "https://github.com/bytecodealliance/wac.git"  
+    wac_url = repository_ctx.attr.wac_url or "https://github.com/bytecodealliance/wac.git"
     wit_bindgen_url = repository_ctx.attr.wit_bindgen_url or "https://github.com/bytecodealliance/wit-bindgen.git"
     wrpc_url = repository_ctx.attr.wrpc_url or "https://github.com/bytecodealliance/wrpc.git"
 
@@ -530,25 +542,25 @@ def _setup_built_tools_original(repository_ctx):
 
 def _setup_hybrid_tools_original(repository_ctx):
     """Setup tools using hybrid build/download strategy"""
-    
+
     # Determine which tools to build vs download based on custom URLs/commits
     build_wasm_tools = repository_ctx.attr.wasm_tools_url != "" or repository_ctx.attr.wasm_tools_commit != ""
     build_wac = repository_ctx.attr.wac_url != "" or repository_ctx.attr.wac_commit != ""
     build_wit_bindgen = repository_ctx.attr.wit_bindgen_url != "" or repository_ctx.attr.wit_bindgen_commit != ""
     build_wrpc = repository_ctx.attr.wrpc_url != "" or repository_ctx.attr.wrpc_commit != ""
-    
+
     # Get commits and URLs for tools we're building
     git_commit = repository_ctx.attr.git_commit
     wasm_tools_commit = repository_ctx.attr.wasm_tools_commit or git_commit
     wac_commit = repository_ctx.attr.wac_commit or git_commit
     wit_bindgen_commit = repository_ctx.attr.wit_bindgen_commit or git_commit
     wrpc_commit = repository_ctx.attr.wrpc_commit or git_commit
-    
+
     wasm_tools_url = repository_ctx.attr.wasm_tools_url or "https://github.com/bytecodealliance/wasm-tools.git"
     wac_url = repository_ctx.attr.wac_url or "https://github.com/bytecodealliance/wac.git"
     wit_bindgen_url = repository_ctx.attr.wit_bindgen_url or "https://github.com/bytecodealliance/wit-bindgen.git"
     wrpc_url = repository_ctx.attr.wrpc_url or "https://github.com/bytecodealliance/wrpc.git"
-    
+
     # Build or download wasm-tools - MODERNIZED: Use git_repository + rules_rust
     if build_wasm_tools:
         # Link to modernized git_repository-based wasm-tools build
@@ -556,15 +568,15 @@ def _setup_hybrid_tools_original(repository_ctx):
         print("Using modernized wasm-tools from @wasm_tools_src git repository")
     else:
         _download_wasm_tools(repository_ctx)
-    
-    # Build or download wac - MODERNIZED: Use git_repository + rules_rust  
+
+    # Build or download wac - MODERNIZED: Use git_repository + rules_rust
     if build_wac:
         # Link to modernized git_repository-based wac build
         repository_ctx.symlink("../wac_src/bazel-bin/wac", "wac")
         print("Using modernized wac from @wac_src git repository")
     else:
         _download_wac(repository_ctx)
-    
+
     # Build or download wit-bindgen - MODERNIZED: Use git_repository + rules_rust
     if build_wit_bindgen:
         # Link to modernized git_repository-based wit-bindgen build
@@ -572,7 +584,7 @@ def _setup_hybrid_tools_original(repository_ctx):
         print("Using modernized wit-bindgen from @wit_bindgen_src git repository")
     else:
         _download_wit_bindgen(repository_ctx)
-    
+
     # Build or download wrpc - MODERNIZED: Use git_repository + rules_rust
     if build_wrpc:
         # Link to modernized git_repository-based wrpc build
@@ -586,17 +598,19 @@ def _download_wasm_tools(repository_ctx):
     """Download wasm-tools only"""
     platform = _detect_host_platform(repository_ctx)
     version = repository_ctx.attr.version
-    
+
     # Get platform info and checksum from WASM_TOOLS_PLATFORMS
     if platform not in WASM_TOOLS_PLATFORMS:
         fail("Unsupported platform: {}".format(platform))
-    
+
     platform_info = WASM_TOOLS_PLATFORMS[platform]
-    
+
     wasm_tools_url = "https://github.com/bytecodealliance/wasm-tools/releases/download/v{}/wasm-tools-{}-{}".format(
-        version, version, platform_info.url_suffix,
+        version,
+        version,
+        platform_info.url_suffix,
     )
-    
+
     # Download and extract tarball, letting Bazel handle the structure
     repository_ctx.download_and_extract(
         url = wasm_tools_url,
@@ -608,37 +622,40 @@ def _download_wac(repository_ctx):
     """Download wac only"""
     platform = _detect_host_platform(repository_ctx)
     wac_version = "0.7.0"
-    
+
     # Get checksum and platform info from tool_versions.bzl
     tool_info = get_tool_info("wac", wac_version, platform)
     if not tool_info:
         fail("Unsupported platform {} for wac version {}".format(platform, wac_version))
-    
+
     wac_url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-cli-{}".format(
-        wac_version, tool_info["platform_name"],
+        wac_version,
+        tool_info["platform_name"],
     )
-    
+
     repository_ctx.download(
-        url = wac_url, 
-        output = "wac", 
+        url = wac_url,
+        output = "wac",
         sha256 = tool_info["sha256"],
-        executable = True
+        executable = True,
     )
 
 def _download_wit_bindgen(repository_ctx):
     """Download wit-bindgen only"""
     platform = _detect_host_platform(repository_ctx)
     wit_bindgen_version = "0.43.0"
-    
+
     # Get checksum and platform info from tool_versions.bzl
     tool_info = get_tool_info("wit-bindgen", wit_bindgen_version, platform)
     if not tool_info:
         fail("Unsupported platform {} for wit-bindgen version {}".format(platform, wit_bindgen_version))
-    
+
     wit_bindgen_url = "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{}/wit-bindgen-{}-{}".format(
-        wit_bindgen_version, wit_bindgen_version, tool_info["url_suffix"],
+        wit_bindgen_version,
+        wit_bindgen_version,
+        tool_info["url_suffix"],
     )
-    
+
     repository_ctx.download_and_extract(
         url = wit_bindgen_url,
         sha256 = tool_info["sha256"],
@@ -647,6 +664,7 @@ def _download_wit_bindgen(repository_ctx):
 
 def _download_wrpc(repository_ctx):
     """Download wrpc only - for now, build from source since no simple CLI releases"""
+
     # Clone and build wrpc since there's no simple CLI release
     result = repository_ctx.execute([
         "git",
@@ -693,14 +711,14 @@ package(default_visibility = ["//visibility:public"])
 
 # File targets for executables
 filegroup(
-    name = "wasm_tools_binary", 
+    name = "wasm_tools_binary",
     srcs = ["wasm-tools"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wac_binary",
-    srcs = ["wac"], 
+    srcs = ["wac"],
     visibility = ["//visibility:public"],
 )
 
@@ -720,7 +738,7 @@ filegroup(
 wasm_tools_toolchain(
     name = "wasm_tools_impl",
     wasm_tools = ":wasm_tools_binary",
-    wac = ":wac_binary", 
+    wac = ":wac_binary",
     wit_bindgen = ":wit_bindgen_binary",
     wrpc = ":wrpc_binary",
 )

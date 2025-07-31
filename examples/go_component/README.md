@@ -11,11 +11,11 @@ This example demonstrates **state-of-the-art Go support** for WebAssembly Compon
 
 ## Features
 
-✅ **WASI Preview 2**: Native support for latest WASI specification  
-✅ **Component Model**: Full WebAssembly Component Model compatibility  
-✅ **WIT Bindings**: Automatic Go code generation from WIT definitions  
-✅ **Cross Platform**: Works on Linux, macOS, and Windows  
-✅ **Production Optimized**: Release builds with size/performance optimization  
+✅ **WASI Preview 2**: Native support for latest WASI specification
+✅ **Component Model**: Full WebAssembly Component Model compatibility
+✅ **WIT Bindings**: Automatic Go code generation from WIT definitions
+✅ **Cross Platform**: Works on Linux, macOS, and Windows
+✅ **Production Optimized**: Release builds with size/performance optimization
 
 ## Prerequisites
 
@@ -69,7 +69,7 @@ examples/go_component/
 ├── go.mod                   # Go module definition
 ├── main.go                  # Component entry point
 ├── calculator.go            # Business logic
-├── service.go              # HTTP service implementation  
+├── service.go              # HTTP service implementation
 ├── handlers.go             # Request handlers
 └── wit/
     ├── calculator.wit       # Calculator interface definition
@@ -84,7 +84,7 @@ examples/go_component/
 go_wasm_component(
     name = "my_component",
     srcs = ["main.go", "logic.go"],
-    wit = "wit/component.wit", 
+    wit = "wit/component.wit",
     world = "my-world",
     go_mod = "go.mod",
     optimization = "release",  # or "debug"
@@ -120,6 +120,7 @@ wac run bazel-bin/examples/go_component/calculator_component_component.wasm
 ## Performance
 
 TinyGo with WASI Preview 2 provides:
+
 - **Small binaries**: Optimized for size with `-gc=leaking` in release mode
 - **Fast startup**: Minimal runtime overhead
 - **Memory efficient**: Conservative GC in debug, leaking GC in release
@@ -128,6 +129,7 @@ TinyGo with WASI Preview 2 provides:
 ## Migration from wit-bindgen-go
 
 This replaces the old broken `wit-bindgen-go` binary approach with:
+
 - ✅ **Official Go modules**: `go.bytecodealliance.org`
 - ✅ **TinyGo native support**: No external dependencies
 - ✅ **WASI Preview 2**: Latest WASI specification

@@ -12,14 +12,14 @@ Architecture:
 
 load("@bazel_skylib//lib:versions.bzl", "versions")
 load("//toolchains:tool_versions.bzl", "get_tool_info")
-load("//toolchains:tool_cache.bzl", "retrieve_cached_tool", "cache_tool")
+load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "log_diagnostic_info")
 
 def _detect_host_platform(repository_ctx):
     """Detect the host platform for tool downloads"""
     os_name = repository_ctx.os.name.lower()
     arch = repository_ctx.os.arch.lower()
-    
+
     # Use Bazel's native architecture detection instead of uname -m
     if "mac" in os_name or "darwin" in os_name:
         if arch == "aarch64" or "arm64" in arch:
@@ -36,32 +36,32 @@ def _detect_host_platform(repository_ctx):
 
 def _download_tinygo(repository_ctx, version, platform):
     """Download TinyGo release for the specified platform and version"""
-    
+
     # TinyGo release URL pattern
     tinygo_url = "https://github.com/tinygo-org/tinygo/releases/download/v{version}/tinygo{version}.{platform}.tar.gz".format(
         version = version,
-        platform = _get_tinygo_platform_suffix(platform)
+        platform = _get_tinygo_platform_suffix(platform),
     )
-    
+
     print("Downloading TinyGo {} for {}".format(version, platform))
-    
+
     # Download and extract TinyGo
     repository_ctx.download_and_extract(
         url = tinygo_url,
         output = "tinygo",
         stripPrefix = "tinygo",
     )
-    
+
     # Verify installation
     tinygo_binary = repository_ctx.path("tinygo/bin/tinygo")
     if not tinygo_binary.exists:
         fail("TinyGo binary not found after download: {}".format(tinygo_binary))
-    
+
     # Test TinyGo installation
     result = repository_ctx.execute([tinygo_binary, "version"])
     if result.return_code != 0:
         fail("TinyGo installation test failed: {}".format(result.stderr))
-    
+
     print("Successfully installed TinyGo: {}".format(result.stdout.strip()))
     return tinygo_binary
 
@@ -69,27 +69,27 @@ def _get_tinygo_platform_suffix(platform):
     """Get TinyGo platform suffix for download URLs"""
     platform_map = {
         "darwin_amd64": "darwin-amd64",
-        "darwin_arm64": "darwin-arm64", 
+        "darwin_arm64": "darwin-arm64",
         "linux_amd64": "linux-amd64",
         "linux_arm64": "linux-arm64",
         "windows_amd64": "windows-amd64",
     }
-    
+
     if platform not in platform_map:
         fail("Unsupported platform for TinyGo: {}".format(platform))
-    
+
     return platform_map[platform]
 
 def _setup_go_wit_bindgen(repository_ctx):
     """Set up wit-bindgen-go using Bazel's Go toolchain integration
-    
+
     Instead of trying to install wit-bindgen-go during repository setup,
     we rely on Bazel's Go toolchain and rules_go to handle Go dependencies.
     This eliminates the need for system Go during toolchain setup.
     """
-    
+
     print("Using Bazel's Go toolchain for wit-bindgen-go - no system Go required")
-    
+
     # Create a placeholder that indicates Bazel will handle Go toolchain
     repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
 # wit-bindgen-go is handled by Bazel's Go toolchain via rules_go
@@ -101,20 +101,20 @@ exit 0
 
 def _tinygo_toolchain_repository_impl(repository_ctx):
     """Implementation of TinyGo toolchain repository rule"""
-    
+
     platform = _detect_host_platform(repository_ctx)
     tinygo_version = repository_ctx.attr.tinygo_version
-    
+
     print("Setting up TinyGo toolchain v{} for {}".format(tinygo_version, platform))
-    
+
     # Download and set up TinyGo
     tinygo_binary = _download_tinygo(repository_ctx, tinygo_version, platform)
-    
+
     # Set up wit-bindgen-go
     _setup_go_wit_bindgen(repository_ctx)
-    
+
     # wasm-tools will be provided by the wasm toolchain dependency
-    
+
     # Create toolchain BUILD file
     repository_ctx.file("BUILD.bazel", """
 load("@rules_wasm_component//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain")
@@ -168,7 +168,7 @@ toolchain(
         os = "osx" if "darwin" in platform else ("windows" if "windows" in platform else "linux"),
         cpu = "arm64" if "arm64" in platform else "x86_64",
     ))
-    
+
     print("TinyGo toolchain setup complete!")
 
 # Repository rule for TinyGo toolchain
@@ -185,7 +185,7 @@ tinygo_toolchain_repository = repository_rule(
 
 def _tinygo_toolchain_impl(ctx):
     """Implementation of TinyGo toolchain rule"""
-    
+
     return [
         platform_common.ToolchainInfo(
             tinygo = ctx.executable.tinygo,

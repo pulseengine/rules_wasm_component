@@ -32,7 +32,7 @@ Calculator::CalculationResult Calculator::divide(double a, double b) const {
     if (!validate_inputs(a, b)) {
         return create_error("Invalid input numbers");
     }
-    
+
     auto result = math_utils::MathUtils::safe_divide(a, b);
     if (!result.has_value()) {
         if (math_utils::MathUtils::approximately_equal(b, 0.0)) {
@@ -40,7 +40,7 @@ Calculator::CalculationResult Calculator::divide(double a, double b) const {
         }
         return create_error("Division resulted in invalid number");
     }
-    
+
     return create_success(result.value());
 }
 
@@ -48,14 +48,14 @@ Calculator::CalculationResult Calculator::power(double base, double exponent) co
     if (!validate_inputs(base, exponent)) {
         return create_error("Invalid input numbers");
     }
-    
+
     auto result = math_utils::MathUtils::safe_power(base, exponent);
     if (!result.has_value()) {
         std::ostringstream oss;
         oss << "Power operation failed: " << base << "^" << exponent;
         return create_error(oss.str());
     }
-    
+
     return create_success(result.value());
 }
 
@@ -63,12 +63,12 @@ Calculator::CalculationResult Calculator::sqrt(double value) const {
     if (!math_utils::MathUtils::is_valid_number(value)) {
         return create_error("Invalid input number");
     }
-    
+
     auto result = math_utils::MathUtils::safe_sqrt(value);
     if (!result.has_value()) {
         return create_error("Square root of negative number is not supported");
     }
-    
+
     return create_success(result.value());
 }
 
@@ -79,7 +79,7 @@ Calculator::CalculationResult Calculator::factorial(uint32_t n) const {
         oss << "Factorial of " << n << " is too large or not supported";
         return create_error(oss.str());
     }
-    
+
     return create_success(static_cast<double>(result.value()));
 }
 
@@ -91,40 +91,40 @@ Calculator::CalculationResult Calculator::calculate(const Operation& operation) 
                 return create_error("Add operation requires two operands");
             }
             return create_success(add(operation.a, operation.b.value()));
-            
+
         case OperationType::Subtract:
             if (!operation.b.has_value()) {
                 return create_error("Subtract operation requires two operands");
             }
             return create_success(subtract(operation.a, operation.b.value()));
-            
+
         case OperationType::Multiply:
             if (!operation.b.has_value()) {
                 return create_error("Multiply operation requires two operands");
             }
             return create_success(multiply(operation.a, operation.b.value()));
-            
+
         case OperationType::Divide:
             if (!operation.b.has_value()) {
                 return create_error("Divide operation requires two operands");
             }
             return divide(operation.a, operation.b.value());
-            
+
         case OperationType::Power:
             if (!operation.b.has_value()) {
                 return create_error("Power operation requires two operands");
             }
             return power(operation.a, operation.b.value());
-            
+
         case OperationType::Sqrt:
             return sqrt(operation.a);
-            
+
         case OperationType::Factorial:
             if (operation.a < 0 || operation.a != std::floor(operation.a)) {
                 return create_error("Factorial requires a non-negative integer");
             }
             return factorial(static_cast<uint32_t>(operation.a));
-            
+
         default:
             return create_error("Unknown operation type");
     }
@@ -132,14 +132,14 @@ Calculator::CalculationResult Calculator::calculate(const Operation& operation) 
 
 std::vector<Calculator::CalculationResult> Calculator::calculate_batch(
     const std::vector<Operation>& operations) const {
-    
+
     std::vector<CalculationResult> results;
     results.reserve(operations.size());
-    
+
     for (const auto& op : operations) {
         results.push_back(calculate(op));
     }
-    
+
     return results;
 }
 
@@ -149,7 +149,7 @@ Calculator::ComponentInfo Calculator::get_calculator_info() const {
         .name = "C++ Calculator Component",
         .version = "1.0.0",
         .supported_operations = {
-            "add", "subtract", "multiply", "divide", 
+            "add", "subtract", "multiply", "divide",
             "power", "sqrt", "factorial"
         },
         .precision = "IEEE 754 double precision (15-17 decimal digits)",
@@ -176,7 +176,7 @@ Calculator::CalculationResult Calculator::create_success(double value) const {
 }
 
 bool Calculator::validate_inputs(double a, double b) const {
-    return math_utils::MathUtils::is_valid_number(a) && 
+    return math_utils::MathUtils::is_valid_number(a) &&
            math_utils::MathUtils::is_valid_number(b);
 }
 

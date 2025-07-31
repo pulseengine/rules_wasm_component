@@ -12,7 +12,7 @@ build_test(
 )
 
 build_test(
-    name = "wit_bindgen_generation_test", 
+    name = "wit_bindgen_generation_test",
     targets = ["//examples/basic:hello_component_wit_bindgen_gen"],
 )
 
@@ -43,19 +43,19 @@ genrule(
     name = "wasm_artifact_validation",
     srcs = ["//examples/basic:hello_component"],
     outs = ["artifact_validation.marker"],
-    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
     cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) validate $(location //examples/basic:hello_component) && touch $@",
+    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
 )
 
 # Test suite combining all production tests
 test_suite(
     name = "production_readiness",
     tests = [
-        ":toolchain_registration_test",
-        ":wit_bindgen_generation_test", 
-        ":wasm_component_build_test",
-        ":checksum_validation_test",
         ":build_performance_test",
+        ":checksum_validation_test",
+        ":toolchain_registration_test",
+        ":wasm_component_build_test",
+        ":wit_bindgen_generation_test",
     ],
     visibility = ["//visibility:public"],
 )

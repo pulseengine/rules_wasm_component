@@ -6,7 +6,7 @@ impl Guest for Component {
     fn add(a: u32, b: u32) -> u32 {
         a + b
     }
-    
+
     fn multiply(a: u32, b: u32) -> u32 {
         a * b
     }

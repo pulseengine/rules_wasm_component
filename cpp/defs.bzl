@@ -14,7 +14,7 @@ def _cpp_component_impl(ctx):
 
     # Output files
     component_wasm = ctx.actions.declare_file(ctx.attr.name + ".wasm")
-    
+
     # Input files
     sources = ctx.files.srcs
     headers = ctx.files.hdrs
@@ -38,10 +38,10 @@ def _cpp_component_impl(ctx):
     wit_args = ctx.actions.args()
     wit_args.add("c")
     wit_args.add("--out-dir", bindings_dir.path)
-    
+
     if ctx.attr.world:
         wit_args.add("--world", ctx.attr.world)
-    
+
     wit_args.add(wit_file.path)
 
     ctx.actions.run(
@@ -116,19 +116,19 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
 
     # Compile to WASM
     wasm_binary = ctx.actions.declare_file(ctx.attr.name + "_module.wasm")
-    
+
     compile_args = ctx.actions.args()
-    
+
     # Basic compiler flags for Preview2
     compile_args.add("--target=wasm32-wasip2")
     compile_args.add("--sysroot=" + sysroot.path)
-    
+
     # Component model definitions
     compile_args.add("-D_WASI_EMULATED_PROCESS_CLOCKS")
-    compile_args.add("-D_WASI_EMULATED_SIGNAL") 
+    compile_args.add("-D_WASI_EMULATED_SIGNAL")
     compile_args.add("-D_WASI_EMULATED_MMAN")
     compile_args.add("-DCOMPONENT_MODEL_PREVIEW2")
-    
+
     # Optimization and language settings
     if ctx.attr.optimize:
         compile_args.add("-O3")
@@ -136,7 +136,7 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
     else:
         compile_args.add("-O0")
         compile_args.add("-g")
-    
+
     # C++ specific flags
     if ctx.attr.language == "cpp":
         compile_args.add("-fno-exceptions")
@@ -145,26 +145,26 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
             pass
         else:
             compile_args.add("-fno-rtti")
-        
+
         if ctx.attr.cxx_std:
             compile_args.add("-std=" + ctx.attr.cxx_std)
-    
+
     # Include directories
     compile_args.add("-I" + work_dir.path)
     for include in ctx.attr.includes:
         compile_args.add("-I" + include)
-    
+
     # Defines
     for define in ctx.attr.defines:
         compile_args.add("-D" + define)
-    
+
     # Compile flags
     for flag in ctx.attr.copts:
         compile_args.add(flag)
-    
+
     # Output
     compile_args.add("-o", wasm_binary.path)
-    
+
     # Add source files from work directory
     for src in sources:
         compile_args.add(work_dir.path + "/" + src.basename)
@@ -185,7 +185,7 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
     component_args.add(wasm_binary.path)
     component_args.add("--wit", wit_file.path)
     component_args.add("--output", component_wasm.path)
-    
+
     if ctx.attr.world:
         component_args.add("--world", ctx.attr.world)
 
@@ -271,10 +271,10 @@ cpp_component = rule(
     toolchains = ["@rules_wasm_component//toolchains:cpp_component_toolchain_type"],
     doc = """
     Builds a WebAssembly component from C/C++ source code using Preview2.
-    
+
     This rule compiles C/C++ code directly to a Preview2 WebAssembly component
     without requiring adapter modules, providing native component model support.
-    
+
     Example:
         cpp_component(
             name = "calculator_component",
@@ -306,16 +306,16 @@ def _cpp_wit_bindgen_impl(ctx):
     args = ctx.actions.args()
     args.add("c")
     args.add("--out-dir", bindings_dir.path)
-    
+
     if ctx.attr.world:
         args.add("--world", ctx.attr.world)
-    
+
     if ctx.attr.stubs_only:
         args.add("--stubs-only")
-    
+
     if ctx.attr.string_encoding:
         args.add("--string-encoding", ctx.attr.string_encoding)
-    
+
     args.add(wit_file.path)
 
     ctx.actions.run(
@@ -357,10 +357,10 @@ cpp_wit_bindgen = rule(
     toolchains = ["@rules_wasm_component//toolchains:cpp_component_toolchain_type"],
     doc = """
     Generates C/C++ bindings from WIT interface definitions.
-    
+
     This rule uses wit-bindgen to create C/C++ header and source files
     that implement or consume WIT interfaces for component development.
-    
+
     Example:
         cpp_wit_bindgen(
             name = "calculator_bindings",
@@ -382,7 +382,7 @@ def _cc_component_library_impl(ctx):
 
     # Output library
     library = ctx.actions.declare_file("lib{}.a".format(ctx.attr.name))
-    
+
     # Collect dependency headers
     dep_headers = []
     for dep in ctx.attr.deps:
@@ -390,62 +390,62 @@ def _cc_component_library_impl(ctx):
             for file in dep[DefaultInfo].files.to_list():
                 if file.extension in ["h", "hpp", "hh", "hxx"]:
                     dep_headers.append(file)
-    
+
     # Compile source files to object files
     object_files = []
-    
+
     for src in ctx.files.srcs:
         obj_file = ctx.actions.declare_file(src.basename.rsplit(".", 1)[0] + ".o")
         object_files.append(obj_file)
-        
+
         # Compile arguments
         compile_args = ctx.actions.args()
         compile_args.add("--target=wasm32-wasip2")
         compile_args.add("--sysroot=" + sysroot.path)
         compile_args.add("-c")  # Compile only, don't link
-        
+
         # Component model definitions
         compile_args.add("-D_WASI_EMULATED_PROCESS_CLOCKS")
         compile_args.add("-D_WASI_EMULATED_SIGNAL")
         compile_args.add("-D_WASI_EMULATED_MMAN")
         compile_args.add("-DCOMPONENT_MODEL_PREVIEW2")
-        
+
         # Optimization
         if ctx.attr.optimize:
             compile_args.add("-O3")
         else:
             compile_args.add("-O0")
             compile_args.add("-g")
-        
+
         # C++ specific flags
         if ctx.attr.language == "cpp":
             compile_args.add("-fno-exceptions")
             compile_args.add("-fno-rtti")
             if ctx.attr.cxx_std:
                 compile_args.add("-std=" + ctx.attr.cxx_std)
-        
+
         # Include directories
         for hdr in ctx.files.hdrs:
             compile_args.add("-I" + hdr.dirname)
         for include in ctx.attr.includes:
             compile_args.add("-I" + include)
-        
+
         # Add dependency header directories
         for dep_hdr in dep_headers:
             compile_args.add("-I" + dep_hdr.dirname)
-        
+
         # Defines
         for define in ctx.attr.defines:
             compile_args.add("-D" + define)
-        
+
         # Compiler options
         for opt in ctx.attr.copts:
             compile_args.add(opt)
-        
+
         # Output and input
         compile_args.add("-o", obj_file.path)
         compile_args.add(src.path)
-        
+
         ctx.actions.run(
             executable = clang,
             arguments = [compile_args],
@@ -454,13 +454,13 @@ def _cc_component_library_impl(ctx):
             mnemonic = "CompileCppObject",
             progress_message = "Compiling {} for component library".format(src.basename),
         )
-    
+
     # Create static library
     ar_args = ctx.actions.args()
     ar_args.add("rcs")
     ar_args.add(library.path)
     ar_args.add_all(object_files)
-    
+
     ctx.actions.run(
         executable = llvm_ar,
         arguments = [ar_args],
@@ -518,10 +518,10 @@ cc_component_library = rule(
     toolchains = ["@rules_wasm_component//toolchains:cpp_component_toolchain_type"],
     doc = """
     Creates a static library for use in WebAssembly components.
-    
+
     This rule compiles C/C++ source files into a static library that can
     be linked into WebAssembly components, providing modular development.
-    
+
     Example:
         cc_component_library(
             name = "math_utils",

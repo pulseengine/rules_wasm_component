@@ -17,8 +17,8 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "hello_component",
     srcs = ["src/lib.rs"],
-    wit = ":hello_interfaces",
     profiles = ["release"],  # Build release profile
+    wit = ":hello_interfaces",
 )
 
 # Test the component

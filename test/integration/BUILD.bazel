@@ -6,7 +6,7 @@ workflows from WIT interface definition through component composition.
 
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//wit:wit_deps_check.bzl", "wit_deps_check")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen") 
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
 
 # Test 1: Basic component workflow
@@ -19,8 +19,11 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "basic_component",
     srcs = ["src/basic.rs"],
+    profiles = [
+        "debug",
+        "release",
+    ],
     wit = ":basic_interface",
-    profiles = ["debug", "release"],
 )
 
 # Test 2: Component with external dependencies
@@ -32,7 +35,7 @@ wit_library(
 
 wit_library(
     name = "consumer_interface",
-    package_name = "test:consumer@1.0.0", 
+    package_name = "test:consumer@1.0.0",
     srcs = ["consumer.wit"],
     deps = [":external_lib"],
 )
@@ -51,7 +54,7 @@ wit_library(
 )
 
 wit_library(
-    name = "service_b_interface", 
+    name = "service_b_interface",
     package_name = "test:service-b@1.0.0",
     srcs = ["service_b.wit"],
     deps = [":service_a_interface"],
@@ -65,7 +68,7 @@ rust_wasm_component_bindgen(
 
 rust_wasm_component_bindgen(
     name = "service_b_component",
-    srcs = ["src/service_b.rs"], 
+    srcs = ["src/service_b.rs"],
     wit = ":service_b_interface",
 )
 
@@ -78,12 +81,12 @@ wac_compose(
     },
     composition = """
         package test:multi-system@1.0.0;
-        
+
         let service-a = new test:service-a { ... };
-        let service-b = new test:service-b { 
+        let service-b = new test:service-b {
             storage: service-a,
         };
-        
+
         export service-b as main;
     """,
 )
@@ -108,7 +111,7 @@ wac_compose(
     },
     composition = """
         package test:wasi-system@1.0.0;
-        
+
         let app = new test:wasi-app { ... };
         export app as main;
     """,
@@ -133,7 +136,7 @@ build_test(
     ],
 )
 
-# Test 2: Dependency resolution build validation  
+# Test 2: Dependency resolution build validation
 build_test(
     name = "dependency_resolution_build_test",
     targets = [
@@ -167,7 +170,7 @@ component_validation_test(
 
 component_validation_test(
     name = "wasi_system_validation",
-    component = ":wasi_system", 
+    component = ":wasi_system",
     expected_exports = ["wasi-app"],
     expected_imports = ["wasi:"],  # Should preserve WASI imports
 )
@@ -176,10 +179,10 @@ test_suite(
     name = "integration_tests",
     tests = [
         ":basic_component_build_test",
-        ":dependency_resolution_build_test",
-        ":composition_build_test",
         ":basic_component_validation",
-        ":consumer_component_validation", 
+        ":composition_build_test",
+        ":consumer_component_validation",
+        ":dependency_resolution_build_test",
         ":wasi_system_validation",
     ],
 )

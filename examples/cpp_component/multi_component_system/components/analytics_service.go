@@ -34,14 +34,14 @@ type Event struct {
 }
 
 type EventContext struct {
-	UserAgent   string            `json:"user_agent"`
-	IPAddress   string            `json:"ip_address"`
-	Referrer    string            `json:"referrer"`
-	Page        string            `json:"page"`
-	Viewport    Viewport          `json:"viewport"`
-	Device      DeviceInfo        `json:"device"`
-	Location    LocationInfo      `json:"location"`
-	CustomData  map[string]string `json:"custom_data"`
+	UserAgent  string            `json:"user_agent"`
+	IPAddress  string            `json:"ip_address"`
+	Referrer   string            `json:"referrer"`
+	Page       string            `json:"page"`
+	Viewport   Viewport          `json:"viewport"`
+	Device     DeviceInfo        `json:"device"`
+	Location   LocationInfo      `json:"location"`
+	CustomData map[string]string `json:"custom_data"`
 }
 
 type Viewport struct {
@@ -50,7 +50,7 @@ type Viewport struct {
 }
 
 type DeviceInfo struct {
-	Type         string `json:"type"`          // "desktop", "mobile", "tablet"
+	Type         string `json:"type"` // "desktop", "mobile", "tablet"
 	OS           string `json:"os"`
 	Browser      string `json:"browser"`
 	Version      string `json:"version"`
@@ -104,21 +104,21 @@ type FunnelStep struct {
 }
 
 type FunnelAnalysis struct {
-	FunnelID    string                `json:"funnel_id"`
-	Name        string                `json:"name"`
-	Steps       []FunnelStep          `json:"steps"`
-	Results     []FunnelStepResult    `json:"results"`
-	Conversions map[string]int        `json:"conversions"`
-	DropoffRate []float64             `json:"dropoff_rate"`
+	FunnelID    string                 `json:"funnel_id"`
+	Name        string                 `json:"name"`
+	Steps       []FunnelStep           `json:"steps"`
+	Results     []FunnelStepResult     `json:"results"`
+	Conversions map[string]int         `json:"conversions"`
+	DropoffRate []float64              `json:"dropoff_rate"`
 	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 type FunnelStepResult struct {
-	StepIndex    int     `json:"step_index"`
-	UserCount    int     `json:"user_count"`
+	StepIndex      int     `json:"step_index"`
+	UserCount      int     `json:"user_count"`
 	ConversionRate float64 `json:"conversion_rate"`
-	DropoffCount int     `json:"dropoff_count"`
-	DropoffRate  float64 `json:"dropoff_rate"`
+	DropoffCount   int     `json:"dropoff_count"`
+	DropoffRate    float64 `json:"dropoff_rate"`
 }
 
 // Global service state using Go's concurrency-safe patterns
@@ -136,16 +136,16 @@ type AnalyticsService struct {
 }
 
 type ServiceMetrics struct {
-	TotalEvents         int64                  `json:"total_events"`
-	ProcessedEvents     int64                  `json:"processed_events"`
-	FailedEvents        int64                  `json:"failed_events"`
-	ActiveGoroutines    int                    `json:"active_goroutines"`
-	EventTypes          map[string]int64       `json:"event_types"`
-	ProcessingLatency   time.Duration          `json:"processing_latency"`
-	MemoryUsage         int64                  `json:"memory_usage"`
-	GoroutinePool       int                    `json:"goroutine_pool"`
-	ChannelBufferSizes  map[string]int         `json:"channel_buffer_sizes"`
-	ConcurrentOperations int64                 `json:"concurrent_operations"`
+	TotalEvents          int64            `json:"total_events"`
+	ProcessedEvents      int64            `json:"processed_events"`
+	FailedEvents         int64            `json:"failed_events"`
+	ActiveGoroutines     int              `json:"active_goroutines"`
+	EventTypes           map[string]int64 `json:"event_types"`
+	ProcessingLatency    time.Duration    `json:"processing_latency"`
+	MemoryUsage          int64            `json:"memory_usage"`
+	GoroutinePool        int              `json:"goroutine_pool"`
+	ChannelBufferSizes   map[string]int   `json:"channel_buffer_sizes"`
+	ConcurrentOperations int64            `json:"concurrent_operations"`
 }
 
 // Global service instance
@@ -170,7 +170,7 @@ func getAnalyticsService() *AnalyticsService {
 			isRunning: true,
 			shutdown:  make(chan struct{}),
 		}
-		
+
 		// Start background processing goroutines
 		analyticsService.startProcessingWorkers()
 	})
@@ -307,7 +307,7 @@ func (as *AnalyticsService) calculateAggregation(events []Event, aggType Aggrega
 	for _, window := range timeWindows {
 		duration := parseDuration(window)
 		startTime := now.Add(-duration)
-		
+
 		// Filter events for time window using Go's slice operations
 		filteredEvents := make([]Event, 0)
 		for _, event := range events {
@@ -319,9 +319,9 @@ func (as *AnalyticsService) calculateAggregation(events []Event, aggType Aggrega
 		// Group events by dimensions
 		dimensionGroups := make(map[string][]Event)
 		for _, event := range filteredEvents {
-			key := fmt.Sprintf("%s_%s_%s", 
-				event.EventType, 
-				event.Context.Device.Type, 
+			key := fmt.Sprintf("%s_%s_%s",
+				event.EventType,
+				event.Context.Device.Type,
 				event.Context.Location.Country)
 			dimensionGroups[key] = append(dimensionGroups[key], event)
 		}
@@ -330,7 +330,7 @@ func (as *AnalyticsService) calculateAggregation(events []Event, aggType Aggrega
 		for dimensionKey, groupEvents := range dimensionGroups {
 			aggregation := as.calculateMetricValue(groupEvents, aggType)
 			aggregationKey := fmt.Sprintf("%s_%s_%s", aggType, window, dimensionKey)
-			
+
 			as.mu.Lock()
 			as.aggregations[aggregationKey] = aggregation
 			as.mu.Unlock()
@@ -447,7 +447,7 @@ func (as *AnalyticsService) processFunnel(funnelID string, funnel FunnelAnalysis
 	// Analyze funnel steps concurrently
 	stepResults := make([]FunnelStepResult, len(funnel.Steps))
 	var wg sync.WaitGroup
-	
+
 	for stepIndex, step := range funnel.Steps {
 		wg.Add(1)
 		go func(index int, funnelStep FunnelStep) {
@@ -469,11 +469,11 @@ func (as *AnalyticsService) processFunnel(funnelID string, funnel FunnelAnalysis
 // Analyze individual funnel step using Go's efficient data processing
 func (as *AnalyticsService) analyzeFunnelStep(stepIndex int, step FunnelStep, userEvents map[string][]Event) FunnelStepResult {
 	userCount := 0
-	
+
 	// Process users concurrently using goroutines
 	userChan := make(chan string, len(userEvents))
 	resultChan := make(chan bool, len(userEvents))
-	
+
 	// Send all user IDs to channel
 	go func() {
 		defer close(userChan)
@@ -485,7 +485,7 @@ func (as *AnalyticsService) analyzeFunnelStep(stepIndex int, step FunnelStep, us
 	// Process users concurrently
 	var wg sync.WaitGroup
 	numWorkers := 5
-	
+
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func() {
@@ -547,10 +547,10 @@ func (as *AnalyticsService) processPageView(event Event) {
 		as.mu.Lock()
 		as.metrics.ConcurrentOperations++
 		as.mu.Unlock()
-		
+
 		// Process page view metrics
 		// Implementation details...
-		
+
 		as.mu.Lock()
 		as.metrics.ConcurrentOperations--
 		as.mu.Unlock()
@@ -601,7 +601,7 @@ func parseDuration(window string) time.Duration {
 // WIT interface implementation
 func TrackEvent(eventData []byte) bool {
 	service := getAnalyticsService()
-	
+
 	var event Event
 	if err := json.Unmarshal(eventData, &event); err != nil {
 		service.mu.Lock()
@@ -642,10 +642,10 @@ func TrackEvent(eventData []byte) bool {
 
 func GetMetrics(timeWindow string) []byte {
 	service := getAnalyticsService()
-	
+
 	service.mu.RLock()
 	defer service.mu.RUnlock()
-	
+
 	// Filter aggregations by time window
 	filteredAggregations := make(map[string]MetricAggregation)
 	for key, aggregation := range service.aggregations {
@@ -653,14 +653,14 @@ func GetMetrics(timeWindow string) []byte {
 			filteredAggregations[key] = aggregation
 		}
 	}
-	
+
 	result, _ := json.Marshal(filteredAggregations)
 	return result
 }
 
 func CreateFunnel(funnelData []byte) string {
 	service := getAnalyticsService()
-	
+
 	var funnel FunnelAnalysis
 	if err := json.Unmarshal(funnelData, &funnel); err != nil {
 		return ""
@@ -668,25 +668,25 @@ func CreateFunnel(funnelData []byte) string {
 
 	funnelID := uuid.New().String()
 	funnel.FunnelID = funnelID
-	
+
 	service.mu.Lock()
 	service.funnels[funnelID] = funnel
 	service.mu.Unlock()
-	
+
 	return funnelID
 }
 
 func GetFunnelResults(funnelId string) []byte {
 	service := getAnalyticsService()
-	
+
 	service.mu.RLock()
 	funnel, exists := service.funnels[funnelId]
 	service.mu.RUnlock()
-	
+
 	if !exists {
 		return nil
 	}
-	
+
 	result, _ := json.Marshal(funnel)
 	return result
 }
@@ -698,12 +698,12 @@ func HealthCheck() bool {
 
 func GetServiceStats() string {
 	service := getAnalyticsService()
-	
+
 	service.mu.RLock()
 	stats := service.metrics
 	stats.ActiveGoroutines = len(service.eventChannels) + service.processingWorkers + 2 // +2 for aggregation and funnel workers
 	service.mu.RUnlock()
-	
+
 	result, _ := json.Marshal(stats)
 	return string(result)
 }
@@ -712,7 +712,7 @@ func GetServiceStats() string {
 func main() {
 	// Initialize the service
 	getAnalyticsService()
-	
+
 	// Keep the service running
 	select {}
 }

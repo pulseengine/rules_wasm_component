@@ -6,7 +6,5 @@
       "name": "rules_wasm_component maintainer"
     }
   ],
-  "repository": [
-    "github:pulseengine/rules_wasm_component"
-  ]
+  "repository": ["github:pulseengine/rules_wasm_component"]
 }

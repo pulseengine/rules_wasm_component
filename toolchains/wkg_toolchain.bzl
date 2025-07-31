@@ -10,7 +10,7 @@ WKG_PLATFORMS = {
         binary_name = "wkg-x86_64-apple-darwin",
     ),
     "darwin_arm64": struct(
-        url_suffix = "wkg-aarch64-apple-darwin", 
+        url_suffix = "wkg-aarch64-apple-darwin",
         binary_name = "wkg-aarch64-apple-darwin",
     ),
     "linux_amd64": struct(
@@ -29,11 +29,11 @@ WKG_PLATFORMS = {
 
 def _wkg_toolchain_impl(ctx):
     """Implementation of wkg_toolchain rule"""
-    
+
     toolchain_info = platform_common.ToolchainInfo(
         wkg = ctx.file.wkg,
     )
-    
+
     return [toolchain_info]
 
 wkg_toolchain = rule(
@@ -67,16 +67,16 @@ def _detect_platform(ctx):
 
 def _wkg_toolchain_repository_impl(ctx):
     """Repository rule implementation for wkg toolchain"""
-    
+
     strategy = ctx.attr.strategy
     version = ctx.attr.version
-    
+
     if strategy == "system":
         # Try to find wkg in system PATH
         wkg_path = ctx.which("wkg")
         if not wkg_path:
             fail("wkg not found in system PATH. Install it with 'cargo install wkg' or use strategy='download'")
-        
+
         # Create a BUILD file that references the system binary
         ctx.file("BUILD.bazel", """
 load("@rules_wasm_component//toolchains:wkg_toolchain.bzl", "wkg_toolchain")
@@ -94,28 +94,28 @@ toolchain(
     visibility = ["//visibility:public"],
 )
 """)
-        
+
         # Create a symlink to the system binary
         ctx.symlink(wkg_path, "wkg_binary")
-    
+
     elif strategy == "download":
         platform = _detect_platform(ctx)
         platform_info = WKG_PLATFORMS[platform]
-        
+
         # Construct download URL
         base_url = ctx.attr.url or "https://github.com/bytecodealliance/wasm-pkg-tools/releases/download/v{version}"
         url = base_url.format(version = version) + "/" + platform_info.url_suffix
-        
+
         # Download the binary directly (no extraction needed)
         ctx.download(
             url = url,
             output = platform_info.binary_name,
             executable = True,
         )
-        
+
         # Use the downloaded binary
         wkg_binary = platform_info.binary_name
-        
+
         ctx.file("BUILD.bazel", """
 load("@rules_wasm_component//toolchains:wkg_toolchain.bzl", "wkg_toolchain")
 
@@ -126,34 +126,38 @@ wkg_toolchain(
 )
 
 toolchain(
-    name = "wkg_toolchain_def", 
+    name = "wkg_toolchain_def",
     toolchain = ":wkg_toolchain",
     toolchain_type = "@rules_wasm_component//toolchains:wkg_toolchain_type",
     visibility = ["//visibility:public"],
 )
 """.format(wkg_binary = wkg_binary))
-    
+
     elif strategy == "build":
         # Build from source using git
         git_url = ctx.attr.git_url or "https://github.com/bytecodealliance/wasm-pkg-tools.git"
         git_commit = ctx.attr.git_commit or "main"
-        
+
         # Clone the repository
         ctx.download_and_extract(
             url = "{}/archive/{}.tar.gz".format(git_url.rstrip(".git"), git_commit),
             stripPrefix = "wasm-pkg-tools-{}".format(git_commit),
         )
-        
+
         # Build with cargo
         result = ctx.execute([
-            "cargo", "build", "--release", "--bin", "wkg"
+            "cargo",
+            "build",
+            "--release",
+            "--bin",
+            "wkg",
         ])
         if result.return_code != 0:
             fail("Failed to build wkg: {}".format(result.stderr))
-        
+
         # Copy the binary using Bazel-native operations
         ctx.symlink("target/release/wkg", "wkg")
-        
+
         ctx.file("BUILD.bazel", """
 load("@rules_wasm_component//toolchains:wkg_toolchain.bzl", "wkg_toolchain")
 
@@ -165,12 +169,12 @@ wkg_toolchain(
 
 toolchain(
     name = "wkg_toolchain_def",
-    toolchain = ":wkg_toolchain", 
+    toolchain = ":wkg_toolchain",
     toolchain_type = "@rules_wasm_component//toolchains:wkg_toolchain_type",
     visibility = ["//visibility:public"],
 )
 """)
-    
+
     else:
         fail("Unknown strategy: {}. Supported: system, download, build".format(strategy))
 

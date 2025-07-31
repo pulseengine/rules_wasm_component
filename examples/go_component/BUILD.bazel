@@ -18,7 +18,7 @@ wit_library(
     world = "calculator-world",
 )
 
-# WIT library definitions for HTTP service interface  
+# WIT library definitions for HTTP service interface
 wit_library(
     name = "http_service_wit",
     srcs = ["wit/http-service.wit"],
@@ -33,7 +33,7 @@ wit_markdown(
 
 # Generate markdown documentation for HTTP service interface
 wit_markdown(
-    name = "http_service_docs", 
+    name = "http_service_docs",
     wit = ":http_service_wit",
 )
 
@@ -48,19 +48,19 @@ go_wit_bindgen(
 go_wasm_component(
     name = "calculator_component",
     srcs = [
-        "main.go",
         "calculator.go",
+        "main.go",
     ],
-    wit = "wit/calculator.wit",
-    world = "calculator-world",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "release",
-    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    wit = "wit/calculator.wit",
+    world = "calculator-world",
 )
 
 # Generate Go bindings for HTTP service
 go_wit_bindgen(
-    name = "http_service_bindings", 
+    name = "http_service_bindings",
     wit = "wit/http-service.wit",
     world = "http-service-world",
 )
@@ -69,36 +69,36 @@ go_wit_bindgen(
 go_wasm_component(
     name = "http_service_component",
     srcs = [
-        "service.go", 
         "handlers.go",
+        "service.go",
     ],
-    wit = "wit/http-service.wit",
-    world = "http-service-world",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "release",
-    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    wit = "wit/http-service.wit",
+    world = "http-service-world",
 )
 
 # Debug version for development
 go_wasm_component(
     name = "calculator_component_debug",
     srcs = [
+        "calculator.go",
         "main.go",
-        "calculator.go", 
     ],
-    wit = "wit/calculator.wit",
-    world = "calculator-world",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",
-    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    wit = "wit/calculator.wit",
+    world = "calculator-world",
 )
 
 # Simple test without WIT bindings to isolate asyncify issues
 go_wasm_component(
     name = "simple_test",
     srcs = ["main.go"],
-    world = "simple-test",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",
-    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    world = "simple-test",
 )

@@ -11,21 +11,21 @@ typedef struct {
     http_response_t* response;
     size_t headers_capacity;
     size_t body_capacity;
-    
+
     // Template system
     char** templates;
     size_t template_count;
     size_t template_capacity;
-    
+
     // Content negotiation
     char* accepted_types[16];
     size_t accepted_count;
-    
+
     // Configuration
     bool auto_content_length;
     bool auto_date_header;
     bool auto_content_type;
-    
+
     // Error tracking
     char error_message[256];
 } response_builder_t;
@@ -82,15 +82,15 @@ bool response_set_text(response_builder_t* builder, const char* text);
 bool response_set_xml(response_builder_t* builder, const char* xml);
 
 // Set binary response
-bool response_set_binary(response_builder_t* builder, const uint8_t* data, size_t size, 
+bool response_set_binary(response_builder_t* builder, const uint8_t* data, size_t size,
                         const char* content_type);
 
 // File response (for static file serving)
-bool response_set_file(response_builder_t* builder, const char* filepath, 
+bool response_set_file(response_builder_t* builder, const char* filepath,
                       const char* content_type);
 
 // Redirect responses
-bool response_redirect(response_builder_t* builder, const char* location, 
+bool response_redirect(response_builder_t* builder, const char* location,
                       bool permanent);
 
 // Error responses
@@ -99,28 +99,28 @@ bool response_redirect(response_builder_t* builder, const char* location,
 bool response_set_error(response_builder_t* builder, http_status_t status);
 
 // Set error response with custom message
-bool response_set_error_message(response_builder_t* builder, http_status_t status, 
+bool response_set_error_message(response_builder_t* builder, http_status_t status,
                                const char* message);
 
 // Set error response with JSON error object
-bool response_set_error_json(response_builder_t* builder, http_status_t status, 
+bool response_set_error_json(response_builder_t* builder, http_status_t status,
                             const char* error_code, const char* message);
 
 // Cookie support
 
 // Add Set-Cookie header
-bool response_add_cookie(response_builder_t* builder, const char* name, 
+bool response_add_cookie(response_builder_t* builder, const char* name,
                         const char* value, const char* path, const char* domain,
                         int max_age, bool secure, bool http_only);
 
 // Delete cookie (set expired)
-bool response_delete_cookie(response_builder_t* builder, const char* name, 
+bool response_delete_cookie(response_builder_t* builder, const char* name,
                            const char* path, const char* domain);
 
 // Template system
 
 // Load template from string
-bool response_load_template(response_builder_t* builder, const char* name, 
+bool response_load_template(response_builder_t* builder, const char* name,
                            const char* template_content);
 
 // Render template with variables
@@ -128,7 +128,7 @@ bool response_render_template(response_builder_t* builder, const char* template_
                              const template_var_t* variables, size_t var_count);
 
 // Simple variable substitution in string
-char* response_substitute_variables(const char* template_str, 
+char* response_substitute_variables(const char* template_str,
                                    const template_var_t* variables, size_t var_count);
 
 // Content negotiation
@@ -137,7 +137,7 @@ char* response_substitute_variables(const char* template_str,
 bool response_set_accepted_types(response_builder_t* builder, const char* accept_header);
 
 // Get best content type match
-const char* response_get_best_content_type(response_builder_t* builder, 
+const char* response_get_best_content_type(response_builder_t* builder,
                                           const char* available_types[], size_t count);
 
 // Check if content type is acceptable
@@ -177,11 +177,11 @@ bool response_set_csp(response_builder_t* builder, const char* policy);
 // Compression support
 
 // Check if client accepts compression
-bool response_client_accepts_compression(const http_request_t* request, 
+bool response_client_accepts_compression(const http_request_t* request,
                                         const char* encoding);
 
 // Set compressed body (if compression is enabled)
-bool response_set_compressed_body(response_builder_t* builder, const uint8_t* data, 
+bool response_set_compressed_body(response_builder_t* builder, const uint8_t* data,
                                  size_t size, const char* encoding);
 
 // Response finalization

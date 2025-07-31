@@ -25,24 +25,24 @@ def _rust_wasm_component_impl(ctx):
     else:
         # Check if the WASM module is already a component (e.g., from wasip2)
         # For now, we'll try to detect this by attempting component validation
-        
+
         # First embed WIT metadata if wit_bindgen is specified and module isn't already a component
         if ctx.attr.wit_bindgen:
             # For wasip2, the WASM output likely already contains component metadata
             # so we skip the embedding and conversion steps
-            
+
             # TODO: Add proper component detection logic here
             # For now, assume wasip2 outputs are already components
             # Future: Use wasm-tools inspect to detect if module is already a component
             # if wasm_module_is_component(wasm_module):
-            #     component_wasm = wasm_module  
+            #     component_wasm = wasm_module
             # else:
             #     component_wasm = convert_module_to_component(wasm_module, wit_bindgen)
             component_wasm = wasm_module
         else:
             # No WIT bindings, try to convert module to component
             input_wasm = wasm_module
-            
+
             # Convert module to component
             component_wasm = ctx.actions.declare_file(ctx.label.name + ".component.wasm")
 
@@ -131,6 +131,7 @@ def rust_wasm_component(
         profiles = ["release"],
         visibility = None,
         crate_root = None,
+        edition = "2021",
         **kwargs):
     """
     Builds a Rust WebAssembly component.
@@ -147,6 +148,7 @@ def rust_wasm_component(
         rustc_flags: Additional rustc flags
         profiles: List of build profiles to create ["debug", "release", "custom"]
         visibility: Target visibility
+        edition: Rust edition (default: "2021")
         **kwargs: Additional arguments passed to rust_library
 
     Example:
@@ -210,7 +212,7 @@ def rust_wasm_component(
             srcs = all_srcs,
             crate_root = crate_root,
             deps = all_deps,
-            edition = "2021",
+            edition = edition,
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags,
             visibility = ["//visibility:private"],

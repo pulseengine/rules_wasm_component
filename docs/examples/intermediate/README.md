@@ -9,7 +9,7 @@ Examples showing cross-package dependencies and multi-component systems.
 > **✅ Status**: External dependency binding generation has been fixed! Components can now successfully use external WIT packages.
 
 ```starlark
-# external/BUILD.bazel  
+# external/BUILD.bazel
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 wit_library(
@@ -81,6 +81,7 @@ rust_wasm_component_bindgen(
 ```
 
 Outputs:
+
 - `bazel-bin/optimized_component_debug.wasm` - Debug build
 - `bazel-bin/optimized_component_release.wasm` - Release build
 

@@ -2,17 +2,17 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//toolchains:tool_versions.bzl", "get_tool_info", "validate_tool_compatibility")
-load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "create_retry_wrapper")
-load("//toolchains:tool_cache.bzl", "retrieve_cached_tool", "cache_tool", "validate_tool_functionality")
+load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error")
+load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
 
 WIZER_VERSIONS = {
     "9.0.0": {
         "release_date": "2024-06-03",
         "cargo_install": True,  # Primary installation method
-        "git_commit": "090082b", 
+        "git_commit": "090082b",
     },
     "8.0.0": {
-        "release_date": "2024-02-28", 
+        "release_date": "2024-02-28",
         "cargo_install": True,
         "git_commit": "unknown",
     },
@@ -20,11 +20,11 @@ WIZER_VERSIONS = {
 
 def _wizer_toolchain_impl(ctx):
     """Implementation of wizer_toolchain rule"""
-    
+
     toolchain_info = platform_common.ToolchainInfo(
         wizer = ctx.file.wizer,
     )
-    
+
     return [toolchain_info]
 
 wizer_toolchain = rule(
@@ -39,19 +39,40 @@ wizer_toolchain = rule(
     },
 )
 
+def _detect_host_platform(repository_ctx):
+    """Detect the host platform for tool installation"""
+    os_name = repository_ctx.os.name.lower()
+    arch = repository_ctx.os.arch.lower()
+
+    # Use Bazel's native architecture detection
+    if "mac" in os_name or "darwin" in os_name:
+        if arch == "aarch64" or "arm64" in arch:
+            return "darwin_arm64"
+        return "darwin_amd64"
+    elif "linux" in os_name:
+        if arch == "aarch64" or "arm64" in arch:
+            return "linux_arm64"
+        return "linux_amd64"
+    elif "windows" in os_name:
+        return "windows_amd64"
+    else:
+        fail("Unsupported operating system: {}".format(os_name))
+
 def _wizer_toolchain_repository_impl(ctx):
     """Implementation of wizer_toolchain_repository repository rule"""
-    
+
     version = ctx.attr.version
     strategy = ctx.attr.strategy
-    
+    platform = _detect_host_platform(ctx)
+
     if version not in WIZER_VERSIONS:
         fail("Unsupported Wizer version: {}. Supported versions: {}".format(
-            version, list(WIZER_VERSIONS.keys())
+            version,
+            list(WIZER_VERSIONS.keys()),
         ))
-    
+
     version_info = WIZER_VERSIONS[version]
-    
+
     if strategy == "cargo":
         # Create a script that installs Wizer via Cargo
         ctx.file("install_wizer.sh", """#!/bin/bash
@@ -83,36 +104,36 @@ else
     exit 1
 fi
 """.format(version = version), executable = True)
-        
+
         # Execute installation script
         result = ctx.execute(["./install_wizer.sh"])
         if result.return_code != 0:
             fail("Failed to install Wizer via cargo: {}".format(result.stderr))
-            
+
         wizer_path = "bin/wizer"
-        
+
     elif strategy == "system":
         # Check for system-installed Wizer using Bazel-native function
         wizer_path = ctx.which("wizer")
         if not wizer_path:
             fail("Wizer not found in system PATH. Install with 'cargo install wizer --all-features'")
-        
+
         # Verify version if possible
         version_result = ctx.execute([wizer_path, "--version"])
         if version_result.return_code == 0:
             print("Found system Wizer: {}".format(version_result.stdout.strip()))
-        
+
         # Create symlink for consistent access
         ctx.symlink(wizer_path, "bin/wizer")
         wizer_path = "bin/wizer"
-        
+
     else:
         fail("Unsupported Wizer installation strategy: {}. Use 'cargo' or 'system'".format(strategy))
-    
+
     # Create BUILD file for the toolchain
     ctx.file("BUILD.bazel", '''"""Wizer WebAssembly pre-initialization toolchain"""
 
-load("//toolchains:wizer_toolchain.bzl", "wizer_toolchain")
+load("@rules_wasm_component//toolchains:wizer_toolchain.bzl", "wizer_toolchain")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -130,20 +151,23 @@ wizer_toolchain(
 
 # Toolchain definition
 toolchain(
-    name = "wizer_toolchain",
+    name = "wizer_toolchain_def",
     exec_compatible_with = [
-        "@platforms//os:linux",
-        "@platforms//os:macos", 
-        "@platforms//os:windows",
+        "@platforms//os:{os}",
+        "@platforms//cpu:{cpu}",
     ],
     target_compatible_with = [
-        "@platforms//cpu:wasm32",
+        # Wizer runs on host platform to pre-initialize WASM modules
     ],
     toolchain = ":wizer_toolchain_impl",
-    toolchain_type = "//toolchains:wizer_toolchain_type",
+    toolchain_type = "@rules_wasm_component//toolchains:wizer_toolchain_type",
     visibility = ["//visibility:public"],
 )
-'''.format(wizer_path = wizer_path))
+'''.format(
+        wizer_path = wizer_path,
+        os = "osx" if "darwin" in platform else ("windows" if "windows" in platform else "linux"),
+        cpu = "arm64" if "arm64" in platform else "x86_64",
+    ))
 
 wizer_toolchain_repository = repository_rule(
     implementation = _wizer_toolchain_repository_impl,

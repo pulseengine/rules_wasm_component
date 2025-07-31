@@ -1,6 +1,6 @@
 """Rust WASM component with WIT bindgen integration"""
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_common")
+load("@rules_rust//rust:defs.bzl", "rust_common", "rust_library")
 load("//wit:wit_bindgen.bzl", "wit_bindgen")
 load(":rust_wasm_component.bzl", "rust_wasm_component")
 load(":transitions.bzl", "wasm_transition")
@@ -21,19 +21,19 @@ def _generate_wrapper_impl(ctx):
 pub mod wit_bindgen {
     pub mod rt {
         use core::alloc::Layout;
-        
+
         #[inline]
         pub fn run_ctors_once() {
             // No-op - WASM components don't need explicit constructor calls
         }
-        
+
         #[inline]
         pub fn maybe_link_cabi_realloc() {
             // This ensures cabi_realloc is referenced and thus linked
         }
-        
+
         pub struct Cleanup;
-        
+
         impl Cleanup {
             #[inline]
             #[allow(clippy::new_ret_no_self)]
@@ -44,9 +44,9 @@ pub mod wit_bindgen {
                 (ptr, None)
             }
         }
-        
+
         pub struct CleanupGuard;
-        
+
         impl CleanupGuard {
             #[inline]
             pub fn forget(self) {
@@ -58,18 +58,23 @@ pub mod wit_bindgen {
 
 // Generated bindings follow:
 """
-    
+
     # Concatenate wrapper content with generated bindings
-    # Keep interface-specific export macros but remove any duplicate top-level exports
+    # Modern approach: write wrapper first, then append bindgen content with single cat command
+    temp_wrapper = ctx.actions.declare_file(ctx.label.name + "_wrapper.rs")
+    ctx.actions.write(
+        output = temp_wrapper,
+        content = wrapper_content + "\n",
+    )
+
+    # Single clean command to concatenate files
     ctx.actions.run_shell(
-        command = '''echo '{}' > {} && echo "" >> {} && cat {} >> {}'''.format(
-            wrapper_content.replace("'", "'\"'\"'"),
-            out_file.path,
-            out_file.path,
+        command = "cat {} {} > {}".format(
+            temp_wrapper.path,
             ctx.file.bindgen.path,
             out_file.path,
         ),
-        inputs = [ctx.file.bindgen],
+        inputs = [temp_wrapper, ctx.file.bindgen],
         outputs = [out_file],
         mnemonic = "ConcatWitWrapper",
         progress_message = "Concatenating wrapper for {}".format(ctx.label),
@@ -89,36 +94,37 @@ _generate_wrapper = rule(
 
 def _wasm_rust_library_impl(ctx):
     """Implementation of wasm_rust_library rule"""
+
     # This rule just passes through to the rust_library target
     # The transition is handled by the cfg attribute
     target_info = ctx.attr.target[0]
-    
+
     # Collect providers to forward
     providers = []
-    
+
     # Forward DefaultInfo (always needed)
     if DefaultInfo in target_info:
         providers.append(target_info[DefaultInfo])
-    
+
     # Forward CcInfo if present (Rust libraries often provide this)
     if CcInfo in target_info:
         providers.append(target_info[CcInfo])
-    
+
     # Forward Rust-specific providers using the correct rust_common API
     if rust_common.crate_info in target_info:
         providers.append(target_info[rust_common.crate_info])
-    
+
     if rust_common.dep_info in target_info:
         providers.append(target_info[rust_common.dep_info])
-    
+
     # Handle test crate case
     if rust_common.test_crate_info in target_info:
         providers.append(target_info[rust_common.test_crate_info])
-    
+
     # Forward other common providers
-    if hasattr(target_info, 'instrumented_files'):
+    if hasattr(target_info, "instrumented_files"):
         providers.append(target_info.instrumented_files)
-        
+
     return providers
 
 _wasm_rust_library = rule(
@@ -200,7 +206,7 @@ def rust_wasm_component_bindgen(
     # Create a rust_library from the generated bindings
     bindings_lib = name + "_bindings"
     bindings_lib_host = bindings_lib + "_host"
-    
+
     # Create the bindings library for host platform first
     rust_library(
         name = bindings_lib_host,
@@ -209,7 +215,7 @@ def rust_wasm_component_bindgen(
         edition = "2021",
         visibility = ["//visibility:private"],
     )
-    
+
     # Create a WASM-transitioned version of the bindings library
     _wasm_rust_library(
         name = bindings_lib,

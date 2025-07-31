@@ -7,13 +7,13 @@ interface http-service {
         headers: list<tuple<string, string>>,
         body: string,
     }
-    
+
     record http-response {
         status: u32,
         headers: list<tuple<string, string>>,
         body: string,
     }
-    
+
     record service-info {
         name: string,
         version: string,
@@ -22,7 +22,7 @@ interface http-service {
         uptime: u64,
         requests: u64,
     }
-    
+
     handle-request: func(request: http-request) -> http-response;
     get-service-info: func() -> service-info;
 }

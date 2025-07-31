@@ -106,14 +106,14 @@ wasm_toolchain = module_extension(
 
 def _wasi_sdk_extension_impl(module_ctx):
     """Implementation of wasi_sdk module extension"""
-    
+
     registrations = {}
-    
+
     # Collect all SDK registrations
     for mod in module_ctx.modules:
         for registration in mod.tags.register:
             registrations[registration.name] = registration
-    
+
     # Create SDK repositories
     for name, registration in registrations.items():
         wasi_sdk_repository(
@@ -123,7 +123,7 @@ def _wasi_sdk_extension_impl(module_ctx):
             url = registration.url,
             wasi_sdk_root = registration.wasi_sdk_root,
         )
-    
+
     # If no registrations, create default system SDK
     if not registrations:
         wasi_sdk_repository(
@@ -164,14 +164,14 @@ wasi_sdk = module_extension(
 
 def _wkg_extension_impl(module_ctx):
     """Implementation of wkg module extension"""
-    
+
     registrations = {}
-    
+
     # Collect all wkg registrations
     for mod in module_ctx.modules:
         for registration in mod.tags.register:
             registrations[registration.name] = registration
-    
+
     # Create wkg repositories
     for name, registration in registrations.items():
         wkg_toolchain_repository(
@@ -182,7 +182,7 @@ def _wkg_extension_impl(module_ctx):
             git_url = registration.git_url,
             git_commit = registration.git_commit,
         )
-    
+
     # If no registrations, create default system toolchain
     if not registrations:
         wkg_toolchain_repository(
@@ -226,14 +226,14 @@ wkg = module_extension(
 
 def _jco_extension_impl(module_ctx):
     """Implementation of jco module extension"""
-    
+
     registrations = {}
-    
+
     # Collect all jco registrations
     for mod in module_ctx.modules:
         for registration in mod.tags.register:
             registrations[registration.name] = registration
-    
+
     # Create jco repositories
     for name, registration in registrations.items():
         jco_toolchain_repository(
@@ -241,13 +241,13 @@ def _jco_extension_impl(module_ctx):
             strategy = registration.strategy,
             version = registration.version,
         )
-    
+
     # If no registrations, create default system toolchain
     if not registrations:
         jco_toolchain_repository(
             name = "jco_toolchain",
             strategy = "system",
-            version = "1.4.0", 
+            version = "1.4.0",
         )
 
 # Module extension for jco (JavaScript Component Tools)
@@ -257,7 +257,7 @@ jco = module_extension(
         "register": tag_class(
             attrs = {
                 "name": attr.string(
-                    doc = "Name for this jco registration", 
+                    doc = "Name for this jco registration",
                     default = "jco",
                 ),
                 "strategy": attr.string(
@@ -274,17 +274,16 @@ jco = module_extension(
     },
 )
 
-
 def _cpp_component_extension_impl(module_ctx):
     """Implementation of cpp_component module extension"""
-    
+
     registrations = {}
-    
+
     # Collect all C/C++ component registrations
     for mod in module_ctx.modules:
         for registration in mod.tags.register:
             registrations[registration.name] = registration
-    
+
     # Create C/C++ component repositories
     for name, registration in registrations.items():
         cpp_component_toolchain_repository(
@@ -292,7 +291,7 @@ def _cpp_component_extension_impl(module_ctx):
             strategy = registration.strategy,
             wasi_sdk_version = registration.wasi_sdk_version,
         )
-    
+
     # If no registrations, create default system toolchain
     if not registrations:
         cpp_component_toolchain_repository(
@@ -327,21 +326,21 @@ cpp_component = module_extension(
 
 def _tinygo_extension_impl(module_ctx):
     """Implementation of TinyGo module extension"""
-    
+
     registrations = {}
-    
+
     # Collect all TinyGo registrations
     for mod in module_ctx.modules:
         for registration in mod.tags.register:
             registrations[registration.name] = registration
-    
+
     # Create TinyGo repositories
     for name, registration in registrations.items():
         tinygo_toolchain_repository(
             name = name + "_toolchain",
             tinygo_version = registration.tinygo_version,
         )
-    
+
     # If no registrations, create default TinyGo toolchain
     if not registrations:
         tinygo_toolchain_repository(
@@ -370,14 +369,14 @@ tinygo = module_extension(
 
 def _wizer_extension_impl(module_ctx):
     """Implementation of Wizer module extension"""
-    
+
     registrations = {}
-    
+
     # Collect all Wizer registrations
     for mod in module_ctx.modules:
         for registration in mod.tags.register:
             registrations[registration.name] = registration
-    
+
     # Create Wizer repositories
     for name, registration in registrations.items():
         wizer_toolchain_repository(
@@ -385,7 +384,7 @@ def _wizer_extension_impl(module_ctx):
             version = registration.version,
             strategy = registration.strategy,
         )
-    
+
     # If no registrations, create default Wizer toolchain
     if not registrations:
         wizer_toolchain_repository(

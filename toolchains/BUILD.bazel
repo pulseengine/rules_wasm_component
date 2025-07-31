@@ -28,8 +28,7 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
-
-# Toolchain type for C/C++ WebAssembly components  
+# Toolchain type for C/C++ WebAssembly components
 toolchain_type(
     name = "cpp_component_toolchain_type",
     visibility = ["//visibility:public"],
@@ -73,7 +72,6 @@ bzl_library(
     ],
 )
 
-
 # Bzl library for C/C++ WebAssembly component toolchain implementation
 bzl_library(
     name = "cpp_component_toolchain",
@@ -93,7 +91,7 @@ bzl_library(
     visibility = ["//visibility:public"],
     deps = [
         ":diagnostics",
-        ":tool_cache", 
+        ":tool_cache",
         ":tool_versions",
     ],
 )
@@ -118,7 +116,7 @@ bzl_library(
 )
 
 bzl_library(
-    name = "diagnostics", 
+    name = "diagnostics",
     srcs = ["diagnostics.bzl"],
     visibility = ["//visibility:public"],
 )

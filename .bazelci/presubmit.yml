@@ -173,7 +173,7 @@ tasks:
   # Integration test focus
   ubuntu2204_integration:
     name: "Ubuntu 22.04 (integration)"
-    platform: ubuntu2204  
+    platform: ubuntu2204
     bazel: "7.4.1"
     test_targets:
       - "//test/integration:integration_tests"

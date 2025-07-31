@@ -15,6 +15,19 @@ rust_wasm_component_bindgen(
 # Compose local component with remote components from registries
 wac_remote_compose(
     name = "distributed_system",
+    composition = """
+        // Instantiate all components
+        let frontend = new frontend:component { ... };
+        let auth = new auth_service:component { ... };
+        let data = new data_service:component { ... };
+
+        // Connect frontend to remote services
+        connect frontend.auth_request -> auth.validate;
+        connect frontend.data_request -> data.query;
+
+        // Export frontend as the main interface
+        export frontend as main;
+    """,
     local_components = {
         "frontend": ":local_frontend",
     },
@@ -23,24 +36,12 @@ wac_remote_compose(
         "auth_service": "example-registry/auth@1.0.0",
         "data_service": "wasi:data@0.2.0",
     },
-    composition = """
-        // Instantiate all components
-        let frontend = new frontend:component { ... };
-        let auth = new auth_service:component { ... };
-        let data = new data_service:component { ... };
-        
-        // Connect frontend to remote services
-        connect frontend.auth_request -> auth.validate;
-        connect frontend.data_request -> data.query;
-        
-        // Export frontend as the main interface
-        export frontend as main;
-    """,
 )
 
 # Alternative example using composition file
 wac_remote_compose(
     name = "microservices_system",
+    composition_file = "composition/microservices.wac",
     local_components = {
         "gateway": ":local_frontend",
     },
@@ -48,5 +49,4 @@ wac_remote_compose(
         "user_service": "my-org/users@2.1.0",
         "payment_service": "my-org/payments@1.5.0",
     },
-    composition_file = "composition/microservices.wac",
 )

@@ -10,8 +10,8 @@ load(
 )
 load(
     "//wit:wit_markdown.bzl",
-    _wit_markdown = "wit_markdown",
     _wit_docs_collection = "wit_docs_collection",
+    _wit_markdown = "wit_markdown",
 )
 
 # Re-export public rules

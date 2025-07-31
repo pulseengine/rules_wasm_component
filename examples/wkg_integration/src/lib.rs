@@ -1,5 +1,7 @@
 // Import the generated WIT bindings
-use example_component_bindings::exports::example::component::example_service::{Guest, ServiceInfo};
+use example_component_bindings::exports::example::component::example_service::{
+    Guest, ServiceInfo,
+};
 
 // Component implementation
 struct Component;
@@ -8,7 +10,7 @@ impl Guest for Component {
     fn process_request(request: String) -> String {
         format!("Processed: {}", request)
     }
-    
+
     fn get_metadata() -> ServiceInfo {
         ServiceInfo {
             name: "Example Component".to_string(),

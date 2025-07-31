@@ -1,4 +1,4 @@
-load("//cpp:defs.bzl", "cpp_component", "cpp_wit_bindgen", "cc_component_library")
+load("//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen")
 
 # WIT bindings generation
 cpp_wit_bindgen(
@@ -20,8 +20,8 @@ cc_component_library(
     name = "hash_table",
     srcs = ["src/hash_table.cpp"],
     hdrs = ["src/hash_table.h"],
-    deps = [":memory_pool"],
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    deps = [":memory_pool"],
 )
 
 # B-tree implementation
@@ -29,8 +29,8 @@ cc_component_library(
     name = "btree",
     srcs = ["src/btree.cpp"],
     hdrs = ["src/btree.h"],
-    deps = [":memory_pool"],
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    deps = [":memory_pool"],
 )
 
 # Graph algorithms library
@@ -38,8 +38,8 @@ cc_component_library(
     name = "graph",
     srcs = ["src/graph.cpp"],
     hdrs = ["src/graph.h"],
-    deps = [":memory_pool"],
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    deps = [":memory_pool"],
 )
 
 # Serialization library
@@ -47,8 +47,8 @@ cc_component_library(
     name = "serializer",
     srcs = ["src/serializer.cpp"],
     hdrs = ["src/serializer.h"],
-    deps = [":memory_pool"],
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    deps = [":memory_pool"],
 )
 
 # Main data structures component
@@ -56,17 +56,17 @@ cpp_component(
     name = "data_structures_component",
     srcs = ["src/data_structures.cpp"],
     hdrs = ["src/data_structures.h"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+    visibility = ["//visibility:public"],
     wit = "wit/data_structures.wit",
     world = "data-structures",
     deps = [
-        ":memory_pool",
-        ":hash_table",
         ":btree",
         ":graph",
+        ":hash_table",
+        ":memory_pool",
         ":serializer",
     ],
-    target_compatible_with = ["@platforms//cpu:wasm32"],
-    visibility = ["//visibility:public"],
 )
 
 # Performance benchmark
@@ -74,10 +74,10 @@ cc_binary(
     name = "data_structures_benchmark",
     srcs = ["test/benchmark.cpp"],
     deps = [
-        ":memory_pool",
-        ":hash_table",
         ":btree",
         ":graph",
+        ":hash_table",
+        ":memory_pool",
         ":serializer",
     ],
 )
@@ -87,10 +87,10 @@ cc_test(
     name = "data_structures_test",
     srcs = ["test/data_structures_test.cpp"],
     deps = [
-        ":memory_pool",
-        ":hash_table",
         ":btree",
         ":graph",
+        ":hash_table",
+        ":memory_pool",
         ":serializer",
     ],
 )

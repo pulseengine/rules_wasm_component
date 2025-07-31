@@ -43,6 +43,7 @@ def _wit_library_impl(ctx):
     dep_info_list = []
     for dep in ctx.attr.deps:
         dep_info = dep[WitInfo]
+
         # Convert package name to directory name: external:lib@1.0.0 -> external-lib
         simple_name = dep_info.package_name.split("@")[0].replace(":", "-")
         dep_info_list.append({
@@ -83,15 +84,15 @@ def _wit_library_impl(ctx):
             "wit_file": ctx.files.srcs[0].path,  # Analyze the first WIT file
             "missing_packages": [],
         }
-        
+
         analyzer_config_file = ctx.actions.declare_file(ctx.label.name + "_analyzer_config.json")
         ctx.actions.write(
             output = analyzer_config_file,
             content = json.encode(analyzer_config),
         )
-        
+
         analyzer_output = ctx.actions.declare_file(ctx.label.name + "_analysis.json")
-        
+
         # Run dependency analysis (this will help debug missing deps)
         ctx.actions.run(
             executable = ctx.executable._wit_dependency_analyzer,
@@ -164,10 +165,10 @@ wit_library = rule(
     },
     doc = """
     Defines a WIT (WebAssembly Interface Types) library.
-    
+
     This rule processes WIT files and makes them available for use
     in WASM component builds and binding generation.
-    
+
     Example:
         wit_library(
             name = "my_interfaces",

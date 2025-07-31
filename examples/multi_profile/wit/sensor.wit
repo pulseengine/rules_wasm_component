@@ -8,13 +8,13 @@ interface camera {
         data: list<u8>,
         timestamp: u64,
     }
-    
+
     /// Configure camera settings
     configure: func(frame-rate: u32, resolution: string) -> result<_, string>;
-    
+
     /// Capture a frame
     capture-frame: func() -> result<frame, string>;
-    
+
     /// Get camera status
     get-status: func() -> string;
 }

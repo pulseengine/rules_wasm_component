@@ -26,11 +26,11 @@ func (m *MathUtils) Factorial(n int) (int64, error) {
 	if n < 0 {
 		return 0, fmt.Errorf("factorial is not defined for negative numbers: %d", n)
 	}
-	
+
 	if n == 0 || n == 1 {
 		return 1, nil
 	}
-	
+
 	result := int64(1)
 	for i := 2; i <= n; i++ {
 		result *= int64(i)
@@ -39,7 +39,7 @@ func (m *MathUtils) Factorial(n int) (int64, error) {
 			return 0, fmt.Errorf("factorial overflow for input: %d", n)
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -65,11 +65,11 @@ func (m *MathUtils) Percentage(part, whole float64) (float64, error) {
 // ValidateOperation checks if an operation can be performed safely
 func ValidateOperation(op string, a, b float64) error {
 	utils := &MathUtils{}
-	
+
 	if !utils.IsValidNumber(a) || !utils.IsValidNumber(b) {
 		return fmt.Errorf("invalid numbers provided: a=%f, b=%f", a, b)
 	}
-	
+
 	switch op {
 	case "divide":
 		if b == 0 {
@@ -81,6 +81,6 @@ func ValidateOperation(op string, a, b float64) error {
 			return fmt.Errorf("zero raised to negative power is undefined")
 		}
 	}
-	
+
 	return nil
 }

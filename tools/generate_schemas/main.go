@@ -8,20 +8,20 @@ import (
 
 // Schema definitions for our Bazel rules - AI agents can parse this
 type RuleSchema struct {
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"` // "rule" or "provider"
-	Description string                 `json:"description"`
-	Attributes  map[string]Attribute   `json:"attributes,omitempty"`
+	Name        string                   `json:"name"`
+	Type        string                   `json:"type"` // "rule" or "provider"
+	Description string                   `json:"description"`
+	Attributes  map[string]Attribute     `json:"attributes,omitempty"`
 	Fields      map[string]ProviderField `json:"fields,omitempty"`
-	Examples    []Example              `json:"examples"`
-	LoadFrom    string                 `json:"load_from"`
+	Examples    []Example                `json:"examples"`
+	LoadFrom    string                   `json:"load_from"`
 }
 
 type Attribute struct {
-	Type        string   `json:"type"`
-	Required    bool     `json:"required"`
-	Default     *string  `json:"default,omitempty"`
-	Description string   `json:"description"`
+	Type          string   `json:"type"`
+	Required      bool     `json:"required"`
+	Default       *string  `json:"default,omitempty"`
+	Description   string   `json:"description"`
 	AllowedValues []string `json:"allowed_values,omitempty"`
 }
 
@@ -38,13 +38,13 @@ type Example struct {
 
 func main() {
 	schemas := generateRuleSchemas()
-	
+
 	output, err := json.MarshalIndent(schemas, "", "  ")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error generating schemas: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Println(string(output))
 }
 
@@ -77,7 +77,7 @@ func generateRuleSchemas() map[string]RuleSchema {
 					Description: "WIT library dependencies. Each dependency must provide WitInfo.",
 				},
 				"world": {
-					Type:        "string", 
+					Type:        "string",
 					Required:    false,
 					Description: "Optional world name to export from this library",
 				},
@@ -102,7 +102,7 @@ func generateRuleSchemas() map[string]RuleSchema {
 					Description: "WIT library that imports from another package",
 					Code: `wit_library(
     name = "consumer_interfaces",
-    package_name = "consumer:app@1.0.0", 
+    package_name = "consumer:app@1.0.0",
     srcs = ["consumer.wit"],
     deps = ["//external:lib_interfaces"],
 )`,
@@ -131,10 +131,10 @@ func generateRuleSchemas() map[string]RuleSchema {
 					Description: "WIT library target that provides interfaces for this component",
 				},
 				"profiles": {
-					Type:        "string_list",
-					Required:    false,
-					Default:     stringPtr("['release']"),
-					Description: "Build profiles to generate",
+					Type:          "string_list",
+					Required:      false,
+					Default:       stringPtr("['release']"),
+					Description:   "Build profiles to generate",
 					AllowedValues: []string{"debug", "release", "custom"},
 				},
 				"deps": {
@@ -167,7 +167,7 @@ func generateRuleSchemas() map[string]RuleSchema {
 		},
 		"wac_compose": {
 			Name:        "wac_compose",
-			Type:        "rule", 
+			Type:        "rule",
 			Description: "Composes multiple WebAssembly components into a single application using WAC (WebAssembly Composition) format.",
 			LoadFrom:    "@rules_wasm_component//wac:defs.bzl",
 			Attributes: map[string]Attribute{
@@ -255,7 +255,7 @@ func generateRuleSchemas() map[string]RuleSchema {
 					Description: "Depset of WIT source files for this library",
 				},
 				"wit_deps": {
-					Type:        "depset", 
+					Type:        "depset",
 					Description: "Depset of transitive WIT dependencies",
 				},
 				"package_name": {

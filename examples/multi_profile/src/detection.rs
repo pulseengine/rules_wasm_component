@@ -1,7 +1,9 @@
 // Object detection AI component implementation
 // The generated bindings are available as a separate crate
 
-use object_detection_bindings::exports::ai::interfaces::detector::{Frame, DetectionResult, BoundingBox, Guest};
+use object_detection_bindings::exports::ai::interfaces::detector::{
+    BoundingBox, DetectionResult, Frame, Guest,
+};
 
 #[allow(dead_code)]
 struct Detector;
@@ -11,7 +13,7 @@ impl Guest for Detector {
         // Model loading would happen here
         Ok(())
     }
-    
+
     fn detect_objects(_frame: Frame) -> Result<Vec<DetectionResult>, String> {
         // Simulate object detection
         Ok(vec![
@@ -37,7 +39,7 @@ impl Guest for Detector {
             },
         ])
     }
-    
+
     fn set_confidence(_threshold: f32) -> Result<(), String> {
         // Confidence setting would happen here
         Ok(())

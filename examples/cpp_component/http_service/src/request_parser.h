@@ -22,23 +22,23 @@ typedef enum {
 typedef struct {
     parser_state_t state;
     http_request_t* request;
-    
+
     // Parsing buffers
     char* buffer;
     size_t buffer_size;
     size_t buffer_capacity;
-    
+
     // Current parsing position
     size_t position;
-    
+
     // Temporary storage during parsing
     char* current_header_name;
     size_t headers_capacity;
-    
+
     // Configuration
     size_t max_header_size;
     size_t max_body_size;
-    
+
     // Error information
     char error_message[256];
 } http_parser_t;
@@ -117,7 +117,7 @@ typedef struct {
 } multipart_part_t;
 
 // Parse multipart form data
-multipart_part_t* parse_multipart_body(const uint8_t* body, size_t size, 
+multipart_part_t* parse_multipart_body(const uint8_t* body, size_t size,
                                        const char* boundary, size_t* part_count);
 
 // Free multipart parts

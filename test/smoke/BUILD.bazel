@@ -12,7 +12,7 @@ build_test(
 )
 
 test_suite(
-    name = "all", 
+    name = "all",
     tests = [
         ":wasm_component_smoke_test",
     ],
