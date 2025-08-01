@@ -1,6 +1,7 @@
 """Bazel rules for C/C++ WebAssembly components with Preview2 support"""
 
 load("//providers:providers.bzl", "WasmComponentInfo")
+load("//rust:transitions.bzl", "wasm_transition")
 
 def _cpp_component_impl(ctx):
     """Implementation of cpp_component rule"""
@@ -218,6 +219,7 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
 
 cpp_component = rule(
     implementation = _cpp_component_impl,
+    cfg = wasm_transition,
     attrs = {
         "srcs": attr.label_list(
             allow_files = [".c", ".cpp", ".cc", ".cxx"],
@@ -336,6 +338,7 @@ def _cpp_wit_bindgen_impl(ctx):
 
 cpp_wit_bindgen = rule(
     implementation = _cpp_wit_bindgen_impl,
+    cfg = wasm_transition,
     attrs = {
         "wit": attr.label(
             allow_single_file = [".wit"],
@@ -480,6 +483,7 @@ def _cc_component_library_impl(ctx):
 
 cc_component_library = rule(
     implementation = _cc_component_library_impl,
+    cfg = wasm_transition,
     attrs = {
         "srcs": attr.label_list(
             allow_files = [".c", ".cpp", ".cc", ".cxx"],

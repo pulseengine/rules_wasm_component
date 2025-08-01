@@ -209,9 +209,39 @@
         ]
       }
     },
+    "//wasm:extensions.bzl%cpp_component": {
+      "general": {
+        "bzlTransitiveDigest": "KjiFJ8MFs7PBeHTUaiJa4bs33DcxFCQlO7j2c4qtsjw=",
+        "usagesDigest": "KERVkkyQzlvYNLbCaBpMj9urmK7glE2PKp9/GlHysFg=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "cpp_toolchain": {
+            "repoRuleId": "@@//toolchains:cpp_component_toolchain.bzl%cpp_component_toolchain_repository",
+            "attributes": {
+              "strategy": "download",
+              "wasi_sdk_version": "25"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "bazel_skylib",
+            "bazel_skylib+"
+          ],
+          [
+            "",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "//wasm:extensions.bzl%tinygo": {
       "general": {
-        "bzlTransitiveDigest": "rjFzRRSCHFJKaKhviDRcE+AM/DkpwSntmKf+FufGQSw=",
+        "bzlTransitiveDigest": "KjiFJ8MFs7PBeHTUaiJa4bs33DcxFCQlO7j2c4qtsjw=",
         "usagesDigest": "tE5hZWIXf+a1hThQOIcRRVjPbVQjFDb2aj5a1eEhvaA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -240,7 +270,7 @@
     },
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "rjFzRRSCHFJKaKhviDRcE+AM/DkpwSntmKf+FufGQSw=",
+        "bzlTransitiveDigest": "KjiFJ8MFs7PBeHTUaiJa4bs33DcxFCQlO7j2c4qtsjw=",
         "usagesDigest": "alR+pUqsJ738YkyooBLo61S409k3zQk0DMrGQ+rPP0w=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -272,7 +302,7 @@
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "rjFzRRSCHFJKaKhviDRcE+AM/DkpwSntmKf+FufGQSw=",
+        "bzlTransitiveDigest": "KjiFJ8MFs7PBeHTUaiJa4bs33DcxFCQlO7j2c4qtsjw=",
         "usagesDigest": "j2w0KsG/e6tltUI+WAeNH505251eBn4uleGJW2ExVag=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -311,8 +341,8 @@
     },
     "//wasm:extensions.bzl%wizer": {
       "general": {
-        "bzlTransitiveDigest": "rjFzRRSCHFJKaKhviDRcE+AM/DkpwSntmKf+FufGQSw=",
-        "usagesDigest": "07DtmDULzgrEXZ9upcli2pDfTJmzQhdUmeMrujiupZA=",
+        "bzlTransitiveDigest": "KjiFJ8MFs7PBeHTUaiJa4bs33DcxFCQlO7j2c4qtsjw=",
+        "usagesDigest": "MEwa1ebd3deOoYJBG02gjbulLkimn8F1eSbFPuBmVVM=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -341,7 +371,7 @@
     },
     "//wasm:extensions.bzl%wkg": {
       "general": {
-        "bzlTransitiveDigest": "rjFzRRSCHFJKaKhviDRcE+AM/DkpwSntmKf+FufGQSw=",
+        "bzlTransitiveDigest": "KjiFJ8MFs7PBeHTUaiJa4bs33DcxFCQlO7j2c4qtsjw=",
         "usagesDigest": "mH3SUo8xNuIm+C21hj2zQVuSslC4w2RVQ5JRqzScS24=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
