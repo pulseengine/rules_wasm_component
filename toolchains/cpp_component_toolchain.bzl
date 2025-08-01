@@ -157,7 +157,20 @@ def _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version):
 
     # Download WASI SDK
     wasi_sdk_url = _get_wasi_sdk_url(platform, wasi_sdk_version)
-    wasi_sdk_dir = "wasi-sdk-{}".format(wasi_sdk_version)
+    
+    # Handle new WASI SDK directory format (version 25+)
+    if int(wasi_sdk_version) >= 25:
+        platform_map = {
+            "linux_amd64": "x86_64-linux",
+            "linux_arm64": "arm64-linux", 
+            "darwin_amd64": "x86_64-macos",
+            "darwin_arm64": "arm64-macos",
+            "windows_amd64": "x86_64-mingw",
+        }
+        arch_os = platform_map.get(platform, "x86_64-linux")
+        wasi_sdk_dir = "wasi-sdk-{}.0-{}".format(wasi_sdk_version, arch_os)
+    else:
+        wasi_sdk_dir = "wasi-sdk-{}".format(wasi_sdk_version)
 
     print("Downloading WASI SDK version {} for platform {}".format(wasi_sdk_version, platform))
 
@@ -176,6 +189,9 @@ def _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version):
 
     # Create tool wrappers pointing to downloaded WASI SDK
     _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir)
+
+    # Set up sysroot symlink for the downloaded WASI SDK
+    _setup_downloaded_sysroot(repository_ctx)
 
     print("Successfully downloaded WASI SDK")
 
@@ -196,68 +212,101 @@ def _get_wasi_sdk_url(platform, version):
     # WASI SDK release URL format
     base_url = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-{}"
 
-    platform_map = {
-        "linux_amd64": "linux",
-        "linux_arm64": "linux",  # Use same binary for now
-        "darwin_amd64": "macos",
-        "darwin_arm64": "macos",
-        "windows_amd64": "mingw",
-    }
-
-    os_name = platform_map.get(platform, "linux")
-    filename = "wasi-sdk-{}-{}.tar.gz".format(version, os_name)
+    # Handle new WASI SDK filename format (version 25+)
+    if int(version) >= 25:
+        platform_map = {
+            "linux_amd64": "x86_64-linux",
+            "linux_arm64": "arm64-linux",
+            "darwin_amd64": "x86_64-macos", 
+            "darwin_arm64": "arm64-macos",
+            "windows_amd64": "x86_64-mingw",
+        }
+        arch_os = platform_map.get(platform, "x86_64-linux")
+        filename = "wasi-sdk-{}.0-{}.tar.gz".format(version, arch_os)
+    else:
+        # Legacy format for older versions
+        platform_map = {
+            "linux_amd64": "linux",
+            "linux_arm64": "linux",
+            "darwin_amd64": "macos",
+            "darwin_arm64": "macos", 
+            "windows_amd64": "mingw",
+        }
+        os_name = platform_map.get(platform, "linux")
+        filename = "wasi-sdk-{}-{}.tar.gz".format(version, os_name)
 
     return base_url.format(version) + "/" + filename
 
 def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir):
     """Create wrapper scripts for WASI SDK tools"""
 
+    # Get absolute path to the repository root
+    repo_root = repository_ctx.path(".")
+    
     # Clang wrapper with Preview2 target
     repository_ctx.file("clang", """#!/bin/bash
-exec ./bin/clang \\
+exec {}/bin/clang \\
   --target=wasm32-wasip2 \\
-  --sysroot=./share/wasi-sysroot \\
+  --sysroot={}/share/wasi-sysroot \\
   -D_WASI_EMULATED_PROCESS_CLOCKS \\
   -D_WASI_EMULATED_SIGNAL \\
   -D_WASI_EMULATED_MMAN \\
   "$@"
-""", executable = True)
+""".format(repo_root, repo_root), executable = True)
 
     # Clang++ wrapper with Preview2 target and C++ support
     repository_ctx.file("clang_cpp", """#!/bin/bash
-exec ./bin/clang++ \\
+exec {}/bin/clang++ \\
   --target=wasm32-wasip2 \\
-  --sysroot=./share/wasi-sysroot \\
+  --sysroot={}/share/wasi-sysroot \\
   -D_WASI_EMULATED_PROCESS_CLOCKS \\
   -D_WASI_EMULATED_SIGNAL \\
   -D_WASI_EMULATED_MMAN \\
   -fno-exceptions \\
   -fno-rtti \\
   "$@"
-""", executable = True)
+""".format(repo_root, repo_root), executable = True)
 
     # LLVM AR wrapper
     repository_ctx.file("llvm_ar", """#!/bin/bash
-exec ./bin/llvm-ar "$@"
-""", executable = True)
+exec {}/bin/llvm-ar "$@"
+""".format(repo_root), executable = True)
 
 def _setup_component_tools(repository_ctx):
     """Set up wit-bindgen and wasm-tools"""
 
-    # Assume these are available from system or existing toolchain
-    for tool in ["wit_bindgen", "wasm_tools"]:
-        validation_result = validate_system_tool(repository_ctx, tool.replace("_", "-"))
+    # Create symlinks to the tools from the wasm toolchain
+    # These will be resolved by Bazel's toolchain resolution system
+    print("Using wit-bindgen and wasm-tools from configured WASM toolchain")
+    
+    # Create placeholder scripts that will be replaced by toolchain resolution
+    repository_ctx.file("wit_bindgen", """#!/bin/bash
+# This placeholder should be replaced by Bazel's toolchain resolution
+# with the actual wit-bindgen from @wasm_tools_toolchains
+echo "Error: wit-bindgen not properly resolved from WASM toolchain"
+exit 1
+""", executable = True)
 
-        if not validation_result["valid"]:
-            fail(format_diagnostic_error(
-                "E006",
-                "{} not found".format(tool.replace("_", "-")),
-                "Configure wasm_toolchain extension first",
-            ))
+    repository_ctx.file("wasm_tools", """#!/bin/bash
+# This placeholder should be replaced by Bazel's toolchain resolution
+# with the actual wasm-tools from @wasm_tools_toolchains
+echo "Error: wasm-tools not properly resolved from WASM toolchain"
+exit 1
+""", executable = True)
 
-        repository_ctx.file(tool, """#!/bin/bash
-exec {} "$@"
-""".format(tool.replace("_", "-")), executable = True)
+def _setup_downloaded_sysroot(repository_ctx):
+    """Set up sysroot for downloaded WASI SDK"""
+    
+    # Create symlink to the downloaded WASI SDK sysroot
+    wasi_sysroot_path = repository_ctx.path("share/wasi-sysroot")
+    if wasi_sysroot_path.exists:
+        repository_ctx.symlink("share/wasi-sysroot", "sysroot")
+        print("Using downloaded WASI sysroot")
+    else:
+        # Fallback: create minimal sysroot structure
+        print("Warning: Downloaded WASI sysroot not found, creating minimal structure")
+        repository_ctx.file("sysroot/include/.gitkeep", "")
+        repository_ctx.file("sysroot/lib/.gitkeep", "")
 
 def _setup_system_sysroot(repository_ctx):
     """Set up system sysroot directory"""
@@ -311,15 +360,16 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-filegroup(
+# Reference tools from WASM toolchain instead of local files
+alias(
     name = "wit_bindgen_binary",
-    srcs = ["wit_bindgen"],
+    actual = "@wasm_tools_toolchains//:wit_bindgen_binary",
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "wasm_tools_binary",
-    srcs = ["wasm_tools"],
+alias(
+    name = "wasm_tools_binary", 
+    actual = "@wasm_tools_toolchains//:wasm_tools_binary",
     visibility = ["//visibility:public"],
 )
 
@@ -347,7 +397,7 @@ toolchain(
     toolchain = ":cpp_component_toolchain_impl",
     toolchain_type = "@rules_wasm_component//toolchains:cpp_component_toolchain_type",
     exec_compatible_with = [],
-    target_compatible_with = [],
+    target_compatible_with = ["@platforms//cpu:wasm32", "@platforms//os:wasi"],
 )
 
 # Alias for toolchain registration

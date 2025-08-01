@@ -106,6 +106,17 @@ use_repo(wizer, "wizer_toolchain")
 
 register_toolchains("@wizer_toolchain//:wizer_toolchain_def")
 
+# C++ WebAssembly components with WASI SDK
+cpp_component = use_extension("//wasm:extensions.bzl", "cpp_component")
+cpp_component.register(
+    name = "cpp",
+    strategy = "download",
+    wasi_sdk_version = "25",  # Match existing WASI SDK version
+)
+use_repo(cpp_component, "cpp_toolchain")
+
+register_toolchains("@cpp_toolchain//:cpp_component_toolchain")
+
 # Rust crates for wizer_initializer tool
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(
