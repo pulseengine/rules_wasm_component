@@ -28,6 +28,7 @@ Example usage:
 """
 
 load("//providers:providers.bzl", "WasmComponentInfo")
+load("//rust:transitions.bzl", "wasm_transition")
 
 def _go_wasm_component_impl(ctx):
     """Implementation of go_wasm_component rule using TinyGo + WASI Preview 2"""
@@ -352,6 +353,7 @@ EOF
 # TinyGo WebAssembly Component rule
 go_wasm_component = rule(
     implementation = _go_wasm_component_impl,
+    cfg = wasm_transition,
     attrs = {
         "srcs": attr.label_list(
             allow_files = [".go"],
@@ -431,6 +433,7 @@ def _go_wit_bindgen_impl(ctx):
 # Standalone Go WIT bindings generation rule
 go_wit_bindgen = rule(
     implementation = _go_wit_bindgen_impl,
+    cfg = wasm_transition,
     attrs = {
         "wit": attr.label(
             allow_single_file = [".wit"],
@@ -602,6 +605,7 @@ def _go_wasm_component_wizer_impl(ctx):
 # TinyGo WebAssembly Component rule with Wizer pre-initialization
 go_wasm_component_wizer = rule(
     implementation = _go_wasm_component_wizer_impl,
+    cfg = wasm_transition,
     attrs = {
         "srcs": attr.label_list(
             allow_files = [".go"],
