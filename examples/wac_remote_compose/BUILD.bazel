@@ -2,14 +2,23 @@
 
 load("@rules_wasm_component//wac:defs.bzl", "wac_remote_compose")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 package(default_visibility = ["//visibility:public"])
 
+# Define WIT interfaces
+wit_library(
+    name = "frontend_interfaces",
+    package_name = "frontend:app",  
+    srcs = ["wit/frontend.wit"],
+    world = "frontend",
+)
+
 # Local component that will be composed with remote components
 rust_wasm_component_bindgen(
-    name = "local_frontend",
+    name = "frontend",
     srcs = ["src/lib.rs"],
-    wit = "wit/frontend.wit",
+    wit = ":frontend_interfaces",
 )
 
 # Compose local component with remote components from registries
@@ -29,7 +38,7 @@ wac_remote_compose(
         export frontend as main;
     """,
     local_components = {
-        "frontend": ":local_frontend",
+        "frontend": ":frontend",
     },
     remote_components = {
         # Example remote components (these would need to exist in registries)
