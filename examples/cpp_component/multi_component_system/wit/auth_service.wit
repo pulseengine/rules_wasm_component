@@ -212,6 +212,6 @@ interface auth-service {
     decrypt-data: func(encrypted-data: list<u8>, key: string) -> option<list<u8>>;
 }
 
-world auth-service {
+world auth-service-world {
     export auth-service;
 }

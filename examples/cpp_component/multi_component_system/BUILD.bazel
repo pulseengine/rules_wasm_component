@@ -6,7 +6,7 @@ cpp_component(
     srcs = ["test/simple_auth.cpp"],
     target_compatible_with = ["@platforms//cpu:wasm32"],
     wit = "wit/auth_service.wit",
-    world = "auth-service",
+    world = "auth-service-world",
 )
 
 # Test binary
