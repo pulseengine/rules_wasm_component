@@ -7,47 +7,43 @@ cpp_wit_bindgen(
     world = "http-service-world",
 )
 
-# Shared HTTP utilities library
+# Combined HTTP service library (all in one to avoid include path issues)
 cc_component_library(
-    name = "http_utils",
-    srcs = ["src/http_utils.c"],
-    hdrs = ["src/http_utils.h"],
+    name = "http_service_lib",
+    srcs = [
+        "src/http_utils.c",
+        "src/request_parser.c", 
+        "src/response_builder.c",
+    ],
+    hdrs = [
+        "src/http_utils.h",
+        "src/request_parser.h",
+        "src/response_builder.h",
+    ],
+    copts = ["-x", "c"],  # Force compilation as C, not C++
     target_compatible_with = ["@platforms//cpu:wasm32"],
 )
 
-# Request parser library
-cc_component_library(
-    name = "request_parser",
-    srcs = ["src/request_parser.c"],
-    hdrs = ["src/request_parser.h"],
-    target_compatible_with = ["@platforms//cpu:wasm32"],
-    deps = [":http_utils"],
-)
-
-# Response builder library
-cc_component_library(
-    name = "response_builder",
-    srcs = ["src/response_builder.c"],
-    hdrs = ["src/response_builder.h"],
-    target_compatible_with = ["@platforms//cpu:wasm32"],
-    deps = [":http_utils"],
-)
-
-# Main HTTP service component (C implementation)
+# Main HTTP service component (C implementation) - all sources combined
 cpp_component(
     name = "http_service_component",
-    srcs = ["src/http_service.c"],
-    hdrs = ["src/http_service.h"],
+    srcs = [
+        "src/http_service.c",
+        "src/http_utils.c",
+        "src/request_parser.c", 
+        "src/response_builder.c",
+    ],
+    hdrs = [
+        "src/http_service.h",
+        "src/http_utils.h",
+        "src/request_parser.h",
+        "src/response_builder.h",
+    ],
     language = "c",
     target_compatible_with = ["@platforms//cpu:wasm32"],
     visibility = ["//visibility:public"],
     wit = "wit/http_service.wit",
     world = "http-service-world",
-    deps = [
-        ":http_utils",
-        ":request_parser",
-        ":response_builder",
-    ],
 )
 
 # Test executable (runs on host, not WASM)

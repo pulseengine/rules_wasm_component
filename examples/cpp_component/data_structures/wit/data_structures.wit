@@ -172,7 +172,7 @@ interface data-structures {
 
     btree-successor: func(tree-name: string, key: key-type) -> option<key-type>;
 
-    btree-stats: func(tree-name: string) -> option<btree-stats>;
+    get-btree-stats: func(tree-name: string) -> option<btree-stats>;
 
     // Graph Interface
 
@@ -185,11 +185,11 @@ interface data-structures {
 
     graph-add-edge: func(graph-name: string, edge: edge) -> bool;
 
-    graph-remove-edge: func(graph-name: string, from: node-id, to: node-id) -> bool;
+    graph-remove-edge: func(graph-name: string, source-node: node-id, to: node-id) -> bool;
 
     graph-has-node: func(graph-name: string, node-id: node-id) -> bool;
 
-    graph-has-edge: func(graph-name: string, from: node-id, to: node-id) -> bool;
+    graph-has-edge: func(graph-name: string, source-node: node-id, to: node-id) -> bool;
 
     graph-get-neighbors: func(graph-name: string, node-id: node-id) -> list<node-id>;
 
@@ -206,7 +206,7 @@ interface data-structures {
 
     graph-minimum-spanning-tree: func(graph-name: string) -> list<edge>;
 
-    graph-stats: func(graph-name: string) -> option<graph-stats>;
+    get-graph-stats: func(graph-name: string) -> option<graph-stats>;
 
     // Serialization Interface
 
@@ -348,6 +348,6 @@ interface data-structures {
     export-diagnostics: func() -> list<u8>;
 }
 
-world data-structures {
+world data-structures-world {
     export data-structures;
 }

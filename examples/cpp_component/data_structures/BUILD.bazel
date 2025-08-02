@@ -4,7 +4,7 @@ load("//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen
 cpp_wit_bindgen(
     name = "data_structures_bindings",
     wit = "wit/data_structures.wit",
-    world = "data-structures",
+    world = "data-structures-world",
 )
 
 # Memory allocator library
