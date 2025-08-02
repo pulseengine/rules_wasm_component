@@ -179,20 +179,20 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
         progress_message = "Compiling C/C++ to WASM for %s" % ctx.label,
     )
 
-    # Convert WASM module to component using wasm-tools (Preview2 native)
-    component_args = ctx.actions.args()
-    component_args.add("component")
-    component_args.add("new")
-    component_args.add(wasm_binary.path)
-    component_args.add("--wit", wit_file.path)
-    component_args.add("--output", component_wasm.path)
-
+    # Embed WIT metadata and create component in one step
+    embed_args = ctx.actions.args()
+    embed_args.add("component")
+    embed_args.add("embed")
+    embed_args.add(wit_file.path)
+    embed_args.add(wasm_binary.path)
+    embed_args.add("--output", component_wasm.path)
+    
     if ctx.attr.world:
-        component_args.add("--world", ctx.attr.world)
-
+        embed_args.add("--world", ctx.attr.world)
+    
     ctx.actions.run(
         executable = wasm_tools,
-        arguments = [component_args],
+        arguments = [embed_args],
         inputs = [wasm_binary, wit_file],
         outputs = [component_wasm],
         mnemonic = "CreateCppComponent",
