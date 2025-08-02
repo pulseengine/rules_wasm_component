@@ -194,12 +194,13 @@ def _setup_npm_jco_tools(repository_ctx):
             "Install Node.js and npm, then try again",
         ))
 
-    # Install jco globally via npm
+    # Install jco and componentize-js globally via npm
     result = repository_ctx.execute([
         "npm",
         "install",
         "-g",
         "@bytecodealliance/jco@{}".format(repository_ctx.attr.version),
+        "@bytecodealliance/componentize-js",
     ])
 
     if result.return_code != 0:
@@ -209,13 +210,28 @@ def _setup_npm_jco_tools(repository_ctx):
             "Check npm configuration and network connectivity",
         ))
 
-    # Create wrapper that uses globally installed jco
-    repository_ctx.file("jco", """#!/bin/bash
-exec jco "$@"
-""", executable = True)
+    # Find the installed jco binary path
+    jco_result = repository_ctx.execute(["which", "jco"])
+    if jco_result.return_code != 0:
+        fail(format_diagnostic_error(
+            "E003",
+            "jco binary not found after installation",
+            "Check npm global installation path",
+        ))
 
-    # Set up Node.js and npm
+    jco_path = jco_result.stdout.strip()
+
+    # Set up Node.js and npm first to get paths
     _setup_node_tools_system(repository_ctx)
+
+    # Get Node.js path for JCO wrapper
+    node_validation = validate_system_tool(repository_ctx, "node")
+    node_path = node_validation.get("path", "node")
+
+    # Create wrapper that uses Node.js to run JCO
+    repository_ctx.file("jco", """#!/bin/bash
+exec {} {} "$@"
+""".format(node_path, jco_path), executable = True)
 
     print("Installed jco via npm globally")
 
@@ -240,14 +256,18 @@ def _setup_node_tools_system(repository_ctx):
             "Install npm (usually comes with Node.js)",
         ))
 
-    # Create wrapper executables
+    # Get absolute paths to tools
+    node_path = node_validation.get("path", "node")
+    npm_path = npm_validation.get("path", "npm")
+
+    # Create wrapper executables with absolute paths
     repository_ctx.file("node", """#!/bin/bash
-exec node "$@"
-""", executable = True)
+exec {} "$@"
+""".format(node_path), executable = True)
 
     repository_ctx.file("npm", """#!/bin/bash
-exec npm "$@"
-""", executable = True)
+exec {} "$@"
+""".format(npm_path), executable = True)
 
 def _create_jco_build_files(repository_ctx):
     """Create BUILD files for jco toolchain"""

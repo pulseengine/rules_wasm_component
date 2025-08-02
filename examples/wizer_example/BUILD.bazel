@@ -40,8 +40,8 @@ genrule(
 rust_wasm_component_bindgen(
     name = "expensive_init_component",
     srcs = ["src/lib.rs"],
-    wit = ":expensive_init_interfaces",
     profiles = ["release"],
+    wit = ":expensive_init_interfaces",
 )
 
 # Apply Wizer to the WASM module
@@ -63,7 +63,7 @@ wasm_component_wizer_library(
 # Create the final optimized component using separate source
 # (Note: In a real implementation, this would use the Wizer-processed module)
 rust_wasm_component_bindgen(
-    name = "optimized_component", 
+    name = "optimized_component",
     srcs = ["src/lib_simple.rs"],
     wit = ":expensive_init_interfaces",
 )

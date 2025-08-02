@@ -34,15 +34,15 @@ jco_transpile(
     world_name = "hello-world",
 )
 
-# TypeScript component example
+# JavaScript component example
 js_component(
-    name = "calc_ts_component",
+    name = "calc_js_component",
     package_name = "example:calculator@1.0.0",
     srcs = [
-        "src/calculator.ts",
-        "src/types.ts",
+        "src/calculator.js",
+        "src/types.js",
     ],
-    entry_point = "calculator.ts",
+    entry_point = "calculator.js",
     minify = True,
     optimize = True,
     wit = "wit/calculator.wit",

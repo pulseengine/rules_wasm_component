@@ -46,6 +46,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for Wasmtime WebAssembly runtime
+toolchain_type(
+    name = "wasmtime_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for toolchain implementation
 bzl_library(
     name = "wasm_toolchain",

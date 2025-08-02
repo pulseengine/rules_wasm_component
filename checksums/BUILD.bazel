@@ -1,0 +1,51 @@
+"""Centralized checksum management for WebAssembly toolchain"""
+
+package(default_visibility = ["//visibility:public"])
+
+# Export all tool checksum files for consumption by toolchains
+filegroup(
+    name = "all_checksums",
+    srcs = glob(["tools/*.json"]),
+    visibility = ["//visibility:public"],
+)
+
+# Individual tool checksum files
+filegroup(
+    name = "wasm_tools_checksums",
+    srcs = ["tools/wasm-tools.json"],
+)
+
+filegroup(
+    name = "wit_bindgen_checksums",
+    srcs = ["tools/wit-bindgen.json"],
+)
+
+filegroup(
+    name = "wac_checksums",
+    srcs = ["tools/wac.json"],
+)
+
+filegroup(
+    name = "wkg_checksums",
+    srcs = ["tools/wkg.json"],
+)
+
+filegroup(
+    name = "wasmtime_checksums",
+    srcs = ["tools/wasmtime.json"],
+)
+
+filegroup(
+    name = "wasi_sdk_checksums",
+    srcs = ["tools/wasi-sdk.json"],
+)
+
+filegroup(
+    name = "tinygo_checksums",
+    srcs = ["tools/tinygo.json"],
+)
+
+filegroup(
+    name = "jco_checksums",
+    srcs = ["tools/jco.json"],
+)

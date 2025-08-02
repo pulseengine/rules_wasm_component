@@ -9,7 +9,7 @@ package(default_visibility = ["//visibility:public"])
 # Define WIT interfaces
 wit_library(
     name = "frontend_interfaces",
-    package_name = "frontend:app",  
+    package_name = "frontend:app",
     srcs = ["wit/frontend.wit"],
     world = "frontend",
 )

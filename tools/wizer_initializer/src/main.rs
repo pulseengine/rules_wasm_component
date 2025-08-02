@@ -92,7 +92,7 @@ fn main() -> Result<()> {
     // if args.allow_wasi { wizer.allow_wasi(true); }
     // if args.inherit_stdio { wizer.inherit_stdio(true); }
     // let initialized_module_bytes = wizer.run(&core_module_bytes)?;
-    
+
     eprintln!("WARNING: Wizer pre-initialization not yet implemented - returning input as-is");
     let initialized_module_bytes = core_module_bytes;
 
@@ -126,7 +126,10 @@ fn main() -> Result<()> {
         );
     }
 
-    println!("Pre-initialization complete: {:?} -> {:?}", args.input, args.output);
+    println!(
+        "Pre-initialization complete: {:?} -> {:?}",
+        args.input, args.output
+    );
 
     Ok(())
 }
@@ -146,7 +149,7 @@ fn is_wasm_component(bytes: &[u8]) -> Result<bool> {
     let version_bytes = &bytes[4..8];
     let version = u32::from_le_bytes([
         version_bytes[0],
-        version_bytes[1], 
+        version_bytes[1],
         version_bytes[2],
         version_bytes[3],
     ]);
@@ -160,9 +163,9 @@ fn is_wasm_component(bytes: &[u8]) -> Result<bool> {
 fn extract_core_module(component_bytes: &[u8]) -> Result<Vec<u8>> {
     // PLACEHOLDER: In a full implementation, this would use wasm-tools or wasmtime
     // to parse the component and extract the core module
-    
+
     eprintln!("WARNING: Component parsing not yet implemented - using placeholder approach");
-    
+
     // For now, just return the input bytes - this demonstrates the architecture
     // In production, this would call:
     // wasm-tools component wit <component> --core-module
@@ -174,10 +177,10 @@ fn extract_core_module(component_bytes: &[u8]) -> Result<Vec<u8>> {
 fn wrap_module_as_component(module_bytes: &[u8]) -> Result<Vec<u8>> {
     // This is a placeholder that would use wasm-tools or similar to wrap
     // the module as a component. For now, we'll just return the module.
-    
+
     // In a full implementation, this would use something like:
     // wasm-tools component new <module> -o <component>
-    
+
     eprintln!("Warning: Component wrapping not yet implemented. Returning module as-is.");
     Ok(module_bytes.to_vec())
 }

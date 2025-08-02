@@ -7,6 +7,7 @@ load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
 load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_repository")
 load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
 load("//toolchains:wizer_toolchain.bzl", "wizer_toolchain_repository")
+load("//toolchains:wasmtime_toolchain.bzl", "wasmtime_repository")
 
 def _wasm_toolchain_extension_impl(module_ctx):
     """Implementation of wasm_toolchain module extension"""
@@ -411,6 +412,56 @@ wizer = module_extension(
                     doc = "Installation strategy: 'cargo' (install via cargo) or 'system' (use system install)",
                     default = "cargo",
                     values = ["cargo", "system"],
+                ),
+            },
+        ),
+    },
+)
+
+def _wasmtime_extension_impl(module_ctx):
+    """Implementation of Wasmtime module extension"""
+
+    registrations = {}
+
+    # Collect all Wasmtime registrations
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+
+    # Create Wasmtime repositories
+    for name, registration in registrations.items():
+        wasmtime_repository(
+            name = name + "_toolchain",
+            version = registration.version,
+            strategy = registration.strategy,
+        )
+
+    # If no registrations, create default Wasmtime toolchain
+    if not registrations:
+        wasmtime_repository(
+            name = "wasmtime_toolchain",
+            version = "35.0.0",
+            strategy = "download",
+        )
+
+# Module extension for Wasmtime WebAssembly runtime
+wasmtime = module_extension(
+    implementation = _wasmtime_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this Wasmtime registration",
+                    default = "wasmtime",
+                ),
+                "version": attr.string(
+                    doc = "Wasmtime version to install",
+                    default = "35.0.0",
+                ),
+                "strategy": attr.string(
+                    doc = "Installation strategy: 'download' (download binary) or 'system' (use system install)",
+                    default = "download",
+                    values = ["download", "system"],
                 ),
             },
         ),
