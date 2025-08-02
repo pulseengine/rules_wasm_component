@@ -6,6 +6,7 @@ Modern Bazel rules for building and composing WebAssembly components.
 
 - 🚀 **Component Model Support**: Full support for WASM Component Model and WIT
 - 🦀 **Rust Integration**: Seamless integration with rules_rust
+- 🐹 **Go Integration**: TinyGo v0.38.0 with WASI Preview 2 component support
 - 🔧 **Toolchain Management**: Automatic wasm-tools and wit-bindgen setup
 - 📦 **Composition**: WAC-based component composition
 - 🎯 **Type Safety**: Strongly typed WIT interfaces
@@ -16,7 +17,7 @@ Modern Bazel rules for building and composing WebAssembly components.
 Add to your `MODULE.bazel`:
 
 ```starlark
-bazel_dep(name = "rules_wasm_component", version = "0.1.0")
+bazel_dep(name = "rules_wasm_component", version = "1.0.0")
 
 # Optional: Configure WASM toolchain version
 wasm_toolchain = use_extension(
@@ -26,6 +27,13 @@ wasm_toolchain = use_extension(
 wasm_toolchain.register(
     name = "wasm_tools",
     version = "1.0.60",  # Optional, defaults to latest stable
+)
+
+# Optional: Configure TinyGo toolchain version
+tinygo = use_extension("//wasm:extensions.bzl", "tinygo")
+tinygo.register(
+    name = "tinygo",
+    tinygo_version = "0.38.0"  # Optional, defaults to 0.38.0
 )
 ```
 
@@ -58,6 +66,21 @@ rust_wasm_component(
 )
 ```
 
+### 2b. Build Go WASM Component
+
+```starlark
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
+
+go_wasm_component(
+    name = "my_go_component",
+    srcs = ["main.go", "logic.go"],
+    wit = "my-interface.wit",
+    world = "my-world",
+    go_mod = "go.mod",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+)
+```
+
 ### 3. Compose Components
 
 ```starlark
@@ -72,9 +95,9 @@ wac_compose(
     composition = """
         let frontend = new frontend:component { ... };
         let backend = new backend:component { ... };
-        
+
         connect frontend.request -> backend.handler;
-        
+
         export frontend as main;
     """,
 )
@@ -91,6 +114,11 @@ wac_compose(
 
 - `rust_wasm_component` - Build Rust WASM components
 - `rust_wasm_component_test` - Test WASM components
+
+### Go Rules
+
+- `go_wasm_component` - Build Go WASM components with TinyGo
+- `go_wit_bindgen` - Generate Go bindings from WIT interfaces
 
 ### Composition Rules
 
@@ -114,22 +142,42 @@ See the [`examples/`](examples/) directory for complete examples:
 ## Documentation
 
 ### For Developers
+
 - [Rule Reference](docs/rules.md)
 - [Migration Guide](docs/migration.md)
 - [Best Practices](docs/best_practices.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
 ### For AI Agents
+
 - [**AI Agent Guide**](docs/ai_agent_guide.md) - Structured documentation for AI coding assistants
 - [**Rule Schemas**](docs/rule_schemas.json) - Machine-readable rule definitions
 - [Examples](docs/examples/) - Progressive complexity examples:
   - [Basic](docs/examples/basic/) - Fundamental patterns
-  - [Intermediate](docs/examples/intermediate/) - Cross-package dependencies  
+  - [Intermediate](docs/examples/intermediate/) - Cross-package dependencies
   - [Advanced](docs/examples/advanced/) - Complex compositions and custom rules
 
 ## Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
+
+### Development Setup
+
+This project uses pre-commit hooks for code quality:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks
+pre-commit install
+pre-commit install --hook-type commit-msg
+
+# Test setup
+pre-commit run --all-files
+```
+
+See [Pre-commit Instructions](.pre-commit-instructions.md) for detailed setup.
 
 ## License
 

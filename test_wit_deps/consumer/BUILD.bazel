@@ -3,7 +3,7 @@ load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 wit_library(
     name = "consumer_interfaces",
-    package_name = "consumer:app@1.0.0", 
+    package_name = "consumer:app@1.0.0",
     srcs = ["consumer.wit"],
     deps = ["//test_wit_deps/external-lib:external_interfaces"],
 )
@@ -11,8 +11,8 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "consumer_component",
     srcs = ["src/lib.rs"],
-    wit = ":consumer_interfaces",
     profiles = ["release"],
+    wit = ":consumer_interfaces",
 )
 
 # Dependency checking utility

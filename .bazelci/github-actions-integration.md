@@ -9,12 +9,14 @@ This document explains how to integrate the Buildkite CI configuration with your
 The existing GitHub Actions workflow (`.github/workflows/ci.yml`) and the new Buildkite CI configuration (`.bazelci/presubmit.yml`) work together to provide comprehensive testing:
 
 **GitHub Actions** - Fast feedback and basic validation:
+
 - Quick lint and format checks
 - Basic build and test validation on Linux and macOS
 - Essential WebAssembly component validation
 - Integration tests for core functionality
 
 **Buildkite CI** - Comprehensive testing matrix:
+
 - Multi-platform testing (including Windows)
 - Multiple Bazel versions (minimum, current, rolling)
 - Various configuration combinations (bzlmod vs WORKSPACE)
@@ -33,16 +35,16 @@ buildkite_trigger:
   name: Trigger Buildkite CI
   runs-on: ubuntu-latest
   if: github.event_name == 'pull_request'
-  
+
   steps:
-  - name: Trigger Buildkite Build
-    uses: buildkite/trigger-pipeline-action@v1.5.0
-    with:
-      buildkite_api_access_token: ${{ secrets.BUILDKITE_API_ACCESS_TOKEN }}
-      pipeline: "your-org/rules-wasm-component"
-      commit: ${{ github.event.pull_request.head.sha }}
-      branch: ${{ github.event.pull_request.head.ref }}
-      message: "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+    - name: Trigger Buildkite Build
+      uses: buildkite/trigger-pipeline-action@v1.5.0
+      with:
+        buildkite_api_access_token: ${{ secrets.BUILDKITE_API_ACCESS_TOKEN }}
+        pipeline: "your-org/rules-wasm-component"
+        commit: ${{ github.event.pull_request.head.sha }}
+        branch: ${{ github.event.pull_request.head.ref }}
+        message: "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
 ```
 
 ### 2. Configure Branch Protection Rules
@@ -52,7 +54,7 @@ In your GitHub repository settings, add Buildkite checks as required status chec
 - Navigate to Settings → Branches → Branch protection rules
 - Add required status checks for critical Buildkite jobs:
   - `ubuntu2204`
-  - `macos_arm64` 
+  - `macos_arm64`
   - `examples_ubuntu2204`
   - `integration_tests`
   - `bcr_test`
@@ -136,6 +138,7 @@ Configure the following environment variables in Buildkite:
 ## Testing Matrix Coordination
 
 ### GitHub Actions (Fast Lane)
+
 ```yaml
 # Focus on essential, fast tests
 test_matrix:
@@ -147,6 +150,7 @@ test_matrix:
 ```
 
 ### Buildkite CI (Comprehensive Lane)
+
 ```yaml
 # Full matrix testing
 test_matrix:
@@ -228,6 +232,7 @@ wasm-tools validate bazel-bin/examples/basic/hello_component.wasm
 ### 2. Buildkite Logs
 
 Access detailed logs in Buildkite UI:
+
 - Build timeline view
 - Artifact downloads
 - Raw log outputs
@@ -236,6 +241,7 @@ Access detailed logs in Buildkite UI:
 ### 3. GitHub Actions Comparison
 
 Compare with GitHub Actions results:
+
 - Same commit, different environment results
 - Platform-specific differences
 - Timing and resource usage variations
@@ -243,16 +249,19 @@ Compare with GitHub Actions results:
 ## Migration Strategy
 
 ### Phase 1: Parallel Testing
+
 - Keep existing GitHub Actions
 - Add Buildkite CI as additional testing
 - Monitor for inconsistencies
 
 ### Phase 2: Gradual Migration
+
 - Move comprehensive tests to Buildkite
 - Keep fast feedback in GitHub Actions
 - Update branch protection rules
 
 ### Phase 3: Optimization
+
 - Fine-tune test distribution
 - Optimize cache usage
 - Minimize redundant testing
@@ -260,12 +269,14 @@ Compare with GitHub Actions results:
 ## Cost Optimization
 
 ### 1. Selective Testing
+
 ```yaml
 # Only run full matrix on main branch
 if: build.branch == "main" || build.pull_request.draft == false
 ```
 
 ### 2. Resource Management
+
 ```yaml
 # Use appropriate agent sizes
 agents:
@@ -274,9 +285,10 @@ agents:
 ```
 
 ### 3. Parallel Execution Limits
+
 ```yaml
 # Prevent resource exhaustion
-parallelism: 3  # Limit concurrent jobs
+parallelism: 3 # Limit concurrent jobs
 ```
 
 This integration provides comprehensive testing coverage while maintaining fast feedback loops for developers.

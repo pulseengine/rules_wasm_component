@@ -17,6 +17,6 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "world_export_component",
     srcs = ["src/lib.rs"],
-    wit = ":world_export_wit",
     profiles = ["release"],
+    wit = ":world_export_wit",
 )

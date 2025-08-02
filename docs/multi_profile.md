@@ -16,7 +16,7 @@ The rules support building and composing WASM components with different optimiza
    - `strip = false` - Keep symbols
    - `--cfg debug_assertions` - Runtime checks enabled
 
-2. **`release`** 
+2. **`release`**
    - `opt-level = "s"` - Optimize for size (important for WASM)
    - `debug = false` - No debug info
    - `strip = true` - Strip symbols
@@ -44,8 +44,9 @@ rust_wasm_component(
 ```
 
 This creates:
+
 - `my_component_debug` - Debug build
-- `my_component_release` - Release build  
+- `my_component_release` - Release build
 - `my_component_main` - Alias to release build
 - `my_component` - Filegroup containing all variants
 
@@ -93,6 +94,7 @@ wac_compose(
 ## Dependency Directory Structure
 
 ### Traditional Copying (❌ Memory Inefficient)
+
 ```
 deps/
 ├── component1.wasm (500MB copy)
@@ -102,10 +104,11 @@ Total: 1GB disk usage
 ```
 
 ### Symlink Strategy (✅ Memory Efficient)
+
 ```
 deps/
 ├── component1.wasm -> ../../../bazel-out/.../component1_release.wasm
-├── component2.wasm -> ../../../bazel-out/.../component2_debug.wasm  
+├── component2.wasm -> ../../../bazel-out/.../component2_debug.wasm
 └── component3.wasm -> ../../../bazel-out/.../component3_release.wasm
 Total: ~1KB disk usage (just symlinks)
 ```
@@ -145,7 +148,7 @@ wac_compose(
 
 # Production deployment
 wac_compose(
-    name = "prod_system", 
+    name = "prod_system",
     profile = "release",
     use_symlinks = True,
     # ... components
@@ -191,6 +194,7 @@ bazel run //my_project:package_prod
 ## Migration from Shell Scripts
 
 ### Before (Shell Script Approach)
+
 ```bash
 # Fixed single profile
 BUILD_MODE="release"
@@ -205,6 +209,7 @@ wac compose wac.toml -o system.wasm
 ```
 
 ### After (Bazel Rules)
+
 ```starlark
 # Multiple profiles supported
 rust_wasm_component(
@@ -224,6 +229,7 @@ wac_compose(
 ## Best Practices
 
 ### 1. Use Symlinks by Default
+
 ```starlark
 wac_compose(
     use_symlinks = True,  # Default: saves memory
@@ -231,19 +237,21 @@ wac_compose(
 ```
 
 ### 2. Profile Selection Strategy
+
 - **Development**: Use `debug` for detailed diagnostics
-- **Testing**: Mix profiles to test configurations  
+- **Testing**: Mix profiles to test configurations
 - **Production**: Use `release` for performance
 - **Debug Production**: Use `custom` profile
 
 ### 3. Component Organization
+
 ```starlark
 # Group related components
 filegroup(
     name = "sensor_components",
     srcs = [
         ":camera_sensor",
-        ":lidar_sensor", 
+        ":lidar_sensor",
         ":radar_sensor",
     ],
 )
@@ -257,6 +265,7 @@ wac_compose(
 ```
 
 ### 4. Dependency Management
+
 ```starlark
 # Shared WIT interfaces
 wit_library(
@@ -265,7 +274,7 @@ wit_library(
     visibility = ["//visibility:public"],
 )
 
-# Components reference shared interfaces  
+# Components reference shared interfaces
 rust_wasm_component(
     name = "comp1",
     wit_bindgen = "//interfaces:common_interfaces",
@@ -275,27 +284,32 @@ rust_wasm_component(
 ## Troubleshooting
 
 ### Symlink Issues
+
 - **Problem**: Symlinks broken on different filesystems
 - **Solution**: Set `use_symlinks = False` for cross-filesystem builds
 
 ### Profile Missing
+
 - **Problem**: Requested profile not available
 - **Solution**: Component falls back to available profile automatically
 
 ### Large Dependencies
+
 - **Problem**: WAC composition still slow with many components
 - **Solution**: Use `component_profiles` to mix debug/release strategically
 
 ## Performance Impact
 
 ### Build Time Comparison
-| Method | Build Time | Disk Usage | Memory Usage |
-|--------|------------|------------|--------------|
-| Copy | 45s | 2.1GB | 1.8GB |
-| Symlink | 12s | 15MB | 400MB |
+
+| Method          | Build Time     | Disk Usage   | Memory Usage |
+| --------------- | -------------- | ------------ | ------------ |
+| Copy            | 45s            | 2.1GB        | 1.8GB        |
+| Symlink         | 12s            | 15MB         | 400MB        |
 | **Improvement** | **73% faster** | **99% less** | **78% less** |
 
 ### Composition Time
+
 - **Large system (20 components)**: 8s → 2s (75% faster)
 - **Medium system (8 components)**: 3s → 1s (66% faster)
 - **Small system (3 components)**: 1s → 0.3s (70% faster)

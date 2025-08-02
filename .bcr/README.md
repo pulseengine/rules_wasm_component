@@ -4,13 +4,13 @@ This directory contains template files for publishing `rules_wasm_component` to 
 
 ## Status: 🚧 Blocked
 
-**Current Issue**: Publication is blocked due to `git_override` dependency in `MODULE.bazel`. 
+**Current Issue**: Publication is blocked due to `git_override` dependency in `MODULE.bazel`.
 See [Issue #7](https://github.com/pulseengine/rules_wasm_component/issues/7) for details.
 
 ## Files
 
 - **`metadata.template.json`**: Module metadata including maintainers and homepage
-- **`source.template.json`**: Source archive configuration 
+- **`source.template.json`**: Source archive configuration
 - **`presubmit.yml`**: BCR validation configuration (mirrors our CI exclusions)
 - **`README.md`**: This documentation file
 
@@ -35,6 +35,7 @@ Once the dependency issue is resolved:
 ## Testing
 
 The `presubmit.yml` configuration will test the module on:
+
 - **Platforms**: Ubuntu 20.04/22.04, macOS, Windows
 - **Bazel versions**: 7.x, latest
 - **Targets**: Core functionality (excludes problematic targets with target triple issues)
@@ -42,7 +43,8 @@ The `presubmit.yml` configuration will test the module on:
 ## Maintenance
 
 Update the template files when:
+
 - Repository URL changes
-- Maintainer list changes  
+- Maintainer list changes
 - Testing requirements change
 - Archive structure changes

@@ -15,13 +15,13 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "simple_component",
     srcs = ["src/lib.rs"],
-    wit = ":simple_interfaces",
     profiles = ["release"],
+    wit = ":simple_interfaces",
 )
 
 # Test no-WASI WIT interface
 wit_library(
-    name = "nowasi_interfaces", 
+    name = "nowasi_interfaces",
     package_name = "test:nowasi@1.0.0",
     srcs = ["simple_no_wasi.wit"],
 )
@@ -30,8 +30,8 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "nowasi_component",
     srcs = ["src/lib_no_wasi.rs"],
-    wit = ":nowasi_interfaces",
     profiles = ["release"],
+    wit = ":nowasi_interfaces",
 )
 
 # Simple WAC composition that should work
@@ -42,7 +42,7 @@ wac_compose(
     },
     composition = """
         package test:composition@1.0.0;
-        
+
         let comp = new test:simple { ... };
         export comp as main;
     """,
@@ -57,7 +57,7 @@ wac_compose(
     },
     composition = """
         package test:nowasi-composition@1.0.0;
-        
+
         let comp = new test:nowasi {};
         export comp as main;
     """,

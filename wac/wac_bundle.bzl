@@ -4,24 +4,24 @@ load("//providers:providers.bzl", "WacCompositionInfo")
 
 def _wac_bundle_impl(ctx):
     """Bundle components without composition, suitable for WASI components"""
-    
+
     # Output directory containing all components
     bundle_dir = ctx.actions.declare_directory(ctx.attr.name + "_bundle")
-    
+
     # Collect component files
     component_files = []
     component_infos = {}
-    
+
     for comp_target, comp_name in ctx.attr.components.items():
         files = comp_target[DefaultInfo].files.to_list()
         wasm_files = [f for f in files if f.path.endswith(".wasm")]
         if not wasm_files:
             fail("Component target %s must provide .wasm files" % comp_target.label)
-        
+
         component_file = wasm_files[0]  # Use first .wasm file
         component_files.append(component_file)
         component_infos[comp_name] = comp_target
-    
+
     # Create bundle directory with all components
     args = ctx.actions.args()
     args.add("--output-dir", bundle_dir.path)
@@ -30,7 +30,7 @@ def _wac_bundle_impl(ctx):
         "--component={}={}".format(comp_name, comp_file.path)
         for (comp_target, comp_name), comp_file in zip(ctx.attr.components.items(), component_files)
     ])
-    
+
     ctx.actions.run(
         executable = ctx.executable._wac_deps_tool,
         arguments = [args],
@@ -39,7 +39,7 @@ def _wac_bundle_impl(ctx):
         mnemonic = "WacBundle",
         progress_message = "Bundling WASM components for %s" % ctx.label,
     )
-    
+
     # Return provider without composed component
     bundle_info = WacCompositionInfo(
         composed_wasm = None,  # No single composed file
@@ -48,7 +48,7 @@ def _wac_bundle_impl(ctx):
         instantiations = [],
         connections = [],
     )
-    
+
     return [
         bundle_info,
         DefaultInfo(files = depset([bundle_dir])),

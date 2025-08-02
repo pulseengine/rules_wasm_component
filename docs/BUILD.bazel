@@ -1,0 +1,17 @@
+"""Documentation generation for rules_wasm_component
+
+Collects and generates documentation for all WIT interfaces used in examples.
+"""
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_docs_collection")
+
+package(default_visibility = ["//visibility:public"])
+
+# Collect all WIT documentation from examples into a single location
+wit_docs_collection(
+    name = "all_wit_docs",
+    docs = [
+        "//examples/go_component:calculator_docs",
+        "//examples/go_component:http_service_docs",
+    ],
+)

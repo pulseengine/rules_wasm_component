@@ -1,0 +1,24 @@
+"""BUILD file for wac repository
+
+This file creates wac binary using cargo within the git repository.
+This is a hybrid approach - git_repository for source + genrule for cargo build.
+"""
+
+# Build wac using cargo (hybrid approach)
+genrule(
+    name = "wac",
+    srcs = glob(["**/*"]),  # All source files
+    outs = ["wac"],
+    cmd = """cd $$(dirname $(location Cargo.toml)) && \
+             cargo build --release --bin wac && \
+             cp target/release/wac $(location wac)""",
+    visibility = ["//visibility:public"],
+    tags = ["requires-network"],  # Cargo may need to fetch dependencies
+)
+
+# Export the binary for toolchain use
+filegroup(
+    name = "wac_binary",
+    srcs = [":wac"],
+    visibility = ["//visibility:public"],
+)

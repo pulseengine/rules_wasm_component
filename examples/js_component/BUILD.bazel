@@ -1,0 +1,50 @@
+"""Example demonstrating JavaScript WebAssembly components with jco"""
+
+load("@rules_wasm_component//js:defs.bzl", "jco_transpile", "js_component", "npm_install")
+
+package(default_visibility = ["//visibility:public"])
+
+# Install NPM dependencies
+npm_install(
+    name = "npm_deps",
+    package_json = "package.json",
+)
+
+# Build JavaScript component
+js_component(
+    name = "hello_js_component",
+    package_name = "example:hello@1.0.0",
+    srcs = [
+        "src/index.js",
+        "src/utils.js",
+    ],
+    entry_point = "index.js",
+    npm_dependencies = {
+        "lodash": "^4.17.21",
+    },
+    optimize = True,
+    wit = "wit/hello.wit",
+)
+
+# Transpile component back to JavaScript for testing
+jco_transpile(
+    name = "hello_js_bindings",
+    component = ":hello_js_component",
+    instantiation = "async",
+    world_name = "hello-world",
+)
+
+# JavaScript component example
+js_component(
+    name = "calc_js_component",
+    package_name = "example:calculator@1.0.0",
+    srcs = [
+        "src/calculator.js",
+        "src/types.js",
+    ],
+    entry_point = "calculator.js",
+    minify = True,
+    optimize = True,
+    wit = "wit/calculator.wit",
+    world = "calculator",
+)

@@ -1,0 +1,33 @@
+{
+  "tool_name": "wac",
+  "github_repo": "bytecodealliance/wac",
+  "latest_version": "0.7.0",
+  "last_checked": "2025-08-02T04:35:39.525232Z",
+  "versions": {
+    "0.7.0": {
+      "release_date": "2024-11-20",
+      "platforms": {
+        "linux_amd64": {
+          "sha256": "dd734c4b049287b599a3f8c553325307687a17d070290907e3d5bbe481b89cc6",
+          "platform_name": "x86_64-unknown-linux-musl"
+        },
+        "linux_arm64": {
+          "sha256": "af966d4efbd411900073270bd4261ac42d9550af8ba26ed49288bb942476c5a9",
+          "platform_name": "aarch64-unknown-linux-musl"
+        },
+        "darwin_amd64": {
+          "sha256": "023645743cfcc167a3004d3c3a62e8209a55cde438e6561172bafcaaafc33a40",
+          "platform_name": "x86_64-apple-darwin"
+        },
+        "darwin_arm64": {
+          "sha256": "4e2d22c65c51f0919b10c866ef852038b804d3dbcf515c696412566fc1eeec66",
+          "platform_name": "aarch64-apple-darwin"
+        },
+        "windows_amd64": {
+          "sha256": "d8c65e5471fc242d8c4993e2125912e10e9373f1e38249157491b3c851bd1336",
+          "platform_name": "x86_64-pc-windows-gnu"
+        }
+      }
+    }
+  }
+}

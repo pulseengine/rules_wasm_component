@@ -5,6 +5,7 @@ This guide helps you migrate from shell scripts or other build systems to Bazel 
 ## From Shell Scripts
 
 ### Before (Shell Script)
+
 ```bash
 #!/bin/bash
 
@@ -20,6 +21,7 @@ wac compose my_composition.wac -o final_system.wasm
 ```
 
 ### After (Bazel)
+
 ```starlark
 # BUILD.bazel
 
@@ -52,13 +54,15 @@ wac_compose(
 The ADAS project used several shell scripts for building and composition.
 
 ### Shell Script Approach
+
 - `build-composed.sh` - Build all components and compose
 - `fix-profiles.sh` - Fix Cargo.toml issues
 - Manual dependency management
 
 ### Bazel Approach
+
 - Declarative BUILD files
-- Automatic dependency resolution  
+- Automatic dependency resolution
 - Parallel builds
 - Incremental compilation
 - Better caching
@@ -66,6 +70,7 @@ The ADAS project used several shell scripts for building and composition.
 ### Migration Steps
 
 1. **Add MODULE.bazel** to your project root:
+
 ```starlark
 module(name = "my_adas_project", version = "1.0.0")
 
@@ -74,6 +79,7 @@ bazel_dep(name = "rules_rust", version = "0.46.0")
 ```
 
 2. **Convert component builds** from individual Cargo.toml to BUILD.bazel:
+
 ```starlark
 # components/camera-front/BUILD.bazel
 rust_wasm_component(
@@ -84,6 +90,7 @@ rust_wasm_component(
 ```
 
 3. **Replace wac.toml** with wac_compose rules:
+
 ```starlark
 # BUILD.bazel (root)
 wac_compose(
@@ -98,29 +105,33 @@ wac_compose(
 ```
 
 4. **Remove shell scripts** and use Bazel commands:
+
 ```bash
 # Instead of ./build-composed.sh
 bazel build //:adas_complete_system
 
-# Instead of ./build-and-run.sh  
+# Instead of ./build-and-run.sh
 bazel run //:adas_complete_system
 ```
 
 ## Benefits of Migration
 
 ### Build Performance
+
 - **Parallel compilation**: Components build in parallel
 - **Incremental builds**: Only changed components rebuild
 - **Distributed builds**: Scale across multiple machines
 - **Build caching**: Share build artifacts across team
 
 ### Dependency Management
+
 - **Hermetic builds**: Reproducible across environments
 - **Version pinning**: Exact dependency versions
 - **Transitive deps**: Automatic dependency resolution
 - **Cross-platform**: Works on Linux, macOS, Windows
 
 ### Developer Experience
+
 - **IDE integration**: Better code completion and navigation
 - **Error reporting**: Clear, actionable build errors
 - **Testing**: Integrated test execution
@@ -129,7 +140,9 @@ bazel run //:adas_complete_system
 ## Common Issues
 
 ### Target Configuration
+
 Make sure your MODULE.bazel configures WASM targets:
+
 ```starlark
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
@@ -141,7 +154,9 @@ rust.toolchain(
 ```
 
 ### WIT Dependencies
+
 Organize WIT files in a dedicated package:
+
 ```
 wit/
 ├── BUILD.bazel
@@ -154,7 +169,9 @@ wit/
 ```
 
 ### Component Adapter
+
 For WASI Preview 1 compatibility:
+
 ```starlark
 rust_wasm_component(
     name = "legacy_component",

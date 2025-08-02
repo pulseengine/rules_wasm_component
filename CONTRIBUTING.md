@@ -127,17 +127,17 @@ MyInfo = provider(fields = {"stuff": "some stuff"})
 ```starlark
 def _my_rule_impl(ctx):
     """Implementation with clear documentation"""
-    
+
     # Validate inputs
     if not ctx.files.srcs:
         fail("srcs cannot be empty")
-    
+
     # Get toolchain
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:my_toolchain_type"]
-    
+
     # Declare outputs
     output = ctx.actions.declare_file(ctx.label.name + ".out")
-    
+
     # Run action
     ctx.actions.run(
         executable = toolchain.my_tool,
@@ -147,7 +147,7 @@ def _my_rule_impl(ctx):
         mnemonic = "MyAction",
         progress_message = "Processing %s" % ctx.label,
     )
-    
+
     return [DefaultInfo(files = depset([output]))]
 
 my_rule = rule(
@@ -162,9 +162,9 @@ my_rule = rule(
     toolchains = ["@rules_wasm_component//toolchains:my_toolchain_type"],
     doc = """
     Processes my files into output format.
-    
+
     This rule takes source files and processes them using my_tool.
-    
+
     Example:
         my_rule(
             name = "process_files",
@@ -200,10 +200,10 @@ load(":my_rule.bzl", "my_rule")
 
 def _my_rule_test_impl(ctx):
     env = unittest.begin(ctx)
-    
+
     # Test successful case
     # ... test implementation
-    
+
     return unittest.end(env)
 
 my_rule_test = unittest.make(_my_rule_test_impl)
@@ -242,17 +242,17 @@ my_rule = rule(
     # ... implementation
     doc = """
     One-line summary of what the rule does.
-    
+
     Longer description explaining the purpose, behavior,
     and any important details about the rule.
-    
+
     Example:
         my_rule(
             name = "example",
             srcs = ["file.txt"],
             options = ["--verbose"],
         )
-    
+
     Args:
         name: Target name
         srcs: Source files to process
@@ -300,7 +300,7 @@ my_rule = rule(
 
 - **Semantic versioning**: `MAJOR.MINOR.PATCH`
 - **Breaking changes**: Increment MAJOR
-- **New features**: Increment MINOR  
+- **New features**: Increment MINOR
 - **Bug fixes**: Increment PATCH
 
 ### Release Checklist

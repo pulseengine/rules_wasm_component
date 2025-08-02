@@ -54,11 +54,7 @@
         "required": false,
         "default": "['release']",
         "description": "Build profiles to generate",
-        "allowed_values": [
-          "debug",
-          "release",
-          "custom"
-        ]
+        "allowed_values": ["debug", "release", "custom"]
       },
       "srcs": {
         "type": "label_list",

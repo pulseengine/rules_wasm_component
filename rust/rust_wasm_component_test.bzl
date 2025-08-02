@@ -86,7 +86,7 @@ echo "✅ Component validation passed"
         component_workspace = component_info.wasm_file.owner.workspace_name if component_info.wasm_file.owner else "_main",
         component_path = component_info.wasm_file.short_path,
     )
-    
+
     ctx.actions.write(
         output = test_script,
         content = script_content,
@@ -115,9 +115,9 @@ rust_wasm_component_test = rule(
     toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
     doc = """
     Test rule for Rust WASM components.
-    
+
     This rule validates WASM components and can run basic tests.
-    
+
     Example:
         rust_wasm_component_test(
             name = "my_component_test",

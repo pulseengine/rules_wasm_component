@@ -20,7 +20,7 @@ wit_library(
 )
 
 wit_library(
-    name = "http_interfaces", 
+    name = "http_interfaces",
     package_name = "app:http@1.0.0",
     srcs = ["http.wit"],
     deps = [":database_interfaces"],
@@ -95,11 +95,11 @@ load("//providers:providers.bzl", "WitInfo")
 def _wit_validator_impl(ctx):
     """Custom rule that validates WIT files"""
     wit_info = ctx.attr.wit[WitInfo]
-    
+
     # Access WIT metadata
     package_name = wit_info.package_name
     wit_files = wit_info.wit_files.to_list()
-    
+
     # Run validation
     output = ctx.actions.declare_file(ctx.label.name + "_validation.txt")
     ctx.actions.run(
@@ -109,7 +109,7 @@ def _wit_validator_impl(ctx):
         outputs = [output],
         mnemonic = "ValidateWit",
     )
-    
+
     return [DefaultInfo(files = depset([output]))]
 
 wit_validator = rule(
@@ -150,15 +150,15 @@ rust_wasm_component_bindgen(
 
 # Future: Go implementation
 # go_wasm_component_bindgen(
-#     name = "go_implementation", 
+#     name = "go_implementation",
 #     srcs = ["go_impl.go"],
 #     wit = ":shared_interfaces",
 # )
 
-# Future: Python implementation  
+# Future: Python implementation
 # python_wasm_component_bindgen(
 #     name = "python_implementation",
-#     srcs = ["python_impl.py"], 
+#     srcs = ["python_impl.py"],
 #     wit = ":shared_interfaces",
 # )
 ```
@@ -182,7 +182,7 @@ wit_library(
 # Database abstraction layer
 wit_library(
     name = "database_layer",
-    package_name = "workspace:database@1.0.0", 
+    package_name = "workspace:database@1.0.0",
     srcs = ["database.wit"],
     deps = [":core_utilities"],
     visibility = ["//visibility:public"],
@@ -192,7 +192,7 @@ wit_library(
 wit_library(
     name = "http_layer",
     package_name = "workspace:http@1.0.0",
-    srcs = ["http.wit"], 
+    srcs = ["http.wit"],
     deps = [":core_utilities", ":database_layer"],
     visibility = ["//visibility:public"],
 )
@@ -207,6 +207,7 @@ wit_library(
 ```
 
 This creates a dependency hierarchy:
+
 ```
 business_logic
 ├── http_layer

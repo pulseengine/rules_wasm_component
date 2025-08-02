@@ -32,7 +32,6 @@ def _wit_bindgen_impl(ctx):
             if file.is_directory:
                 wit_library_dir = file
                 break
-    
 
     # Build command arguments for new wit-bindgen CLI
     cmd_args = [ctx.attr.language]
@@ -48,6 +47,7 @@ def _wit_bindgen_impl(ctx):
     # For Rust, use a custom runtime path to avoid dependency on wit_bindgen crate
     if ctx.attr.language == "rust":
         cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
+
         # Make the export macro public so it can be used from separate crates
         cmd_args.append("--pub-export-macro")
 
@@ -68,21 +68,21 @@ def _wit_bindgen_impl(ctx):
         if wit_library_dir:
             # Run wit-bindgen directly on the WIT library directory
             # The wit_library already contains the proper structure with deps/
-            
+
             # Check if we have external dependencies and add --generate-all if needed
             bindgen_args = cmd_args[:-len(wit_file_args)]
             if wit_info.wit_deps and len(wit_info.wit_deps.to_list()) > 0:
                 # Add --generate-all to handle external dependencies automatically
                 bindgen_args.append("--generate-all")
-            
+
             bindgen_args.extend([wit_library_dir.path, "--out-dir", out_dir.path])
-            
+
             ctx.actions.run(
                 executable = wit_bindgen,
                 arguments = bindgen_args,
                 inputs = depset(
                     direct = [wit_library_dir],
-                    transitive = [wit_info.wit_files, wit_info.wit_deps]
+                    transitive = [wit_info.wit_files, wit_info.wit_deps],
                 ),
                 outputs = [out_dir],
                 mnemonic = "WitBindgen",
@@ -91,7 +91,7 @@ def _wit_bindgen_impl(ctx):
                     ctx.label,
                 ),
             )
-            
+
             # Use a separate action to find and copy the generated file
             # This is more explicit than shell find commands
             ctx.actions.run_shell(
@@ -136,10 +136,10 @@ def _wit_bindgen_impl(ctx):
                 command = """
                     # Create dependency structure
                     mkdir -p {deps_dir}
-                    
+
                     # Create symlinks to WIT library directory
                     for f in {wit_lib_dir}/*; do ln -sf "$(realpath "$f")" {deps_dir}/; done
-                    
+
                     # Run wit-bindgen from deps directory
                     cd {deps_dir}
                     WIT_FILE=$(basename {wit_file})
@@ -153,7 +153,7 @@ def _wit_bindgen_impl(ctx):
                 ),
                 inputs = depset(
                     direct = [wit_library_dir],
-                    transitive = [wit_info.wit_files, wit_info.wit_deps]
+                    transitive = [wit_info.wit_files, wit_info.wit_deps],
                 ),
                 outputs = [out_file],
                 tools = [wit_bindgen],
@@ -170,7 +170,7 @@ def _wit_bindgen_impl(ctx):
                 arguments = cmd_args,
                 inputs = depset(
                     direct = [wit_library_dir] if wit_library_dir else [],
-                    transitive = [wit_info.wit_files, wit_info.wit_deps]
+                    transitive = [wit_info.wit_files, wit_info.wit_deps],
                 ),
                 outputs = [out_file],
                 mnemonic = "WitBindgen",
@@ -202,10 +202,10 @@ wit_bindgen = rule(
     toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
     doc = """
     Generates language bindings from WIT files.
-    
+
     This rule uses wit-bindgen to generate language-specific bindings
     from WIT interface definitions.
-    
+
     Example:
         wit_bindgen(
             name = "my_bindings",

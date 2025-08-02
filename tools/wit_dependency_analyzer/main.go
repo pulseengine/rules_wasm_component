@@ -13,24 +13,24 @@ import (
 )
 
 type Config struct {
-	AnalysisMode    string   `json:"analysis_mode"`    // "check" or "suggest"
+	AnalysisMode    string   `json:"analysis_mode"` // "check" or "suggest"
 	WorkspaceDir    string   `json:"workspace_dir"`
 	WitFile         string   `json:"wit_file"`
 	MissingPackages []string `json:"missing_packages"`
 }
 
 type WitPackage struct {
-	PackageName string `json:"package_name"`
-	FilePath    string `json:"file_path"`
-	Target      string `json:"target"`
+	PackageName string   `json:"package_name"`
+	FilePath    string   `json:"file_path"`
+	Target      string   `json:"target"`
 	Interfaces  []string `json:"interfaces"`
 }
 
 type AnalysisResult struct {
-	MissingPackages    []string     `json:"missing_packages"`
-	AvailablePackages  []WitPackage `json:"available_packages"`
-	SuggestedDeps      []string     `json:"suggested_deps"`
-	ErrorMessage       string       `json:"error_message,omitempty"`
+	MissingPackages   []string     `json:"missing_packages"`
+	AvailablePackages []WitPackage `json:"available_packages"`
+	SuggestedDeps     []string     `json:"suggested_deps"`
+	ErrorMessage      string       `json:"error_message,omitempty"`
 }
 
 func main() {
@@ -165,11 +165,11 @@ func parseWitPackage(filePath, workspaceDir string) (*WitPackage, error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		if matches := packageRegex.FindStringSubmatch(line); matches != nil {
 			packageName = strings.TrimSpace(matches[1])
 		}
-		
+
 		if matches := interfaceRegex.FindStringSubmatch(line); matches != nil {
 			interfaces = append(interfaces, strings.TrimSpace(matches[1]))
 		}
@@ -180,7 +180,7 @@ func parseWitPackage(filePath, workspaceDir string) (*WitPackage, error) {
 	}
 
 	relPath, _ := filepath.Rel(workspaceDir, filePath)
-	
+
 	return &WitPackage{
 		PackageName: packageName,
 		FilePath:    relPath,
@@ -205,7 +205,7 @@ func parseBuildFile(buildPath, workspaceDir string) ([]WitPackage, error) {
 	}
 
 	buildContent := string(content)
-	
+
 	// Find wit_library targets
 	witMatches := witLibraryRegex.FindAllStringSubmatch(buildContent, -1)
 	packageMatches := packageNameRegex.FindAllStringSubmatch(buildContent, -1)
@@ -213,7 +213,7 @@ func parseBuildFile(buildPath, workspaceDir string) ([]WitPackage, error) {
 	for i, witMatch := range witMatches {
 		targetName := witMatch[1]
 		var packageName string
-		
+
 		// Try to find corresponding package_name
 		if i < len(packageMatches) {
 			packageName = packageMatches[i][1]
@@ -221,9 +221,9 @@ func parseBuildFile(buildPath, workspaceDir string) ([]WitPackage, error) {
 
 		relPath, _ := filepath.Rel(workspaceDir, buildPath)
 		dirPath := filepath.Dir(relPath)
-		
+
 		target := fmt.Sprintf("//%s:%s", dirPath, targetName)
-		
+
 		packages = append(packages, WitPackage{
 			PackageName: packageName,
 			FilePath:    relPath,
@@ -236,7 +236,7 @@ func parseBuildFile(buildPath, workspaceDir string) ([]WitPackage, error) {
 
 func generateSuggestions(missingPackages []string, availablePackages []WitPackage) []string {
 	var suggestions []string
-	
+
 	for _, missing := range missingPackages {
 		for _, available := range availablePackages {
 			if available.PackageName == missing && available.Target != "" {

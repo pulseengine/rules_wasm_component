@@ -7,6 +7,7 @@
 Defines a WIT (WebAssembly Interface Types) library.
 
 **Attributes:**
+
 - `srcs` (label_list): WIT source files (.wit)
 - `deps` (label_list): WIT dependencies
 - `package_name` (string): WIT package name (defaults to target name)
@@ -14,6 +15,7 @@ Defines a WIT (WebAssembly Interface Types) library.
 - `interfaces` (string_list): List of interface names
 
 **Example:**
+
 ```starlark
 wit_library(
     name = "my_interfaces",
@@ -28,11 +30,13 @@ wit_library(
 Generates language bindings from WIT files.
 
 **Attributes:**
+
 - `wit` (label): WIT library to generate bindings for
 - `language` (string): Target language ("rust", "c", "go", "python")
 - `options` (string_list): Additional options for wit-bindgen
 
 **Example:**
+
 ```starlark
 wit_bindgen(
     name = "rust_bindings",
@@ -48,6 +52,7 @@ wit_bindgen(
 Builds a Rust WebAssembly component.
 
 **Attributes:**
+
 - `srcs` (label_list): Rust source files
 - `deps` (label_list): Rust dependencies
 - `wit_bindgen` (label): WIT library for binding generation
@@ -56,6 +61,7 @@ Builds a Rust WebAssembly component.
 - `rustc_flags` (string_list): Additional rustc flags
 
 **Example:**
+
 ```starlark
 rust_wasm_component(
     name = "my_component",
@@ -70,9 +76,11 @@ rust_wasm_component(
 Tests a Rust WASM component.
 
 **Attributes:**
+
 - `component` (label): WASM component to test
 
 **Example:**
+
 ```starlark
 rust_wasm_component_test(
     name = "my_component_test",
@@ -87,11 +95,13 @@ rust_wasm_component_test(
 Composes multiple WebAssembly components using WAC.
 
 **Attributes:**
+
 - `components` (label_keyed_string_dict): Components to compose
 - `composition` (string): Inline WAC composition code
 - `composition_file` (label): External WAC composition file
 
 **Example:**
+
 ```starlark
 wac_compose(
     name = "my_system",
@@ -102,9 +112,9 @@ wac_compose(
     composition = '''
         let frontend = new frontend:component { ... };
         let backend = new backend:component { ... };
-        
+
         connect frontend.request -> backend.handler;
-        
+
         export frontend as main;
     ''',
 )
@@ -117,6 +127,7 @@ wac_compose(
 Information about a WIT library.
 
 **Fields:**
+
 - `wit_files`: Depset of WIT source files
 - `wit_deps`: Depset of WIT dependencies
 - `package_name`: WIT package name
@@ -128,6 +139,7 @@ Information about a WIT library.
 Information about a WebAssembly component.
 
 **Fields:**
+
 - `wasm_file`: The compiled WASM component file
 - `wit_info`: WitInfo provider from the component's interfaces
 - `component_type`: Type of component (module or component)
@@ -140,6 +152,7 @@ Information about a WebAssembly component.
 Information about a WAC composition.
 
 **Fields:**
+
 - `composed_wasm`: The composed WASM file
 - `components`: Dict of component name to WasmComponentInfo
 - `composition_wit`: WIT file describing the composition

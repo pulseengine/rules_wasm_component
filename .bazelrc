@@ -23,7 +23,7 @@ build:macos --copt=-fPIC
 build:wasm --platforms=//platforms:wasm32-unknown-unknown
 build:wasm --@rules_rust//:no_std=alloc
 
-# WASI settings  
+# WASI settings
 build:wasi --platforms=//platforms:wasm32-wasi
 build:wasi --@rules_rust//:no_std=alloc
 

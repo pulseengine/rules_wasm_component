@@ -1,0 +1,39 @@
+{
+  "tool_name": "tinygo",
+  "github_repo": "tinygo-org/tinygo",
+  "latest_version": "0.38.0",
+  "last_checked": "2025-01-02T10:30:00Z",
+  "note": "TinyGo requires special handling - installed via system package managers",
+  "versions": {
+    "0.38.0": {
+      "release_date": "2024-10-15",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "x86_64-macos.tar.gz",
+          "install_method": "brew"
+        },
+        "darwin_arm64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "aarch64-macos.tar.gz",
+          "install_method": "brew"
+        },
+        "linux_amd64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "x86_64-linux.tar.gz",
+          "install_method": "download"
+        },
+        "linux_arm64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "aarch64-linux.tar.gz",
+          "install_method": "download"
+        },
+        "windows_amd64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "x86_64-windows.zip",
+          "install_method": "download"
+        }
+      }
+    }
+  }
+}

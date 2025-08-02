@@ -79,10 +79,10 @@ wasm_component_new = rule(
     toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
     doc = """
     Converts a WebAssembly module to a component.
-    
+
     This rule uses wasm-tools to convert a core WASM module into
     a WebAssembly component, optionally with a WASI adapter.
-    
+
     Example:
         wasm_component_new(
             name = "my_component",

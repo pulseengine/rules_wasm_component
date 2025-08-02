@@ -16,10 +16,10 @@ type Dependency struct {
 }
 
 type Config struct {
-	OutputDir        string       `json:"output_dir"`
-	SourceFiles      []string     `json:"source_files"`
-	Dependencies     []Dependency `json:"dependencies"`
-	DepsTomlContent  string       `json:"deps_toml_content"`
+	OutputDir       string       `json:"output_dir"`
+	SourceFiles     []string     `json:"source_files"`
+	Dependencies    []Dependency `json:"dependencies"`
+	DepsTomlContent string       `json:"deps_toml_content"`
 }
 
 func main() {

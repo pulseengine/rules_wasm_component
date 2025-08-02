@@ -23,86 +23,86 @@ jobs:
     outputs:
       tag_name: ${{ steps.get_tag.outputs.tag_name }}
       release_archive: ${{ steps.create_archive.outputs.archive_name }}
-    
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Get tag name
-      id: get_tag
-      run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "tag_name=${{ inputs.tag }}" >> $GITHUB_OUTPUT
-        else
-          echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        fi
-    
-    - name: Install git-cliff
-      uses: taiki-e/install-action@v2
-      with:
-        tool: git-cliff
-    
-    - name: Generate Release Notes
-      run: |
-        # Generate changelog for the latest version
-        git-cliff --latest --strip header -o RELEASE_NOTES.md
-        
-        # If no changes found, create a basic release note
-        if [ ! -s RELEASE_NOTES.md ]; then
-          echo "## Release ${{ steps.get_tag.outputs.tag_name }}" > RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          echo "This release includes improvements and bug fixes for WebAssembly component support in Bazel." >> RELEASE_NOTES.md
-        fi
-        
-        echo "Generated release notes:"
-        cat RELEASE_NOTES.md
-    
-    - name: Create Release Archive
-      id: create_archive
-      run: |
-        TAG_NAME="${{ steps.get_tag.outputs.tag_name }}"
-        VERSION=${TAG_NAME#v}  # Remove 'v' prefix
-        ARCHIVE_NAME="rules_wasm_component-${VERSION}.tar.gz"
-        
-        # Create a clean directory for the release
-        mkdir -p release_tmp
-        
-        # Copy files excluding Bazel cache, git, and other build artifacts
-        rsync -av \
-          --exclude='.git*' \
-          --exclude='bazel-*' \
-          --exclude='*.tar.gz' \
-          --exclude='.bazel*' \
-          --exclude='release_tmp' \
-          --exclude='node_modules' \
-          --exclude='*.log' \
-          . release_tmp/rules_wasm_component-${VERSION}/
-        
-        # Create the archive from the clean directory
-        tar -czf "$ARCHIVE_NAME" -C release_tmp .
-        
-        echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
-        echo "Created archive: $ARCHIVE_NAME"
-        ls -la "$ARCHIVE_NAME"
-    
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ steps.get_tag.outputs.tag_name }}
-        name: Release ${{ steps.get_tag.outputs.tag_name }}
-        body_path: RELEASE_NOTES.md
-        files: ${{ steps.create_archive.outputs.archive_name }}
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-        make_latest: true
-    
-    - name: Generate Provenance Attestation
-      uses: actions/attest-build-provenance@v1
-      with:
-        subject-path: ${{ steps.create_archive.outputs.archive_name }}
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get tag name
+        id: get_tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag_name=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
+
+      - name: Generate Release Notes
+        run: |
+          # Generate changelog for the latest version
+          git-cliff --latest --strip header -o RELEASE_NOTES.md
+
+          # If no changes found, create a basic release note
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "## Release ${{ steps.get_tag.outputs.tag_name }}" > RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "This release includes improvements and bug fixes for WebAssembly component support in Bazel." >> RELEASE_NOTES.md
+          fi
+
+          echo "Generated release notes:"
+          cat RELEASE_NOTES.md
+
+      - name: Create Release Archive
+        id: create_archive
+        run: |
+          TAG_NAME="${{ steps.get_tag.outputs.tag_name }}"
+          VERSION=${TAG_NAME#v}  # Remove 'v' prefix
+          ARCHIVE_NAME="rules_wasm_component-${VERSION}.tar.gz"
+
+          # Create a clean directory for the release
+          mkdir -p release_tmp
+
+          # Copy files excluding Bazel cache, git, and other build artifacts
+          rsync -av \
+            --exclude='.git*' \
+            --exclude='bazel-*' \
+            --exclude='*.tar.gz' \
+            --exclude='.bazel*' \
+            --exclude='release_tmp' \
+            --exclude='node_modules' \
+            --exclude='*.log' \
+            . release_tmp/rules_wasm_component-${VERSION}/
+
+          # Create the archive from the clean directory
+          tar -czf "$ARCHIVE_NAME" -C release_tmp .
+
+          echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
+          echo "Created archive: $ARCHIVE_NAME"
+          ls -la "$ARCHIVE_NAME"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag_name }}
+          name: Release ${{ steps.get_tag.outputs.tag_name }}
+          body_path: RELEASE_NOTES.md
+          files: ${{ steps.create_archive.outputs.archive_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          make_latest: true
+
+      - name: Generate Provenance Attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ steps.create_archive.outputs.archive_name }}
 
   publish_to_bcr:
     name: Publish to BCR

@@ -82,10 +82,14 @@ def _wac_compose_impl(ctx):
     ctx.actions.run(
         executable = ctx.executable._wac_deps_tool,
         arguments = [
-            "--output-dir", deps_dir.path,
-            "--manifest", _generate_component_manifest(selected_components),
-            "--profile-info", _generate_profile_info(selected_components),
-            "--use-symlinks", str(ctx.attr.use_symlinks).lower(),
+            "--output-dir",
+            deps_dir.path,
+            "--manifest",
+            _generate_component_manifest(selected_components),
+            "--profile-info",
+            _generate_profile_info(selected_components),
+            "--use-symlinks",
+            str(ctx.attr.use_symlinks).lower(),
         ] + [
             "--component={}={}".format(comp_name, comp_data["file"].path)
             for comp_name, comp_data in selected_components.items()
@@ -96,21 +100,22 @@ def _wac_compose_impl(ctx):
         progress_message = "Creating WAC deps structure for %s" % ctx.label,
     )
 
-    # Run wac compose  
+    # Run wac compose
     args = ctx.actions.args()
     args.add("compose")
     args.add("--output", composed_wasm)
-    
+
     # Use ONLY explicit package dependencies to avoid any registry lookups
     # Don't use --deps-dir to avoid triggering registry resolver
     # IMPORTANT: Use package names WITHOUT version for --dep overrides
     # because WAC filesystem resolver only uses overrides when key.version.is_none()
     for comp_name, comp_data in selected_components.items():
         wit_package = comp_data.get("wit_package", "unknown:package@1.0.0")
+
         # Remove version from package name for --dep override
         package_name_no_version = wit_package.split("@")[0] if "@" in wit_package else wit_package
         args.add("--dep", "{}={}".format(package_name_no_version, comp_data["file"].path))
-    
+
     # Essential flags for local-only composition
     args.add("--no-validate")  # Skip validation that might trigger registry
     args.add("--import-dependencies")  # Allow WASI imports instead of requiring them as args
@@ -238,11 +243,11 @@ wac_compose = rule(
     toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
     doc = """
     Composes multiple WebAssembly components using WAC with profile support.
-    
+
     This rule uses the WebAssembly Composition (WAC) tool to combine
     multiple WASM components into a single composed component, with support
     for different build profiles and memory-efficient symlinks.
-    
+
     Example:
         wac_compose(
             name = "my_system",
@@ -257,9 +262,9 @@ wac_compose = rule(
             composition = '''
                 let frontend = new frontend:component { ... };
                 let backend = new backend:component { ... };
-                
+
                 connect frontend.request -> backend.handler;
-                
+
                 export frontend as main;
             ''',
         )

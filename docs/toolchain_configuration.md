@@ -5,12 +5,14 @@ The rules_wasm_component supports flexible toolchain configuration with three ac
 ## Quick Reference
 
 ### Use System Tools (Default)
+
 ```starlark
 # MODULE.bazel - Uses tools from PATH (CI-friendly)
 bazel_dep(name = "rules_wasm_component", version = "0.1.0")
 ```
 
 ### Download Prebuilt Binaries
+
 ```starlark
 # MODULE.bazel
 bazel_dep(name = "rules_wasm_component", version = "0.1.0")
@@ -23,6 +25,7 @@ wasm_toolchain.register(
 ```
 
 ### Build from Source
+
 ```starlark
 # MODULE.bazel
 bazel_dep(name = "rules_wasm_component", version = "0.1.0")
@@ -37,7 +40,9 @@ wasm_toolchain.register(
 ## Configuration Options
 
 ### Strategy: `"system"` (Default)
+
 Uses tools installed on the system PATH. Perfect for:
+
 - CI environments where tools are pre-installed
 - Developer machines with `cargo install wasm-tools wac-cli wit-bindgen-cli`
 - Consistent with existing CI setup
@@ -49,35 +54,40 @@ wasm_toolchain.register(
 ```
 
 **Requirements:**
+
 - `wasm-tools`, `wac`, and `wit-bindgen` must be in PATH
 - No version control - uses whatever is installed
 
 ### Strategy: `"download"`
+
 Downloads prebuilt binaries from GitHub releases:
 
 ```starlark
 wasm_toolchain.register(
     strategy = "download",
     version = "1.235.0",
-    
+
     # Optional: Custom URLs
     wasm_tools_url = "https://custom-mirror.com/wasm-tools.tar.gz",
-    wac_url = "https://custom-mirror.com/wac.tar.gz", 
+    wac_url = "https://custom-mirror.com/wac.tar.gz",
     wit_bindgen_url = "https://custom-mirror.com/wit-bindgen.tar.gz",
 )
 ```
 
 **Benefits:**
+
 - Reproducible builds with pinned versions
 - No Rust compilation required
 - Works on any platform with prebuilt binaries
 
 **Platforms supported:**
+
 - Linux (x86_64, aarch64)
-- macOS (x86_64, aarch64) 
+- macOS (x86_64, aarch64)
 - Windows (x86_64)
 
 ### Strategy: `"build"`
+
 Builds tools from source code:
 
 ```starlark
@@ -88,6 +98,7 @@ wasm_toolchain.register(
 ```
 
 **Advanced options:**
+
 ```starlark
 wasm_toolchain.register(
     strategy = "build",
@@ -98,11 +109,13 @@ wasm_toolchain.register(
 ```
 
 **Benefits:**
+
 - Always up-to-date with latest commits
 - Can use unreleased features
 - Full control over build configuration
 
 **Requirements:**
+
 - Rust toolchain available during build
 - Git available for cloning
 - Longer build times (tools compiled from scratch)
@@ -123,7 +136,7 @@ wasm_toolchain.register(
 
 # Pinned version for production
 wasm_toolchain.register(
-    name = "production_tools", 
+    name = "production_tools",
     strategy = "download",
     version = "1.235.0",
 )
@@ -131,23 +144,25 @@ wasm_toolchain.register(
 # Latest development for testing
 wasm_toolchain.register(
     name = "dev_tools",
-    strategy = "build", 
+    strategy = "build",
     git_commit = "main",
 )
 ```
 
 Then specify which to use:
+
 ```bash
 # Use production toolchain
 bazel build --extra_toolchains=@production_tools_toolchains//:wasm_tools_toolchain //...
 
-# Use development toolchain  
+# Use development toolchain
 bazel build --extra_toolchains=@dev_tools_toolchains//:wasm_tools_toolchain //...
 ```
 
 ## CI/CD Integration
 
 ### GitHub Actions (Recommended)
+
 Uses system strategy with pre-installed tools:
 
 ```yaml
@@ -157,10 +172,11 @@ Uses system strategy with pre-installed tools:
     cargo install wasm-tools wac-cli wit-bindgen-cli
 
 - name: Build with Bazel
-  run: bazel build //...  # Uses system tools automatically
+  run: bazel build //... # Uses system tools automatically
 ```
 
 ### Docker Builds
+
 Use download strategy for hermetic Docker builds:
 
 ```dockerfile
@@ -179,6 +195,7 @@ RUN bazel build //...
 ```
 
 ### Corporate Environments
+
 Use custom URLs for internal mirrors:
 
 ```starlark
@@ -195,7 +212,9 @@ wasm_toolchain.register(
 ## Migration Examples
 
 ### From CI Script to System Strategy
+
 **Before:**
+
 ```bash
 # build.sh
 cargo install wasm-tools wac-cli wit-bindgen-cli
@@ -203,27 +222,31 @@ cargo install wasm-tools wac-cli wit-bindgen-cli
 ```
 
 **After:**
+
 ```yaml
 # .github/workflows/ci.yml
 - run: cargo install wasm-tools wac-cli wit-bindgen-cli
-- run: bazel build //...  # Automatically uses system tools
+- run: bazel build //... # Automatically uses system tools
 ```
 
 ### From Fixed Version to Flexible Strategy
+
 **Before:** Hard-coded tool versions in scripts
 
 **After:** Configurable in MODULE.bazel:
+
 ```starlark
 # Development: latest tools
 wasm_toolchain.register(strategy = "build", git_commit = "main")
 
-# Production: pinned stable version  
+# Production: pinned stable version
 wasm_toolchain.register(strategy = "download", version = "1.235.0")
 ```
 
 ## Troubleshooting
 
 ### "Tool not found" with system strategy
+
 ```bash
 # Install missing tools
 cargo install wasm-tools wac-cli wit-bindgen-cli
@@ -232,6 +255,7 @@ cargo install wasm-tools wac-cli wit-bindgen-cli
 ```
 
 ### "Download failed" with download strategy
+
 ```starlark
 # Use custom URLs or switch to build strategy
 wasm_toolchain.register(
@@ -241,6 +265,7 @@ wasm_toolchain.register(
 ```
 
 ### "Build failed" with build strategy
+
 ```bash
 # Ensure Rust toolchain is available
 rustup install stable
@@ -251,10 +276,11 @@ which git
 ```
 
 ### Tool version mismatches
+
 ```starlark
 # Pin specific versions for consistency
 wasm_toolchain.register(
-    strategy = "download", 
+    strategy = "download",
     version = "1.235.0",  # Everyone uses same version
 )
 ```
