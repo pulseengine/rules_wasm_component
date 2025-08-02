@@ -107,6 +107,6 @@ interface http-service {
     is-form-request: func(request: http-request) -> bool;
 }
 
-world http-service {
+world http-service-world {
     export http-service;
 }

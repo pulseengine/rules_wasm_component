@@ -62,7 +62,7 @@ interface data-structures {
     }
 
     record edge {
-        from: node-id,
+        source-node: node-id,
         to: node-id,
         weight: f64,
         data: option<value-type>,

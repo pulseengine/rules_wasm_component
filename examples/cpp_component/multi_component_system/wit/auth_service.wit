@@ -173,7 +173,7 @@ interface auth-service {
 
     has-role: func(user-id: string, role: string) -> bool;
 
-    check-access: func(user-id: string, resource: string, action: string) -> bool;
+    check-access: func(user-id: string, resource-id: string, action: string) -> bool;
 
     // Rate limiting
     check-rate-limit: func(user-id: string, action: string) -> rate-limit-info;

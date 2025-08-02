@@ -254,6 +254,6 @@ interface image-processor {
     hue-saturation: func(image: image, hue-shift: f32, saturation: f32) -> processing-result;
 }
 
-world image-processor {
+world image-processor-world {
     export image-processor;
 }

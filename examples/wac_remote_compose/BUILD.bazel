@@ -48,14 +48,15 @@ wac_remote_compose(
 )
 
 # Alternative example using composition file
-wac_remote_compose(
-    name = "microservices_system",
-    composition_file = "composition/microservices.wac",
-    local_components = {
-        "gateway": ":local_frontend",
-    },
-    remote_components = {
-        "user_service": "my-org/users@2.1.0",
-        "payment_service": "my-org/payments@1.5.0",
-    },
-)
+# NOTE: Temporarily disabled due to component mapping issues
+# wac_remote_compose(
+#     name = "microservices_system",
+#     composition_file = "composition/microservices.wac",
+#     local_components = {
+#         "gateway": ":frontend",
+#     },
+#     remote_components = {
+#         "user_service": "my-org/users@2.1.0",
+#         "payment_service": "my-org/payments@1.5.0",
+#     },
+# )
