@@ -24,7 +24,7 @@ def _js_component_impl(ctx):
     package_json = ctx.file.package_json
     if not package_json:
         # Generate a basic package.json if not provided
-        package_json = ctx.actions.declare_file("generated_package.json")
+        package_json = ctx.actions.declare_file(ctx.attr.name + "_generated_package.json")
         package_content = {
             "name": ctx.attr.name,
             "version": "1.0.0",

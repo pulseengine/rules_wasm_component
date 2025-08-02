@@ -13,7 +13,7 @@ build_test(
 
 build_test(
     name = "wit_bindgen_generation_test",
-    targets = ["//examples/basic:hello_component_wit_bindgen_gen"],
+    targets = ["//examples/basic:hello_interfaces"],
 )
 
 build_test(
@@ -35,7 +35,7 @@ build_test(
 # Build time is measured by Bazel's own metrics
 build_test(
     name = "build_performance_test",
-    targets = ["//examples/basic:hello_component_wit_bindgen_gen"],
+    targets = ["//examples/basic:hello_component"],
 )
 
 # WASM artifact validation - use wasm-tools validate directly

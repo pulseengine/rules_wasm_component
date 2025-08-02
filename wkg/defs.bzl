@@ -142,7 +142,7 @@ def _wkg_lock_impl(ctx):
         else:
             deps_content += '{} = "*"\n'.format(dep)
 
-    wkg_toml = ctx.actions.declare_file("wkg.toml")
+    wkg_toml = ctx.actions.declare_file(ctx.attr.name + "_wkg.toml")
     ctx.actions.write(
         output = wkg_toml,
         content = deps_content,
@@ -236,7 +236,7 @@ version = "{version}"
     if ctx.attr.license:
         metadata_content += 'license = "{}"\n'.format(ctx.attr.license)
 
-    wkg_toml = ctx.actions.declare_file("wkg.toml")
+    wkg_toml = ctx.actions.declare_file(ctx.attr.name + "_wkg.toml")
     ctx.actions.write(
         output = wkg_toml,
         content = metadata_content,
