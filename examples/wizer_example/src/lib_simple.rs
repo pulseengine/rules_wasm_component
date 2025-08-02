@@ -21,17 +21,17 @@ pub extern "C" fn compute(input: i32) -> i32 {
 pub extern "C" fn wizer_initialize() {
     // Expensive computation that would normally happen at runtime
     let mut data = HashMap::new();
-    
+
     // Simulate expensive initialization work
     for i in 1..1000 {
         let key = format!("key_{}", i);
-        let value = expensive_computation(i); 
+        let value = expensive_computation(i);
         data.insert(key, value);
     }
-    
+
     // Store the pre-computed multiplier
     data.insert("multiplier".to_string(), 42);
-    
+
     // Set global state (this gets captured by Wizer)
     unsafe {
         EXPENSIVE_DATA = Some(data);

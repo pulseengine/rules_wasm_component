@@ -157,12 +157,12 @@ def _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version):
 
     # Download WASI SDK
     wasi_sdk_url = _get_wasi_sdk_url(platform, wasi_sdk_version)
-    
+
     # Handle new WASI SDK directory format (version 25+)
     if int(wasi_sdk_version) >= 25:
         platform_map = {
             "linux_amd64": "x86_64-linux",
-            "linux_arm64": "arm64-linux", 
+            "linux_arm64": "arm64-linux",
             "darwin_amd64": "x86_64-macos",
             "darwin_arm64": "arm64-macos",
             "windows_amd64": "x86_64-mingw",
@@ -217,7 +217,7 @@ def _get_wasi_sdk_url(platform, version):
         platform_map = {
             "linux_amd64": "x86_64-linux",
             "linux_arm64": "arm64-linux",
-            "darwin_amd64": "x86_64-macos", 
+            "darwin_amd64": "x86_64-macos",
             "darwin_arm64": "arm64-macos",
             "windows_amd64": "x86_64-mingw",
         }
@@ -229,7 +229,7 @@ def _get_wasi_sdk_url(platform, version):
             "linux_amd64": "linux",
             "linux_arm64": "linux",
             "darwin_amd64": "macos",
-            "darwin_arm64": "macos", 
+            "darwin_arm64": "macos",
             "windows_amd64": "mingw",
         }
         os_name = platform_map.get(platform, "linux")
@@ -242,7 +242,7 @@ def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir):
 
     # Get absolute path to the repository root
     repo_root = repository_ctx.path(".")
-    
+
     # Clang wrapper with Preview2 target
     repository_ctx.file("clang", """#!/bin/bash
 exec {}/bin/clang \\
@@ -278,7 +278,7 @@ def _setup_component_tools(repository_ctx):
     # Create symlinks to the tools from the wasm toolchain
     # These will be resolved by Bazel's toolchain resolution system
     print("Using wit-bindgen and wasm-tools from configured WASM toolchain")
-    
+
     # Create placeholder scripts that will be replaced by toolchain resolution
     repository_ctx.file("wit_bindgen", """#!/bin/bash
 # This placeholder should be replaced by Bazel's toolchain resolution
@@ -296,7 +296,7 @@ exit 1
 
 def _setup_downloaded_sysroot(repository_ctx):
     """Set up sysroot for downloaded WASI SDK"""
-    
+
     # Create symlink to the downloaded WASI SDK sysroot
     wasi_sysroot_path = repository_ctx.path("share/wasi-sysroot")
     if wasi_sysroot_path.exists:
@@ -368,7 +368,7 @@ alias(
 )
 
 alias(
-    name = "wasm_tools_binary", 
+    name = "wasm_tools_binary",
     actual = "@wasm_tools_toolchains//:wasm_tools_binary",
     visibility = ["//visibility:public"],
 )

@@ -1,0 +1,6 @@
+"""BUILD file for Wasmtime toolchain type"""
+
+package(default_visibility = ["//visibility:public"])
+
+# Wasmtime toolchain type
+toolchain_type(name = "wasmtime_toolchain_type")

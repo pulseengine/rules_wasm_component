@@ -2,6 +2,7 @@
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("//providers:providers.bzl", "WasmComponentInfo")
+load("//rust:transitions.bzl", "wasm_transition")
 
 def _js_component_impl(ctx):
     """Implementation of js_component rule"""
@@ -67,7 +68,7 @@ const path = require('path');
 const args = process.argv.slice(2);
 const config = {};
 for (let i = 0; i < args.length; i += 2) {
-    const key = args[i].replace('--', '');
+    const key = args[i].replace('--', '').replace(/-([a-z])/g, (g) => g[1].toUpperCase());
     const value = args[i + 1];
     if (key === 'src') {
         if (!config.srcs) config.srcs = [];
@@ -113,13 +114,13 @@ console.log('Prepared JavaScript component sources in', config.workDir);
 
     # Run jco to build component
     jco_args = ctx.actions.args()
-    jco_args.add("new")
-    jco_args.add(work_dir.path)
+    jco_args.add("componentize")
+    jco_args.add(paths.join(work_dir.path, ctx.attr.entry_point))
     jco_args.add("--wit", paths.join(work_dir.path, "component.wit"))
     jco_args.add("--out", component_wasm.path)
 
     if ctx.attr.world:
-        jco_args.add("--world", ctx.attr.world)
+        jco_args.add("--world-name", ctx.attr.world)
 
     # Add jco-specific flags
     if ctx.attr.disable_feature_detection:
@@ -153,6 +154,7 @@ console.log('Prepared JavaScript component sources in', config.workDir);
 
 js_component = rule(
     implementation = _js_component_impl,
+    cfg = wasm_transition,
     attrs = {
         "srcs": attr.label_list(
             allow_files = [".js", ".ts", ".mjs"],

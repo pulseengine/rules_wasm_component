@@ -106,6 +106,17 @@ use_repo(wizer, "wizer_toolchain")
 
 register_toolchains("@wizer_toolchain//:wizer_toolchain_def")
 
+# Wasmtime WebAssembly runtime
+wasmtime = use_extension("//wasm:extensions.bzl", "wasmtime")
+wasmtime.register(
+    name = "wasmtime",
+    strategy = "download",
+    version = "35.0.0",
+)
+use_repo(wasmtime, "wasmtime_toolchain")
+
+register_toolchains("@wasmtime_toolchain//:wasmtime_toolchain")
+
 # C++ WebAssembly components with WASI SDK
 cpp_component = use_extension("//wasm:extensions.bzl", "cpp_component")
 cpp_component.register(
@@ -116,6 +127,17 @@ cpp_component.register(
 use_repo(cpp_component, "cpp_toolchain")
 
 register_toolchains("@cpp_toolchain//:cpp_component_toolchain")
+
+# JavaScript/TypeScript WebAssembly components with JCO
+jco = use_extension("//wasm:extensions.bzl", "jco")
+jco.register(
+    name = "jco",
+    strategy = "npm",
+    version = "1.4.0",
+)
+use_repo(jco, "jco_toolchain")
+
+register_toolchains("@jco_toolchain//:jco_toolchain")
 
 # Rust crates for wizer_initializer tool
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")

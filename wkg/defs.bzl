@@ -9,7 +9,7 @@ def _wkg_fetch_impl(ctx):
     # Output files
     component_file = ctx.actions.declare_file(ctx.attr.name + ".wasm")
     wit_dir = ctx.actions.declare_directory(ctx.attr.name + "_wit")
-    lock_file = ctx.actions.declare_file("wkg.lock")
+    # Note: wkg get doesn't create a lock file
 
     # Create config file if registry is specified
     config_content = ""
@@ -32,18 +32,27 @@ url = "{registry}"
 
     # Build command arguments
     args = ctx.actions.args()
-    args.add("fetch")
-    args.add(ctx.attr.package)
+    args.add("get")
 
+    # Format package spec as package@version
+    package_spec = ctx.attr.package
     if ctx.attr.version:
-        args.add("--version", ctx.attr.version)
+        package_spec += "@" + ctx.attr.version
+    args.add(package_spec)
 
     if config_file:
         args.add("--config", config_file.path)
 
     # Output directory for fetched components
     output_dir = ctx.actions.declare_directory(ctx.attr.name + "_fetched")
-    args.add("--output", output_dir.path)
+    args.add("--output", output_dir.path + "/")
+
+    # Use a sandbox-friendly cache directory
+    cache_dir = ctx.actions.declare_directory(ctx.attr.name + "_cache")
+    args.add("--cache", cache_dir.path)
+
+    # Allow overwriting existing files
+    args.add("--overwrite")
 
     # Run wkg fetch
     inputs = []
@@ -54,7 +63,7 @@ url = "{registry}"
         executable = wkg,
         arguments = [args],
         inputs = inputs,
-        outputs = [output_dir, lock_file],
+        outputs = [output_dir, cache_dir],
         mnemonic = "WkgFetch",
         progress_message = "Fetching WebAssembly component {}".format(ctx.attr.package),
     )
@@ -87,11 +96,11 @@ url = "{registry}"
     )
 
     return [
-        DefaultInfo(files = depset([component_file, wit_dir, lock_file])),
+        DefaultInfo(files = depset([component_file, wit_dir])),
         OutputGroupInfo(
             component = depset([component_file]),
             wit = depset([wit_dir]),
-            lock = depset([lock_file]),
+            # No lock file created by wkg get
         ),
     ]
 

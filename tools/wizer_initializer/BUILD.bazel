@@ -1,4 +1,4 @@
-"""Wizer library-based initializer tool (Bazel-native proof of concept)"""
+"""Wizer library-based initializer tool and checksum updater"""
 
 load("@rules_rust//rust:defs.bzl", "rust_binary")
 
@@ -14,4 +14,30 @@ rust_binary(
         "@wizer_crates//:anyhow",
         "@wizer_crates//:clap",
     ],
+)
+
+# Checksum updater for automated SHA management
+rust_binary(
+    name = "checksum_updater",
+    srcs = ["src/checksum_updater.rs"],
+    edition = "2021",
+    deps = [
+        "@wizer_crates//:anyhow",
+        "@wizer_crates//:chrono",
+        "@wizer_crates//:clap",
+        "@wizer_crates//:futures-util",
+        "@wizer_crates//:octocrab",
+        "@wizer_crates//:reqwest",
+        "@wizer_crates//:serde",
+        "@wizer_crates//:serde_json",
+        "@wizer_crates//:sha2",
+        "@wizer_crates//:tempfile",
+        "@wizer_crates//:tokio",
+    ],
+)
+
+# Alias for easier command line usage
+alias(
+    name = "update_checksums",
+    actual = ":checksum_updater",
 )

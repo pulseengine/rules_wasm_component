@@ -79,17 +79,17 @@ wasm_component_wizer_library = rule(
         "wizer_component": "%{name}_wizer.wasm",
     },
     doc = """Pre-initialize a WebAssembly component using Wizer library.
-    
+
     This rule uses Wizer as a library (rather than CLI tool) to properly handle
     WebAssembly components. The workflow is:
-    
+
     1. Parse component to extract core module
     2. Apply Wizer pre-initialization to the core module
     3. Wrap the initialized module back as a component
-    
+
     This approach provides proper component model support and integrates well
     with Wasmtime runtime for initialization.
-    
+
     Example:
         wasm_component_wizer_library(
             name = "optimized_component",

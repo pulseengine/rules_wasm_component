@@ -1,37 +1,37 @@
-// TypeScript calculator component
-import { Operation, CalculationResult } from "./types";
+// JavaScript calculator component
+import { Operation, CalculationResult } from "./types.js";
 
-export function add(a: number, b: number): number {
+export function add(a, b) {
   return a + b;
 }
 
-export function subtract(a: number, b: number): number {
+export function subtract(a, b) {
   return a - b;
 }
 
-export function multiply(a: number, b: number): number {
+export function multiply(a, b) {
   return a * b;
 }
 
-export function divide(a: number, b: number): CalculationResult {
+export function divide(a, b) {
   if (b === 0) {
     return {
       success: false,
       error: "Division by zero is not allowed",
-      result: null,
+      value: null,
     };
   }
 
   return {
     success: true,
     error: null,
-    result: a / b,
+    value: a / b,
   };
 }
 
-export function calculate(operation: Operation): CalculationResult {
+export function calculate(operation) {
   try {
-    let result: number;
+    let result;
 
     switch (operation.op) {
       case "add":
@@ -49,27 +49,27 @@ export function calculate(operation: Operation): CalculationResult {
         return {
           success: false,
           error: `Unknown operation: ${operation.op}`,
-          result: null,
+          value: null,
         };
     }
 
     return {
       success: true,
       error: null,
-      result: result,
+      value: result,
     };
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-      result: null,
+      value: null,
     };
   }
 }
 
 export function getCalculatorInfo() {
   return {
-    name: "TypeScript Calculator Component",
+    name: "JavaScript Calculator Component",
     version: "1.0.0",
     supportedOperations: ["add", "subtract", "multiply", "divide"],
   };

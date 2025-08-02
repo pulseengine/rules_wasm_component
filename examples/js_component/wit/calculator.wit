@@ -1,6 +1,6 @@
 package example:calculator@1.0.0;
 
-interface calculator {
+interface calc {
     variant operation-type {
         add,
         subtract,
@@ -17,7 +17,7 @@ interface calculator {
     record calculation-result {
         success: bool,
         error: option<string>,
-        result: option<f64>,
+        value: option<f64>,
     }
 
     record component-info {
@@ -36,5 +36,5 @@ interface calculator {
 }
 
 world calculator {
-    export calculator;
+    export calc;
 }

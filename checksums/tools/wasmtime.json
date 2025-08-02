@@ -1,0 +1,58 @@
+{
+  "tool_name": "wasmtime",
+  "github_repo": "bytecodealliance/wasmtime",
+  "latest_version": "35.0.0",
+  "last_checked": "2025-08-02T04:35:39.086536Z",
+  "versions": {
+    "35.0.0": {
+      "release_date": "2025-07-22",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "1ef7d07b8a8ef7e261281ad6a1b14ebf462f84c534593ca20e70ec8097524247",
+          "url_suffix": "x86_64-macos.tar.xz"
+        },
+        "linux_arm64": {
+          "sha256": "304009a9e4cad3616694b4251a01d72b77ae33d884680f3586710a69bd31b8f8",
+          "url_suffix": "aarch64-linux.tar.xz"
+        },
+        "linux_amd64": {
+          "sha256": "e3d2aae710a5cef548ab13f7e4ed23adc4fa1e9b4797049f4459320f32224011",
+          "url_suffix": "x86_64-linux.tar.xz"
+        },
+        "windows_amd64": {
+          "sha256": "cb4d9b788e81268edfb43d26c37dc4115060635ff4eceed16f4f9e6f331179b1",
+          "url_suffix": "x86_64-windows.zip"
+        },
+        "darwin_arm64": {
+          "sha256": "8ad8832564e15053cd982c732fac39417b2307bf56145d02ffd153673277c665",
+          "url_suffix": "aarch64-macos.tar.xz"
+        }
+      }
+    },
+    "27.0.0": {
+      "release_date": "2024-12-18",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "x86_64-macos.tar.xz"
+        },
+        "linux_amd64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "x86_64-linux.tar.xz"
+        },
+        "darwin_arm64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "aarch64-macos.tar.xz"
+        },
+        "windows_amd64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "x86_64-windows.zip"
+        },
+        "linux_arm64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "aarch64-linux.tar.xz"
+        }
+      }
+    }
+  }
+}
