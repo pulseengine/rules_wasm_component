@@ -3,6 +3,7 @@
   "github_repo": "bytecodealliance/wasm-tools",
   "latest_version": "1.236.0",
   "last_checked": "2025-08-02T04:35:34.862279Z",
+  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64"],
   "versions": {
     "1.235.0": {
       "release_date": "2024-12-15",

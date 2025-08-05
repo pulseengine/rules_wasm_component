@@ -1,33 +1,22 @@
 """WebAssembly toolchain definitions with enhanced tool management"""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//toolchains:tool_versions.bzl", "get_recommended_versions", "get_tool_info", "validate_tool_compatibility")
+load("//toolchains:tool_versions.bzl", "get_recommended_versions", "validate_tool_compatibility")
 load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error", "log_diagnostic_info", "validate_system_tool")
 load("//toolchains:tool_cache.bzl", "cache_tool", "clean_expired_cache", "retrieve_cached_tool", "validate_tool_functionality")
 load("//toolchains:monitoring.bzl", "add_build_telemetry", "create_health_check", "log_build_metrics")
+load("//checksums:registry.bzl", "get_tool_info")
 
-WASM_TOOLS_PLATFORMS = {
-    "darwin_amd64": struct(
-        sha256 = "154e9ea5f5477aa57466cfb10e44bc62ef537e32bf13d1c35ceb4fedd9921510",
-        url_suffix = "x86_64-macos.tar.gz",
-    ),
-    "darwin_arm64": struct(
-        sha256 = "17035deade9d351df6183d87ad9283ce4ae7d3e8e93724ae70126c87188e96b2",
-        url_suffix = "aarch64-macos.tar.gz",
-    ),
-    "linux_amd64": struct(
-        sha256 = "4c44bc776aadbbce4eedc90c6a07c966a54b375f8f36a26fd178cea9b419f584",
-        url_suffix = "x86_64-linux.tar.gz",
-    ),
-    "linux_arm64": struct(
-        sha256 = "384ca3691502116fb6f48951ad42bd0f01f9bf799111014913ce15f4f4dde5a2",
-        url_suffix = "aarch64-linux.tar.gz",
-    ),
-    "windows_amd64": struct(
-        sha256 = "ecf9f2064c2096df134c39c2c97af2c025e974cc32e3c76eb2609156c1690a74",
-        url_suffix = "x86_64-windows.tar.gz",
-    ),
-}
+def _get_wasm_tools_platform_info(platform, version):
+    """Get platform info and checksum for wasm-tools from centralized registry"""
+    from_registry = get_tool_info("wasm-tools", version, platform)
+    if not from_registry:
+        fail("Unsupported platform {} for wasm-tools version {}".format(platform, version))
+    
+    return struct(
+        sha256 = from_registry["sha256"],
+        url_suffix = from_registry["url_suffix"],
+    )
 
 def _wasm_tools_toolchain_impl(ctx):
     """Implementation of wasm_tools_toolchain rule"""
@@ -599,11 +588,8 @@ def _download_wasm_tools(repository_ctx):
     platform = _detect_host_platform(repository_ctx)
     version = repository_ctx.attr.version
 
-    # Get platform info and checksum from WASM_TOOLS_PLATFORMS
-    if platform not in WASM_TOOLS_PLATFORMS:
-        fail("Unsupported platform: {}".format(platform))
-
-    platform_info = WASM_TOOLS_PLATFORMS[platform]
+    # Get platform info and checksum from centralized registry
+    platform_info = _get_wasm_tools_platform_info(platform, version)
 
     wasm_tools_url = "https://github.com/bytecodealliance/wasm-tools/releases/download/v{}/wasm-tools-{}-{}".format(
         version,

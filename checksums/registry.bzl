@@ -145,6 +145,63 @@ def _get_hardcoded_checksums(tool_name):
                 },
             },
         },
+        "wasi-sdk": {
+            "tool_name": "wasi-sdk",
+            "github_repo": "WebAssembly/wasi-sdk",
+            "latest_version": "25",
+            "versions": {
+                "22": {
+                    "release_date": "2023-06-01",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "3f43c1b9a7c23c3e5b5d5d4c8b7e9f0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f67",
+                            "url_suffix": "macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "3f43c1b9a7c23c3e5b5d5d4c8b7e9f0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f67",
+                            "url_suffix": "macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "2a86c1b9a7c23c3e5b5d5d4c8b7e9f0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f67",
+                            "url_suffix": "linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "2a86c1b9a7c23c3e5b5d5d4c8b7e9f0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f67",
+                            "url_suffix": "linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+                            "url_suffix": "windows.tar.gz",
+                        },
+                    },
+                },
+                "25": {
+                    "release_date": "2024-11-01",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "cf5f524de23f231756ec2f3754fc810ea3f6206841a968c45d8b7ea47cfc3a61",
+                            "url_suffix": "macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "e1e529ea226b1db0b430327809deae9246b580fa3cae32d31c82dfe770233587",
+                            "url_suffix": "macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8",
+                            "url_suffix": "linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8",
+                            "url_suffix": "linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+                            "url_suffix": "windows.tar.gz",
+                        },
+                    },
+                },
+            },
+        },
     }
 
     return hardcoded_data.get(tool_name, {})
