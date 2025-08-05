@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 

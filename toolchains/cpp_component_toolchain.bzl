@@ -262,8 +262,6 @@ exec {}/bin/clang++ \\
   -D_WASI_EMULATED_PROCESS_CLOCKS \\
   -D_WASI_EMULATED_SIGNAL \\
   -D_WASI_EMULATED_MMAN \\
-  -fno-exceptions \\
-  -fno-rtti \\
   "$@"
 """.format(repo_root, repo_root), executable = True)
 

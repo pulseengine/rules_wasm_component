@@ -1,8 +1,9 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <algorithm>
+#include <vector>
 
 // WebAssembly SIMD support
 #ifdef __wasm__

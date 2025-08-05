@@ -140,7 +140,12 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
 
     # C++ specific flags
     if ctx.attr.language == "cpp":
-        compile_args.add("-fno-exceptions")
+        if ctx.attr.enable_exceptions:
+            # Enable exceptions if specifically requested
+            pass
+        else:
+            compile_args.add("-fno-exceptions")
+        
         if ctx.attr.enable_rtti:
             # Only enable RTTI if specifically requested
             pass
@@ -154,6 +159,12 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
     compile_args.add("-I" + work_dir.path)
     for include in ctx.attr.includes:
         compile_args.add("-I" + include)
+    
+    # Add dependency header directories
+    for dep_hdr in dep_headers:
+        include_dir = dep_hdr.dirname
+        if include_dir not in [work_dir.path] + ctx.attr.includes:
+            compile_args.add("-I" + include_dir)
 
     # Defines
     for define in ctx.attr.defines:
@@ -268,6 +279,10 @@ cpp_component = rule(
         "enable_rtti": attr.bool(
             default = False,
             doc = "Enable C++ RTTI (not recommended for components)",
+        ),
+        "enable_exceptions": attr.bool(
+            default = False,
+            doc = "Enable C++ exceptions (increases binary size)",
         ),
     },
     toolchains = ["@rules_wasm_component//toolchains:cpp_component_toolchain_type"],
@@ -422,7 +437,12 @@ def _cc_component_library_impl(ctx):
 
         # C++ specific flags
         if ctx.attr.language == "cpp":
-            compile_args.add("-fno-exceptions")
+            if ctx.attr.enable_exceptions:
+                # Enable exceptions if specifically requested
+                pass
+            else:
+                compile_args.add("-fno-exceptions")
+            
             compile_args.add("-fno-rtti")
             if ctx.attr.cxx_std:
                 compile_args.add("-std=" + ctx.attr.cxx_std)
@@ -474,10 +494,11 @@ def _cc_component_library_impl(ctx):
     )
 
     return [
-        DefaultInfo(files = depset([library])),
+        DefaultInfo(files = depset([library] + ctx.files.hdrs)),
         OutputGroupInfo(
             library = depset([library]),
             objects = depset(object_files),
+            headers = depset(ctx.files.hdrs),
         ),
     ]
 
@@ -517,6 +538,10 @@ cc_component_library = rule(
         ),
         "cxx_std": attr.string(
             doc = "C++ standard (e.g., c++17, c++20, c++23)",
+        ),
+        "enable_exceptions": attr.bool(
+            default = False,
+            doc = "Enable C++ exceptions (increases binary size)",
         ),
     },
     toolchains = ["@rules_wasm_component//toolchains:cpp_component_toolchain_type"],
