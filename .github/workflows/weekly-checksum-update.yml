@@ -1,0 +1,422 @@
+name: Weekly Checksum Updates
+
+on:
+  schedule:
+    # Run every Monday at 6:00 AM UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      tools:
+        description: 'Specific tools to update (comma-separated, or "all")'
+        required: false
+        default: 'all'
+        type: string
+      force_update:
+        description: 'Force update even if no new versions found'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Perform dry run without creating PR'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  checksum-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Set up Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+    
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "tools/checksum_updater"
+        cache-on-failure: true
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl jq git
+    
+    - name: Build checksum updater tool
+      run: |
+        cd tools/checksum_updater
+        cargo build --release
+        cargo test --release
+    
+    - name: Configure Git
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create update branch
+      id: branch
+      run: |
+        BRANCH_NAME="automated/checksum-updates-$(date +%Y%m%d-%H%M%S)"
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        
+        if [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
+          git checkout -b "$BRANCH_NAME"
+        fi
+    
+    - name: Run checksum updates
+      id: update
+      run: |
+        cd tools/checksum_updater
+        
+        # Determine which tools to update
+        TOOLS="${{ github.event.inputs.tools || 'all' }}"
+        FORCE_FLAG=""
+        if [ "${{ github.event.inputs.force_update }}" = "true" ]; then
+          FORCE_FLAG="--force"
+        fi
+        
+        DRY_RUN_FLAG=""
+        if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+          DRY_RUN_FLAG="--dry-run"
+        fi
+        
+        echo "Running checksum updater with tools: $TOOLS"
+        
+        # Run the updater and capture output
+        if [ "$TOOLS" = "all" ]; then
+          ./target/release/checksum_updater update-all $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json
+        else
+          ./target/release/checksum_updater update --tools "$TOOLS" $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json
+        fi
+        
+        # Check if any updates were made
+        UPDATES_COUNT=$(jq '.summary.tools_updated' update_results.json)
+        NEW_VERSIONS_COUNT=$(jq '.summary.new_versions_found' update_results.json)
+        ERRORS_COUNT=$(jq '.summary.errors' update_results.json)
+        
+        echo "updates_count=$UPDATES_COUNT" >> $GITHUB_OUTPUT
+        echo "new_versions_count=$NEW_VERSIONS_COUNT" >> $GITHUB_OUTPUT
+        echo "errors_count=$ERRORS_COUNT" >> $GITHUB_OUTPUT
+        
+        # Store results for later steps
+        cp update_results.json ../../update_results.json
+        
+        # Generate summary for PR description
+        ./target/release/checksum_updater generate-summary update_results.json > ../../update_summary.md
+    
+    - name: Validate updated checksums
+      if: steps.update.outputs.updates_count > 0
+      run: |
+        echo "Validating updated checksums..."
+        
+        # Test that all JSON files are valid
+        for json_file in checksums/tools/*.json; do
+          echo "Validating $json_file"
+          jq empty "$json_file" || {
+            echo "❌ Invalid JSON in $json_file"
+            exit 1
+          }
+        done
+        
+        # Test that registry.bzl loads correctly
+        cd tools/checksum_updater
+        ./target/release/checksum_updater validate --all
+        
+        echo "✅ All checksums validated successfully"
+    
+    - name: Run integration tests
+      if: steps.update.outputs.updates_count > 0 && github.event.inputs.dry_run != 'true'
+      run: |
+        echo "Running integration tests with updated checksums..."
+        
+        # Build a simple component to test toolchain integration
+        if bazel build //examples/basic:basic_component --config=ci; then
+          echo "✅ Basic component build successful"
+        else
+          echo "❌ Integration test failed - toolchain issues detected"
+          exit 1
+        fi
+    
+    - name: Check for changes
+      id: changes
+      run: |
+        if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+          echo "changes_detected=false" >> $GITHUB_OUTPUT
+          echo "Dry run mode - no changes committed"
+          exit 0
+        fi
+        
+        if git diff --quiet HEAD; then
+          echo "changes_detected=false" >> $GITHUB_OUTPUT
+          echo "No changes detected"
+        else
+          echo "changes_detected=true" >> $GITHUB_OUTPUT
+          echo "Changes detected"
+          git status --porcelain
+        fi
+    
+    - name: Commit changes
+      if: steps.changes.outputs.changes_detected == 'true' && steps.update.outputs.updates_count > 0
+      run: |
+        # Add all changed files
+        git add checksums/
+        git add tools/checksum_updater/
+        
+        # Create detailed commit message
+        cat > commit_message.txt << 'EOF'
+        feat: automated checksum updates for WebAssembly tools
+        
+        Updates include:
+        - ${{ steps.update.outputs.updates_count }} tools updated
+        - ${{ steps.update.outputs.new_versions_count }} new versions found
+        
+        Automated update performed by checksum_updater tool.
+        
+        🤖 Generated with [Claude Code](https://claude.ai/code)
+        
+        Co-Authored-By: Claude <noreply@anthropic.com>
+        EOF
+        
+        git commit -F commit_message.txt
+        
+        echo "✅ Changes committed successfully"
+    
+    - name: Push changes and create PR
+      if: steps.changes.outputs.changes_detected == 'true' && steps.update.outputs.updates_count > 0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Push the branch
+        git push origin "${{ steps.branch.outputs.branch_name }}"
+        
+        # Prepare PR body
+        cat > pr_body.md << 'EOF'
+        ## 🤖 Automated Checksum Updates
+        
+        This PR contains automated updates to WebAssembly tool checksums detected by the weekly checksum update workflow.
+        
+        ### Summary
+        
+        EOF
+        
+        # Add the generated summary
+        cat update_summary.md >> pr_body.md
+        
+        cat >> pr_body.md << 'EOF'
+        
+        ### Validation
+        
+        - ✅ All JSON files validated successfully
+        - ✅ Registry integration tests passed
+        - ✅ Basic component build test passed
+        
+        ### Review Guidelines
+        
+        1. **Verify the changelog** for any breaking changes in updated tools
+        2. **Check CI status** - all tests should pass
+        3. **Test critical examples** if major version updates are included
+        4. **Review security implications** of new tool versions
+        
+        ### Auto-merge Criteria
+        
+        This PR will be auto-merged if:
+        - All CI checks pass ✅
+        - Only patch/minor version updates (no major versions)
+        - No errors reported by the updater tool
+        - Community feedback period (24 hours) has passed
+        
+        ---
+        
+        🤖 Generated with [Claude Code](https://claude.ai/code)
+        
+        Generated by: Weekly Checksum Update workflow
+        Branch: `${{ steps.branch.outputs.branch_name }}`
+        Run: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        EOF
+        
+        # Create the PR
+        gh pr create \
+          --title "feat: automated checksum updates ($(date +%Y-%m-%d))" \
+          --body-file pr_body.md \
+          --label "automated" \
+          --label "checksums" \
+          --label "toolchain" \
+          --base main \
+          --head "${{ steps.branch.outputs.branch_name }}"
+        
+        # Get PR number for later steps
+        PR_NUMBER=$(gh pr view "${{ steps.branch.outputs.branch_name }}" --json number --jq .number)
+        echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+    
+    - name: Add PR labels based on update content
+      if: steps.changes.outputs.changes_detected == 'true' && steps.update.outputs.updates_count > 0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PR_NUMBER=$(gh pr view "${{ steps.branch.outputs.branch_name }}" --json number --jq .number)
+        
+        # Add labels based on update results
+        if [ "${{ steps.update.outputs.errors_count }}" -gt 0 ]; then
+          gh pr edit "$PR_NUMBER" --add-label "needs-review"
+          gh pr edit "$PR_NUMBER" --add-label "errors-detected"
+        fi
+        
+        # Check for major version updates
+        if jq -e '.updates[] | select(.version_change == "major")' update_results.json > /dev/null; then
+          gh pr edit "$PR_NUMBER" --add-label "major-update"
+          gh pr edit "$PR_NUMBER" --add-label "needs-review"
+        fi
+        
+        # Add tool-specific labels
+        jq -r '.updates[].tool_name' update_results.json | while read tool; do
+          gh pr edit "$PR_NUMBER" --add-label "tool:$tool"
+        done
+    
+    - name: Schedule auto-merge
+      if: steps.changes.outputs.changes_detected == 'true' && steps.update.outputs.updates_count > 0 && steps.update.outputs.errors_count == 0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PR_NUMBER=$(gh pr view "${{ steps.branch.outputs.branch_name }}" --json number --jq .number)
+        
+        # Check if this is a safe auto-merge candidate
+        HAS_MAJOR_UPDATES=$(jq -e '.updates[] | select(.version_change == "major")' update_results.json && echo "true" || echo "false")
+        
+        if [ "$HAS_MAJOR_UPDATES" = "false" ]; then
+          # Create a follow-up workflow to auto-merge after 24 hours
+          cat > .github/workflows/temp-auto-merge-$PR_NUMBER.yml << EOF
+        name: Auto-merge checksum PR $PR_NUMBER
+        
+        on:
+          schedule:
+            # Run 24 hours from now
+            - cron: '$(date -d "+24 hours" +"%M %H %d %m") *'
+          workflow_dispatch:
+        
+        jobs:
+          auto-merge:
+            runs-on: ubuntu-latest
+            if: github.repository == '${{ github.repository }}'
+            steps:
+            - name: Auto-merge PR
+              env:
+                GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+              run: |
+                # Check if PR is still open and all checks pass
+                if gh pr view $PR_NUMBER --json state --jq .state | grep -q "OPEN"; then
+                  if gh pr checks $PR_NUMBER --required; then
+                    gh pr merge $PR_NUMBER --squash --delete-branch
+                    echo "✅ PR $PR_NUMBER auto-merged successfully"
+                  else
+                    echo "❌ PR $PR_NUMBER has failing checks, skipping auto-merge"
+                  fi
+                else
+                  echo "ℹ️ PR $PR_NUMBER is no longer open"
+                fi
+                
+                # Clean up this temporary workflow
+                rm -f .github/workflows/temp-auto-merge-$PR_NUMBER.yml
+        EOF
+          
+          git add .github/workflows/temp-auto-merge-$PR_NUMBER.yml
+          git commit -m "ci: add auto-merge workflow for PR $PR_NUMBER"
+          git push origin "${{ steps.branch.outputs.branch_name }}"
+          
+          # Add comment about auto-merge
+          gh pr comment "$PR_NUMBER" --body "🤖 This PR is scheduled for auto-merge in 24 hours if all checks pass and no major version updates are detected."
+        else
+          gh pr comment "$PR_NUMBER" --body "⚠️ This PR contains major version updates and requires manual review before merging."
+        fi
+    
+    - name: Report status
+      if: always()
+      run: |
+        echo "=== Checksum Update Workflow Summary ==="
+        echo "Branch: ${{ steps.branch.outputs.branch_name }}"
+        echo "Updates count: ${{ steps.update.outputs.updates_count }}"
+        echo "New versions found: ${{ steps.update.outputs.new_versions_count }}"
+        echo "Errors: ${{ steps.update.outputs.errors_count }}"
+        echo "Changes detected: ${{ steps.changes.outputs.changes_detected }}"
+        echo "Dry run: ${{ github.event.inputs.dry_run }}"
+        
+        if [ -f update_results.json ]; then
+          echo ""
+          echo "=== Detailed Results ==="
+          jq . update_results.json
+        fi
+    
+    - name: Create issue on failure
+      if: failure() && github.event_name == 'schedule'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Create an issue for failed automatic updates
+        cat > failure_issue.md << 'EOF'
+        ## 🚨 Weekly Checksum Update Failed
+        
+        The automated weekly checksum update workflow has failed.
+        
+        **Workflow Run:** [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        **Failure Time:** $(date -u)
+        **Branch:** ${{ steps.branch.outputs.branch_name }}
+        
+        ### Possible Causes
+        
+        - Network issues accessing tool repositories
+        - Changes in tool release formats
+        - Checksum validation failures
+        - Integration test failures
+        
+        ### Action Required
+        
+        Please investigate the workflow logs and address any issues with the checksum updater tool.
+        
+        ---
+        
+        This issue was automatically created by the weekly checksum update workflow.
+        EOF
+        
+        gh issue create \
+          --title "Weekly checksum update failed ($(date +%Y-%m-%d))" \
+          --body-file failure_issue.md \
+          --label "bug" \
+          --label "automated" \
+          --label "checksum-updater"
+
+  # Separate job for notification and cleanup
+  notify:
+    needs: checksum-update
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: needs.checksum-update.result == 'success'
+      run: |
+        echo "✅ Weekly checksum update completed successfully"
+        # Could add Slack/Discord notifications here
+    
+    - name: Cleanup on failure
+      if: needs.checksum-update.result == 'failure'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "🧹 Cleaning up after failed workflow"
+        # Could clean up temporary branches/files here
