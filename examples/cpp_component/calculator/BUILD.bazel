@@ -18,6 +18,7 @@ cc_component_library(
     srcs = ["src/math_utils.cpp"],
     hdrs = ["src/math_utils.h"],
     cxx_std = "c++20",
+    enable_exceptions = True,
     language = "cpp",
     optimize = True,
 )
@@ -30,9 +31,10 @@ cpp_component(
         "src/calculator.cpp",
     ],
     hdrs = [
-        "src/calculator.h",
+        "src/calculator_impl.h",
     ],
     cxx_std = "c++20",
+    enable_exceptions = True,
     language = "cpp",
     optimize = True,
     wit = "wit/calculator.wit",

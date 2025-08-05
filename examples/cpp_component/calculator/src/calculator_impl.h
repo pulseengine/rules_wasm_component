@@ -1,8 +1,9 @@
 #pragma once
 
 #include "math_utils.h"
-#include <vector>
+#include <optional>
 #include <string>
+#include <vector>
 
 // Generated WIT bindings will be included here
 // #include "calculator_bindings.h"
