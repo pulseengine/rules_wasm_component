@@ -12,7 +12,7 @@
           "url_suffix": "macos.tar.gz"
         },
         "darwin_arm64": {
-          "sha256": "cf5f524de23f231756ec2f3754fc810ea3f6206841a968c45d8b7ea47cfc3a61",
+          "sha256": "e1e529ea226b1db0b430327809deae9246b580fa3cae32d31c82dfe770233587",
           "url_suffix": "macos.tar.gz"
         },
         "linux_amd64": {

@@ -1,25 +1,18 @@
 """WASI SDK toolchain definitions"""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("//checksums:registry.bzl", "get_tool_info")
 
-WASI_SDK_PLATFORMS = {
-    "darwin_amd64": struct(
-        sha256 = "cf5f524de23f231756ec2f3754fc810ea3f6206841a968c45d8b7ea47cfc3a61",
-        url_suffix = "macos.tar.gz",
-    ),
-    "darwin_arm64": struct(
-        sha256 = "cf5f524de23f231756ec2f3754fc810ea3f6206841a968c45d8b7ea47cfc3a61",
-        url_suffix = "macos.tar.gz",
-    ),
-    "linux_amd64": struct(
-        sha256 = "fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8",
-        url_suffix = "linux.tar.gz",
-    ),
-    "linux_arm64": struct(
-        sha256 = "fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8",
-        url_suffix = "linux.tar.gz",
-    ),
-}
+def _get_wasi_sdk_platform_info(platform, version):
+    """Get platform info and checksum for WASI SDK from centralized registry"""
+    from_registry = get_tool_info("wasi-sdk", version, platform)
+    if not from_registry:
+        fail("Unsupported platform {} for wasi-sdk version {}".format(platform, version))
+    
+    return struct(
+        sha256 = from_registry["sha256"],
+        url_suffix = from_registry["url_suffix"],
+    )
 
 def _wasi_sdk_toolchain_impl(ctx):
     """Implementation of wasi_sdk_toolchain rule"""
@@ -162,11 +155,15 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
             platform_suffix,
         )
 
+    # Get checksum from centralized registry
+    platform_info = _get_wasi_sdk_platform_info(platform, version)
+    
     # The archive contains the full version and platform in the prefix
     strip_prefix = "wasi-sdk-{}-{}".format(full_version, platform_suffix)
 
     repository_ctx.download_and_extract(
         url = url,
+        sha256 = platform_info.sha256,
         stripPrefix = strip_prefix,
     )
 
