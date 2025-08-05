@@ -1,0 +1,69 @@
+"""
+WebAssembly component version of the checksum updater tool.
+
+This demonstrates self-bootstrapping capabilities and showcases the maturity
+of the WebAssembly component model for real-world tooling.
+"""
+
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_binary", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Core library for the checksum updater
+rust_library(
+    name = "checksum_updater_wasm_lib",
+    srcs = [
+        "src/lib.rs",
+        "src/checksum_manager.rs",
+        "src/github_client.rs",
+        "src/tool_config.rs", 
+        "src/update_engine.rs",
+        "src/validator.rs",
+    ],
+    deps = [
+        "@crates//:anyhow",
+        "@crates//:chrono",
+        "@crates//:hex",
+        "@crates//:regex",
+        "@crates//:reqwest",
+        "@crates//:semver",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:sha2",
+        "@crates//:tokio",
+        "@crates//:tracing",
+    ],
+    crate_features = ["default"],
+)
+
+# WebAssembly component binary - will be built with appropriate toolchain
+rust_binary(
+    name = "checksum_updater_wasm_bin",
+    srcs = ["src/main.rs"],
+    deps = [
+        ":checksum_updater_wasm_lib",
+        "@crates//:anyhow",
+        "@crates//:clap",
+        "@crates//:tokio",
+        "@crates//:tracing",
+        "@crates//:tracing-subscriber",
+    ],
+    crate_features = ["default"],
+)
+
+# Placeholder component target - this demonstrates the architecture
+# In a full implementation, this would use wasm32-wasi target compilation
+alias(
+    name = "checksum_updater_wasm",
+    actual = ":checksum_updater_wasm_bin",
+)
+
+# Rust test for component functionality
+rust_test(
+    name = "checksum_updater_wasm_test",
+    crate = ":checksum_updater_wasm_lib",
+    data = [
+        ":checksum_updater_wasm",
+        "//checksums:all_checksums",
+    ],
+)

@@ -1,0 +1,113 @@
+/// WebAssembly Component Interface for Checksum Updater
+/// 
+/// This component provides automated checksum management for WebAssembly tools,
+/// demonstrating self-bootstrapping capabilities using WASI Preview 2.
+
+package component:checksum-updater@0.1.0;
+
+/// Update operation configuration
+record update-config {
+    /// Force update even if versions match
+    force: bool,
+    /// Dry run - don't actually update files
+    dry-run: bool,
+    /// Continue processing if errors occur
+    skip-errors: bool,
+    /// Timeout in seconds for operations
+    timeout-seconds: u64,
+}
+
+/// Result of an update operation
+record update-result {
+    /// Number of tools processed
+    tools-processed: u32,
+    /// Number of tools updated  
+    tools-updated: u32,
+    /// Number of new versions found
+    new-versions-found: u32,
+    /// Number of errors encountered
+    errors: u32,
+    /// Duration in milliseconds
+    duration-ms: u64,
+}
+
+/// Information about a tool update
+record tool-update {
+    /// Tool name
+    tool-name: string,
+    /// Previous version (if any)
+    old-version: option<string>,
+    /// New version
+    new-version: string,
+    /// Type of version change (major, minor, patch)
+    version-change: string,
+    /// Number of platforms updated
+    platforms-updated: u32,
+    /// URL to release notes
+    release-notes-url: option<string>,
+}
+
+/// Validation results
+record validation-result {
+    /// Number of tools validated
+    tools-validated: u32,
+    /// Number of valid checksums
+    valid-checksums: u32,
+    /// Number of invalid checksums
+    invalid-checksums: u32,
+    /// Number of fixed checksums
+    fixed-checksums: u32,
+}
+
+/// Main checksum updater interface
+interface updater {
+    /// List all available tools
+    list-tools: func() -> result<list<string>, string>;
+    
+    /// Update specific tools
+    update-tools: func(tools: list<string>, config: update-config) -> result<update-result, string>;
+    
+    /// Update all tools
+    update-all-tools: func(config: update-config) -> result<update-result, string>;
+    
+    /// Validate checksums for tools
+    validate-tools: func(tools: list<string>, fix-errors: bool) -> result<validation-result, string>;
+    
+    /// Get detailed information about updates (JSON format)
+    get-update-details: func() -> result<string, string>;
+    
+    /// Self-update: Check if this component has a newer version available
+    check-self-update: func() -> result<option<string>, string>;
+    
+    /// Self-update: Download and prepare new version of this component
+    perform-self-update: func(version: string) -> result<bool, string>;
+}
+
+/// Bootstrap interface for self-hosting capabilities
+interface bootstrap {
+    /// Get the current version of this component
+    get-version: func() -> string;
+    
+    /// Get the path where this component is located
+    get-component-path: func() -> result<string, string>;
+    
+    /// Replace this component with a new version
+    replace-self: func(new-component-path: string) -> result<bool, string>;
+    
+    /// Verify that a component file is valid
+    verify-component: func(component-path: string) -> result<bool, string>;
+}
+
+world checksum-updater {
+    /// Import WASI Preview 2 interfaces
+    import wasi:filesystem/types@0.2.0;
+    import wasi:filesystem/preopens@0.2.0;
+    import wasi:http/types@0.2.0;
+    import wasi:http/outgoing-handler@0.2.0;
+    import wasi:io/streams@0.2.0;
+    import wasi:clocks/wall-clock@0.2.0;
+    
+    /// Export our interfaces
+    export updater;
+    export bootstrap;
+}
