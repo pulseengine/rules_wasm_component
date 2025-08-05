@@ -1,0 +1,33 @@
+[package]
+name = "checksum_updater"
+version = "0.1.0"
+edition = "2021"
+description = "Automated tool for updating WebAssembly tool checksums"
+license = "Apache-2.0"
+repository = "https://github.com/rules-wasm-component/rules_wasm_component"
+
+[[bin]]
+name = "checksum_updater"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+sha2 = "0.10"
+hex = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+semver = "1.0"
+regex = "1.0"
+futures = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tempfile = "3.0"
+async-trait = "0.1"
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockito = "1.0"
