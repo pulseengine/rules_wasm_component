@@ -1,0 +1,51 @@
+[package]
+name = "checksum_updater_wasm"
+version = "0.1.0"
+edition = "2021"
+description = "WebAssembly component version of checksum updater for self-bootstrapping"
+license = "Apache-2.0"
+repository = "https://github.com/rules-wasm-component/rules_wasm_component"
+
+[lib]
+crate-type = ["cdylib"]
+
+[[bin]]
+name = "checksum_updater_wasm"
+path = "src/main.rs"
+
+[dependencies]
+# Core functionality
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+semver = "1.0"
+regex = "1.0"
+hex = "0.4"
+sha2 = "0.10"
+
+# WASI-compatible async runtime and HTTP client
+tokio = { version = "1.0", features = ["rt", "macros", "fs", "io-util"] }
+reqwest = { version = "0.11", features = ["json"], default-features = false }
+
+# WebAssembly component model
+wit-bindgen = "0.43.0"
+
+# CLI (for component interface)
+clap = { version = "4.0", features = ["derive"] }
+
+# Tracing for WASI
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+# Target-specific dependencies for WASI
+[target.'cfg(target_family = "wasm")'.dependencies]
+wasi = "0.13"
+
+[package.metadata.component]
+package = "component:checksum-updater"
+
+[package.metadata.component.dependencies]
