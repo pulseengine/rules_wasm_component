@@ -1,0 +1,182 @@
+"""
+Enhanced real-world examples demonstrating Wasmtime WebAssembly runtime integration
+"""
+
+load("//rust:defs.bzl", "rust_binary", "rust_library")
+load("//wasm:defs.bzl", "wasm_component_test")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Host application for component execution and testing
+rust_binary(
+    name = "component_runner",
+    srcs = ["src/bin/component_runner.rs"],
+    deps = [
+        ":wasmtime_utils",
+        "@crates//:anyhow",
+        "@crates//:clap",
+        "@crates//:serde_json",
+        "@crates//:tokio",
+        "@crates//:tracing",
+        "@crates//:tracing-subscriber",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
+
+# Performance benchmarking tool
+rust_binary(
+    name = "component_benchmark",
+    srcs = ["src/bin/component_benchmark.rs"],
+    deps = [
+        ":wasmtime_utils",
+        "@crates//:anyhow",
+        "@crates//:clap",
+        "@crates//:criterion",
+        "@crates//:serde_json",
+        "@crates//:tokio",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
+
+# Plugin system demonstrator
+rust_binary(
+    name = "plugin_system",
+    srcs = ["src/bin/plugin_system.rs"],
+    deps = [
+        ":wasmtime_utils",
+        "@crates//:anyhow",
+        "@crates//:clap",
+        "@crates//:serde_json",
+        "@crates//:tokio",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
+
+# Multi-component orchestration
+rust_binary(
+    name = "component_orchestrator",
+    srcs = ["src/bin/component_orchestrator.rs"],
+    deps = [
+        ":wasmtime_utils",
+        "@crates//:anyhow",
+        "@crates//:async-trait",
+        "@crates//:clap",
+        "@crates//:futures",
+        "@crates//:serde_json",
+        "@crates//:tokio",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
+
+# Shared utilities library
+rust_library(
+    name = "wasmtime_utils",
+    srcs = [
+        "src/lib.rs",
+        "src/component_loader.rs",
+        "src/host_functions.rs",
+        "src/metrics.rs",
+        "src/runtime_config.rs",
+    ],
+    deps = [
+        "@crates//:anyhow",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:tokio",
+        "@crates//:tracing",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
+
+# Unit tests for utilities
+rust_test(
+    name = "wasmtime_utils_test",
+    crate = ":wasmtime_utils",
+    deps = [
+        "@crates//:tokio-test",
+    ],
+)
+
+# Documentation
+rust_doc(
+    name = "wasmtime_docs",
+    crate = ":wasmtime_utils",
+)
+
+# Integration tests that use real components
+wasm_component_test(
+    name = "calculator_runtime_test",
+    srcs = ["tests/calculator_runtime_test.rs"],
+    data = [
+        "//examples/cpp_component/calculator:calculator_component",
+        "//examples/go_component:calculator_component",
+        "//examples/basic:basic_component",
+    ],
+    deps = [
+        ":wasmtime_utils",
+        "@crates//:anyhow",
+        "@crates//:tokio-test",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
+
+# Performance test suite
+wasm_component_test(
+    name = "performance_test",
+    srcs = ["tests/performance_test.rs"],
+    data = [
+        "//examples/cpp_component/image_processing:simd_utils",
+        "//examples/wizer_example:wizer_example_component",
+    ],
+    deps = [
+        ":wasmtime_utils",
+        "@crates//:anyhow",
+        "@crates//:criterion",
+        "@crates//:tokio-test",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
+
+# Plugin system test
+wasm_component_test(
+    name = "plugin_system_test",
+    srcs = ["tests/plugin_system_test.rs"],
+    data = [
+        "//examples/js_component:calculator_component",
+        "//examples/basic:basic_component",
+    ],
+    deps = [
+        ":wasmtime_utils",
+        "@crates//:anyhow",
+        "@crates//:tokio-test",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
+
+# Multi-component orchestration test
+wasm_component_test(
+    name = "orchestration_test",
+    srcs = ["tests/orchestration_test.rs"],
+    data = [
+        "//examples/cpp_component/multi_component_system:analytics_service",
+        "//examples/cpp_component/multi_component_system:auth_service",
+        "//examples/cpp_component/multi_component_system:user_service",
+    ],
+    deps = [
+        ":wasmtime_utils",
+        "@crates//:anyhow",
+        "@crates//:futures",
+        "@crates//:tokio-test",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+    ],
+)
