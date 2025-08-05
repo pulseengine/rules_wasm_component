@@ -1,0 +1,97 @@
+"""
+Checksum updater tool for automated WebAssembly tool checksum management.
+"""
+
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Main checksum updater binary
+rust_binary(
+    name = "checksum_updater",
+    srcs = ["src/main.rs"],
+    deps = [
+        ":checksum_updater_lib",
+        "@crates//:anyhow",
+        "@crates//:clap",
+        "@crates//:regex",
+        "@crates//:serde_json",
+        "@crates//:tokio",
+        "@crates//:tracing",
+        "@crates//:tracing-subscriber",
+    ],
+)
+
+# Checksum updater library
+rust_library(
+    name = "checksum_updater_lib",
+    srcs = [
+        "src/lib.rs",
+        "src/checksum_manager.rs",
+        "src/github_client.rs",
+        "src/tool_config.rs",
+        "src/update_engine.rs",
+        "src/validator.rs",
+    ],
+    deps = [
+        "@crates//:anyhow",
+        "@crates//:chrono",
+        "@crates//:futures",
+        "@crates//:hex",
+        "@crates//:regex",
+        "@crates//:reqwest",
+        "@crates//:semver",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:sha2",
+        "@crates//:tempfile",
+        "@crates//:tokio",
+        "@crates//:tracing",
+    ],
+    proc_macro_deps = [
+        "@crates//:async-trait",
+    ],
+)
+
+# Unit tests
+rust_test(
+    name = "checksum_updater_test",
+    crate = ":checksum_updater_lib",
+    deps = [
+        "@crates//:tokio-test",
+        "@crates//:tempfile",
+    ],
+)
+
+# Integration test with actual tool files
+rust_test(
+    name = "integration_test",
+    srcs = ["tests/integration_test.rs"],
+    deps = [
+        ":checksum_updater_lib",
+        "@crates//:anyhow",
+        "@crates//:tempfile",
+        "@crates//:tokio",
+        "@crates//:tokio-test",
+        "@crates//:serde_json",
+    ],
+    data = [
+        ":checksum_updater",
+    ],
+)
+
+# Validation test to ensure all JSON files are valid
+rust_test(
+    name = "json_validation_test", 
+    srcs = ["tests/json_validation_test.rs"],
+    deps = [
+        ":checksum_updater_lib",
+        "@crates//:anyhow",
+        "@crates//:tokio",
+        "@crates//:serde_json",
+        "@crates//:semver",
+    ],
+    data = [
+        ":checksum_updater",
+    ],
+)
