@@ -24,12 +24,8 @@ regex = "1.0"
 hex = "0.4"
 sha2 = "0.10"
 
-# WASI-compatible async runtime and HTTP client
-tokio = { version = "1.0", features = ["rt", "macros", "fs", "io-util"] }
-reqwest = { version = "0.11", features = ["json"], default-features = false }
-
-# WebAssembly component model
-wit-bindgen = "0.43.0"
+# For now, keep it simple and focus on Bazel integration
+# Future: consider wstd when it matures
 
 # CLI (for component interface)
 clap = { version = "4.0", features = ["derive"] }
@@ -41,9 +37,13 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 [dev-dependencies]
 tokio-test = "0.4"
 
-# Target-specific dependencies for WASI
-[target.'cfg(target_family = "wasm")'.dependencies]
-wasi = "0.13"
+[features]
+default = []
+wizer = []
+
+# Target-specific dependencies would go here for complete WASIP2 implementation
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
+# wasi = "0.13"  # Direct WASIP2 bindings
 
 [package.metadata.component]
 package = "component:checksum-updater"

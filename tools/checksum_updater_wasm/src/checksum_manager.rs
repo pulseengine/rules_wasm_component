@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use tokio::fs;
+// use tokio::fs; // Native WASIP2 uses std::fs instead
 use tracing::{debug, info, warn};
 
 /// Tool information from the JSON registry
@@ -47,14 +47,13 @@ pub struct ChecksumManager {
 }
 
 impl ChecksumManager {
-    /// Create a new checksum manager
+    /// Create a new checksum manager (native WASIP2 implementation)
     pub async fn new() -> Result<Self> {
-        let checksums_dir = Self::find_checksums_directory().await?;
+        let checksums_dir = Self::find_checksums_directory()?;
         let tools_dir = checksums_dir.join("tools");
 
-        // Ensure directories exist
-        fs::create_dir_all(&tools_dir)
-            .await
+        // Ensure directories exist using native std::fs
+        std::fs::create_dir_all(&tools_dir)
             .context("Failed to create tools directory")?;
 
         Ok(Self {
@@ -71,8 +70,8 @@ impl ChecksumManager {
         }
     }
 
-    /// Find the checksums directory in the repository
-    async fn find_checksums_directory() -> Result<PathBuf> {
+    /// Find the checksums directory in the repository (native WASIP2)
+    fn find_checksums_directory() -> Result<PathBuf> {
         let mut current_dir = std::env::current_dir()?;
 
         // Look for checksums directory up the directory tree

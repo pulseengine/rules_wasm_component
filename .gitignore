@@ -20,3 +20,62 @@ test.xml
 # Temporary files
 *.tmp
 .claude/
+
+# Scratch/temporary test files
+tests/scratch/*.go
+tests/scratch/*.wasm
+tests/scratch/*.wat
+
+# Rust/Cargo build artifacts
+target/
+**/target/
+Cargo.lock.orig
+*.pdb
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Go build artifacts
+*.test
+*.prof
+go.work
+go.work.sum
+
+# C/C++ build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Wasm build artifacts
+*.wasm
+*.wat
+*.wasm.orig
+
+# Exception: Keep essential adapter files
+!wasm/adapters/*.wasm
+
+# Editor and tool specific
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/.ropeproject
+.project
+.classpath
+
+# Coverage reports
+coverage/
+*.lcov
+*.gcov
+*.gcda
+*.gcno
+
+# Profiling output
+perf.data
+flamegraph.svg

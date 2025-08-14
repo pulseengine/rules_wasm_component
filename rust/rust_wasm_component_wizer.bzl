@@ -96,6 +96,10 @@ def rust_wasm_component_wizer(
 
         # Step 1: Create the regular WASM component
         component_name = "{}_component_{}".format(name, profile)
+        
+        # Filter out conflicting kwargs
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k != "tags"}
+        
         rust_wasm_component(
             name = component_name,
             srcs = all_srcs,
@@ -108,7 +112,7 @@ def rust_wasm_component_wizer(
             adapter = adapter,
             visibility = ["//visibility:private"],
             tags = ["wasm_component"],
-            **kwargs
+            **filtered_kwargs
         )
 
         # Step 2: Apply Wizer pre-initialization to the component

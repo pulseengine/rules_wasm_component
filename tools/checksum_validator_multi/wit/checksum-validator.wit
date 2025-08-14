@@ -1,0 +1,225 @@
+/// Multi-Language WebAssembly Checksum Validator Component Interface
+///
+/// This component combines Go HTTP downloading capabilities with Rust checksum validation
+/// to provide a comprehensive tool for managing and validating SHA256 checksums of downloaded files.
+
+package component:checksum-validator@1.0.0;
+
+/// HTTP download configuration
+record download-config {
+    /// URL to download from
+    url: string,
+    /// Local path to save the file
+    output-path: string,
+    /// Timeout in seconds for the download
+    timeout-seconds: u32,
+    /// Expected file size (optional, for validation)
+    expected-size: option<u64>,
+    /// User agent string to use
+    user-agent: option<string>,
+}
+
+/// Download operation result
+record download-result {
+    /// Whether the download was successful
+    success: bool,
+    /// Local path where file was saved
+    local-path: string,
+    /// Actual file size downloaded
+    file-size: u64,
+    /// Calculated SHA256 of downloaded file
+    sha256: string,
+    /// Download time in milliseconds
+    download-time-ms: u64,
+    /// Error message if download failed
+    error: option<string>,
+    /// HTTP status code
+    status-code: option<u32>,
+}
+
+/// Checksum validation configuration
+record validation-config {
+    /// Path to file to validate
+    file-path: string,
+    /// Expected SHA256 checksum
+    expected-sha256: string,
+    /// Tool name (for registry lookup)
+    tool-name: option<string>,
+    /// Version (for registry lookup)
+    version: option<string>,
+    /// Platform (for registry lookup)
+    platform: option<string>,
+}
+
+/// Checksum validation result
+record validation-result {
+    /// Whether validation passed
+    valid: bool,
+    /// Path to validated file
+    file-path: string,
+    /// Actual SHA256 calculated
+    actual-sha256: string,
+    /// Expected SHA256 provided
+    expected-sha256: string,
+    /// File size in bytes
+    file-size: u64,
+    /// Validation time in milliseconds
+    validation-time-ms: u64,
+    /// Error message if validation failed
+    error: option<string>,
+}
+
+/// GitHub release information
+record github-release {
+    /// Release tag name (version)
+    tag-name: string,
+    /// Release name/title
+    name: string,
+    /// Publication date
+    published-at: string,
+    /// List of release assets
+    assets: list<github-asset>,
+}
+
+/// GitHub release asset information
+record github-asset {
+    /// Asset file name
+    name: string,
+    /// Download URL
+    browser-download-url: string,
+    /// File size in bytes
+    size: u64,
+    /// Content type
+    content-type: string,
+}
+
+/// Tool registry information
+record tool-info {
+    /// Tool name
+    tool-name: string,
+    /// GitHub repository (owner/repo)
+    github-repo: string,
+    /// Latest version available
+    latest-version: string,
+    /// Last time registry was checked
+    last-checked: string,
+    /// List of supported platforms
+    supported-platforms: list<string>,
+    /// Number of versions available
+    version-count: u32,
+}
+
+/// Registry update result
+record registry-update-result {
+    /// Number of tools processed
+    tools-processed: u32,
+    /// Number of tools updated
+    tools-updated: u32,
+    /// Number of new versions found
+    new-versions-found: u32,
+    /// Number of errors encountered
+    errors: u32,
+    /// Total duration in milliseconds
+    duration-ms: u64,
+    /// Updated tools list
+    updated-tools: list<string>,
+}
+
+/// Combined download and validation operation
+record download-and-validate-config {
+    /// Download configuration
+    download: download-config,
+    /// Expected checksum for validation
+    expected-sha256: string,
+    /// Whether to keep file if validation fails
+    keep-on-failure: bool,
+}
+
+/// Combined download and validation result
+record download-and-validate-result {
+    /// Download result
+    download: download-result,
+    /// Validation result
+    validation: validation-result,
+    /// Overall success (both download and validation must succeed)
+    success: bool,
+    /// Total operation time in milliseconds
+    total-time-ms: u64,
+}
+
+/// HTTP downloader interface (Go component)
+interface http-downloader {
+    /// Download a file from URL
+    download-file: func(config: download-config) -> result<download-result, string>;
+    
+    /// Fetch GitHub release information
+    fetch-github-release: func(repo: string) -> result<github-release, string>;
+    
+    /// Test network connectivity
+    test-connectivity: func() -> result<bool, string>;
+    
+    /// Get Go component version and info
+    get-component-info: func() -> string;
+}
+
+/// Checksum validator interface (Rust component)  
+interface checksum-validator {
+    /// Validate file checksum
+    validate-checksum: func(config: validation-config) -> result<validation-result, string>;
+    
+    /// List available tools in registry
+    list-tools: func(registry-path: string) -> result<list<string>, string>;
+    
+    /// Get detailed tool information
+    get-tool-info: func(registry-path: string, tool-name: string) -> result<tool-info, string>;
+    
+    /// Update tool information in registry
+    update-tool-registry: func(registry-path: string, tool-name: string, version: string, platform: string, sha256: string) -> result<bool, string>;
+    
+    /// Verify registry integrity
+    verify-registry-integrity: func(registry-path: string) -> result<bool, string>;
+    
+    /// Batch validate multiple files
+    batch-validate: func(configs: list<validation-config>) -> result<list<validation-result>, string>;
+    
+    /// Get Rust component version and info
+    get-component-info: func() -> string;
+}
+
+/// Main orchestrator interface combining both components
+interface orchestrator {
+    /// Download file and validate checksum in one operation
+    download-and-validate: func(config: download-and-validate-config) -> result<download-and-validate-result, string>;
+    
+    /// Download latest release from GitHub and validate
+    download-latest-release: func(repo: string, platform: string, output-dir: string) -> result<download-and-validate-result, string>;
+    
+    /// Update tool registry from GitHub releases
+    update-registry-from-github: func(registry-path: string, repo: string) -> result<registry-update-result, string>;
+    
+    /// Comprehensive tool validation (download + checksum + registry update)
+    validate-tool-comprehensive: func(registry-path: string, tool-name: string, version: option<string>) -> result<validation-result, string>;
+    
+    /// Get system status and component information
+    get-system-status: func() -> string;
+    
+    /// Self-test both Go and Rust components
+    run-self-test: func() -> result<bool, string>;
+}
+
+/// Main world interface for the multi-language checksum validator
+world checksum-validator {
+    /// Import WASI Preview 2 interfaces
+    import wasi:filesystem/types@0.2.0;
+    import wasi:filesystem/preopens@0.2.0;
+    import wasi:http/types@0.2.0;
+    import wasi:http/outgoing-handler@0.2.0;
+    import wasi:io/streams@0.2.0;
+    import wasi:clocks/wall-clock@0.2.0;
+    import wasi:random/random@0.2.0;
+    
+    /// Export component interfaces
+    export http-downloader;
+    export checksum-validator;
+    export orchestrator;
+}

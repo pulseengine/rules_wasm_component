@@ -1,0 +1,57 @@
+package http-downloader:api@0.1.0;
+
+/// HTTP downloader world for WebAssembly component extending WASI CLI
+world http-downloader {
+    /// Import WASI CLI environment for TinyGo compatibility
+    import wasi:cli/environment@0.2.0;
+    import wasi:cli/exit@0.2.0;
+    import wasi:io/error@0.2.0;
+    import wasi:io/streams@0.2.0;
+    import wasi:cli/stdin@0.2.0;
+    import wasi:cli/stdout@0.2.0;
+    import wasi:cli/stderr@0.2.0;
+    
+    /// Export our HTTP downloader interface
+    export download-github-release: interface {
+        
+        /// Download result containing response data or error
+        variant download-result {
+            /// Successful download with response body
+            success(response-data),
+            /// HTTP error with status code and message  
+            http-error(http-error-info),
+            /// Network or other error with message
+            error(string),
+        }
+        
+        /// HTTP response data
+        record response-data {
+            /// HTTP status code
+            status: u16,
+            /// Response headers
+            headers: list<tuple<string, string>>,
+            /// Response body as bytes
+            body: list<u8>,
+        }
+        
+        /// HTTP error information
+        record http-error-info {
+            /// HTTP status code
+            status: u16,
+            /// Error message
+            message: string,
+        }
+        
+        /// Download a file from a GitHub release
+        /// Example: download-github-release-asset("bytecodealliance/wasm-tools", "1.236.0", "wasm-tools-1.236.0-x86_64-linux.tar.gz")
+        download-github-release-asset: func(repo: string, version: string, asset-name: string) -> download-result;
+        
+        /// Download checksums from a GitHub release (usually SHASUMS256.txt)
+        /// Example: download-github-checksums("bytecodealliance/wasm-tools", "1.236.0")
+        download-github-checksums: func(repo: string, version: string) -> download-result;
+        
+        /// Get the latest release information from GitHub API
+        /// Example: get-latest-release("bytecodealliance/wasm-tools") 
+        get-latest-release: func(repo: string) -> download-result;
+    }
+}

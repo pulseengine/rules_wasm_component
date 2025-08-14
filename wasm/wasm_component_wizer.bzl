@@ -116,34 +116,33 @@ def _wizer_chain_impl(ctx):
 
     component_file = original_files[0]
 
-    # Get Wizer toolchain
-    wizer_toolchain = ctx.toolchains["//toolchains:wizer_toolchain_type"]
-    wizer = wizer_toolchain.wizer
+    # Get Wizer initializer tool (handles Component → Module → Wizer → Component)
+    wizer_initializer = ctx.executable._wizer_initializer
 
     # Output file
     output_wasm = ctx.outputs.wizer_component
 
-    # Build Wizer arguments
+    # Build Wizer initializer arguments
     args = ctx.actions.args()
+    args.add("--input", component_file.path)
+    args.add("--output", output_wasm.path)
     args.add("--allow-wasi")
-    args.add("--inherit-stdio", "true")
+    args.add("--inherit-stdio")
+    args.add("--verbose")
 
     if ctx.attr.init_function_name:
         args.add("--init-func", ctx.attr.init_function_name)
     else:
-        args.add("--init-func", "wizer.initialize")
+        args.add("--init-func", "wizer_initialize")
 
-    args.add("-o", output_wasm.path)
-    args.add(component_file.path)
-
-    # Run Wizer
+    # Run Wizer initializer (Component → Module → Wizer → Component)
     ctx.actions.run(
-        executable = wizer,
+        executable = wizer_initializer,
         arguments = [args],
         inputs = [component_file],
         outputs = [output_wasm],
         mnemonic = "WizerChain",
-        progress_message = "Wizer pre-initializing component: {}".format(ctx.label.name),
+        progress_message = "Wizer pre-initializing component (via initializer): {}".format(ctx.label.name),
         use_default_shell_env = False,
         env = {"RUST_BACKTRACE": "1"},
     )
@@ -163,14 +162,19 @@ wizer_chain = rule(
             doc = "WebAssembly component target to pre-initialize",
         ),
         "init_function_name": attr.string(
-            default = "wizer.initialize",
+            default = "wizer_initialize",
             doc = "Name of the initialization function",
+        ),
+        "_wizer_initializer": attr.label(
+            default = "//tools/wizer_initializer:wizer_initializer",
+            executable = True,
+            cfg = "exec",
+            doc = "Wizer initializer tool for Component → Module → Wizer → Component workflow",
         ),
     },
     outputs = {
         "wizer_component": "%{name}_wizer.wasm",
     },
-    toolchains = ["//toolchains:wizer_toolchain_type"],
     doc = """Chain Wizer pre-initialization after an existing component rule.
 
     This is a convenience rule that takes the output of another component-building

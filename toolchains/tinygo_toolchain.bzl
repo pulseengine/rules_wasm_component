@@ -63,6 +63,45 @@ def _download_tinygo(repository_ctx, version, platform):
         fail("TinyGo installation test failed: {}".format(result.stderr))
 
     print("Successfully installed TinyGo: {}".format(result.stdout.strip()))
+    
+    # Rebuild WASI-libc with TinyGo's LLVM tools to fix missing headers
+    wasi_libc_dir = repository_ctx.path("tinygo/lib/wasi-libc")
+    if wasi_libc_dir.exists:
+        print("Rebuilding WASI-libc with TinyGo's LLVM tools...")
+        
+        # TinyGo's LLVM tool paths
+        tinygo_root = repository_ctx.path("tinygo")
+        clang_path = tinygo_root.get_child("bin").get_child("clang")
+        ar_path = tinygo_root.get_child("bin").get_child("llvm-ar") 
+        nm_path = tinygo_root.get_child("bin").get_child("llvm-nm")
+        
+        # Check if TinyGo's LLVM tools exist
+        if clang_path.exists and ar_path.exists and nm_path.exists:
+            # Clean any existing build
+            clean_result = repository_ctx.execute([
+                "make", "clean"
+            ], working_directory = str(wasi_libc_dir))
+            
+            # Rebuild WASI-libc with TinyGo's LLVM
+            build_result = repository_ctx.execute([
+                "make",
+                "WASM_CC={}".format(clang_path),
+                "WASM_AR={}".format(ar_path), 
+                "WASM_NM={}".format(nm_path),
+                # Only build essential components to avoid long build times
+                "THREAD_MODEL=single"
+            ], working_directory = str(wasi_libc_dir))
+            
+            if build_result.return_code == 0:
+                print("Successfully rebuilt WASI-libc with TinyGo's LLVM tools")
+            else:
+                print("Warning: WASI-libc rebuild failed: {}".format(build_result.stderr))
+                print("Continuing with downloaded WASI-libc - may have header issues")
+        else:
+            print("Warning: TinyGo LLVM tools not found, using downloaded WASI-libc")
+    else:
+        print("Warning: WASI-libc directory not found in TinyGo installation")
+
     return tinygo_binary
 
 def _get_tinygo_platform_suffix(platform):
