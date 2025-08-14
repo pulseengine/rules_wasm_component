@@ -1,0 +1,39 @@
+// WebAssembly Signing Example Interface
+//
+// Defines the interface for a component that demonstrates
+// signing capabilities and integrity verification.
+
+package example:signature@1.0.0;
+
+interface demo {
+    // Information about a component for signing
+    record signing-info {
+        name: string,
+        version: string, 
+        description: string,
+        author: string,
+    }
+
+    // Result of integrity verification
+    record verification-result {
+        is-valid: bool,
+        computed-hash: string,
+        message: string,
+    }
+
+    // Get metadata about this component
+    get-component-info: func() -> signing-info;
+
+    // Compute a simple hash of data (for demonstration)
+    compute-hash: func(data: string) -> string;
+
+    // Verify data integrity using hash comparison
+    verify-integrity: func(expected-hash: string, data: string) -> verification-result;
+
+    // Demonstrate the complete signing workflow
+    demonstrate-signing-flow: func() -> string;
+}
+
+world example-world {
+    export demo;
+}

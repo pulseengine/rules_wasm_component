@@ -98,6 +98,31 @@ TOOL_VERSIONS = {
             },
         },
     },
+    "wasmsign2": {
+        "0.2.6": {
+            "build_type": "rust_source",
+            "source_info": {
+                "git_tag": "0.2.6",
+                "cargo_package": "wasmsign2-cli",
+                "binary_name": "wasmsign2",
+            },
+            "darwin_amd64": {
+                "rust_target": "x86_64-apple-darwin",
+            },
+            "darwin_arm64": {
+                "rust_target": "aarch64-apple-darwin", 
+            },
+            "linux_amd64": {
+                "rust_target": "x86_64-unknown-linux-gnu",
+            },
+            "linux_arm64": {
+                "rust_target": "aarch64-unknown-linux-gnu",
+            },
+            "windows_amd64": {
+                "rust_target": "x86_64-pc-windows-msvc",
+            },
+        },
+    },
 }
 
 # Tool compatibility matrix
@@ -107,6 +132,7 @@ COMPATIBILITY_MATRIX = {
             "wac": ["0.7.0"],
             "wit-bindgen": ["0.43.0"],
             "wkg": ["0.11.0"],
+            "wasmsign2": ["0.2.6"],
         },
     },
 }
@@ -118,12 +144,14 @@ DEFAULT_VERSIONS = {
         "wac": "0.7.0",
         "wit-bindgen": "0.43.0",
         "wkg": "0.11.0",
+        "wasmsign2": "0.2.6",
     },
     "latest": {
         "wasm-tools": "1.235.0",
         "wac": "0.7.0",
         "wit-bindgen": "0.43.0",
         "wkg": "0.11.0",
+        "wasmsign2": "0.2.6",
     },
 }
 
