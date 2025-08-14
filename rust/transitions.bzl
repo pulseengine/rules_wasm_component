@@ -2,6 +2,7 @@
 
 def _wasm_transition_impl(settings, attr):
     """Transition to WASM platform for component builds"""
+    # Use WASI Preview 2 - now Tier 2 support in Rust 1.82+
     return {
         "//command_line_option:platforms": "//platforms:wasm32-wasip2",
     }

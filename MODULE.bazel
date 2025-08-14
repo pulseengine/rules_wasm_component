@@ -150,6 +150,14 @@ crate.from_cargo(
     name = "crates",
     cargo_lockfile = "//tools/checksum_updater:Cargo.lock",
     manifests = ["//tools/checksum_updater:Cargo.toml"],
+    supported_platform_triples = [
+        "wasm32-wasip2",  # Enable WebAssembly WASI Preview 2 support
+        "wasm32-unknown-unknown",
+        "wasm32-wasip1",
+        "x86_64-unknown-linux-gnu",
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+    ],
 )
 use_repo(crate, "wizer_crates", "crates")
 

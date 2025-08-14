@@ -1,0 +1,61 @@
+"""
+Go HTTP Downloader WebAssembly Component
+
+This demonstrates TinyGo + WASI Preview 2 networking capabilities
+for downloading GitHub releases in a real-world WebAssembly component.
+"""
+
+load("//go:defs.bzl", "go_wasm_component")
+load("//go:go_wasm_component_test.bzl", "go_wasm_component_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Standard WebAssembly component for HTTP downloading
+go_wasm_component(
+    name = "http_downloader_go_component",
+    srcs = ["main.go"],
+    world = "wasi:cli/command",
+    go_mod = "go.mod",
+    optimization = "release",
+)
+
+# TODO: Wizer support for Go will be added later
+# go_wasm_component_wizer(
+#     name = "http_downloader_go_wizer",
+#     srcs = ["src/main.go"],
+#     wit = "wit/http-downloader.wit",
+#     world = "wasi:cli/command", 
+#     go_mod = "go.mod",
+#     optimization = "release",
+#     wizer_init_function = "wizer.initialize",
+# )
+
+# Main component alias (points to standard version)
+alias(
+    name = "http_downloader_go",
+    actual = ":http_downloader_go_component",
+)
+
+# Build tests to ensure components compile correctly
+build_test(
+    name = "go_component_build_test",
+    targets = [
+        ":http_downloader_go_component",
+    ],
+)
+
+# Comprehensive component validation test
+go_wasm_component_test(
+    name = "go_component_validation_test",
+    component = ":http_downloader_go_component",
+)
+
+# Test suite for Go HTTP downloader components
+test_suite(
+    name = "http_downloader_go_tests",
+    tests = [
+        ":go_component_build_test",
+        ":go_component_validation_test",
+    ],
+)

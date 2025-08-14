@@ -1,0 +1,13 @@
+"""
+WIT Interface definitions for Multi-Language Checksum Validator
+"""
+
+load("//wit:defs.bzl", "wit_library")
+
+package(default_visibility = ["//visibility:public"])
+
+wit_library(
+    name = "checksum_validator_wit",
+    srcs = ["checksum-validator.wit"],
+    visibility = ["//visibility:public"],
+)

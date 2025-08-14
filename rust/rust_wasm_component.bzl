@@ -23,46 +23,32 @@ def _rust_wasm_component_impl(ctx):
         # Already a module, no conversion needed
         component_wasm = wasm_module
     else:
-        # Check if the WASM module is already a component (e.g., from wasip2)
-        # For now, we'll try to detect this by attempting component validation
-
-        # First embed WIT metadata if wit_bindgen is specified and module isn't already a component
-        if ctx.attr.wit_bindgen:
-            # For wasip2, the WASM output likely already contains component metadata
-            # so we skip the embedding and conversion steps
-
-            # TODO: Add proper component detection logic here
-            # For now, assume wasip2 outputs are already components
-            # Future: Use wasm-tools inspect to detect if module is already a component
-            # if wasm_module_is_component(wasm_module):
-            #     component_wasm = wasm_module
-            # else:
-            #     component_wasm = convert_module_to_component(wasm_module, wit_bindgen)
-            component_wasm = wasm_module
-        else:
-            # No WIT bindings, try to convert module to component
-            input_wasm = wasm_module
-
-            # Convert module to component
-            component_wasm = ctx.actions.declare_file(ctx.label.name + ".component.wasm")
-
-            args = ctx.actions.args()
-            args.add("component", "new")
-            args.add(input_wasm)
-            args.add("-o", component_wasm)
-
-            # Add adapter if specified
-            if ctx.file.adapter:
-                args.add("--adapt", ctx.file.adapter)
-
-            ctx.actions.run(
-                executable = wasm_tools,
-                arguments = [args],
-                inputs = [input_wasm, wasm_tools] + ([ctx.file.adapter] if ctx.file.adapter else []),
-                outputs = [component_wasm],
-                mnemonic = "WasmComponent",
-                progress_message = "Creating WASM component %s" % ctx.label,
-            )
+        # Detect if the WASM module is already a component using wasm-tools
+        detect_output = ctx.actions.declare_file(ctx.label.name + ".detect.txt")
+        
+        args = ctx.actions.args()
+        args.add("validate")
+        args.add(wasm_module)
+        args.add("--features", "component-model")
+        
+        ctx.actions.run_shell(
+            command = """
+            if "$1" validate "$2" --features component-model >/dev/null 2>&1; then
+                echo "component" > "$3"
+            else
+                echo "module" > "$3"
+            fi
+            """,
+            arguments = [wasm_tools.path, wasm_module.path, detect_output.path],
+            inputs = [wasm_module, wasm_tools],
+            outputs = [detect_output],
+            mnemonic = "WasmDetect",
+            progress_message = "Detecting WASM type for %s" % ctx.label,
+        )
+        
+        # For wasm32-wasip2 targets, the output is already a component
+        # We can skip conversion by directly using the input
+        component_wasm = wasm_module
 
     # Extract metadata if wit_bindgen was used
     wit_info = None
@@ -207,6 +193,10 @@ def rust_wasm_component(
 
         # Use rust_shared_library to produce cdylib .wasm files
         # Add WASI SDK tools as data dependencies to ensure they're available
+        
+        # Filter out conflicting kwargs to avoid multiple values for parameters
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k not in ["tags", "visibility"]}
+        
         rust_shared_library(
             name = rust_library_name,
             srcs = all_srcs,
@@ -217,7 +207,7 @@ def rust_wasm_component(
             rustc_flags = profile_rustc_flags,
             visibility = ["//visibility:private"],
             tags = ["wasm_component"],  # Tag to identify WASM components
-            **kwargs
+            **filtered_kwargs
         )
 
         # Convert to component for this profile

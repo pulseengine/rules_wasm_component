@@ -1,0 +1,105 @@
+"""
+Production Checksum Management System for CI
+
+This is a CRITICAL CI COMPONENT that our build system uses to manage tool dependencies.
+We eat our own dog food - this WebAssembly component handles:
+- Downloading latest releases from GitHub  
+- Calculating SHA256 checksums
+- Updating our checksums/ registry
+- Validating tool dependencies in CI
+
+Not a demo - this is PRODUCTION infrastructure.
+
+Architecture:
+┌─────────────────────────────────────────────────────────────┐
+│                Multi-Language Component                     │
+├─────────────────────┬───────────────────────────────────────┤
+│   Go Component      │         Rust Component                │
+│                     │                                       │
+│ • HTTP Downloads    │ • SHA256 Validation                   │
+│ • GitHub API        │ • Registry Management                 │
+│ • Network I/O       │ • JSON Processing                     │
+│ • TinyGo Runtime    │ • File Operations                     │
+├─────────────────────┼───────────────────────────────────────┤
+│              WIT Interface Layer                            │
+│   • Component Communication Protocol                       │
+│   • Type-safe Inter-language Calls                         │
+│   • WASI Preview 2 Integration                             │
+└─────────────────────────────────────────────────────────────┘
+"""
+
+load("//go:defs.bzl", "go_wasm_component")
+load(":checksum_updater.bzl", "checksum_updater", "validate_checksums_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Production Checksum Updater Component (Go + TinyGo)
+go_wasm_component(
+    name = "production_checksum_component",
+    srcs = ["production_checksum_updater/main.go"],
+    go_mod = "production_checksum_updater/go.mod", 
+    optimization = "release",
+)
+
+# PRODUCTION CI TOOLS - Used by our build system
+
+# Update checksums for all tools (used by CI)
+checksum_updater(
+    name = "update_checksums", 
+    component = ":production_checksum_component",
+    checksums_dir = "checksums",
+)
+
+# Update specific tools (used by CI and developers)  
+checksum_updater(
+    name = "update_wasm_tools",
+    component = ":production_checksum_component", 
+    checksums_dir = "checksums",
+)
+
+checksum_updater(
+    name = "update_tinygo",
+    component = ":production_checksum_component",
+    checksums_dir = "checksums", 
+)
+
+# CI Test: Validate our checksum registry is current
+validate_checksums_test(
+    name = "checksums_current_test",
+    component = ":production_checksum_component",
+    checksums_dir = "checksums",
+    tools = [
+        "wasm-tools",
+        "wasmtime", 
+        "wit-bindgen",
+        "tinygo",
+        "wkg",
+    ],
+)
+
+# Build test to ensure our production component compiles
+build_test(
+    name = "production_component_build_test", 
+    targets = [
+        ":production_checksum_component",
+        ":update_checksums",
+        ":update_wasm_tools",
+        ":update_tinygo",
+    ],
+)
+
+# Test suite for CI
+test_suite(
+    name = "ci_checksum_tests",
+    tests = [
+        ":checksums_current_test",
+        ":production_component_build_test",
+    ],
+)
+
+# Main production component alias
+alias(
+    name = "checksum_updater",
+    actual = ":production_checksum_component", 
+)

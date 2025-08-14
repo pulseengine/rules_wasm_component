@@ -1,0 +1,69 @@
+"""
+Multi-language WebAssembly Component Composition Example
+
+This demonstrates the composition of WebAssembly components written in different languages
+into a cohesive, orchestrated system using the WebAssembly Component Model.
+
+Architecture:
+- Rust component: Checksum validation, file operations, CLI interface
+- Go component: HTTP downloading, GitHub API integration (when TinyGo is ready)
+- Composition: Orchestrated workflow for complete checksum management
+"""
+
+load("//wasm:multi_language_wasm_component.bzl", "multi_language_wasm_component")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Multi-language composition: Rust + Go components  
+multi_language_wasm_component(
+    name = "checksum_updater_composed",
+    components = [
+        "//tools/checksum_updater_wasm:checksum_updater_wasm",
+        # TODO: Add when TinyGo component is ready
+        # "//tools/http_downloader_go:http_downloader_go",
+    ],
+    composition_type = "orchestrated", 
+    description = "Complete checksum management system with HTTP downloading and validation",
+    workflows = [
+        "fetch_github_release_info",
+        "download_checksum_files", 
+        "validate_existing_checksums",
+        "update_tool_definitions",
+        "generate_bazel_rules",
+    ],
+)
+
+# Simple composition - single Rust component for now
+multi_language_wasm_component(
+    name = "checksum_updater_simple",
+    components = [
+        "//tools/checksum_updater_wasm:checksum_updater_wasm",
+    ],
+    composition_type = "simple",
+    description = "Checksum validation component (single-language demonstration)",
+)
+
+# Demonstration alias for the working composition
+alias(
+    name = "checksum_updater_demo",
+    actual = ":checksum_updater_simple",
+)
+
+# Build tests to ensure compositions work
+build_test(
+    name = "multi_language_composition_test",
+    targets = [
+        ":checksum_updater_simple",
+        # TODO: Fix orchestrated composition when wac toolchain is available
+        # ":checksum_updater_composed", 
+    ],
+)
+
+# Test suite for multi-language WebAssembly components
+test_suite(
+    name = "multi_language_tests", 
+    tests = [
+        ":multi_language_composition_test",
+    ],
+)

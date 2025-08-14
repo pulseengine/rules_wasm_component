@@ -10,13 +10,13 @@ use anyhow::{Context, Result};
 use std::collections::HashMap;
 
 // Re-use the core logic from the native version
-mod checksum_manager;
-mod github_client;
-mod tool_config;
-mod update_engine;
-mod validator;
+pub mod checksum_manager;
+pub mod github_client;
+pub mod tool_config;
+pub mod update_engine;
+pub mod validator;
 
-use checksum_manager::ChecksumManager;
+pub use checksum_manager::ChecksumManager;
 use update_engine::UpdateEngine;
 use validator::ChecksumValidator;
 
