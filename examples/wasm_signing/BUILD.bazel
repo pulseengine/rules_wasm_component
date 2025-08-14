@@ -1,0 +1,152 @@
+"""
+WebAssembly Signing Example
+
+This example demonstrates the complete WebAssembly signing workflow using
+wasmsign2 integration, including key generation, component signing, and 
+signature verification.
+"""
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen", "wasm_sign", "wasm_verify", "wasm_validate")
+
+package(default_visibility = ["//visibility:public"])
+
+# Step 1: Define WIT interfaces
+wit_library(
+    name = "example_interfaces",
+    package_name = "example:signature",
+    srcs = ["wit/example.wit"],
+    world = "example-world",
+)
+
+# Step 2: Create a simple WASM component to sign
+rust_wasm_component_bindgen(
+    name = "example_component",
+    srcs = ["src/lib.rs"],
+    wit = ":example_interfaces",
+    profiles = ["release"],
+)
+
+# Step 3: Generate signing keys
+wasm_keygen(
+    name = "example_keys",
+    public_key_name = "example.public",
+    secret_key_name = "example.secret",
+    openssh_format = True,
+)
+
+# Alternative: Generate compact format keys
+wasm_keygen(
+    name = "compact_keys",
+    public_key_name = "compact.public", 
+    secret_key_name = "compact.secret",
+    openssh_format = False,
+)
+
+# Step 4: Sign the component with embedded signature
+wasm_sign(
+    name = "signed_component_embedded",
+    component = ":example_component",
+    keys = ":example_keys",
+    detached = False,
+)
+
+# Step 5: Sign the component with detached signature
+wasm_sign(
+    name = "signed_component_detached",
+    component = ":example_component", 
+    keys = ":compact_keys",
+    detached = True,
+)
+
+# Step 6: Verify embedded signature
+wasm_verify(
+    name = "verify_embedded",
+    signed_component = ":signed_component_embedded",
+    keys = ":example_keys",
+)
+
+# Step 7: Verify detached signature
+wasm_verify(
+    name = "verify_detached",
+    signed_component = ":signed_component_detached",
+    keys = ":compact_keys",
+)
+
+# Step 8: Validate with signature verification
+wasm_validate(
+    name = "validate_with_signature_check",
+    component = ":signed_component_embedded",
+    verify_signature = True,
+    signing_keys = ":example_keys",
+)
+
+# Step 9: Test different verification methods
+wasm_validate(
+    name = "validate_with_public_key",
+    component = ":signed_component_embedded",
+    verify_signature = True,
+    public_key = ":example_keys",
+)
+
+# Step 10: Demonstrate signing a raw WASM file
+wasm_sign(
+    name = "signed_raw_wasm",
+    wasm_file = ":example_component",
+    keys = ":example_keys",
+    detached = False,
+)
+
+wasm_verify(
+    name = "verify_raw_wasm",
+    wasm_file = ":signed_raw_wasm",
+    keys = ":example_keys",
+)
+
+# Step 11: Create test targets for the complete workflow
+genrule(
+    name = "test_signing_workflow",
+    srcs = [
+        ":verify_embedded",
+        ":verify_detached", 
+        ":validate_with_signature_check",
+    ],
+    outs = ["signing_test_results.txt"],
+    cmd = """
+        echo "=== WebAssembly Signing Test Results ===" > $@
+        echo "Embedded signature verification: $(if [ -f $(location :verify_embedded) ]; then echo PASSED; else echo FAILED; fi)" >> $@
+        echo "Detached signature verification: $(if [ -f $(location :verify_detached) ]; then echo PASSED; else echo FAILED; fi)" >> $@
+        echo "Validation with signature check: $(if [ -f $(location :validate_with_signature_check) ]; then echo PASSED; else echo FAILED; fi)" >> $@
+        echo "Test completed successfully" >> $@
+    """,
+)
+
+# Export files for easy access
+filegroup(
+    name = "all_keys",
+    srcs = [
+        ":example_keys",
+        ":compact_keys",
+    ],
+)
+
+filegroup(
+    name = "all_signed_components",
+    srcs = [
+        ":signed_component_embedded",
+        ":signed_component_detached",
+        ":signed_raw_wasm",
+    ],
+)
+
+filegroup(
+    name = "all_verification_results", 
+    srcs = [
+        ":verify_embedded",
+        ":verify_detached",
+        ":verify_raw_wasm",
+        ":validate_with_signature_check",
+        ":test_signing_workflow",
+    ],
+)

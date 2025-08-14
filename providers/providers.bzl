@@ -49,3 +49,29 @@ WasmValidationInfo = provider(
         "warnings": "List of validation warnings",
     },
 )
+
+# Provider for WASM signature information
+WasmSignatureInfo = provider(
+    doc = "Information about WebAssembly component signatures",
+    fields = {
+        "signed_wasm": "Signed WASM component file",
+        "signature_file": "Detached signature file (if applicable)",
+        "public_key": "Public key file used for verification",
+        "secret_key": "Secret key file used for signing (for key generation only)",
+        "is_signed": "Boolean indicating if component is signed",
+        "signature_type": "Type of signature (embedded, detached)",
+        "signature_metadata": "Dict with signature details (key_id, algorithm, etc.)",
+        "verification_status": "Verification result (verified, failed, not_checked)",
+    },
+)
+
+# Provider for WASM key pair information
+WasmKeyInfo = provider(
+    doc = "Information about WebAssembly signing key pairs",
+    fields = {
+        "public_key": "Public key file",
+        "secret_key": "Secret key file", 
+        "key_format": "Key format (compact, openssh, der, pem)",
+        "key_metadata": "Dict with key information (algorithm, created_date, etc.)",
+    },
+)

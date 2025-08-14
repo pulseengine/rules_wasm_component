@@ -202,6 +202,45 @@ def _get_hardcoded_checksums(tool_name):
                 },
             },
         },
+        "wasmsign2": {
+            "tool_name": "wasmsign2",
+            "github_repo": "wasm-signatures/wasmsign2",
+            "latest_version": "0.2.6",
+            "build_type": "rust_source",
+            "versions": {
+                "0.2.6": {
+                    "release_date": "2024-11-22",
+                    "source_info": {
+                        "git_tag": "0.2.6",
+                        "commit_sha": "3a2defd9ab2aa8f28513af42e6d73408ee7ac43a",
+                        "cargo_package": "wasmsign2-cli",
+                        "binary_name": "wasmsign2",
+                    },
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "SOURCE_BUILD_NO_CHECKSUM_RUST_COMPILATION_TARGET",
+                            "rust_target": "x86_64-apple-darwin",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "SOURCE_BUILD_NO_CHECKSUM_RUST_COMPILATION_TARGET",
+                            "rust_target": "aarch64-apple-darwin",
+                        },
+                        "linux_amd64": {
+                            "sha256": "SOURCE_BUILD_NO_CHECKSUM_RUST_COMPILATION_TARGET",
+                            "rust_target": "x86_64-unknown-linux-gnu",
+                        },
+                        "linux_arm64": {
+                            "sha256": "SOURCE_BUILD_NO_CHECKSUM_RUST_COMPILATION_TARGET",
+                            "rust_target": "aarch64-unknown-linux-gnu",
+                        },
+                        "windows_amd64": {
+                            "sha256": "SOURCE_BUILD_NO_CHECKSUM_RUST_COMPILATION_TARGET",
+                            "rust_target": "x86_64-pc-windows-msvc",
+                        },
+                    },
+                },
+            },
+        },
     }
 
     return hardcoded_data.get(tool_name, {})

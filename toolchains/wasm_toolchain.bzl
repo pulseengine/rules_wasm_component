@@ -27,6 +27,7 @@ def _wasm_tools_toolchain_impl(ctx):
         wac = ctx.file.wac,
         wit_bindgen = ctx.file.wit_bindgen,
         wrpc = ctx.file.wrpc,
+        wasmsign2 = ctx.file.wasmsign2,
     )
 
     return [toolchain_info]
@@ -58,8 +59,14 @@ wasm_tools_toolchain = rule(
             cfg = "exec",
             doc = "wrpc binary",
         ),
+        "wasmsign2": attr.label(
+            allow_single_file = True,
+            executable = True,
+            cfg = "exec",
+            doc = "wasmsign2 WebAssembly signing binary",
+        ),
     },
-    doc = "Declares a WebAssembly toolchain",
+    doc = "Declares a WebAssembly toolchain with signing support",
 )
 
 def _detect_host_platform(repository_ctx):
@@ -120,7 +127,7 @@ def _wasm_toolchain_repository_impl(repository_ctx):
 def _setup_system_tools_enhanced(repository_ctx):
     """Set up system-installed tools from PATH with validation"""
 
-    tools = ["wasm-tools", "wac", "wit-bindgen", "wrpc"]
+    tools = ["wasm-tools", "wac", "wit-bindgen", "wrpc", "wasmsign2"]
 
     for tool_name in tools:
         # Validate system tool
@@ -156,6 +163,7 @@ def _setup_downloaded_tools_enhanced(repository_ctx):
         ("wasm-tools", version, True),  # True = is tarball
         ("wac", "0.7.0", False),  # False = is single binary
         ("wit-bindgen", "0.43.0", True),
+        ("wasmsign2", "0.2.6", "rust_source"),  # Special handling for Rust source
         # ("wrpc", "latest", None),     # Disabled for production stability
     ]
 
@@ -184,6 +192,9 @@ exit 1
         if tool_name == "wrpc":
             # Special handling for wrpc (build from source)
             _download_wrpc_enhanced(repository_ctx)
+        elif tool_name == "wasmsign2" or is_tarball == "rust_source":
+            # Special handling for Rust source builds
+            _download_wasmsign2(repository_ctx)
         else:
             # Download tool using enhanced method
             _download_single_tool_enhanced(repository_ctx, tool_name, tool_version, platform, is_tarball)
@@ -355,6 +366,7 @@ def _setup_downloaded_tools(repository_ctx):
     _download_wasm_tools(repository_ctx)
     _download_wac(repository_ctx)
     _download_wit_bindgen(repository_ctx)
+    _download_wasmsign2(repository_ctx)
 
     # Create placeholder wrpc binary for compatibility
     repository_ctx.file("wrpc", """#!/bin/bash
@@ -675,6 +687,44 @@ def _download_wrpc(repository_ctx):
     # Use Bazel-native symlink instead of shell cp command
     repository_ctx.symlink("wrpc-src/target/release/wrpc", "wrpc")
 
+def _download_wasmsign2(repository_ctx):
+    """Download wasmsign2 - build from source since it's a Rust project"""
+    
+    platform = _detect_host_platform(repository_ctx)
+    wasmsign2_version = "0.2.6"
+    
+    # Clone and build wasmsign2 from source
+    result = repository_ctx.execute([
+        "git",
+        "clone",
+        "--depth", "1", 
+        "--branch", wasmsign2_version,
+        "https://github.com/wasm-signatures/wasmsign2.git",
+        "wasmsign2-src",
+    ])
+    if result.return_code != 0:
+        fail("Failed to clone wasmsign2: {}".format(result.stderr))
+
+    # Build the binary
+    result = repository_ctx.execute([
+        "cargo",
+        "build", 
+        "--release",
+        "--bin", "wasmsign2",
+        "--manifest-path=wasmsign2-src/Cargo.toml",
+    ])
+    if result.return_code != 0:
+        fail("Failed to build wasmsign2: {}".format(result.stderr))
+
+    # Determine binary name based on platform
+    if repository_ctx.os.name.lower().startswith("windows"):
+        binary_name = "wasmsign2.exe"
+    else:
+        binary_name = "wasmsign2"
+
+    # Use Bazel-native symlink instead of shell cp command
+    repository_ctx.symlink("wasmsign2-src/target/release/{}".format(binary_name), "wasmsign2")
+
 def _get_platform_suffix(platform):
     """Get platform suffix for download URLs"""
     platform_suffixes = {
@@ -720,6 +770,12 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+filegroup(
+    name = "wasmsign2_binary",
+    srcs = ["wasmsign2"],
+    visibility = ["//visibility:public"],
+)
+
 # Toolchain implementation
 wasm_tools_toolchain(
     name = "wasm_tools_impl",
@@ -727,6 +783,7 @@ wasm_tools_toolchain(
     wac = ":wac_binary",
     wit_bindgen = ":wit_bindgen_binary",
     wrpc = ":wrpc_binary",
+    wasmsign2 = ":wasmsign2_binary",
 )
 
 # Toolchain registration
