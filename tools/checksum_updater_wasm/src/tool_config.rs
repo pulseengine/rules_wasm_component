@@ -115,11 +115,26 @@ impl ToolConfig {
                 url_pattern: UrlPattern::SingleBinary {
                     platform_mapping: {
                         let mut map = HashMap::new();
-                        map.insert("darwin_amd64".to_string(), "x86_64-apple-darwin".to_string());
-                        map.insert("darwin_arm64".to_string(), "aarch64-apple-darwin".to_string());
-                        map.insert("linux_amd64".to_string(), "x86_64-unknown-linux-musl".to_string());
-                        map.insert("linux_arm64".to_string(), "aarch64-unknown-linux-musl".to_string());
-                        map.insert("windows_amd64".to_string(), "x86_64-pc-windows-gnu".to_string());
+                        map.insert(
+                            "darwin_amd64".to_string(),
+                            "x86_64-apple-darwin".to_string(),
+                        );
+                        map.insert(
+                            "darwin_arm64".to_string(),
+                            "aarch64-apple-darwin".to_string(),
+                        );
+                        map.insert(
+                            "linux_amd64".to_string(),
+                            "x86_64-unknown-linux-musl".to_string(),
+                        );
+                        map.insert(
+                            "linux_arm64".to_string(),
+                            "aarch64-unknown-linux-musl".to_string(),
+                        );
+                        map.insert(
+                            "windows_amd64".to_string(),
+                            "x86_64-pc-windows-gnu".to_string(),
+                        );
                         map
                     },
                 },
@@ -247,7 +262,10 @@ impl ToolConfigEntry {
                     self.github_repo, version, tool_name, platform_name
                 ))
             }
-            UrlPattern::Custom { pattern, platform_mapping } => {
+            UrlPattern::Custom {
+                pattern,
+                platform_mapping,
+            } => {
                 let platform_name = platform_mapping
                     .get(platform)
                     .with_context(|| format!("Unsupported platform: {}", platform))?;
@@ -269,12 +287,10 @@ impl ToolConfigEntry {
     /// Get platform name for JSON storage
     pub fn get_platform_name(&self, platform: &str) -> Result<String> {
         match &self.url_pattern {
-            UrlPattern::SingleBinary { platform_mapping } => {
-                platform_mapping
-                    .get(platform)
-                    .cloned()
-                    .with_context(|| format!("Platform {} not found", platform))
-            }
+            UrlPattern::SingleBinary { platform_mapping } => platform_mapping
+                .get(platform)
+                .cloned()
+                .with_context(|| format!("Platform {} not found", platform)),
             _ => Err(anyhow::anyhow!("Tool does not use platform names")),
         }
     }
@@ -288,7 +304,9 @@ impl ToolConfigEntry {
                     .with_context(|| format!("Platform {} not found", platform))?;
                 Ok(format!("{}.tar.gz", platform_name))
             }
-            UrlPattern::Custom { platform_mapping, .. } => {
+            UrlPattern::Custom {
+                platform_mapping, ..
+            } => {
                 let platform_name = platform_mapping
                     .get(platform)
                     .with_context(|| format!("Platform {} not found", platform))?;
@@ -322,23 +340,25 @@ mod tests {
     #[test]
     fn test_get_tool_config() {
         let config = ToolConfig::new();
-        
+
         let wasm_tools_config = config.get_tool_config("wasm-tools");
         assert_eq!(wasm_tools_config.github_repo, "bytecodealliance/wasm-tools");
-        assert!(wasm_tools_config.platforms.contains(&"linux_amd64".to_string()));
+        assert!(wasm_tools_config
+            .platforms
+            .contains(&"linux_amd64".to_string()));
     }
 
     #[test]
     fn test_generate_download_url() {
         let config = ToolConfig::new();
-        
+
         // Test wasm-tools (standard tarball)
         let wasm_tools_config = config.get_tool_config("wasm-tools");
         let url = wasm_tools_config
             .generate_download_url("1.0.0", "linux_amd64")
             .unwrap();
         assert!(url.contains("wasm-tools-1.0.0-x86_64-linux.tar.gz"));
-        
+
         // Test wac (single binary)
         let wac_config = config.get_tool_config("wac");
         let url = wac_config
@@ -350,10 +370,10 @@ mod tests {
     #[test]
     fn test_platform_names_vs_suffixes() {
         let config = ToolConfig::new();
-        
+
         let wasm_tools_config = config.get_tool_config("wasm-tools");
         assert!(!wasm_tools_config.has_platform_names());
-        
+
         let wac_config = config.get_tool_config("wac");
         assert!(wac_config.has_platform_names());
     }
@@ -362,10 +382,8 @@ mod tests {
     fn test_get_url_suffix() {
         let config = ToolConfig::new();
         let wasm_tools_config = config.get_tool_config("wasm-tools");
-        
-        let suffix = wasm_tools_config
-            .get_url_suffix("linux_amd64")
-            .unwrap();
+
+        let suffix = wasm_tools_config.get_url_suffix("linux_amd64").unwrap();
         assert_eq!(suffix, "x86_64-linux.tar.gz");
     }
 
@@ -373,10 +391,8 @@ mod tests {
     fn test_get_platform_name() {
         let config = ToolConfig::new();
         let wac_config = config.get_tool_config("wac");
-        
-        let platform_name = wac_config
-            .get_platform_name("linux_amd64")
-            .unwrap();
+
+        let platform_name = wac_config.get_platform_name("linux_amd64").unwrap();
         assert_eq!(platform_name, "x86_64-unknown-linux-musl");
     }
 
@@ -384,8 +400,10 @@ mod tests {
     fn test_default_config_for_unknown_tool() {
         let config = ToolConfig::new();
         let unknown_config = config.get_tool_config("unknown-tool");
-        
+
         assert_eq!(unknown_config.github_repo, "bytecodealliance/unknown-tool");
-        assert!(unknown_config.platforms.contains(&"linux_amd64".to_string()));
+        assert!(unknown_config
+            .platforms
+            .contains(&"linux_amd64".to_string()));
     }
 }

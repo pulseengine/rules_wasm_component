@@ -41,16 +41,16 @@ use wasmtime_runtime::{
 async fn main() -> Result<()> {
     // Initialize tracing
     wasmtime_runtime::init_tracing()?;
-    
+
     // Parse command line arguments
     let matches = create_cli().get_matches();
-    
+
     // Run the component runner
     if let Err(e) = run_component_runner(matches).await {
         error!("Component runner failed: {}", e);
         std::process::exit(1);
     }
-    
+
     Ok(())
 }
 
@@ -133,24 +133,24 @@ async fn run_component_runner(matches: ArgMatches) -> Result<()> {
     let show_metrics = matches.get_flag("metrics");
     let enable_host_functions = matches.get_flag("host-functions");
     let validate_only = matches.get_flag("validate-only");
-    
+
     info!("Starting component runner with component: {}", component_path);
-    
+
     // Parse timeout
     let execution_timeout = parse_duration(timeout_str)
         .with_context(|| format!("Invalid timeout format: {}", timeout_str))?;
-    
+
     // Parse function arguments
     let args: Vec<Value> = serde_json::from_str(args_json)
         .with_context(|| format!("Invalid JSON arguments: {}", args_json))?;
-    
+
     // Create runtime configuration
     let config = create_runtime_config(config_preset, execution_timeout)?;
-    
+
     // Create component loader
     let loader = ComponentLoader::new(config)
         .context("Failed to create component loader")?;
-    
+
     // Set up host functions if requested
     let host_registry = if enable_host_functions {
         let registry = HostFunctionRegistry::new();
@@ -162,34 +162,34 @@ async fn run_component_runner(matches: ArgMatches) -> Result<()> {
     } else {
         None
     };
-    
+
     // Load the component
     info!("Loading component from: {}", component_path);
     let loaded_component = loader
         .load_component(component_path)
         .await
         .with_context(|| format!("Failed to load component: {}", component_path))?;
-    
+
     info!(
         "Component loaded successfully: {} ({} bytes)",
         loaded_component.metadata().name,
         loaded_component.metadata().size_bytes
     );
-    
+
     if validate_only {
         info!("Component validation successful - exiting without execution");
         return Ok(());
     }
-    
+
     // Instantiate the component
     info!("Instantiating component...");
     let mut instance = loaded_component
         .instantiate()
         .await
         .context("Failed to instantiate component")?;
-    
+
     info!("Component instantiated successfully");
-    
+
     if interactive {
         // Run interactive mode
         run_interactive_mode(&mut instance, &host_registry).await?;
@@ -197,12 +197,12 @@ async fn run_component_runner(matches: ArgMatches) -> Result<()> {
         // Execute single function
         execute_function(&mut instance, function_name, &args, execution_timeout).await?;
     }
-    
+
     // Show metrics if requested
     if show_metrics {
         show_execution_metrics(&instance, &loader).await;
     }
-    
+
     info!("Component runner completed successfully");
     Ok(())
 }
@@ -215,7 +215,7 @@ fn create_runtime_config(preset: &str, execution_timeout: Duration) -> Result<Ru
         "sandbox" => RuntimeConfig::sandbox(),
         _ => return Err(anyhow::anyhow!("Unknown configuration preset: {}", preset)),
     };
-    
+
     builder
         .with_execution_timeout(execution_timeout)
         .build()
@@ -234,9 +234,9 @@ async fn execute_function(
         function_name,
         args.len()
     );
-    
+
     let start_time = std::time::Instant::now();
-    
+
     let result = timeout(
         execution_timeout,
         instance.call_function(function_name, args),
@@ -244,14 +244,14 @@ async fn execute_function(
     .await
     .context("Function execution timed out")?
     .with_context(|| format!("Function '{}' execution failed", function_name))?;
-    
+
     let execution_time = start_time.elapsed();
-    
+
     info!(
         "Function '{}' completed in {:?}",
         function_name, execution_time
     );
-    
+
     // Pretty print the result
     match result {
         Value::Null => println!("Result: null"),
@@ -260,7 +260,7 @@ async fn execute_function(
         Value::String(s) => println!("Result: \"{}\"", s),
         _ => println!("Result: {}", serde_json::to_string_pretty(&result)?),
     }
-    
+
     Ok(())
 }
 
@@ -270,23 +270,23 @@ async fn run_interactive_mode(
     _host_registry: &Option<HostFunctionRegistry>,
 ) -> Result<()> {
     info!("Entering interactive mode. Type 'help' for commands, 'quit' to exit.");
-    
+
     loop {
         // Read user input
         print!("wasmtime> ");
         use std::io::{self, Write};
         io::stdout().flush().unwrap();
-        
+
         let mut input = String::new();
         if io::stdin().read_line(&mut input).is_err() {
             break;
         }
-        
+
         let input = input.trim();
         if input.is_empty() {
             continue;
         }
-        
+
         match input {
             "quit" | "exit" => break,
             "help" => show_interactive_help(),
@@ -300,7 +300,7 @@ async fn run_interactive_mode(
                 if parts.is_empty() {
                     continue;
                 }
-                
+
                 let function_name = parts[0];
                 let args: Vec<Value> = parts[1..]
                     .iter()
@@ -313,7 +313,7 @@ async fn run_interactive_mode(
                         }
                     })
                     .collect();
-                
+
                 match instance.call_function(function_name, &args).await {
                     Ok(result) => {
                         println!("→ {}", serde_json::to_string(&result)?);
@@ -325,7 +325,7 @@ async fn run_interactive_mode(
             }
         }
     }
-    
+
     info!("Exiting interactive mode");
     Ok(())
 }
@@ -349,7 +349,7 @@ async fn show_execution_metrics(
     loader: &ComponentLoader,
 ) {
     println!("\n=== Execution Metrics ===");
-    
+
     // Component-specific metrics
     let exec_metrics = instance.execution_metrics();
     println!("Component: {}", exec_metrics.component_name);
@@ -358,14 +358,14 @@ async fn show_execution_metrics(
     println!("Failed calls: {}", exec_metrics.failed_calls);
     println!("Total execution time: {:?}", exec_metrics.total_execution_time);
     println!("Average execution time: {:?}", exec_metrics.average_execution_time);
-    
+
     if !exec_metrics.functions.is_empty() {
         println!("\nFunction statistics:");
         for (name, stats) in &exec_metrics.functions {
             println!("  {}: {} calls, avg {:?}", name, stats.call_count, stats.average_execution_time);
         }
     }
-    
+
     // Global metrics
     let global_metrics = loader.metrics().get_summary();
     println!("\n=== Global Metrics ===");
@@ -378,7 +378,7 @@ async fn show_execution_metrics(
 /// Parse duration string (e.g., "10s", "1m", "500ms")
 fn parse_duration(s: &str) -> Result<Duration> {
     let s = s.trim();
-    
+
     if s.ends_with("ms") {
         let ms: u64 = s[..s.len() - 2].parse()?;
         Ok(Duration::from_millis(ms))
@@ -401,7 +401,7 @@ fn parse_duration(s: &str) -> Result<Duration> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_parse_duration() {
         assert_eq!(parse_duration("10s").unwrap(), Duration::from_secs(10));
@@ -410,15 +410,15 @@ mod tests {
         assert_eq!(parse_duration("1h").unwrap(), Duration::from_secs(3600));
         assert_eq!(parse_duration("30").unwrap(), Duration::from_secs(30));
     }
-    
+
     #[test]
     fn test_create_runtime_config() {
         let config = create_runtime_config("development", Duration::from_secs(10));
         assert!(config.is_ok());
-        
+
         let config = create_runtime_config("production", Duration::from_secs(5));
         assert!(config.is_ok());
-        
+
         let config = create_runtime_config("invalid", Duration::from_secs(10));
         assert!(config.is_err());
     }

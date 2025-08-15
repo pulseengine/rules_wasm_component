@@ -8,7 +8,7 @@ def _get_wasi_sdk_platform_info(platform, version):
     from_registry = get_tool_info("wasi-sdk", version, platform)
     if not from_registry:
         fail("Unsupported platform {} for wasi-sdk version {}".format(platform, version))
-    
+
     return struct(
         sha256 = from_registry["sha256"],
         url_suffix = from_registry["url_suffix"],
@@ -157,7 +157,7 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
 
     # Get checksum from centralized registry
     platform_info = _get_wasi_sdk_platform_info(platform, version)
-    
+
     # The archive contains the full version and platform in the prefix
     strip_prefix = "wasi-sdk-{}-{}".format(full_version, platform_suffix)
 

@@ -110,7 +110,7 @@ TOOL_VERSIONS = {
                 "rust_target": "x86_64-apple-darwin",
             },
             "darwin_arm64": {
-                "rust_target": "aarch64-apple-darwin", 
+                "rust_target": "aarch64-apple-darwin",
             },
             "linux_amd64": {
                 "rust_target": "x86_64-unknown-linux-gnu",

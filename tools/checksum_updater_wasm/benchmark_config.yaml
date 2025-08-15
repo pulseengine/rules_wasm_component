@@ -1,50 +1,60 @@
 # Bazel-bench configuration for WebAssembly component performance comparison
 # This benchmarks standard vs Wizer-optimized WebAssembly components
 
-project_source: .  # Use current directory
+project_source: . # Use current directory
 
 # Benchmark configurations
 benchmark:
   name: "wasm_component_performance"
   description: "Performance comparison between standard and Wizer-optimized WebAssembly components"
-  
+
   # Number of runs for statistical significance
   runs: 5
-  
+
   # Build configurations to compare
   configurations:
     - name: "standard_component"
       description: "Standard WebAssembly component"
       build_targets:
         - "//tools/checksum_updater_wasm:checksum_updater_wasm_bin"
-      
-    - name: "wizer_component" 
+
+    - name: "wizer_component"
       description: "Wizer pre-initialized WebAssembly component"
       build_targets:
         - "//tools/checksum_updater_wasm:checksum_updater_wasm_wizer"
-  
+
   # Runtime benchmarks (execution time measurement)
   runtime_benchmarks:
     - name: "startup_time"
       description: "Component startup and initialization time"
       command: ["wasmtime", "run", "{component}", "bootstrap"]
       timeout: 30
-      
+
     - name: "list_tools_performance"
       description: "Tool listing operation performance"
       command: ["wasmtime", "run", "{component}", "list"]
       timeout: 30
-      
+
     - name: "benchmark_operation"
       description: "Built-in benchmark operation"
-      command: ["wasmtime", "run", "{component}", "benchmark", "--operation", "startup", "--iterations", "10"]
+      command:
+        [
+          "wasmtime",
+          "run",
+          "{component}",
+          "benchmark",
+          "--operation",
+          "startup",
+          "--iterations",
+          "10",
+        ]
       timeout: 60
 
 # Build time benchmarks
 build_benchmarks:
   - name: "build_time_standard"
     targets: ["//tools/checksum_updater_wasm:checksum_updater_wasm_bin"]
-    
+
   - name: "build_time_wizer"
     targets: ["//tools/checksum_updater_wasm:checksum_updater_wasm_wizer"]
 
@@ -61,11 +71,11 @@ environment:
   prerequisites:
     - command: ["wasmtime", "--version"]
       description: "Wasmtime runtime required for component execution"
-      
+
   # Clean builds for accurate measurements
   pre_benchmark:
     - ["bazel", "clean"]
-    
+
   # Collect artifact sizes post-benchmark
   post_benchmark:
     - ["ls", "-la", "bazel-bin/tools/checksum_updater_wasm/"]
@@ -78,6 +88,6 @@ output:
     - type: "comparison"
       title: "Standard vs Wizer Component Performance"
       metrics: ["startup_time", "list_tools_performance"]
-    - type: "size_comparison" 
+    - type: "size_comparison"
       title: "Component Size Comparison"
       artifacts: ["component_sizes"]

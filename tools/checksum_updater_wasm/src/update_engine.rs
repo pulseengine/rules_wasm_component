@@ -88,7 +88,7 @@ impl UpdateEngine {
     pub async fn list_available_tools(&self) -> Result<Vec<String>> {
         // Combine existing tools with configured tools
         let mut tools = self.manager.list_all_tools().await?;
-        
+
         // Add any configured tools that might not exist yet
         for tool_name in self.tool_config.get_all_tool_names() {
             if !tools.contains(&tool_name) {
@@ -182,7 +182,7 @@ impl UpdateEngine {
         config: &UpdateConfig,
     ) -> Result<Option<ToolUpdateResult>> {
         let timeout_duration = Duration::from_secs(config.timeout_seconds);
-        
+
         match timeout(timeout_duration, self.update_single_tool(tool_name, config)).await {
             Ok(result) => result,
             Err(_) => Err(anyhow::anyhow!(
@@ -203,7 +203,7 @@ impl UpdateEngine {
 
         // Get or create tool configuration
         let tool_config = self.tool_config.get_tool_config(tool_name);
-        
+
         // Get current tool info or create new
         let current_tool_info = if self.manager.tool_exists(tool_name).await {
             self.manager.get_tool_info(tool_name).await?
@@ -328,7 +328,7 @@ impl UpdateEngine {
     ) -> Result<PlatformInfo> {
         // Generate download URL based on tool configuration
         let url = tool_config.generate_download_url(version, platform)?;
-        
+
         debug!("Downloading {} for checksum validation: {}", tool_name, url);
 
         // Download file and calculate checksum

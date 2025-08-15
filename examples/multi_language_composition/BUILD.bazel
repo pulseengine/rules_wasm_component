@@ -15,7 +15,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 package(default_visibility = ["//visibility:public"])
 
-# Multi-language composition: Rust + Go components  
+# Multi-language composition: Rust + Go components
 multi_language_wasm_component(
     name = "checksum_updater_composed",
     components = [
@@ -23,11 +23,11 @@ multi_language_wasm_component(
         # TODO: Add when TinyGo component is ready
         # "//tools/http_downloader_go:http_downloader_go",
     ],
-    composition_type = "orchestrated", 
+    composition_type = "orchestrated",
     description = "Complete checksum management system with HTTP downloading and validation",
     workflows = [
         "fetch_github_release_info",
-        "download_checksum_files", 
+        "download_checksum_files",
         "validate_existing_checksums",
         "update_tool_definitions",
         "generate_bazel_rules",
@@ -56,13 +56,13 @@ build_test(
     targets = [
         ":checksum_updater_simple",
         # TODO: Fix orchestrated composition when wac toolchain is available
-        # ":checksum_updater_composed", 
+        # ":checksum_updater_composed",
     ],
 )
 
 # Test suite for multi-language WebAssembly components
 test_suite(
-    name = "multi_language_tests", 
+    name = "multi_language_tests",
     tests = [
         ":multi_language_composition_test",
     ],

@@ -9,7 +9,7 @@ interface demo {
     // Information about a component for signing
     record signing-info {
         name: string,
-        version: string, 
+        version: string,
         description: string,
         author: string,
     }

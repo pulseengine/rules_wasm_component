@@ -12,7 +12,7 @@ cc_component_library(
     name = "http_service_lib",
     srcs = [
         "src/http_utils.c",
-        "src/request_parser.c", 
+        "src/request_parser.c",
         "src/response_builder.c",
     ],
     hdrs = [
@@ -20,7 +20,10 @@ cc_component_library(
         "src/request_parser.h",
         "src/response_builder.h",
     ],
-    copts = ["-x", "c"],  # Force compilation as C, not C++
+    copts = [
+        "-x",
+        "c",
+    ],  # Force compilation as C, not C++
     target_compatible_with = ["@platforms//cpu:wasm32"],
 )
 
@@ -30,7 +33,7 @@ cpp_component(
     srcs = [
         "src/http_service.c",
         "src/http_utils.c",
-        "src/request_parser.c", 
+        "src/request_parser.c",
         "src/response_builder.c",
     ],
     hdrs = [

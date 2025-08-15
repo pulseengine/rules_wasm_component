@@ -77,22 +77,22 @@ cc_component_library(
 #     srcs = ["test/benchmark.cpp"],
 #     deps = [
 #         ":btree",
-#         ":graph", 
+#         ":graph",
 #         ":hash_table",
 #         ":memory_pool",
 #         ":serializer",
 #     ],
 # )
 
-# Test suite  
+# Test suite
 # NOTE: Disabled - cc_test cannot depend on WebAssembly component libraries
 # cc_test(
-#     name = "data_structures_test", 
+#     name = "data_structures_test",
 #     srcs = ["test/data_structures_test.cpp"],
 #     deps = [
 #         ":btree",
 #         ":graph",
-#         ":hash_table", 
+#         ":hash_table",
 #         ":memory_pool",
 #         ":serializer",
 #     ],

@@ -145,7 +145,7 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
             pass
         else:
             compile_args.add("-fno-exceptions")
-        
+
         if ctx.attr.enable_rtti:
             # Only enable RTTI if specifically requested
             pass
@@ -159,7 +159,7 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
     compile_args.add("-I" + work_dir.path)
     for include in ctx.attr.includes:
         compile_args.add("-I" + include)
-    
+
     # Add dependency header directories
     for dep_hdr in dep_headers:
         include_dir = dep_hdr.dirname
@@ -197,10 +197,10 @@ echo "Prepared C/C++ component sources in $WORK_DIR"
     embed_args.add(wit_file.path)
     embed_args.add(wasm_binary.path)
     embed_args.add("--output", component_wasm.path)
-    
+
     if ctx.attr.world:
         embed_args.add("--world", ctx.attr.world)
-    
+
     ctx.actions.run(
         executable = wasm_tools,
         arguments = [embed_args],
@@ -442,7 +442,7 @@ def _cc_component_library_impl(ctx):
                 pass
             else:
                 compile_args.add("-fno-exceptions")
-            
+
             compile_args.add("-fno-rtti")
             if ctx.attr.cxx_std:
                 compile_args.add("-std=" + ctx.attr.cxx_std)

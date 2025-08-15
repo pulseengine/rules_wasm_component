@@ -1,0 +1,606 @@
+"""Example demonstrating WebAssembly component OCI publishing with signing"""
+
+load("//wasm:defs.bzl", "wasm_keygen", "wasm_sign")
+load("//wkg:defs.bzl", "enhanced_oci_annotations", "wasm_component_metadata_extract", "wasm_component_multi_arch_package", "wasm_component_multi_arch_publish", "wasm_component_oci_image", "wasm_component_oci_metadata_mapper", "wasm_component_oci_publish", "wasm_component_publish", "wasm_component_secure_publish", "wasm_security_policy", "wkg_multi_registry_publish", "wkg_registry_config")
+
+# Use existing component from basic example
+alias(
+    name = "hello_oci_component",
+    actual = "//examples/basic:hello_component",
+)
+
+# Generate signing keys for the example (compact format)
+wasm_keygen(
+    name = "oci_signing_keys",
+    openssh_format = False,
+    visibility = ["//visibility:public"],
+)
+
+# Generate OpenSSH format keys for comparison
+wasm_keygen(
+    name = "oci_openssh_keys",
+    openssh_format = True,
+    visibility = ["//visibility:public"],
+)
+
+# Test basic signing to debug the issue
+wasm_sign(
+    name = "test_basic_signing",
+    component = ":hello_oci_component",
+    keys = ":oci_signing_keys",
+    openssh_format = False,
+)
+
+# Registry configuration for different registries
+wkg_registry_config(
+    name = "registry_config",
+    default_registry = "localhost",
+    registries = [
+        "localhost|localhost:5000|oci",
+        "github|ghcr.io|oci|env|GITHUB_TOKEN",
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+    ],
+)
+
+# Enhanced registry configuration with advanced features
+wkg_registry_config(
+    name = "production_registries",
+    cache_dir = "/tmp/wkg_cache",
+    credential_files = [
+        "docker:docker_config",
+        "kubernetes:kubernetes",
+    ],
+    default_registry = "github",
+    enable_mirror_fallback = True,
+    registries = [
+        "local|localhost:5000|oci",
+        "github|ghcr.io|oci|env|GITHUB_TOKEN",
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+        "aws|123456789.dkr.ecr.us-west-2.amazonaws.com|oci|oauth|client_id|client_secret",
+        "azure|myregistry.azurecr.io|oci|basic|username|password",
+    ],
+    timeout_seconds = 60,
+)
+
+# Example 1: Prepare OCI image without signing
+wasm_component_oci_image(
+    name = "hello_oci_unsigned_image",
+    package_name = "examples/hello-oci",
+    annotations = [
+        "org.opencontainers.image.description=Hello World WebAssembly component",
+        "org.opencontainers.image.source=https://github.com/rules_wasm_component/examples",
+        "org.opencontainers.image.version=1.0.0",
+        "com.wasm.component.type=hello-world",
+    ],
+    authors = ["wasm-developer@example.com"],
+    component = ":hello_oci_component",
+    description = "Example WebAssembly component for OCI publishing",
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    tag = "unsigned",
+)
+
+# Example 2: Prepare OCI image with embedded signing (compact format)
+wasm_component_oci_image(
+    name = "hello_oci_signed_image",
+    package_name = "examples/hello-oci-signed",
+    annotations = [
+        "org.opencontainers.image.description=Signed Hello World WebAssembly component",
+        "org.opencontainers.image.source=https://github.com/rules_wasm_component/examples",
+        "org.opencontainers.image.version=1.0.0",
+        "com.wasm.component.type=hello-world",
+        "com.wasm.component.security=signed",
+    ],
+    authors = ["wasm-developer@example.com"],
+    component = ":hello_oci_component",
+    description = "Signed WebAssembly component for OCI publishing",
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    sign_component = True,
+    signature_type = "embedded",
+    signing_keys = ":oci_signing_keys",
+    tag = "signed-v1.0.0",
+)
+
+# Example 2b: Prepare OCI image with embedded signing (OpenSSH format)
+wasm_component_oci_image(
+    name = "hello_oci_openssh_signed_image",
+    package_name = "examples/hello-oci-openssh-signed",
+    annotations = [
+        "org.opencontainers.image.description=OpenSSH Signed Hello World WebAssembly component",
+        "org.opencontainers.image.source=https://github.com/rules_wasm_component/examples",
+        "org.opencontainers.image.version=1.0.0",
+        "com.wasm.component.type=hello-world",
+        "com.wasm.component.security=openssh-signed",
+    ],
+    authors = ["wasm-developer@example.com"],
+    component = ":hello_oci_component",
+    description = "OpenSSH-signed WebAssembly component for OCI publishing",
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    sign_component = True,
+    signature_type = "embedded",
+    signing_keys = ":oci_openssh_keys",
+    tag = "openssh-signed-v1.0.0",
+)
+
+# Example 3: Prepare OCI image with detached signing
+wasm_component_oci_image(
+    name = "hello_oci_detached_image",
+    package_name = "examples/hello-oci-detached",
+    annotations = [
+        "org.opencontainers.image.description=Hello World WebAssembly component with detached signature",
+        "org.opencontainers.image.source=https://github.com/rules_wasm_component/examples",
+        "org.opencontainers.image.version=1.0.0",
+        "com.wasm.component.type=hello-world",
+        "com.wasm.component.security=detached-signed",
+    ],
+    authors = ["wasm-developer@example.com"],
+    component = ":hello_oci_component",
+    description = "WebAssembly component with detached signature for OCI publishing",
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    sign_component = True,
+    signature_type = "detached",
+    signing_keys = ":oci_signing_keys",
+    tag = "detached-v1.0.0",
+)
+
+# Example 4: Publish unsigned component
+wasm_component_publish(
+    name = "publish_unsigned",
+    description = "Publish unsigned component to localhost registry",
+    oci_image = ":hello_oci_unsigned_image",
+    registry_config = ":registry_config",
+)
+
+# Example 5: Publish signed component
+wasm_component_publish(
+    name = "publish_signed",
+    description = "Publish signed component to localhost registry",
+    oci_image = ":hello_oci_signed_image",
+    registry_config = ":registry_config",
+)
+
+# Example 6: Publish with dry run
+wasm_component_publish(
+    name = "publish_dry_run",
+    description = "Dry run publish for testing",
+    dry_run = True,
+    oci_image = ":hello_oci_signed_image",
+    registry_config = ":registry_config",
+)
+
+# Example 7: One-step publish using convenience macro (compact keys)
+wasm_component_oci_publish(
+    name = "publish_complete_workflow",
+    package_name = "examples/hello-complete",
+    annotations = [
+        "org.opencontainers.image.description=Complete workflow WebAssembly component",
+        "org.opencontainers.image.source=https://github.com/rules_wasm_component/examples",
+        "org.opencontainers.image.version=1.0.0",
+        "com.wasm.component.workflow=complete",
+    ],
+    authors = ["wasm-developer@example.com"],
+    component = ":hello_oci_component",
+    description = "Complete workflow example using convenience macro",
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    registry_config = ":registry_config",
+    sign_component = True,
+    signature_type = "embedded",
+    signing_keys = ":oci_signing_keys",  # Using compact format keys
+    tag = "complete-v1.0.0",
+)
+
+# Example 8: GitHub Container Registry publish (requires GITHUB_TOKEN)
+wasm_component_oci_publish(
+    name = "publish_to_github",
+    package_name = "rules-wasm-component/hello-example",
+    annotations = [
+        "org.opencontainers.image.description=WebAssembly component published to GHCR",
+        "org.opencontainers.image.source=https://github.com/my-org/rules-wasm-component",
+        "org.opencontainers.image.url=https://github.com/my-org/rules-wasm-component",
+        "org.opencontainers.image.documentation=https://github.com/my-org/rules-wasm-component/README.md",
+    ],
+    authors = ["github-user@example.com"],
+    component = ":hello_oci_component",
+    description = "Example component published to GitHub Container Registry",
+    dry_run = True,  # Set to False when you have a real GITHUB_TOKEN
+    license = "MIT",
+    namespace = "my-org",
+    registry = "ghcr.io",
+    registry_config = ":registry_config",
+    sign_component = True,
+    signing_keys = ":oci_signing_keys",
+    tag = "latest",
+)
+
+# Example 9: Multi-registry publishing
+wkg_multi_registry_publish(
+    name = "publish_to_all_registries",
+    authors = ["multi-registry@example.com"],
+    description = "Multi-registry WebAssembly component",
+    dry_run = True,
+    fail_fast = False,  # Continue even if some registries fail
+    license = "MIT",
+    oci_image = ":hello_oci_signed_image",
+    registry_config = ":production_registries",
+    target_registries = [
+        "local",
+        "github",
+        "docker",
+    ],  # Subset of configured registries
+)
+
+# Example 10: Publish to all configured registries
+wkg_multi_registry_publish(
+    name = "publish_everywhere",
+    authors = ["distribution@example.com"],
+    # target_registries not specified = use all configured registries
+    description = "Universal WebAssembly component distribution",
+    dry_run = True,
+    fail_fast = True,  # Stop on first failure for safety
+    license = "MIT",
+    oci_image = ":hello_oci_signed_image",
+    registry_config = ":production_registries",
+)
+
+# Security Policy Examples
+
+# Example 11: Basic security policy (no signing required)
+wasm_security_policy(
+    name = "basic_security_policy",
+    default_signing_required = False,
+    key_source = "file",
+    openssh_format = False,
+    signature_type = "embedded",
+)
+
+# Example 12: Strict security policy (signing required)
+wasm_security_policy(
+    name = "strict_security_policy",
+    component_policies = [
+        "production-*|required|oci_signing_keys",
+        "test-*|optional",
+        "*-secure|required",
+    ],
+    default_signing_required = True,
+    key_source = "file",
+    openssh_format = False,
+    registry_policies = [
+        "github|required|oci_signing_keys",
+        "docker|required|oci_signing_keys",
+        "local|optional",
+    ],
+    signature_type = "embedded",
+)
+
+# Example 13: Enterprise security policy with OpenSSH keys
+wasm_security_policy(
+    name = "enterprise_security_policy",
+    component_policies = [
+        "*|required|oci_openssh_keys",  # All components must be signed
+    ],
+    default_signing_required = True,
+    key_source = "file",
+    openssh_format = True,
+    registry_policies = [
+        "github|required|oci_openssh_keys",
+        "docker|required|oci_openssh_keys",
+        "aws|required|oci_openssh_keys",
+        "azure|required|oci_openssh_keys",
+        "local|optional",
+    ],
+    signature_type = "detached",
+)
+
+# Secure Publishing Examples
+
+# Example 14: Secure publish with basic policy (no signing required)
+wasm_component_secure_publish(
+    name = "secure_publish_basic",
+    package_name = "examples/hello-secure-basic",
+    authors = ["security-team@example.com"],
+    component = ":hello_oci_component",
+    description = "Secure publish with basic security policy",
+    dry_run = True,
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry_config = ":production_registries",
+    security_policy = ":basic_security_policy",
+    tag = "secure-basic-v1.0.0",
+    target_registries = [
+        "local",
+        "github",
+    ],
+)
+
+# Example 15: Secure publish with strict policy (signing required)
+wasm_component_secure_publish(
+    name = "secure_publish_strict",
+    package_name = "examples/hello-secure-strict",
+    annotations = [
+        "com.wasm.security.level=strict",
+        "com.wasm.compliance.required=true",
+    ],
+    authors = ["security-team@example.com"],
+    component = ":hello_oci_component",
+    description = "Secure publish with strict security policy requiring signatures",
+    dry_run = True,
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry_config = ":production_registries",
+    security_policy = ":strict_security_policy",
+    signing_keys = ":oci_signing_keys",  # Required by strict policy
+    tag = "secure-strict-v1.0.0",
+    target_registries = [
+        "local",
+        "github",
+        "docker",
+    ],
+)
+
+# Example 16: Secure publish with enterprise policy (OpenSSH signing)
+wasm_component_secure_publish(
+    name = "secure_publish_enterprise",
+    package_name = "examples/hello-secure-enterprise",
+    annotations = [
+        "com.wasm.security.level=enterprise",
+        "com.wasm.compliance.required=true",
+        "com.wasm.audit.enabled=true",
+        "com.wasm.governance.approved=true",
+    ],
+    authors = ["enterprise-security@example.com"],
+    component = ":hello_oci_component",
+    description = "Secure publish with enterprise security policy and OpenSSH signatures",
+    dry_run = True,
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry_config = ":production_registries",
+    security_policy = ":enterprise_security_policy",
+    signing_keys = ":oci_openssh_keys",  # OpenSSH format required by enterprise policy
+    tag = "secure-enterprise-v1.0.0",
+    target_registries = [
+        "github",
+        "docker",
+        "aws",
+        "azure",
+    ],
+)
+
+# Example 17: Force signing override (regardless of policy)
+wasm_component_secure_publish(
+    name = "secure_publish_force_signing",
+    package_name = "examples/hello-force-signed",
+    annotations = [
+        "com.wasm.signing.forced=true",
+        "com.wasm.policy.override=true",
+    ],
+    authors = ["override-demo@example.com"],
+    component = ":hello_oci_component",
+    description = "Force signing override demonstration",
+    dry_run = True,
+    force_signing = True,  # Force signing anyway
+    license = "MIT",
+    namespace = "wasm-examples",
+    openssh_format = False,  # Override policy default
+    registry_config = ":production_registries",
+    security_policy = ":basic_security_policy",  # Basic policy doesn't require signing
+    signature_type = "embedded",  # Override policy default
+    signing_keys = ":oci_signing_keys",
+    tag = "force-signed-v1.0.0",
+    target_registries = ["local"],
+)
+
+# Multi-Architecture Examples
+
+# Example 18: Enhanced OCI annotations
+alias(
+    name = "enhanced_annotations_example",
+    actual = ":hello_oci_component",
+)
+
+wasm_component_oci_image(
+    name = "hello_enhanced_annotations",
+    package_name = "examples/hello-enhanced",
+    annotations = enhanced_oci_annotations(
+        compliance_tags = [
+            "SOC2",
+            "GDPR",
+        ],
+        component_type = "service",
+        custom_annotations = [
+            "com.example.project=hello-world",
+            "com.example.team=wasm-team",
+        ],
+        framework = "wasmtime",
+        language = "rust",
+        security_level = "enhanced",
+        wasi_version = "preview2",
+    ),
+    authors = ["metadata-team@example.com"],
+    component = ":enhanced_annotations_example",
+    description = "WebAssembly component with enhanced OCI annotations",
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    tag = "enhanced-v1.0.0",
+)
+
+# Example 19: Multi-architecture component package (simplified for demo)
+# Note: In practice, you would have different components built for different architectures
+alias(
+    name = "wasm32_wasi_component",
+    actual = ":hello_oci_component",
+)
+
+alias(
+    name = "wasm32_unknown_component",
+    actual = ":hello_oci_component",  # In practice, this would be a different target
+)
+
+wasm_component_multi_arch_package(
+    name = "hello_multiarch_package",
+    package_name = "examples/hello-multiarch",
+    annotations = enhanced_oci_annotations(
+        component_type = "library",
+        custom_annotations = [
+            "com.wasm.multiarch.demo=true",
+        ],
+        language = "rust",
+        security_level = "basic",
+        wasi_version = "multi",
+    ),
+    components = {
+        "wasm32-wasi": ":wasm32_wasi_component",
+        "wasm32-unknown": ":wasm32_unknown_component",
+    },
+    default_architecture = "wasm32-wasi",
+    namespace = "wasm-examples",
+    version = "1.0.0",
+)
+
+# Example 20: Multi-architecture publishing
+wasm_component_multi_arch_publish(
+    name = "publish_multiarch",
+    dry_run = True,
+    multi_arch_image = ":hello_multiarch_package",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    registry_config = ":registry_config",
+    tag = "multiarch",
+)
+
+# Example 21: Advanced multi-architecture with different platforms
+wasm_component_multi_arch_package(
+    name = "hello_advanced_multiarch",
+    package_name = "examples/hello-advanced-multiarch",
+    annotations = enhanced_oci_annotations(
+        compliance_tags = [
+            "SOC2",
+            "FIPS",
+            "PCI",
+        ],
+        component_type = "service",
+        custom_annotations = [
+            "com.wasm.multiarch.advanced=true",
+            "com.wasm.runtime.compatibility=maximum",
+            "com.example.performance.tier=high",
+        ],
+        framework = "wasmtime",
+        language = "rust",
+        security_level = "enterprise",
+        wasi_version = "multi",
+    ),
+    components = {
+        "wasm32-wasi": ":wasm32_wasi_component",
+        "wasm32-wasi-preview1": ":hello_oci_component",
+        "wasm32-unknown-unknown": ":wasm32_unknown_component",
+    },
+    default_architecture = "wasm32-wasi",
+    namespace = "wasm-examples",
+    version = "2.0.0",
+)
+
+# Advanced Metadata Examples
+
+# Example 22: Metadata extraction
+wasm_component_metadata_extract(
+    name = "hello_metadata_extract",
+    component = ":hello_oci_component",
+)
+
+# Example 23: Basic OCI metadata mapping
+wasm_component_oci_metadata_mapper(
+    name = "hello_basic_metadata_mapping",
+    compliance_tags = ["SOC2"],
+    component = ":hello_oci_component",
+    component_type = "demo",
+    custom_annotations = [
+        "com.example.demo=true",
+        "com.example.category=tutorial",
+    ],
+    description = "Demonstration component for OCI metadata mapping",
+    framework = "wasmtime",
+    language = "rust",
+    license = "MIT",
+    optimization_level = "release",
+    performance_tier = "standard",
+    security_level = "basic",
+    source_url = "https://github.com/rules_wasm_component/examples",
+    title = "Hello World WebAssembly Component",
+    version = "1.0.0",
+    wasi_version = "preview2",
+)
+
+# Example 24: Advanced metadata mapping with extracted metadata
+wasm_component_oci_metadata_mapper(
+    name = "hello_advanced_metadata_mapping",
+    compliance_tags = [
+        "SOC2",
+        "GDPR",
+        "FIPS",
+    ],
+    component = ":hello_oci_component",
+    component_type = "service",
+    custom_annotations = [
+        "com.example.advanced=true",
+        "com.example.extracted.metadata=enabled",
+        "com.example.validation.level=comprehensive",
+    ],
+    description = "Advanced demonstration with extracted metadata",
+    framework = "wasmtime",
+    is_signed = True,
+    language = "rust",
+    license = "Apache-2.0",
+    metadata_extract = ":hello_metadata_extract",
+    optimization_level = "release",
+    performance_tier = "high",
+    security_level = "enterprise",
+    signature_type = "embedded",
+    source_url = "https://github.com/rules_wasm_component/examples",
+    title = "Advanced Hello World Component",
+    version = "2.0.0",
+    wasi_version = "preview2",
+)
+
+# Example 25: OCI image with comprehensive metadata mapping
+wasm_component_oci_image(
+    name = "hello_comprehensive_metadata",
+    package_name = "examples/hello-comprehensive",
+    # Use metadata mapping output as annotations source
+    annotations = [
+        "com.wasm.metadata.comprehensive=true",
+        "com.wasm.annotation.source=wasm_component_oci_metadata_mapper",
+        # Additional component-specific annotations
+        "com.example.build.timestamp=BUILD_TIME",
+        "com.example.metadata.version=v2",
+        "com.wasm.component.complexity=advanced",
+        "com.wasm.features.metadata=extraction+mapping+validation",
+        # Performance characteristics
+        "com.wasm.performance.startup=fast",
+        "com.wasm.performance.memory=efficient",
+        "com.wasm.performance.cpu=optimized",
+        # Deployment annotations
+        "com.wasm.deployment.strategy=blue-green",
+        "com.wasm.deployment.environment=production-ready",
+        "com.wasm.deployment.scaling=horizontal",
+        # Integration annotations
+        "com.wasm.integration.apis=REST+GraphQL",
+        "com.wasm.integration.protocols=HTTP+WebSocket",
+        "com.wasm.integration.formats=JSON+MessagePack",
+    ],
+    authors = ["metadata-advanced@example.com"],
+    component = ":hello_oci_component",
+    description = "WebAssembly component with comprehensive metadata",
+    license = "MIT",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    tag = "comprehensive-v1.0.0",
+)

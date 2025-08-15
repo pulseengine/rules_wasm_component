@@ -12,7 +12,7 @@ def _get_wasm_tools_platform_info(platform, version):
     from_registry = get_tool_info("wasm-tools", version, platform)
     if not from_registry:
         fail("Unsupported platform {} for wasm-tools version {}".format(platform, version))
-    
+
     return struct(
         sha256 = from_registry["sha256"],
         url_suffix = from_registry["url_suffix"],
@@ -689,16 +689,18 @@ def _download_wrpc(repository_ctx):
 
 def _download_wasmsign2(repository_ctx):
     """Download wasmsign2 - build from source since it's a Rust project"""
-    
+
     platform = _detect_host_platform(repository_ctx)
     wasmsign2_version = "0.2.6"
-    
+
     # Clone and build wasmsign2 from source
     result = repository_ctx.execute([
         "git",
         "clone",
-        "--depth", "1", 
-        "--branch", wasmsign2_version,
+        "--depth",
+        "1",
+        "--branch",
+        wasmsign2_version,
         "https://github.com/wasm-signatures/wasmsign2.git",
         "wasmsign2-src",
     ])
@@ -708,9 +710,10 @@ def _download_wasmsign2(repository_ctx):
     # Build the binary
     result = repository_ctx.execute([
         "cargo",
-        "build", 
+        "build",
         "--release",
-        "--bin", "wasmsign2",
+        "--bin",
+        "wasmsign2",
         "--manifest-path=wasmsign2-src/Cargo.toml",
     ])
     if result.return_code != 0:

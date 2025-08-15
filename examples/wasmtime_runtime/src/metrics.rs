@@ -103,7 +103,11 @@ pub trait Metrics {
     );
     fn get_summary(&self) -> MetricsSummary;
     fn get_component_stats(&self, component_name: &str) -> Option<ComponentStats>;
-    fn get_function_stats(&self, component_name: &str, function_name: &str) -> Option<FunctionStats>;
+    fn get_function_stats(
+        &self,
+        component_name: &str,
+        function_name: &str,
+    ) -> Option<FunctionStats>;
 }
 
 impl ComponentMetrics {
@@ -122,18 +126,18 @@ impl ComponentMetrics {
             })),
         }
     }
-    
+
     /// Get execution metrics for a specific component
     pub fn get_execution_metrics(&self, component_name: &str) -> ExecutionMetrics {
         let inner = self.inner.lock().unwrap();
-        
+
         let component_functions: HashMap<String, FunctionStats> = inner
             .function_stats
             .iter()
             .filter(|(_, stats)| stats.component_name == component_name)
             .map(|(key, stats)| (stats.function_name.clone(), stats.clone()))
             .collect();
-        
+
         let total_calls = component_functions.values().map(|s| s.call_count).sum();
         let successful_calls = component_functions.values().map(|s| s.success_count).sum();
         let failed_calls = component_functions.values().map(|s| s.failure_count).sum();
@@ -141,13 +145,13 @@ impl ComponentMetrics {
             .values()
             .map(|s| s.total_execution_time)
             .fold(Duration::ZERO, |acc, d| acc + d);
-        
+
         let average_execution_time = if total_calls > 0 {
             total_execution_time / total_calls as u32
         } else {
             Duration::ZERO
         };
-        
+
         ExecutionMetrics {
             component_name: component_name.to_string(),
             total_calls,
@@ -158,13 +162,13 @@ impl ComponentMetrics {
             functions: component_functions,
         }
     }
-    
+
     /// Export metrics to JSON format
     pub fn export_json(&self) -> serde_json::Result<String> {
         let summary = self.get_summary();
         serde_json::to_string_pretty(&summary)
     }
-    
+
     /// Clear all metrics (useful for testing)
     pub fn clear(&self) {
         let mut inner = self.inner.lock().unwrap();
@@ -184,10 +188,10 @@ impl ComponentMetrics {
 impl Metrics for ComponentMetrics {
     fn record_component_loaded(&self, metadata: &ComponentMetadata) {
         let mut inner = self.inner.lock().unwrap();
-        
+
         inner.components_loaded += 1;
         inner.total_load_time += metadata.load_time;
-        
+
         let stats = inner
             .component_stats
             .entry(metadata.name.clone())
@@ -202,28 +206,28 @@ impl Metrics for ComponentMetrics {
                 average_instantiation_time: Duration::ZERO,
                 last_used: Instant::now(),
             });
-        
+
         stats.load_count += 1;
         stats.total_load_time += metadata.load_time;
         stats.average_load_time = stats.total_load_time / stats.load_count as u32;
         stats.last_used = Instant::now();
     }
-    
+
     fn record_component_instantiated(&self, metadata: &ComponentMetadata, duration: Duration) {
         let mut inner = self.inner.lock().unwrap();
-        
+
         inner.components_instantiated += 1;
         inner.total_instantiation_time += duration;
-        
+
         if let Some(stats) = inner.component_stats.get_mut(&metadata.name) {
             stats.instantiation_count += 1;
             stats.total_instantiation_time += duration;
-            stats.average_instantiation_time = 
+            stats.average_instantiation_time =
                 stats.total_instantiation_time / stats.instantiation_count as u32;
             stats.last_used = Instant::now();
         }
     }
-    
+
     fn record_function_called(
         &self,
         component_name: &str,
@@ -232,10 +236,10 @@ impl Metrics for ComponentMetrics {
         success: bool,
     ) {
         let mut inner = self.inner.lock().unwrap();
-        
+
         inner.functions_called += 1;
         inner.total_execution_time += duration;
-        
+
         let key = format!("{}::{}", component_name, function_name);
         let stats = inner
             .function_stats
@@ -252,50 +256,50 @@ impl Metrics for ComponentMetrics {
                 max_execution_time: Duration::ZERO,
                 last_called: Instant::now(),
             });
-        
+
         stats.call_count += 1;
         if success {
             stats.success_count += 1;
         } else {
             stats.failure_count += 1;
         }
-        
+
         stats.total_execution_time += duration;
         stats.average_execution_time = stats.total_execution_time / stats.call_count as u32;
-        
+
         if duration < stats.min_execution_time {
             stats.min_execution_time = duration;
         }
         if duration > stats.max_execution_time {
             stats.max_execution_time = duration;
         }
-        
+
         stats.last_called = Instant::now();
     }
-    
+
     fn get_summary(&self) -> MetricsSummary {
         let inner = self.inner.lock().unwrap();
-        
+
         let average_load_time = if inner.components_loaded > 0 {
             inner.total_load_time / inner.components_loaded as u32
         } else {
             Duration::ZERO
         };
-        
+
         let average_instantiation_time = if inner.components_instantiated > 0 {
             inner.total_instantiation_time / inner.components_instantiated as u32
         } else {
             Duration::ZERO
         };
-        
+
         let average_execution_time = if inner.functions_called > 0 {
             inner.total_execution_time / inner.functions_called as u32
         } else {
             Duration::ZERO
         };
-        
+
         let start_time = Instant::now() - Duration::from_secs(60); // Placeholder
-        
+
         MetricsSummary {
             total_components_loaded: inner.components_loaded,
             total_components_instantiated: inner.components_instantiated,
@@ -311,13 +315,17 @@ impl Metrics for ComponentMetrics {
             start_time,
         }
     }
-    
+
     fn get_component_stats(&self, component_name: &str) -> Option<ComponentStats> {
         let inner = self.inner.lock().unwrap();
         inner.component_stats.get(component_name).cloned()
     }
-    
-    fn get_function_stats(&self, component_name: &str, function_name: &str) -> Option<FunctionStats> {
+
+    fn get_function_stats(
+        &self,
+        component_name: &str,
+        function_name: &str,
+    ) -> Option<FunctionStats> {
         let inner = self.inner.lock().unwrap();
         let key = format!("{}::{}", component_name, function_name);
         inner.function_stats.get(&key).cloned()
@@ -342,7 +350,7 @@ impl Clone for ComponentMetrics {
 mod tests {
     use super::*;
     use crate::component_loader::ComponentMetadata;
-    
+
     #[test]
     fn test_metrics_creation() {
         let metrics = ComponentMetrics::new();
@@ -350,7 +358,7 @@ mod tests {
         assert_eq!(summary.total_components_loaded, 0);
         assert_eq!(summary.total_functions_called, 0);
     }
-    
+
     #[test]
     fn test_component_loaded_metrics() {
         let metrics = ComponentMetrics::new();
@@ -361,71 +369,73 @@ mod tests {
             exports: vec![],
             imports: vec![],
         };
-        
+
         metrics.record_component_loaded(&metadata);
-        
+
         let summary = metrics.get_summary();
         assert_eq!(summary.total_components_loaded, 1);
         assert_eq!(summary.total_load_time, Duration::from_millis(100));
-        
+
         let stats = metrics.get_component_stats("test_component").unwrap();
         assert_eq!(stats.load_count, 1);
         assert_eq!(stats.size_bytes, 1024);
     }
-    
+
     #[test]
     fn test_function_call_metrics() {
         let metrics = ComponentMetrics::new();
-        
+
         metrics.record_function_called(
             "test_component",
             "test_function",
             Duration::from_millis(50),
             true,
         );
-        
+
         let summary = metrics.get_summary();
         assert_eq!(summary.total_functions_called, 1);
         assert_eq!(summary.total_execution_time, Duration::from_millis(50));
-        
-        let stats = metrics.get_function_stats("test_component", "test_function").unwrap();
+
+        let stats = metrics
+            .get_function_stats("test_component", "test_function")
+            .unwrap();
         assert_eq!(stats.call_count, 1);
         assert_eq!(stats.success_count, 1);
         assert_eq!(stats.failure_count, 0);
     }
-    
+
     #[test]
     fn test_execution_metrics() {
         let metrics = ComponentMetrics::new();
-        
+
         metrics.record_function_called("comp1", "func1", Duration::from_millis(10), true);
         metrics.record_function_called("comp1", "func2", Duration::from_millis(20), false);
         metrics.record_function_called("comp2", "func1", Duration::from_millis(15), true);
-        
+
         let exec_metrics = metrics.get_execution_metrics("comp1");
         assert_eq!(exec_metrics.total_calls, 2);
         assert_eq!(exec_metrics.successful_calls, 1);
         assert_eq!(exec_metrics.failed_calls, 1);
         assert_eq!(exec_metrics.functions.len(), 2);
     }
-    
+
     #[test]
     fn test_metrics_clear() {
         let metrics = ComponentMetrics::new();
-        
+
         metrics.record_function_called("test", "func", Duration::from_millis(10), true);
         assert_eq!(metrics.get_summary().total_functions_called, 1);
-        
+
         metrics.clear();
         assert_eq!(metrics.get_summary().total_functions_called, 0);
     }
-    
+
     #[test]
     fn test_metrics_json_export() {
         let metrics = ComponentMetrics::new();
         let json = metrics.export_json();
         assert!(json.is_ok());
-        
+
         let json_str = json.unwrap();
         assert!(json_str.contains("total_components_loaded"));
         assert!(json_str.contains("total_functions_called"));

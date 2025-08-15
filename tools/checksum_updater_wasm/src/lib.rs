@@ -59,21 +59,21 @@ impl ChecksumUpdater {
     pub async fn list_tools() -> Result<Vec<String>, String> {
         let manager = ChecksumManager::new().await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
-        
+
         manager.list_all_tools().await
             .map_err(|e| format!("Failed to list tools: {}", e))
     }
 
     /// Update specific tools
     pub async fn update_tools(
-        tools: Vec<String>, 
+        tools: Vec<String>,
         config: UpdateConfig
     ) -> Result<UpdateResult, String> {
         let manager = ChecksumManager::new().await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
-        
+
         let mut engine = UpdateEngine::new(manager);
-        
+
         let update_config = update_engine::UpdateConfig {
             force: config.force,
             dry_run: config.dry_run,
@@ -100,7 +100,7 @@ impl ChecksumUpdater {
     ) -> Result<UpdateResult, String> {
         let manager = ChecksumManager::new().await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
-        
+
         let tools = manager.list_all_tools().await
             .map_err(|e| format!("Failed to list tools: {}", e))?;
 
@@ -109,14 +109,14 @@ impl ChecksumUpdater {
 
     /// Validate checksums for tools
     pub async fn validate_tools(
-        tools: Vec<String>, 
+        tools: Vec<String>,
         fix_errors: bool
     ) -> Result<ValidationResult, String> {
         let manager = ChecksumManager::new().await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
-        
+
         let validator = ChecksumValidator::new();
-        
+
         let results = validator.validate_tools(&tools, &manager, fix_errors).await
             .map_err(|e| format!("Validation failed: {}", e))?;
 
@@ -140,7 +140,7 @@ impl ChecksumUpdater {
         // Check if there's a newer version of the checksum updater component available
         let manager = ChecksumManager::new().await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
-        
+
         // Look for checksum-updater-wasm in the tools registry
         // This demonstrates the self-bootstrapping capability
         if let Ok(tool_info) = manager.get_tool_info("checksum-updater-wasm").await {
@@ -148,7 +148,7 @@ impl ChecksumUpdater {
                 .map_err(|e| format!("Invalid current version: {}", e))?;
             let latest_version = semver::Version::parse(&tool_info.latest_version)
                 .map_err(|e| format!("Invalid latest version: {}", e))?;
-            
+
             if latest_version > current_version {
                 tracing::info!(
                     "Self-update available: {} -> {}",
@@ -161,7 +161,7 @@ impl ChecksumUpdater {
             // If not found in registry, this component needs to be added
             tracing::warn!("Self-update not available: component not in registry");
         }
-        
+
         Ok(None)
     }
 
@@ -170,27 +170,27 @@ impl ChecksumUpdater {
         // Download the new version of this component
         // This is the self-bootstrapping capability!
         tracing::info!("Starting self-update to version {}", version);
-        
+
         let manager = ChecksumManager::new().await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
-        
+
         let tool_info = manager.get_tool_info("checksum-updater-wasm").await
             .map_err(|e| format!("Failed to get tool info: {}", e))?;
-        
+
         if let Some(version_info) = tool_info.versions.get(&version) {
             // In a real implementation, this would:
             // 1. Determine current platform (wasm32-wasi)
             // 2. Download the new component from GitHub releases
             // 3. Validate the checksum
             // 4. Replace the current component (requires runtime cooperation)
-            
+
             tracing::info!(
                 "Would download {} version {} with {} platforms available",
                 tool_info.tool_name,
                 version,
                 version_info.platforms.len()
             );
-            
+
             // For demonstration, we'll simulate successful self-update
             // In practice, this requires cooperation with the WebAssembly runtime
             // to replace the running component
@@ -214,7 +214,7 @@ impl Bootstrap {
     pub fn get_component_path() -> Result<String, String> {
         // In WASI Preview 2, we can try to determine the component path
         // This is runtime-dependent and might require specific WASI capabilities
-        
+
         // For now, return a sensible default based on typical deployment
         let component_name = "checksum_updater_wasm.wasm";
         Ok(component_name.to_string())
@@ -227,16 +227,16 @@ impl Bootstrap {
         // 1. Stopping the current component gracefully
         // 2. Having the runtime replace the component file
         // 3. Restarting with the new component
-        
+
         tracing::info!(
             "Self-replacement requested: {} -> {}",
             Self::get_component_path().unwrap_or_default(),
             new_component_path
         );
-        
+
         // In a real deployment, this might use WASI filesystem APIs
         // or coordinate with the runtime host
-        
+
         // For demonstration, we simulate success
         Ok(true)
     }
@@ -245,17 +245,17 @@ impl Bootstrap {
     pub fn verify_component(component_path: String) -> Result<bool, String> {
         // Component verification could use:
         // 1. Basic WebAssembly format validation
-        // 2. Component model structure validation  
+        // 2. Component model structure validation
         // 3. Interface compatibility checking
         // 4. Checksum validation
-        
+
         tracing::info!("Verifying component at: {}", component_path);
-        
+
         // Basic checks we could implement:
         // - File exists and is readable (using WASI filesystem)
         // - Starts with WebAssembly magic bytes
         // - Contains component model sections
-        
+
         // For demonstration, assume valid
         Ok(true)
     }
@@ -300,7 +300,7 @@ mod tests {
             skip_errors: true,
             timeout_seconds: 120,
         };
-        
+
         assert!(config.force);
         assert!(!config.dry_run);
         assert!(config.skip_errors);

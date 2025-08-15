@@ -20,7 +20,7 @@ load(
 load(
     "//wasm:wasm_signing.bzl",
     _wasm_keygen = "wasm_keygen",
-    _wasm_sign = "wasm_sign", 
+    _wasm_sign = "wasm_sign",
     _wasm_verify = "wasm_verify",
 )
 

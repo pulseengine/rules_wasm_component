@@ -162,7 +162,7 @@ async fn test_json_formatting() -> Result<()> {
         println!("Validating JSON formatting for: {}", file_name);
 
         let content = fs::read_to_string(&json_path).await?;
-        
+
         // Validate that the JSON parses correctly
         let parsed: Value = serde_json::from_str(&content)
             .map_err(|e| anyhow::anyhow!("Invalid JSON in {}: {}", file_name, e))?;
@@ -176,7 +176,7 @@ async fn test_json_formatting() -> Result<()> {
 
         // Validate consistent formatting by re-serializing
         let reformatted = serde_json::to_string_pretty(&parsed)?;
-        
+
         // Check that the reformatted version is valid JSON too
         let _reparsed: Value = serde_json::from_str(&reformatted)
             .map_err(|e| anyhow::anyhow!("Reformatted JSON is invalid for {}: {}", file_name, e))?;
@@ -218,7 +218,7 @@ async fn test_tool_name_consistency() -> Result<()> {
 
     for tool_name in &tools {
         let tool_info = manager.get_tool_info(&tool_name).await?;
-        
+
         // Validate that the tool_name in the JSON matches the file name
         assert_eq!(
             tool_info.tool_name, *tool_name,
@@ -268,7 +268,7 @@ async fn test_checksum_validity() -> Result<()> {
 
                 // Validate SHA256 format
                 let checksum = &platform_info.sha256;
-                
+
                 // Should be exactly 64 characters
                 assert_eq!(
                     checksum.len(), 64,

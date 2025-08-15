@@ -1,10 +1,12 @@
 // WebAssembly Signing Example Component
-// 
+//
 // This is a simple component that demonstrates cryptographic signing
 // capabilities for WebAssembly components.
 
 // Import the generated WIT bindings
-use example_component_bindings::exports::example::signature::demo::{Guest, SigningInfo, VerificationResult};
+use example_component_bindings::exports::example::signature::demo::{
+    Guest, SigningInfo, VerificationResult,
+};
 
 // Component implementation
 struct ExampleComponent;
@@ -31,13 +33,16 @@ impl Guest for ExampleComponent {
     fn verify_integrity(expected_hash: String, data: String) -> VerificationResult {
         let computed_hash = Self::compute_hash(data);
         let is_valid = computed_hash == expected_hash;
-        
+
         let message = if is_valid {
             "Data integrity verified successfully".to_string()
         } else {
-            format!("Integrity check failed: expected {}, got {}", expected_hash, computed_hash)
+            format!(
+                "Integrity check failed: expected {}, got {}",
+                expected_hash, computed_hash
+            )
         };
-        
+
         VerificationResult {
             is_valid,
             computed_hash,
@@ -50,7 +55,7 @@ impl Guest for ExampleComponent {
         let test_data = format!("{}:{}", info.name, info.version);
         let hash = Self::compute_hash(test_data.clone());
         let verification = Self::verify_integrity(hash.clone(), test_data);
-        
+
         format!(
             "Signing Demo:\n\
              Component: {}\n\
@@ -60,7 +65,11 @@ impl Guest for ExampleComponent {
             info.name,
             hash,
             verification.message,
-            if verification.is_valid { "✅ READY FOR SIGNING" } else { "❌ FAILED" }
+            if verification.is_valid {
+                "✅ READY FOR SIGNING"
+            } else {
+                "❌ FAILED"
+            }
         )
     }
 }
