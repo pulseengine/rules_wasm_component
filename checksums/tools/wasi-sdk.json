@@ -8,7 +8,7 @@
       "release_date": "2024-11-01",
       "platforms": {
         "darwin_amd64": {
-          "sha256": "cf5f524de23f231756ec2f3754fc810ea3f6206841a968c45d8b7ea47cfc3a61",
+          "sha256": "55e3ff3fee1a15678a16eeccba0129276c9f6be481bc9c283e7f9f65bf055c11",
           "url_suffix": "macos.tar.gz"
         },
         "darwin_arm64": {
