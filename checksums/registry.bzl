@@ -187,11 +187,11 @@ def _get_hardcoded_checksums(tool_name):
                             "url_suffix": "macos.tar.gz",
                         },
                         "linux_amd64": {
-                            "sha256": "fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8",
+                            "sha256": "52640dde13599bf127a95499e61d6d640256119456d1af8897ab6725bcf3d89c",
                             "url_suffix": "linux.tar.gz",
                         },
                         "linux_arm64": {
-                            "sha256": "fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8",
+                            "sha256": "52640dde13599bf127a95499e61d6d640256119456d1af8897ab6725bcf3d89c",
                             "url_suffix": "linux.tar.gz",
                         },
                         "windows_amd64": {
