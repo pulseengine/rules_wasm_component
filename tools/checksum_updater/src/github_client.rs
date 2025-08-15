@@ -153,7 +153,10 @@ impl GitHubClient {
 
     /// Check if a release exists for a specific tag
     pub async fn release_exists(&self, repo: &str, tag: &str) -> Result<bool> {
-        let url = format!("https://api.github.com/repos/{}/releases/tags/{}", repo, tag);
+        let url = format!(
+            "https://api.github.com/repos/{}/releases/tags/{}",
+            repo, tag
+        );
         debug!("Checking if release exists: {}", url);
 
         let response = self
@@ -179,7 +182,10 @@ impl GitHubClient {
             .context("Failed to check rate limit")?;
 
         if !response.status().is_success() {
-            return Err(anyhow::anyhow!("Rate limit check failed: {}", response.status()));
+            return Err(anyhow::anyhow!(
+                "Rate limit check failed: {}",
+                response.status()
+            ));
         }
 
         let rate_limit_response: serde_json::Value = response

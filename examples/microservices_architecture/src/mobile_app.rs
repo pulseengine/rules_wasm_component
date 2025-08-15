@@ -1,14 +1,17 @@
 // Mobile App implementation for cross-platform applications
-use mobile::app::exports::mobile_ui::{TouchEvent, Gesture, ScreenInfo, HapticFeedback};
-use mobile::app::exports::device::{Location, SensorReading, DeviceInfo, BatteryStatus};
+use mobile::app::exports::device::{BatteryStatus, DeviceInfo, Location, SensorReading};
+use mobile::app::exports::mobile_ui::{Gesture, HapticFeedback, ScreenInfo, TouchEvent};
 
 struct MobileApp;
 
 impl mobile::app::exports::mobile_ui::Guest for MobileApp {
     fn handle_touch(event: TouchEvent) -> Gesture {
         // Simplified touch handling
-        println!("Mobile: Touch event at ({}, {})", event.coordinates.0, event.coordinates.1);
-        
+        println!(
+            "Mobile: Touch event at ({}, {})",
+            event.coordinates.0, event.coordinates.1
+        );
+
         Gesture {
             gesture_type: "tap".to_string(),
             velocity: Some(0.0),
@@ -16,11 +19,11 @@ impl mobile::app::exports::mobile_ui::Guest for MobileApp {
             duration_ms: 100,
         }
     }
-    
+
     fn provide_haptic_feedback(feedback: HapticFeedback) {
         println!("Mobile: Providing {} haptic feedback", feedback.pattern);
     }
-    
+
     fn get_screen_info() -> ScreenInfo {
         ScreenInfo {
             width: 375,
@@ -41,7 +44,7 @@ impl mobile::app::exports::device::Guest for MobileApp {
             unique_id: "mobile-device-12345".to_string(),
         }
     }
-    
+
     fn get_battery_status() -> BatteryStatus {
         BatteryStatus {
             level: 0.85,
@@ -50,7 +53,7 @@ impl mobile::app::exports::device::Guest for MobileApp {
             discharging_time: Some(480), // 8 hours
         }
     }
-    
+
     fn get_current_location() -> Option<Location> {
         Some(Location {
             latitude: 37.7749,
@@ -62,15 +65,15 @@ impl mobile::app::exports::device::Guest for MobileApp {
             timestamp: 1234567890,
         })
     }
-    
+
     fn start_location_tracking() {
         println!("Mobile: Started location tracking");
     }
-    
+
     fn stop_location_tracking() {
         println!("Mobile: Stopped location tracking");
     }
-    
+
     fn read_sensor(sensor_type: String) -> Option<SensorReading> {
         match sensor_type.as_str() {
             "accelerometer" => Some(SensorReading {
@@ -82,11 +85,14 @@ impl mobile::app::exports::device::Guest for MobileApp {
             _ => None,
         }
     }
-    
+
     fn start_sensor_monitoring(sensor_type: String, interval_ms: u32) {
-        println!("Mobile: Started monitoring {} every {}ms", sensor_type, interval_ms);
+        println!(
+            "Mobile: Started monitoring {} every {}ms",
+            sensor_type, interval_ms
+        );
     }
-    
+
     fn stop_sensor_monitoring(sensor_type: String) {
         println!("Mobile: Stopped monitoring {}", sensor_type);
     }

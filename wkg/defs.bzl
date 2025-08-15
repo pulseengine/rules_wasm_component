@@ -1,6 +1,6 @@
 """Bazel rules for WebAssembly Package Tools (wkg) with OCI support"""
 
-load("//providers:providers.bzl", "WasmComponentInfo", "WasmComponentMetadataInfo", "WasmKeyInfo", "WasmMultiArchInfo", "WasmOciInfo", "WasmOciMetadataMappingInfo", "WasmRegistryInfo", "WasmSecurityPolicyInfo", "WasmSignatureInfo")
+load("//providers:providers.bzl", "WacCompositionInfo", "WasmComponentInfo", "WasmComponentMetadataInfo", "WasmKeyInfo", "WasmMultiArchInfo", "WasmOciInfo", "WasmOciMetadataMappingInfo", "WasmRegistryInfo", "WasmSecurityPolicyInfo", "WasmSignatureInfo")
 
 def _wkg_fetch_impl(ctx):
     """Implementation of wkg_fetch rule"""
@@ -3171,7 +3171,7 @@ def _wac_compose_with_oci_impl(ctx):
     local_components = {}
     all_component_files = []
 
-    for comp_target, comp_name in ctx.attr.local_components.items():
+    for comp_name, comp_target in ctx.attr.local_components.items():
         comp_info = comp_target[WasmComponentInfo]
         local_components[comp_name] = comp_info
         all_component_files.append(comp_info.wasm_file)
@@ -3293,25 +3293,13 @@ def _wac_compose_with_oci_impl(ctx):
     )
 
     # Create provider
-    from_providers = "//providers:providers.bzl"
-    WacCompositionInfo = getattr(ctx.attr._providers, "WacCompositionInfo", None)
-    if WacCompositionInfo == None:
-        # Fallback to struct if provider not available
-        composition_info = struct(
-            composed_wasm = composed_wasm,
-            components = all_components,
-            composition_wit = composition_file,
-            instantiations = [],
-            connections = [],
-        )
-    else:
-        composition_info = WacCompositionInfo(
-            composed_wasm = composed_wasm,
-            components = all_components,
-            composition_wit = composition_file,
-            instantiations = [],
-            connections = [],
-        )
+    composition_info = WacCompositionInfo(
+        composed_wasm = composed_wasm,
+        components = all_components,
+        composition_wit = composition_file,
+        instantiations = [],
+        connections = [],
+    )
 
     return [
         composition_info,
@@ -3351,7 +3339,7 @@ def _generate_oci_composition(components):
 wac_compose_with_oci = rule(
     implementation = _wac_compose_with_oci_impl,
     attrs = {
-        "local_components": attr.label_keyed_string_dict(
+        "local_components": attr.string_keyed_label_dict(
             providers = [WasmComponentInfo],
             doc = "Local components to compose (name -> target)",
         ),
@@ -3380,9 +3368,6 @@ wac_compose_with_oci = rule(
         "public_key": attr.label(
             allow_files = True,
             doc = "Public key for signature verification",
-        ),
-        "_providers": attr.label(
-            default = "//providers:providers.bzl",
         ),
     },
     toolchains = [

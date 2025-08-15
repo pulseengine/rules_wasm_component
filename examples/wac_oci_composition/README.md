@@ -5,27 +5,32 @@ This directory demonstrates comprehensive WebAssembly Component composition usin
 ## Overview
 
 The examples show how to build distributed WebAssembly applications by composing:
+
 - **Local components** built with Bazel in your workspace
 - **Remote components** pulled from OCI registries (GitHub Container Registry, Docker Hub, etc.)
 
 ## Key Features Demonstrated
 
 ### 🔄 Component Integration
+
 - Pull WebAssembly components from multiple OCI registries
 - Compose local and remote components seamlessly
 - Support for different authentication methods (tokens, OAuth, basic auth)
 
 ### 🔐 Security & Verification
+
 - Component signature verification during pull operations
 - Registry authentication and credential management
 - Security policy enforcement for production environments
 
 ### 🏗️ Architecture Patterns
+
 - **Microservices**: Frontend + multiple backend services
 - **IoT Platform**: Edge gateway + cloud processing services
 - **Enterprise**: SSO + audit + backup + monitoring services
 
 ### 🌐 Multi-Registry Support
+
 - GitHub Container Registry (`ghcr.io`)
 - Docker Hub (`docker.io`)
 - AWS Elastic Container Registry (`*.dkr.ecr.*.amazonaws.com`)
@@ -37,11 +42,12 @@ The examples show how to build distributed WebAssembly applications by composing
 ### Basic Examples
 
 #### 1. Basic OCI Component Pulling
+
 ```bazel
 wasm_component_from_oci(
     name = "auth_service_from_oci",
     registry = "localhost:5000",
-    namespace = "wasm-examples", 
+    namespace = "wasm-examples",
     component_name = "auth-service",
     tag = "v1.0.0",
     registry_config = ":example_registries",
@@ -49,6 +55,7 @@ wasm_component_from_oci(
 ```
 
 #### 2. Simple Distributed App
+
 ```bazel
 wac_compose_with_oci(
     name = "basic_distributed_app",
@@ -66,6 +73,7 @@ wac_compose_with_oci(
 ### Advanced Examples
 
 #### 3. Secure Multi-Registry Composition
+
 ```bazel
 wac_compose_with_oci(
     name = "secure_distributed_app",
@@ -80,6 +88,7 @@ wac_compose_with_oci(
 ```
 
 #### 4. Microservices with Convenience Macro
+
 ```bazel
 wac_microservices_app(
     name = "ecommerce_app",
@@ -96,6 +105,7 @@ wac_microservices_app(
 ```
 
 #### 5. IoT Platform Architecture
+
 ```bazel
 wac_distributed_system(
     name = "iot_platform",
@@ -117,6 +127,7 @@ wac_distributed_system(
 ### Enterprise Examples
 
 #### 6. Enterprise System with External Composition
+
 ```bazel
 wac_compose_with_oci(
     name = "enterprise_system",
@@ -126,7 +137,7 @@ wac_compose_with_oci(
     },
     oci_components = {
         "auth": "ghcr.io/enterprise/sso:v3.0.0",
-        "audit": "ghcr.io/enterprise/audit-log:v1.5.0", 
+        "audit": "ghcr.io/enterprise/audit-log:v1.5.0",
         "backup": "azure.azurecr.io/enterprise/backup:v2.0.0",
     },
     verify_signatures = True,
@@ -136,6 +147,7 @@ wac_compose_with_oci(
 ## Registry Configuration
 
 ### Basic Configuration
+
 ```bazel
 wkg_registry_config(
     name = "example_registries",
@@ -149,6 +161,7 @@ wkg_registry_config(
 ```
 
 ### Production Configuration
+
 ```bazel
 wkg_registry_config(
     name = "production_registries",
@@ -158,7 +171,7 @@ wkg_registry_config(
     registries = [
         "local|localhost:5000|oci",
         "github|ghcr.io|oci|env|GITHUB_TOKEN",
-        "docker|docker.io|oci|env|DOCKER_TOKEN", 
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
         "aws|123456789.dkr.ecr.us-west-2.amazonaws.com|oci|oauth|client_id|client_secret",
         "azure|myregistry.azurecr.io|oci|basic|username|password",
     ],
@@ -169,11 +182,13 @@ wkg_registry_config(
 ## Component Interfaces
 
 ### Frontend Component (wit/frontend.wit)
+
 - **Exports**: HTTP handler for web requests
 - **Imports**: Auth service, data service, logging service
 - **Use Cases**: Web frontends, API clients, user interfaces
 
-### Gateway Component (wit/gateway.wit)  
+### Gateway Component (wit/gateway.wit)
+
 - **Exports**: HTTP handler, routing interface
 - **Imports**: User API, analytics API, metrics, device management
 - **Use Cases**: API gateways, reverse proxies, service meshes
@@ -181,6 +196,7 @@ wkg_registry_config(
 ## Development Workflow
 
 ### 1. Local Development
+
 ```bash
 # Build local components
 bazel build //examples/wac_oci_composition:frontend_component
@@ -191,6 +207,7 @@ bazel build //examples/wac_oci_composition:app_development
 ```
 
 ### 2. Integration Testing
+
 ```bash
 # Compose with mix of local and OCI components
 bazel build //examples/wac_oci_composition:basic_distributed_app
@@ -200,6 +217,7 @@ bazel build //examples/wac_oci_composition:secure_distributed_app
 ```
 
 ### 3. Production Deployment
+
 ```bash
 # Build production composition with full OCI services
 bazel build //examples/wac_oci_composition:app_production
@@ -211,6 +229,7 @@ bazel build //examples/wac_oci_composition:enterprise_system
 ## Authentication Setup
 
 ### Environment Variables
+
 ```bash
 # GitHub Container Registry
 export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
@@ -224,6 +243,7 @@ export AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### Credential Files
+
 ```bash
 # Docker config file
 ~/.docker/config.json
@@ -235,16 +255,19 @@ export AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ## Security Considerations
 
 ### Component Signing
+
 - All production components should be signed using `wasmsign2`
 - Use `verify_signatures = True` for production compositions
 - Maintain separate keys for development and production
 
 ### Registry Authentication
+
 - Store registry credentials securely (environment variables, credential files)
 - Use least-privilege access tokens
 - Rotate credentials regularly
 
 ### Network Security
+
 - Use HTTPS registries only in production
 - Consider registry mirrors for air-gapped environments
 - Implement network policies for component communication
@@ -254,6 +277,7 @@ export AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ### Common Issues
 
 #### 1. Authentication Failures
+
 ```bash
 # Check environment variables
 echo $GITHUB_TOKEN
@@ -263,6 +287,7 @@ bazel build //examples/wac_oci_composition:example_registries
 ```
 
 #### 2. Component Pull Failures
+
 ```bash
 # Test component pulling individually
 bazel build //examples/wac_oci_composition:auth_service_from_oci
@@ -272,6 +297,7 @@ curl -I https://ghcr.io/v2/
 ```
 
 #### 3. Composition Errors
+
 ```bash
 # Validate WAC composition syntax
 wac --help compose
@@ -281,7 +307,9 @@ bazel build //examples/wac_oci_composition:frontend_component --verbose_failures
 ```
 
 ### Debug Mode
+
 Enable verbose logging by setting:
+
 ```bash
 export WKG_LOG_LEVEL=debug
 export WAC_LOG_LEVEL=debug
@@ -290,21 +318,25 @@ export WAC_LOG_LEVEL=debug
 ## Best Practices
 
 ### 1. Component Versioning
+
 - Use semantic versioning for component tags
 - Pin specific versions in production compositions
 - Use `latest` only for development
 
 ### 2. Registry Organization
+
 - Use consistent namespace conventions
 - Group related components under common namespaces
 - Document component dependencies
 
 ### 3. Composition Patterns
+
 - Keep compositions focused and modular
 - Use external composition files for complex systems
 - Document service connections and data flow
 
 ### 4. Testing Strategy
+
 - Test local components independently
 - Use mock services for development
 - Validate full compositions in staging environment

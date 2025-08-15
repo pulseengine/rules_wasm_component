@@ -1,0 +1,18 @@
+# Rustfmt configuration for rules_wasm_component
+
+# Use Rust 2021 edition for async/await support
+edition = "2021"
+
+# Basic stable formatting options
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+newline_style = "Auto"
+use_small_heuristics = "Default"
+
+# Stable options only
+reorder_imports = true
+reorder_modules = true
+use_try_shorthand = false
+use_field_init_shorthand = true
+force_explicit_abi = true

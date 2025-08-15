@@ -1,0 +1,123 @@
+"""Simple, working OCI test example for validation"""
+
+load("//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("//wit:defs.bzl", "wit_library")
+load("//wasm:defs.bzl", "wasm_keygen")
+load(
+    "//wkg:defs.bzl",
+    "wac_compose_with_oci",
+    "wasm_component_from_oci",
+    "wasm_component_oci_image",
+    "wasm_component_publish",
+    "wkg_registry_config",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+# Simple greeting component
+wit_library(
+    name = "greeting_wit",
+    package_name = "simple:greeting",
+    srcs = ["wit/greeting.wit"],
+    world = "greeting",
+)
+
+rust_wasm_component_bindgen(
+    name = "greeting_component",
+    srcs = ["src/greeting.rs"],
+    wit = ":greeting_wit",
+)
+
+# Simple calculator component
+wit_library(
+    name = "calculator_wit",
+    package_name = "simple:calculator",
+    srcs = ["wit/calculator.wit"],
+    world = "calculator",
+)
+
+rust_wasm_component_bindgen(
+    name = "calculator_component",
+    srcs = ["src/calculator.rs"],
+    wit = ":calculator_wit",
+)
+
+# Signing keys for testing
+wasm_keygen(
+    name = "test_keys",
+    openssh_format = False,
+)
+
+# Simple registry config for local testing
+wkg_registry_config(
+    name = "local_registry",
+    default_registry = "localhost",
+    registries = [
+        "localhost|localhost:5001|oci",
+    ],
+)
+
+# Test 1: Publish greeting component to local registry
+wasm_component_oci_image(
+    name = "greeting_oci_image",
+    package_name = "simple/greeting",
+    authors = ["test@example.com"],
+    component = ":greeting_component",
+    description = "Simple greeting component for testing",
+    license = "MIT",
+    namespace = "test",
+    registry = "localhost:5001",
+    tag = "v1.0.0",
+)
+
+wasm_component_publish(
+    name = "publish_greeting",
+    oci_image = ":greeting_oci_image",
+    registry_config = ":local_registry",
+)
+
+# Test 2: Publish calculator component to local registry
+wasm_component_oci_image(
+    name = "calculator_oci_image",
+    package_name = "simple/calculator",
+    authors = ["test@example.com"],
+    component = ":calculator_component",
+    description = "Simple calculator component for testing",
+    license = "MIT",
+    namespace = "test",
+    registry = "localhost:5001",
+    tag = "v1.0.0",
+)
+
+wasm_component_publish(
+    name = "publish_calculator",
+    oci_image = ":calculator_oci_image",
+    registry_config = ":local_registry",
+)
+
+# Test 3: Pull component from OCI registry
+wasm_component_from_oci(
+    name = "pulled_greeting",
+    image_ref = "localhost:5001/test/simple/greeting:v1.0.0",
+    registry_config = ":local_registry",
+)
+
+# Test 4: Simple composition with one local + one OCI component
+wac_compose_with_oci(
+    name = "simple_app",
+    composition = """
+        // Simple app: local calculator + remote greeting
+        let calc = new calc:component { ... };
+        let greeter = new greeter:component { ... };
+
+        // For now, just export calc as main
+        export calc as main;
+    """,
+    local_components = {
+        "calc": ":calculator_component",
+    },
+    oci_components = {
+        "greeter": "localhost:5001/test/simple/greeting:v1.0.0",
+    },
+    registry_config = ":local_registry",
+)

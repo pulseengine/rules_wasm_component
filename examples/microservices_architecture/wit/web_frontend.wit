@@ -9,20 +9,20 @@ interface ui {
         data: option<string>,  // JSON payload
         timestamp: u64,
     }
-    
+
     record ui-state {
         current-page: string,
         user-context: option<string>,
         session-data: option<string>,
         preferences: list<tuple<string, string>>,
     }
-    
+
     record ui-event {
         event-type: string,
         target: string,
         payload: option<string>,
     }
-    
+
     handle-user-action: func(action: user-action, state: ui-state) -> ui-state;
     emit-ui-event: func(event: ui-event);
 }
@@ -37,7 +37,7 @@ interface api-client {
         body: option<string>,
         timeout-ms: option<u32>,
     }
-    
+
     record api-response {
         status: u32,
         headers: list<tuple<string, string>>,
@@ -45,7 +45,7 @@ interface api-client {
         error: option<string>,
         duration-ms: u32,
     }
-    
+
     call-api: func(request: api-request) -> api-response;
     batch-call: func(requests: list<api-request>) -> list<api-response>;
 }
@@ -58,18 +58,18 @@ interface state-management {
         expires-at: option<u64>,
         tags: list<string>,
     }
-    
+
     record state-update {
         path: string,  // JSON path or state key
         value: string,
         merge: bool,  // Whether to merge or replace
     }
-    
+
     // Local state management
     get-state: func(path: string) -> option<string>;
     set-state: func(update: state-update);
     clear-state: func(path: string);
-    
+
     // Client-side caching
     cache-get: func(key: string) -> option<cache-entry>;
     cache-set: func(entry: cache-entry);
@@ -85,13 +85,13 @@ interface realtime {
         payload: string,
         timestamp: u64,
     }
-    
+
     record subscription {
         channel: string,
         filters: list<tuple<string, string>>,
         qos: u32,  // Quality of service level
     }
-    
+
     // WebSocket communication
     send-message: func(message: websocket-message);
     subscribe: func(subscription: subscription);
@@ -107,7 +107,7 @@ interface analytics {
         timestamp: u64,
         session-id: string,
     }
-    
+
     record user-event {
         event-name: string,
         properties: list<tuple<string, string>>,
@@ -115,7 +115,7 @@ interface analytics {
         session-id: string,
         timestamp: u64,
     }
-    
+
     record performance-metric {
         metric-name: string,  // page-load-time, api-call-duration, etc.
         value: f64,
@@ -123,7 +123,7 @@ interface analytics {
         page: string,
         timestamp: u64,
     }
-    
+
     track-page-view: func(view: page-view);
     track-event: func(event: user-event);
     track-performance: func(metric: performance-metric);
@@ -138,25 +138,25 @@ interface pwa {
         data: option<string>,
         actions: list<tuple<string, string>>,  // action-id, label
     }
-    
+
     record sync-task {
         task-id: string,
         data: string,
         retry-count: u32,
         scheduled-at: option<u64>,
     }
-    
+
     record offline-capability {
         cache-strategy: string,  // cache-first, network-first, etc.
         cached-resources: list<string>,
         sync-enabled: bool,
     }
-    
+
     // Service worker integration
     show-notification: func(notification: push-notification);
     schedule-sync: func(task: sync-task);
     configure-offline: func(config: offline-capability);
-    
+
     // Installation and updates
     check-for-updates: func() -> bool;
     install-update: func();
@@ -165,17 +165,17 @@ interface pwa {
 world web-frontend {
     // Frontend exports HTTP interface for serving static assets
     export wasi:http/incoming-handler@0.2.0;
-    
+
     // Frontend capabilities
     export ui;
     export state-management;
     export analytics;
     export pwa;
-    
+
     // Frontend imports backend communication
     import api-client;
     import realtime;
-    
+
     // System imports for web platform integration
     import wasi:clocks/wall-clock@0.2.0;
     import wasi:filesystem/types@0.2.0;

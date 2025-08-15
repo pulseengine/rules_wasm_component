@@ -57,7 +57,7 @@ wasm_toolchain.register(
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
-register_toolchains("@wasm_tools_toolchains//:all")
+register_toolchains("@wasm_tools_toolchains//:wasm_tools_toolchain")
 
 # WebAssembly Package Tools (wkg) toolchain
 wkg = use_extension("//wasm:extensions.bzl", "wkg")

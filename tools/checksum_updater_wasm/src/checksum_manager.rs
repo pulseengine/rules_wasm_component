@@ -53,8 +53,7 @@ impl ChecksumManager {
         let tools_dir = checksums_dir.join("tools");
 
         // Ensure directories exist using native std::fs
-        std::fs::create_dir_all(&tools_dir)
-            .context("Failed to create tools directory")?;
+        std::fs::create_dir_all(&tools_dir).context("Failed to create tools directory")?;
 
         Ok(Self {
             checksums_dir,
@@ -202,7 +201,10 @@ impl ChecksumManager {
 
     /// Check if a version is newer than the current latest
     fn is_newer_version(&self, new_version: &str, current_latest: &str) -> bool {
-        match (semver::Version::parse(new_version), semver::Version::parse(current_latest)) {
+        match (
+            semver::Version::parse(new_version),
+            semver::Version::parse(current_latest),
+        ) {
             (Ok(new), Ok(current)) => new > current,
             _ => {
                 // Fall back to string comparison if semver parsing fails
