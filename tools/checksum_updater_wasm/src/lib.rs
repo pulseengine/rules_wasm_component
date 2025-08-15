@@ -57,19 +57,23 @@ pub struct ChecksumUpdater;
 impl ChecksumUpdater {
     /// List all available tools
     pub async fn list_tools() -> Result<Vec<String>, String> {
-        let manager = ChecksumManager::new().await
+        let manager = ChecksumManager::new()
+            .await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
 
-        manager.list_all_tools().await
+        manager
+            .list_all_tools()
+            .await
             .map_err(|e| format!("Failed to list tools: {}", e))
     }
 
     /// Update specific tools
     pub async fn update_tools(
         tools: Vec<String>,
-        config: UpdateConfig
+        config: UpdateConfig,
     ) -> Result<UpdateResult, String> {
-        let manager = ChecksumManager::new().await
+        let manager = ChecksumManager::new()
+            .await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
 
         let mut engine = UpdateEngine::new(manager);
@@ -82,7 +86,9 @@ impl ChecksumUpdater {
             timeout_seconds: config.timeout_seconds,
         };
 
-        let results = engine.update_tools(&tools, &update_config).await
+        let results = engine
+            .update_tools(&tools, &update_config)
+            .await
             .map_err(|e| format!("Update failed: {}", e))?;
 
         Ok(UpdateResult {
@@ -95,13 +101,14 @@ impl ChecksumUpdater {
     }
 
     /// Update all tools
-    pub async fn update_all_tools(
-        config: UpdateConfig
-    ) -> Result<UpdateResult, String> {
-        let manager = ChecksumManager::new().await
+    pub async fn update_all_tools(config: UpdateConfig) -> Result<UpdateResult, String> {
+        let manager = ChecksumManager::new()
+            .await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
 
-        let tools = manager.list_all_tools().await
+        let tools = manager
+            .list_all_tools()
+            .await
             .map_err(|e| format!("Failed to list tools: {}", e))?;
 
         Self::update_tools(tools, config).await
@@ -110,14 +117,17 @@ impl ChecksumUpdater {
     /// Validate checksums for tools
     pub async fn validate_tools(
         tools: Vec<String>,
-        fix_errors: bool
+        fix_errors: bool,
     ) -> Result<ValidationResult, String> {
-        let manager = ChecksumManager::new().await
+        let manager = ChecksumManager::new()
+            .await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
 
         let validator = ChecksumValidator::new();
 
-        let results = validator.validate_tools(&tools, &manager, fix_errors).await
+        let results = validator
+            .validate_tools(&tools, &manager, fix_errors)
+            .await
             .map_err(|e| format!("Validation failed: {}", e))?;
 
         Ok(ValidationResult {
@@ -138,7 +148,8 @@ impl ChecksumUpdater {
     /// Check if there's a newer version of this component available (self-update)
     pub async fn check_self_update() -> Result<Option<String>, String> {
         // Check if there's a newer version of the checksum updater component available
-        let manager = ChecksumManager::new().await
+        let manager = ChecksumManager::new()
+            .await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
 
         // Look for checksum-updater-wasm in the tools registry
@@ -171,10 +182,13 @@ impl ChecksumUpdater {
         // This is the self-bootstrapping capability!
         tracing::info!("Starting self-update to version {}", version);
 
-        let manager = ChecksumManager::new().await
+        let manager = ChecksumManager::new()
+            .await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
 
-        let tool_info = manager.get_tool_info("checksum-updater-wasm").await
+        let tool_info = manager
+            .get_tool_info("checksum-updater-wasm")
+            .await
             .map_err(|e| format!("Failed to get tool info: {}", e))?;
 
         if let Some(version_info) = tool_info.versions.get(&version) {

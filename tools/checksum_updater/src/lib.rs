@@ -16,5 +16,5 @@ pub mod validator;
 pub use checksum_manager::{ChecksumManager, PlatformInfo, ToolInfo, VersionInfo};
 pub use github_client::{GitHubClient, GitHubRelease};
 pub use tool_config::{ToolConfig, ToolConfigEntry};
-pub use update_engine::{UpdateConfig, UpdateEngine, UpdateResults, ToolUpdateResult};
+pub use update_engine::{ToolUpdateResult, UpdateConfig, UpdateEngine, UpdateResults};
 pub use validator::{ChecksumValidator, ValidationResults};

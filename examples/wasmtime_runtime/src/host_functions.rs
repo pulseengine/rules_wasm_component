@@ -16,7 +16,11 @@ use tracing::{info, instrument};
 pub type HostFunctionCallback = Arc<dyn Fn(&[Value]) -> Result<Value> + Send + Sync>;
 
 /// Async function signature for host functions
-pub type AsyncHostFunctionCallback = Arc<dyn Fn(&[Value]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Value>> + Send>> + Send + Sync>;
+pub type AsyncHostFunctionCallback = Arc<
+    dyn Fn(&[Value]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Value>> + Send>>
+        + Send
+        + Sync,
+>;
 
 /// A host function that can be called from WebAssembly components
 #[derive(Clone)]
@@ -78,7 +82,11 @@ impl HostFunction {
     /// Call the host function
     #[instrument(skip(self, args), fields(function = %self.name))]
     pub fn call(&self, args: &[Value]) -> Result<Value> {
-        info!("Calling host function '{}' with {} arguments", self.name, args.len());
+        info!(
+            "Calling host function '{}' with {} arguments",
+            self.name,
+            args.len()
+        );
 
         // Validate argument count
         if args.len() != self.parameter_types.len() {
@@ -110,7 +118,11 @@ impl HostFunctionRegistry {
         let mut functions = self.functions.write().await;
         let name = function.name().to_string();
 
-        info!("Registering host function '{}': {}", name, function.description());
+        info!(
+            "Registering host function '{}': {}",
+            name,
+            function.description()
+        );
 
         functions.insert(name, function);
         Ok(())
@@ -131,7 +143,8 @@ impl HostFunctionRegistry {
 
         let wrapped_callback = Arc::new(move |args: &[Value]| {
             let args = args.to_vec();
-            Box::pin(callback(&args)) as std::pin::Pin<Box<dyn std::future::Future<Output = Result<Value>> + Send>>
+            Box::pin(callback(&args))
+                as std::pin::Pin<Box<dyn std::future::Future<Output = Result<Value>> + Send>>
         });
 
         let mut async_functions = self.async_functions.write().await;
@@ -231,10 +244,11 @@ pub fn create_common_host_functions() -> Vec<HostFunction> {
             |args| {
                 let base = args[0].as_f64().unwrap_or(0.0);
                 let exp = args[1].as_f64().unwrap_or(0.0);
-                Ok(Value::Number(serde_json::Number::from_f64(base.powf(exp)).unwrap()))
+                Ok(Value::Number(
+                    serde_json::Number::from_f64(base.powf(exp)).unwrap(),
+                ))
             },
         ),
-
         HostFunction::new(
             "math_sqrt",
             "Calculate square root",
@@ -242,10 +256,11 @@ pub fn create_common_host_functions() -> Vec<HostFunction> {
             "number",
             |args| {
                 let value = args[0].as_f64().unwrap_or(0.0);
-                Ok(Value::Number(serde_json::Number::from_f64(value.sqrt()).unwrap()))
+                Ok(Value::Number(
+                    serde_json::Number::from_f64(value.sqrt()).unwrap(),
+                ))
             },
         ),
-
         // String functions
         HostFunction::new(
             "string_length",
@@ -257,7 +272,6 @@ pub fn create_common_host_functions() -> Vec<HostFunction> {
                 Ok(Value::Number(serde_json::Number::from(s.len())))
             },
         ),
-
         HostFunction::new(
             "string_upper",
             "Convert string to uppercase",
@@ -268,7 +282,6 @@ pub fn create_common_host_functions() -> Vec<HostFunction> {
                 Ok(Value::String(s.to_uppercase()))
             },
         ),
-
         // Array functions
         HostFunction::new(
             "array_sum",
@@ -277,14 +290,10 @@ pub fn create_common_host_functions() -> Vec<HostFunction> {
             "number",
             |args| {
                 let arr = args[0].as_array().unwrap_or(&vec![]);
-                let sum: f64 = arr
-                    .iter()
-                    .filter_map(|v| v.as_f64())
-                    .sum();
+                let sum: f64 = arr.iter().filter_map(|v| v.as_f64()).sum();
                 Ok(Value::Number(serde_json::Number::from_f64(sum).unwrap()))
             },
         ),
-
         // Utility functions
         HostFunction::new(
             "current_timestamp",
@@ -300,7 +309,6 @@ pub fn create_common_host_functions() -> Vec<HostFunction> {
                 Ok(Value::Number(serde_json::Number::from(timestamp)))
             },
         ),
-
         HostFunction::new(
             "random_number",
             "Generate random number between 0 and 1",
@@ -318,7 +326,6 @@ pub fn create_common_host_functions() -> Vec<HostFunction> {
                 Ok(Value::Number(serde_json::Number::from_f64(random).unwrap()))
             },
         ),
-
         // Logging function
         HostFunction::new(
             "host_log",
@@ -406,7 +413,10 @@ mod tests {
             .await
             .unwrap();
 
-        let result = registry.call_async_function("async_test", &[json!(21)]).await.unwrap();
+        let result = registry
+            .call_async_function("async_test", &[json!(21)])
+            .await
+            .unwrap();
         assert_eq!(result, json!(42.0));
     }
 
@@ -421,7 +431,10 @@ mod tests {
         assert_eq!(result, json!(8.0));
 
         // Test string_length function
-        let len_func = functions.iter().find(|f| f.name() == "string_length").unwrap();
+        let len_func = functions
+            .iter()
+            .find(|f| f.name() == "string_length")
+            .unwrap();
         let result = len_func.call(&[json!("hello")]).unwrap();
         assert_eq!(result, json!(5));
     }
@@ -430,13 +443,9 @@ mod tests {
     async fn test_function_unregister() {
         let registry = HostFunctionRegistry::new();
 
-        let func = HostFunction::new(
-            "temp",
-            "Temporary function",
-            vec![],
-            "null",
-            |_| Ok(json!(null)),
-        );
+        let func = HostFunction::new("temp", "Temporary function", vec![], "null", |_| {
+            Ok(json!(null))
+        });
 
         registry.register_function(func).await.unwrap();
         assert_eq!(registry.list_functions().await.len(), 1);

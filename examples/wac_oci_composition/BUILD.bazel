@@ -115,11 +115,11 @@ wac_compose_with_oci(
         let frontend = new frontend:component { ... };
         let auth = new auth_service:component { ... };
         let data = new data_service:component { ... };
-        
+
         // Connect frontend to services
         connect frontend.auth_request -> auth.validate;
         connect frontend.data_request -> data.query;
-        
+
         // Export frontend as main interface
         export frontend as main;
     """,
@@ -141,11 +141,11 @@ wac_compose_with_oci(
         let frontend = new frontend:component { ... };
         let auth = new auth_service:component { ... };
         let payment = new payment_service:component { ... };
-        
+
         // Secure connection chain
         connect frontend.auth_request -> auth.validate;
         connect auth.payment_request -> payment.process;
-        
+
         export frontend as main;
     """,
     local_components = {
@@ -169,17 +169,17 @@ wac_compose_with_oci(
         let users = new user_service:component { ... };
         let analytics = new analytics:component { ... };
         let cache = new cache:component { ... };
-        
+
         // Gateway routes to services
         connect gateway.user_api -> users.handler;
         connect gateway.analytics_api -> analytics.collect;
         connect users.cache_request -> cache.get;
         connect users.cache_store -> cache.set;
-        
+
         // Analytics collects from all services
         connect users.analytics_event -> analytics.track;
         connect cache.analytics_event -> analytics.track;
-        
+
         export gateway as main;
     """,
     local_components = {
@@ -232,20 +232,20 @@ wac_distributed_system(
         let processor = new data_processor:component { ... };
         let alerts = new alert_system:component { ... };
         let timeseries = new time_series_db:component { ... };
-        
+
         // Edge gateway collects device data
         connect gateway.device_data -> devices.register;
         connect devices.sensor_data -> processor.ingest;
-        
+
         // Data processing pipeline
         connect processor.processed_data -> timeseries.write;
         connect processor.anomaly_detected -> alerts.trigger;
-        
+
         // Frontend observability
         connect frontend.metrics_request -> timeseries.query;
         connect frontend.device_request -> devices.status;
         connect alerts.notification -> frontend.alert_display;
-        
+
         export gateway as main;
     """,
     registry_config = ":production_registries",
@@ -277,10 +277,10 @@ wac_compose_with_oci(
         let frontend = new frontend:component { ... };
         let auth = new mock_auth:component { ... };
         let data = new mock_data:component { ... };
-        
+
         connect frontend.auth_request -> auth.validate;
         connect frontend.data_request -> data.query;
-        
+
         export frontend as main;
     """,
     local_components = {
@@ -300,16 +300,16 @@ wac_compose_with_oci(
         let auth = new auth_service:component { ... };
         let data = new data_service:component { ... };
         let logger = new logging_service:component { ... };
-        
+
         // Service connections
         connect frontend.auth_request -> auth.validate;
         connect frontend.data_request -> data.query;
-        
+
         // Observability
         connect auth.log_event -> logger.write;
         connect data.log_event -> logger.write;
         connect frontend.log_event -> logger.write;
-        
+
         export frontend as main;
     """,
     local_components = {
@@ -334,12 +334,12 @@ wac_compose_with_oci(
         let wasi = new wasi_service:component { ... };
         let unknown = new unknown_service:component { ... };
         let legacy = new legacy_service:component { ... };
-        
+
         // Coordinator orchestrates all services
         connect coordinator.wasi_request -> wasi.handler;
         connect coordinator.unknown_request -> unknown.handler;
         connect coordinator.legacy_request -> legacy.handler;
-        
+
         export coordinator as main;
     """,
     local_components = {

@@ -9,19 +9,19 @@ interface auth {
         user-id: string,
         scopes: list<string>,
     }
-    
+
     record auth-request {
         method: string,  // Bearer, API-Key, OAuth
         credentials: string,
         resource: string,
     }
-    
+
     record auth-response {
         success: bool,
         token: option<auth-token>,
         error: option<string>,
     }
-    
+
     authenticate: func(request: auth-request) -> auth-response;
 }
 
@@ -34,7 +34,7 @@ interface routing {
         load: f32,  // 0.0 to 1.0
         endpoints: list<string>,
     }
-    
+
     record route-rule {
         path-pattern: string,
         service: string,
@@ -42,7 +42,7 @@ interface routing {
         weight: option<u32>,  // For load balancing
         timeout-ms: option<u32>,
     }
-    
+
     record route-request {
         method: string,
         path: string,
@@ -50,7 +50,7 @@ interface routing {
         query-params: list<tuple<string, string>>,
         body: option<list<u8>>,
     }
-    
+
     record route-response {
         status: u32,
         headers: list<tuple<string, string>>,
@@ -58,11 +58,11 @@ interface routing {
         service: string,
         duration-ms: u32,
     }
-    
+
     // Service discovery
     discover-services: func() -> list<service-endpoint>;
     register-service: func(endpoint: service-endpoint);
-    
+
     // Request routing
     route-request: func(request: route-request, rules: list<route-rule>) -> route-response;
 }
@@ -75,24 +75,24 @@ interface load-balancing {
         weighted-random,
         consistent-hash,
     }
-    
+
     enum circuit-state {
         closed,    // Normal operation
         open,      // Circuit breaker activated
         half-open, // Testing if service recovered
     }
-    
+
     record circuit-breaker-config {
         failure-threshold: u32,
         timeout-ms: u32,
         recovery-timeout-ms: u32,
     }
-    
+
     record load-balancer-config {
         strategy: balancing-strategy,
         circuit-breaker: option<circuit-breaker-config>,
     }
-    
+
     balance-request: func(request: route-request, config: load-balancer-config) -> route-response;
     get-circuit-state: func(service: string) -> circuit-state;
 }
@@ -104,21 +104,21 @@ interface rate-limiting {
         burst-size: u32,
         window-size-ms: u32,
     }
-    
+
     record rate-limit-key {
         user-id: option<string>,
         api-key: option<string>,
         ip-address: option<string>,
         service: string,
     }
-    
+
     record rate-limit-result {
         allowed: bool,
         remaining: u32,
         reset-time: u64,
         retry-after-ms: option<u32>,
     }
-    
+
     check-rate-limit: func(key: rate-limit-key, config: rate-limit-config) -> rate-limit-result;
 }
 
@@ -130,13 +130,13 @@ interface versioning {
         patch: u32,
         pre-release: option<string>,
     }
-    
+
     record version-mapping {
         requested-version: api-version,
         target-version: api-version,
         compatibility-level: string,  // full, partial, breaking
     }
-    
+
     resolve-version: func(requested: string, available: list<api-version>) -> option<version-mapping>;
     transform-request: func(request: route-request, mapping: version-mapping) -> route-request;
     transform-response: func(response: route-response, mapping: version-mapping) -> route-response;
@@ -150,7 +150,7 @@ interface monitoring {
         timestamp: u64,
         labels: list<tuple<string, string>>,
     }
-    
+
     record trace-span {
         trace-id: string,
         span-id: string,
@@ -160,7 +160,7 @@ interface monitoring {
         duration-ms: u32,
         tags: list<tuple<string, string>>,
     }
-    
+
     record log-entry {
         level: string,  // debug, info, warn, error
         message: string,
@@ -168,7 +168,7 @@ interface monitoring {
         fields: list<tuple<string, string>>,
         trace-id: option<string>,
     }
-    
+
     emit-metric: func(metric: metric);
     emit-trace: func(span: trace-span);
     emit-log: func(entry: log-entry);
@@ -177,17 +177,17 @@ interface monitoring {
 world api-gateway {
     // Gateway exports HTTP interface
     export wasi:http/incoming-handler@0.2.0;
-    
+
     // Gateway capabilities
     export routing;
     export load-balancing;
     export rate-limiting;
     export versioning;
     export monitoring;
-    
+
     // Gateway imports auth service
     import auth;
-    
+
     // System imports
     import wasi:clocks/wall-clock@0.2.0;
     import wasi:sockets/network@0.2.0;

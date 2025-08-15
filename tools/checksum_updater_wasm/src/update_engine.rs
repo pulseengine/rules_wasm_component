@@ -118,7 +118,7 @@ impl UpdateEngine {
             for tool_name in tool_names {
                 match self.update_single_tool_timeout(tool_name, config).await {
                     Ok(Some(update)) => updates.push(update),
-                    Ok(None) => {}, // No update needed
+                    Ok(None) => {} // No update needed
                     Err(e) => {
                         if !config.skip_errors {
                             return Err(e);
@@ -136,7 +136,7 @@ impl UpdateEngine {
             for tool_name in tool_names {
                 match self.update_single_tool_timeout(tool_name, config).await {
                     Ok(Some(update)) => updates.push(update),
-                    Ok(None) => {}, // No update needed
+                    Ok(None) => {} // No update needed
                     Err(e) => {
                         if config.skip_errors {
                             errors.push(UpdateError {
@@ -224,7 +224,10 @@ impl UpdateEngine {
 
         // Check if update is needed
         if !config.force && latest_version == current_tool_info.latest_version {
-            debug!("No update needed for {}: already at {}", tool_name, latest_version);
+            debug!(
+                "No update needed for {}: already at {}",
+                tool_name, latest_version
+            );
             return Ok(None);
         }
 
@@ -369,7 +372,10 @@ impl UpdateEngine {
 
     /// Classify the type of version change
     fn classify_version_change(&self, old_version: &str, new_version: &str) -> String {
-        match (semver::Version::parse(old_version), semver::Version::parse(new_version)) {
+        match (
+            semver::Version::parse(old_version),
+            semver::Version::parse(new_version),
+        ) {
             (Ok(old), Ok(new)) => {
                 if new.major > old.major {
                     "major".to_string()
@@ -417,10 +423,8 @@ mod tests {
 
     #[test]
     fn test_version_change_classification() {
-        let manager = ChecksumManager::new_with_paths(
-            std::path::PathBuf::new(),
-            std::path::PathBuf::new(),
-        );
+        let manager =
+            ChecksumManager::new_with_paths(std::path::PathBuf::new(), std::path::PathBuf::new());
         let engine = UpdateEngine::new(manager);
 
         assert_eq!(engine.classify_version_change("1.0.0", "2.0.0"), "major");

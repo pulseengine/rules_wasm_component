@@ -798,14 +798,9 @@ toolchain(
     target_compatible_with = [],
 )
 
-# Alias for toolchain registration
-alias(
-    name = "all",
-    actual = ":wasm_tools_toolchain",
-    visibility = ["//visibility:public"],
-)
-
-# Note: Aliases removed to prevent dependency cycles
+# Note: Removed "all" alias to eliminate ambiguity with Bazel's :all wildcard
+# Use the direct target name for explicit, clear toolchain registration
+# Note: Other aliases removed to prevent dependency cycles
 # Use the _binary targets directly: wasm_tools_binary, wac_binary, wit_bindgen_binary
 """)
 

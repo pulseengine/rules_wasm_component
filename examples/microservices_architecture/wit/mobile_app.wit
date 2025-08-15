@@ -10,26 +10,26 @@ interface mobile-ui {
         timestamp: u64,
         target: string,
     }
-    
+
     record gesture {
         gesture-type: string,  // swipe-left, swipe-right, pinch-zoom, etc.
         velocity: option<f32>,
         distance: option<f32>,
         duration-ms: u32,
     }
-    
+
     record screen-info {
         width: u32,
         height: u32,
         density: f32,
         orientation: string,  // portrait, landscape
     }
-    
+
     record haptic-feedback {
         pattern: string,  // light, medium, heavy, custom
         duration-ms: option<u32>,
     }
-    
+
     handle-touch: func(event: touch-event) -> gesture;
     provide-haptic-feedback: func(feedback: haptic-feedback);
     get-screen-info: func() -> screen-info;
@@ -46,14 +46,14 @@ interface device {
         speed: option<f32>,
         timestamp: u64,
     }
-    
+
     record sensor-reading {
         sensor-type: string,  // accelerometer, gyroscope, magnetometer
         values: list<f32>,  // x, y, z or other sensor-specific values
         accuracy: f32,
         timestamp: u64,
     }
-    
+
     record device-info {
         platform: string,  // ios, android, etc.
         version: string,
@@ -61,23 +61,23 @@ interface device {
         manufacturer: string,
         unique-id: string,
     }
-    
+
     record battery-status {
         level: f32,  // 0.0 to 1.0
         charging: bool,
         charging-time: option<u32>,  // minutes
         discharging-time: option<u32>,  // minutes
     }
-    
+
     // Device information
     get-device-info: func() -> device-info;
     get-battery-status: func() -> battery-status;
-    
+
     // Location services
     get-current-location: func() -> option<location>;
     start-location-tracking: func();
     stop-location-tracking: func();
-    
+
     // Sensor access
     read-sensor: func(sensor-type: string) -> option<sensor-reading>;
     start-sensor-monitoring: func(sensor-type: string, interval-ms: u32);
@@ -92,7 +92,7 @@ interface media {
         flash: bool,
         front-camera: bool,
     }
-    
+
     record media-file {
         file-type: string,  // image, video, audio
         path: string,
@@ -100,23 +100,23 @@ interface media {
         duration-ms: option<u32>,  // For video/audio
         metadata: list<tuple<string, string>>,
     }
-    
+
     record audio-config {
         sample-rate: u32,
         channels: u32,
         quality: string,  // low, medium, high
         format: string,  // mp3, wav, aac
     }
-    
+
     // Camera operations
     take-photo: func(config: camera-config) -> option<media-file>;
     record-video: func(config: camera-config, duration-ms: u32) -> option<media-file>;
-    
+
     // Audio operations
     record-audio: func(config: audio-config, duration-ms: u32) -> option<media-file>;
     play-audio: func(file: media-file);
     stop-audio: func();
-    
+
     // Media library
     get-media-library: func(file-type: string) -> list<media-file>;
     save-to-library: func(file: media-file) -> bool;
@@ -133,7 +133,7 @@ interface notifications {
         badge-count: option<u32>,
         scheduled-at: option<u64>,
     }
-    
+
     record local-notification {
         id: string,
         title: string,
@@ -142,19 +142,19 @@ interface notifications {
         repeat-interval: option<string>,  // daily, weekly, monthly
         data: option<string>,
     }
-    
+
     record background-task {
         task-id: string,
         task-type: string,  // sync, download, upload
         data: string,
         estimated-duration-ms: u32,
     }
-    
+
     // Push notifications
     register-for-push: func() -> option<string>;  // Returns device token
     schedule-notification: func(notification: local-notification);
     cancel-notification: func(id: string);
-    
+
     // Background processing
     schedule-background-task: func(task: background-task);
     execute-background-task: func(task-id: string) -> bool;
@@ -169,7 +169,7 @@ interface networking {
         bluetooth,
         none,
     }
-    
+
     record network-info {
         connection-type: connection-type,
         is-connected: bool,
@@ -177,14 +177,14 @@ interface networking {
         signal-strength: option<f32>,  // 0.0 to 1.0
         speed-mbps: option<f32>,
     }
-    
+
     record sync-strategy {
         wifi-only: bool,
         background-sync: bool,
         retry-policy: string,
         max-retries: u32,
     }
-    
+
     get-network-info: func() -> network-info;
     set-sync-strategy: func(strategy: sync-strategy);
     is-suitable-for-sync: func() -> bool;
@@ -198,24 +198,24 @@ interface lifecycle {
         suspended,
         terminated,
     }
-    
+
     record lifecycle-event {
         event-type: string,  // launch, foreground, background, terminate
         timestamp: u64,
         previous-state: option<app-state>,
         current-state: app-state,
     }
-    
+
     record app-memory {
         used-mb: f32,
         available-mb: f32,
         warning-level: string,  // normal, warning, critical
     }
-    
+
     get-app-state: func() -> app-state;
     get-memory-info: func() -> app-memory;
     handle-lifecycle-event: func(event: lifecycle-event);
-    
+
     // State persistence
     save-app-state: func(state: string);
     restore-app-state: func() -> option<string>;
@@ -229,12 +229,12 @@ world mobile-app {
     export notifications;
     export networking;
     export lifecycle;
-    
+
     // Mobile app imports backend communication (similar to web frontend)
     import api-client from frontend:web;
     import realtime from frontend:web;
     import analytics from frontend:web;
-    
+
     // System imports for mobile platform integration
     import wasi:clocks/wall-clock@0.2.0;
     import wasi:filesystem/types@0.2.0;

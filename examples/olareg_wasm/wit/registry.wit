@@ -1,0 +1,20 @@
+// Minimal OCI registry interface for WASM
+package wasm:registry;
+
+interface registry {
+    // Start the registry server
+    start-server: func(addr: string, data-dir: string, read-only: bool, enable-push: bool, enable-delete: bool) -> tuple<s32, string>;
+
+    // Stop the registry server
+    stop-server: func() -> tuple<s32, string>;
+
+    // Get server status
+    get-status: func() -> string;
+
+    // Health check
+    health-check: func() -> bool;
+}
+
+world registry-server {
+    export registry;
+}

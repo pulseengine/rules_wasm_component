@@ -5,7 +5,9 @@ This module provides functionality to validate existing checksums against
 actual downloads and fix any validation errors.
 */
 
-use crate::{checksum_manager::ChecksumManager, github_client::GitHubClient, tool_config::ToolConfig};
+use crate::{
+    checksum_manager::ChecksumManager, github_client::GitHubClient, tool_config::ToolConfig,
+};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info, warn};
@@ -73,7 +75,10 @@ impl ChecksumValidator {
         let mut total_validations = 0;
 
         for tool_name in tool_names {
-            match self.validate_single_tool(tool_name, manager, fix_errors).await {
+            match self
+                .validate_single_tool(tool_name, manager, fix_errors)
+                .await
+            {
                 Ok(tool_results) => {
                     for validation in tool_results {
                         total_validations += 1;
@@ -94,19 +99,27 @@ impl ChecksumValidator {
                             }
                         }
 
-                        if fix_errors && !validation.is_valid && validation.actual_checksum.is_some() {
+                        if fix_errors
+                            && !validation.is_valid
+                            && validation.actual_checksum.is_some()
+                        {
                             match self.fix_checksum(&validation, manager).await {
                                 Ok(()) => {
                                     fixed_checksums += 1;
                                     info!(
                                         "Fixed checksum for {} {} {}",
-                                        validation.tool_name, validation.version, validation.platform
+                                        validation.tool_name,
+                                        validation.version,
+                                        validation.platform
                                     );
                                 }
                                 Err(e) => {
                                     warn!(
                                         "Failed to fix checksum for {} {} {}: {}",
-                                        validation.tool_name, validation.version, validation.platform, e
+                                        validation.tool_name,
+                                        validation.version,
+                                        validation.platform,
+                                        e
                                     );
                                 }
                             }
@@ -304,7 +317,10 @@ impl ChecksumValidator {
     }
 
     /// Validate that all JSON files are properly formatted
-    pub async fn validate_json_format(&self, manager: &ChecksumManager) -> Result<ValidationResults> {
+    pub async fn validate_json_format(
+        &self,
+        manager: &ChecksumManager,
+    ) -> Result<ValidationResults> {
         info!("Validating JSON format for all tool files");
 
         let tools = manager.list_all_tools().await?;
@@ -351,7 +367,8 @@ impl ValidationResults {
             return 100.0;
         }
 
-        (self.valid_checksums as f64 / (self.valid_checksums + self.invalid_checksums) as f64) * 100.0
+        (self.valid_checksums as f64 / (self.valid_checksums + self.invalid_checksums) as f64)
+            * 100.0
     }
 }
 
@@ -421,7 +438,10 @@ mod tests {
         let validator = ChecksumValidator::new();
 
         // Create a valid tool
-        manager.create_tool("test-tool", "owner/test-tool").await.unwrap();
+        manager
+            .create_tool("test-tool", "owner/test-tool")
+            .await
+            .unwrap();
 
         // Validate JSON format
         let results = validator.validate_json_format(&manager).await.unwrap();
