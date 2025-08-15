@@ -1,0 +1,196 @@
+// API Gateway for microservices architecture
+package gateway:microservices;
+
+// Authentication and authorization
+interface auth {
+    record auth-token {
+        token: string,
+        expires-at: u64,
+        user-id: string,
+        scopes: list<string>,
+    }
+    
+    record auth-request {
+        method: string,  // Bearer, API-Key, OAuth
+        credentials: string,
+        resource: string,
+    }
+    
+    record auth-response {
+        success: bool,
+        token: option<auth-token>,
+        error: option<string>,
+    }
+    
+    authenticate: func(request: auth-request) -> auth-response;
+}
+
+// Service discovery and routing
+interface routing {
+    record service-endpoint {
+        name: string,
+        version: string,
+        health-status: string,
+        load: f32,  // 0.0 to 1.0
+        endpoints: list<string>,
+    }
+    
+    record route-rule {
+        path-pattern: string,
+        service: string,
+        version: option<string>,
+        weight: option<u32>,  // For load balancing
+        timeout-ms: option<u32>,
+    }
+    
+    record route-request {
+        method: string,
+        path: string,
+        headers: list<tuple<string, string>>,
+        query-params: list<tuple<string, string>>,
+        body: option<list<u8>>,
+    }
+    
+    record route-response {
+        status: u32,
+        headers: list<tuple<string, string>>,
+        body: option<list<u8>>,
+        service: string,
+        duration-ms: u32,
+    }
+    
+    // Service discovery
+    discover-services: func() -> list<service-endpoint>;
+    register-service: func(endpoint: service-endpoint);
+    
+    // Request routing
+    route-request: func(request: route-request, rules: list<route-rule>) -> route-response;
+}
+
+// Load balancing and circuit breaking
+interface load-balancing {
+    enum balancing-strategy {
+        round-robin,
+        least-connections,
+        weighted-random,
+        consistent-hash,
+    }
+    
+    enum circuit-state {
+        closed,    // Normal operation
+        open,      // Circuit breaker activated
+        half-open, // Testing if service recovered
+    }
+    
+    record circuit-breaker-config {
+        failure-threshold: u32,
+        timeout-ms: u32,
+        recovery-timeout-ms: u32,
+    }
+    
+    record load-balancer-config {
+        strategy: balancing-strategy,
+        circuit-breaker: option<circuit-breaker-config>,
+    }
+    
+    balance-request: func(request: route-request, config: load-balancer-config) -> route-response;
+    get-circuit-state: func(service: string) -> circuit-state;
+}
+
+// Rate limiting and throttling
+interface rate-limiting {
+    record rate-limit-config {
+        requests-per-second: u32,
+        burst-size: u32,
+        window-size-ms: u32,
+    }
+    
+    record rate-limit-key {
+        user-id: option<string>,
+        api-key: option<string>,
+        ip-address: option<string>,
+        service: string,
+    }
+    
+    record rate-limit-result {
+        allowed: bool,
+        remaining: u32,
+        reset-time: u64,
+        retry-after-ms: option<u32>,
+    }
+    
+    check-rate-limit: func(key: rate-limit-key, config: rate-limit-config) -> rate-limit-result;
+}
+
+// API versioning and compatibility
+interface versioning {
+    record api-version {
+        major: u32,
+        minor: u32,
+        patch: u32,
+        pre-release: option<string>,
+    }
+    
+    record version-mapping {
+        requested-version: api-version,
+        target-version: api-version,
+        compatibility-level: string,  // full, partial, breaking
+    }
+    
+    resolve-version: func(requested: string, available: list<api-version>) -> option<version-mapping>;
+    transform-request: func(request: route-request, mapping: version-mapping) -> route-request;
+    transform-response: func(response: route-response, mapping: version-mapping) -> route-response;
+}
+
+// Monitoring and observability
+interface monitoring {
+    record metric {
+        name: string,
+        value: f64,
+        timestamp: u64,
+        labels: list<tuple<string, string>>,
+    }
+    
+    record trace-span {
+        trace-id: string,
+        span-id: string,
+        parent-span-id: option<string>,
+        operation: string,
+        start-time: u64,
+        duration-ms: u32,
+        tags: list<tuple<string, string>>,
+    }
+    
+    record log-entry {
+        level: string,  // debug, info, warn, error
+        message: string,
+        timestamp: u64,
+        fields: list<tuple<string, string>>,
+        trace-id: option<string>,
+    }
+    
+    emit-metric: func(metric: metric);
+    emit-trace: func(span: trace-span);
+    emit-log: func(entry: log-entry);
+}
+
+world api-gateway {
+    // Gateway exports HTTP interface
+    export wasi:http/incoming-handler@0.2.0;
+    
+    // Gateway capabilities
+    export routing;
+    export load-balancing;
+    export rate-limiting;
+    export versioning;
+    export monitoring;
+    
+    // Gateway imports auth service
+    import auth;
+    
+    // System imports
+    import wasi:clocks/wall-clock@0.2.0;
+    import wasi:sockets/network@0.2.0;
+    import wasi:filesystem/types@0.2.0;
+    import wasi:random/random@0.2.0;
+}

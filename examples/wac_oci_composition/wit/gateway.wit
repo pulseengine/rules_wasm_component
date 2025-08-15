@@ -1,0 +1,115 @@
+// API Gateway component interface for microservices routing
+package gateway:api;
+
+interface routing {
+    // Service routing configuration
+    record route-config {
+        path: string,
+        service: string,
+        method: string,
+    }
+    
+    record route-request {
+        path: string,
+        method: string,
+        headers: list<tuple<string, string>>,
+        body: option<string>,
+    }
+    
+    record route-response {
+        status: u32,
+        headers: list<tuple<string, string>>,
+        body: option<string>,
+    }
+    
+    // Route incoming requests to appropriate services
+    route-request: func(request: route-request) -> route-response;
+}
+
+interface user-api {
+    record user-request {
+        action: string,  // get, create, update, delete
+        user-id: option<string>,
+        data: option<string>,  // JSON data
+    }
+    
+    record user-response {
+        success: bool,
+        data: option<string>,
+        error: option<string>,
+    }
+    
+    // Handle user-related operations
+    handle-user: func(request: user-request) -> user-response;
+}
+
+interface analytics-api {
+    record analytics-event {
+        event-type: string,
+        user-id: option<string>,
+        properties: list<tuple<string, string>>,
+        timestamp: u64,
+    }
+    
+    // Collect analytics events
+    collect-event: func(event: analytics-event);
+}
+
+interface metrics {
+    record metric-request {
+        metric-name: string,
+        time-range: tuple<u64, u64>,  // start, end timestamps
+        filters: list<string>,
+    }
+    
+    record metric-response {
+        success: bool,
+        data: option<string>,  // JSON metrics data
+        error: option<string>,
+    }
+    
+    // Query metrics and monitoring data
+    query-metrics: func(request: metric-request) -> metric-response;
+}
+
+interface device-management {
+    record device-data {
+        device-id: string,
+        sensor-type: string,
+        value: string,
+        timestamp: u64,
+    }
+    
+    record device-status {
+        device-id: string,
+        online: bool,
+        last-seen: u64,
+        metadata: list<tuple<string, string>>,
+    }
+    
+    // Collect device sensor data
+    collect-data: func(data: device-data);
+    
+    // Get device status information
+    get-status: func(device-id: string) -> device-status;
+}
+
+world gateway {
+    // Gateway exports HTTP interface
+    export wasi:http/incoming-handler@0.2.0;
+    
+    // Gateway exports routing capabilities
+    export routing;
+    
+    // Gateway imports microservice APIs
+    import user-api;
+    import analytics-api;
+    import metrics;
+    import device-management;
+    
+    // WASI imports for networking and system access
+    import wasi:filesystem/types@0.2.0;
+    import wasi:sockets/network@0.2.0;
+    import wasi:clocks/wall-clock@0.2.0;
+    import wasi:random/random@0.2.0;
+}

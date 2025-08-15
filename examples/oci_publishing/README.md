@@ -145,7 +145,7 @@ wasm_keygen(
 
 # ⚠️ ISSUE: OpenSSH format keys may fail in sandbox
 wasm_keygen(
-    name = "openssh_keys", 
+    name = "openssh_keys",
     openssh_format = True,   # May cause I/O errors in sandbox
 )
 ```
@@ -176,30 +176,35 @@ The published images include comprehensive OCI annotations:
 ## Testing the Example
 
 1. **Build all components**:
+
    ```bash
    bazel build //examples/oci_publishing/...
    ```
 
 2. **Start local registry**:
+
    ```bash
    docker run -d -p 5000:5000 --name registry registry:2
    ```
 
 3. **Test dry run publishing**:
+
    ```bash
    bazel run //examples/oci_publishing:publish_dry_run
    ```
 
 4. **Publish to local registry**:
+
    ```bash
    bazel run //examples/oci_publishing:publish_complete_workflow
    ```
 
 5. **Verify the published component**:
+
    ```bash
    # Pull the component back
    wkg pull --registry localhost:5000 --package examples/hello-complete --version complete-v1.0.0
-   
+
    # Verify signature
    wasmsign2 verify -i hello-complete.wasm
    ```
@@ -212,7 +217,7 @@ The example includes comprehensive security policy management for enterprise dep
 
 ### Security Policy Types
 
-1. **Basic Security Policy** (`basic_security_policy`): 
+1. **Basic Security Policy** (`basic_security_policy`):
    - No signing required by default
    - Suitable for development and testing environments
    - Flexible configuration for different use cases
@@ -256,7 +261,7 @@ wasm_security_policy(
     openssh_format = True,
     registry_policies = [
         "production|required|enterprise_keys",
-        "staging|required|staging_keys", 
+        "staging|required|staging_keys",
         "development|optional",
     ],
     component_policies = [

@@ -3027,3 +3027,468 @@ wasm_component_oci_metadata_mapper = rule(
     data to create a comprehensive set of OCI annotations.
     """,
 )
+
+# WAC + OCI Integration Rules
+
+def _wasm_component_from_oci_impl(ctx):
+    """Implementation of wasm_component_from_oci rule"""
+
+    wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
+    wkg = wkg_toolchain.wkg
+
+    # Output component file
+    component_file = ctx.actions.declare_file(ctx.attr.name + ".wasm")
+
+    # Build pull command
+    args = ctx.actions.args()
+    args.add("pull")
+    args.add("--output", component_file.path)
+
+    # Registry configuration
+    config_inputs = []
+    if ctx.attr.registry_config:
+        registry_info = ctx.attr.registry_config[WasmRegistryInfo]
+        if registry_info.config_file:
+            args.add("--config", registry_info.config_file.path)
+            config_inputs.append(registry_info.config_file)
+
+    # Image reference
+    image_ref = ctx.attr.image_ref
+    if not image_ref:
+        # Construct from individual components
+        registry = ctx.attr.registry or "localhost:5000"
+        namespace = ctx.attr.namespace or "default"
+        name = ctx.attr.component_name or ctx.attr.name
+        tag = ctx.attr.tag or "latest"
+        image_ref = "{}/{}/{}:{}".format(registry, namespace, name, tag)
+
+    args.add(image_ref)
+
+    # Optional: signature verification
+    if ctx.attr.verify_signature and ctx.attr.public_key:
+        args.add("--verify")
+        args.add("--public-key", ctx.attr.public_key.files.to_list()[0].path)
+        config_inputs.extend(ctx.attr.public_key.files.to_list())
+
+    # Run wkg pull
+    ctx.actions.run(
+        executable = wkg,
+        arguments = [args],
+        inputs = config_inputs,
+        outputs = [component_file],
+        mnemonic = "WkgPullOCI",
+        progress_message = "Pulling WebAssembly component from OCI registry: {}".format(image_ref),
+    )
+
+    # Create WasmComponentInfo provider
+    component_info = WasmComponentInfo(
+        wasm_file = component_file,
+        wit_info = None,  # TODO: Extract WIT info from pulled component
+        component_type = "component",
+        imports = [],
+        exports = [],
+        metadata = {
+            "source": "oci",
+            "image_ref": image_ref,
+            "registry": ctx.attr.registry,
+            "namespace": ctx.attr.namespace,
+            "name": ctx.attr.component_name or ctx.attr.name,
+            "tag": ctx.attr.tag,
+        },
+    )
+
+    return [
+        component_info,
+        DefaultInfo(files = depset([component_file])),
+    ]
+
+wasm_component_from_oci = rule(
+    implementation = _wasm_component_from_oci_impl,
+    attrs = {
+        "image_ref": attr.string(
+            doc = "Full OCI image reference (registry/namespace/name:tag). If provided, overrides individual components.",
+        ),
+        "registry": attr.string(
+            doc = "Registry URL (e.g., ghcr.io, docker.io)",
+        ),
+        "namespace": attr.string(
+            doc = "Registry namespace/organization",
+        ),
+        "component_name": attr.string(
+            doc = "Component name (defaults to rule name)",
+        ),
+        "tag": attr.string(
+            default = "latest",
+            doc = "Image tag",
+        ),
+        "registry_config": attr.label(
+            providers = [WasmRegistryInfo],
+            doc = "Registry configuration for authentication",
+        ),
+        "verify_signature": attr.bool(
+            default = False,
+            doc = "Verify component signature during pull",
+        ),
+        "public_key": attr.label(
+            allow_files = True,
+            doc = "Public key for signature verification",
+        ),
+    },
+    toolchains = ["//toolchains:wkg_toolchain_type"],
+    doc = """
+    Pull a WebAssembly component from an OCI registry and make it available for use.
+
+    This rule downloads a WebAssembly component from an OCI-compatible registry
+    and provides it as a WasmComponentInfo that can be used in compositions or other rules.
+
+    Example:
+        wasm_component_from_oci(
+            name = "auth_service",
+            registry = "ghcr.io",
+            namespace = "my-org",
+            component_name = "auth-service",
+            tag = "v1.2.0",
+            registry_config = ":my_registry_config",
+            verify_signature = True,
+            public_key = ":signing_public_key",
+        )
+    """,
+)
+
+def _wac_compose_with_oci_impl(ctx):
+    """Implementation of wac_compose_with_oci rule"""
+
+    # Get toolchains
+    wasm_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
+    wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
+    wac = wasm_toolchain.wac
+    wkg = wkg_toolchain.wkg
+
+    # Output file
+    composed_wasm = ctx.actions.declare_file(ctx.attr.name + ".wasm")
+
+    # Collect local component files and info
+    local_components = {}
+    all_component_files = []
+
+    for comp_target, comp_name in ctx.attr.local_components.items():
+        comp_info = comp_target[WasmComponentInfo]
+        local_components[comp_name] = comp_info
+        all_component_files.append(comp_info.wasm_file)
+
+    # Pull OCI components and collect them
+    oci_components = {}
+    oci_component_files = []
+
+    for comp_name, oci_spec in ctx.attr.oci_components.items():
+        # Create a temporary OCI pull rule for this component
+        oci_component_file = ctx.actions.declare_file("{}_oci_{}.wasm".format(ctx.attr.name, comp_name))
+
+        # Build pull command
+        args = ctx.actions.args()
+        args.add("pull")
+        args.add("--output", oci_component_file.path)
+
+        # Registry configuration
+        config_inputs = []
+        if ctx.attr.registry_config:
+            registry_info = ctx.attr.registry_config[WasmRegistryInfo]
+            if registry_info.config_file:
+                args.add("--config", registry_info.config_file.path)
+                config_inputs.append(registry_info.config_file)
+
+        args.add(oci_spec)
+
+        # Optional: signature verification
+        if ctx.attr.verify_signatures and ctx.attr.public_key:
+            args.add("--verify")
+            args.add("--public-key", ctx.attr.public_key.files.to_list()[0].path)
+            config_inputs.extend(ctx.attr.public_key.files.to_list())
+
+        # Pull the OCI component
+        ctx.actions.run(
+            executable = wkg,
+            arguments = [args],
+            inputs = config_inputs,
+            outputs = [oci_component_file],
+            mnemonic = "WkgPullOCIForComposition",
+            progress_message = "Pulling OCI component {} for composition".format(comp_name),
+        )
+
+        # Create synthetic component info
+        oci_components[comp_name] = struct(
+            wasm_file = oci_component_file,
+            wit_info = None,
+            component_type = "component",
+            imports = [],
+            exports = [],
+            metadata = {"source": "oci", "spec": oci_spec},
+        )
+        oci_component_files.append(oci_component_file)
+        all_component_files.append(oci_component_file)
+
+    # Combine all components
+    all_components = {}
+    all_components.update(local_components)
+    all_components.update(oci_components)
+
+    # Create composition file
+    if ctx.attr.composition:
+        # Inline composition
+        composition_content = ctx.attr.composition
+        composition_file = ctx.actions.declare_file(ctx.label.name + ".wac")
+        ctx.actions.write(
+            output = composition_file,
+            content = composition_content,
+        )
+    elif ctx.file.composition_file:
+        # External composition file
+        composition_file = ctx.file.composition_file
+    else:
+        # Auto-generate composition
+        composition_content = _generate_oci_composition(all_components)
+        composition_file = ctx.actions.declare_file(ctx.label.name + ".wac")
+        ctx.actions.write(
+            output = composition_file,
+            content = composition_content,
+        )
+
+    # Prepare components for WAC
+    selected_components = {}
+    for comp_name, comp_info in all_components.items():
+        selected_components[comp_name] = {
+            "file": comp_info.wasm_file,
+            "info": comp_info,
+            "profile": ctx.attr.profile,
+            "wit_package": _extract_wit_package_from_info(comp_info),
+        }
+
+    # Run wac compose
+    args = ctx.actions.args()
+    args.add("compose")
+    args.add("--output", composed_wasm)
+
+    # Use explicit package dependencies
+    for comp_name, comp_data in selected_components.items():
+        wit_package = comp_data.get("wit_package", "unknown:package@1.0.0")
+        package_name_no_version = wit_package.split("@")[0] if "@" in wit_package else wit_package
+        args.add("--dep", "{}={}".format(package_name_no_version, comp_data["file"].path))
+
+    # Essential flags
+    args.add("--no-validate")
+    args.add("--import-dependencies")
+    args.add(composition_file)
+
+    ctx.actions.run(
+        executable = wac,
+        arguments = [args],
+        inputs = [composition_file] + all_component_files,
+        outputs = [composed_wasm],
+        mnemonic = "WacComposeWithOCI",
+        progress_message = "Composing WASM components with OCI dependencies for %s" % ctx.label,
+        env = {
+            "NO_PROXY": "*",
+            "no_proxy": "*",
+        },
+    )
+
+    # Create provider
+    from_providers = "//providers:providers.bzl"
+    WacCompositionInfo = getattr(ctx.attr._providers, "WacCompositionInfo", None)
+    if WacCompositionInfo == None:
+        # Fallback to struct if provider not available
+        composition_info = struct(
+            composed_wasm = composed_wasm,
+            components = all_components,
+            composition_wit = composition_file,
+            instantiations = [],
+            connections = [],
+        )
+    else:
+        composition_info = WacCompositionInfo(
+            composed_wasm = composed_wasm,
+            components = all_components,
+            composition_wit = composition_file,
+            instantiations = [],
+            connections = [],
+        )
+
+    return [
+        composition_info,
+        DefaultInfo(files = depset([composed_wasm])),
+    ]
+
+def _extract_wit_package_from_info(comp_info):
+    """Extract WIT package name from component info"""
+    if hasattr(comp_info, "wit_info") and comp_info.wit_info:
+        return comp_info.wit_info.package_name
+    return "unknown:package@1.0.0"
+
+def _generate_oci_composition(components):
+    """Generate WAC composition for OCI components"""
+    lines = []
+    lines.append("// Auto-generated WAC composition with OCI components")
+    lines.append("// Uses ... syntax to allow WASI import pass-through")
+    lines.append("")
+
+    # Instantiate components
+    for comp_name in components:
+        lines.append("let {} = new {}:component {{ ... }};".format(comp_name, comp_name))
+
+    lines.append("")
+
+    # Export first component as main
+    if components:
+        first_comp = None
+        for key in components:
+            first_comp = key
+            break
+        if first_comp:
+            lines.append("export {} as main;".format(first_comp))
+
+    return "\n".join(lines)
+
+wac_compose_with_oci = rule(
+    implementation = _wac_compose_with_oci_impl,
+    attrs = {
+        "local_components": attr.label_keyed_string_dict(
+            providers = [WasmComponentInfo],
+            doc = "Local components to compose (name -> target)",
+        ),
+        "oci_components": attr.string_dict(
+            doc = "OCI components to pull and compose (name -> image_ref)",
+        ),
+        "composition": attr.string(
+            doc = "Inline WAC composition code",
+        ),
+        "composition_file": attr.label(
+            allow_single_file = [".wac"],
+            doc = "External WAC composition file",
+        ),
+        "profile": attr.string(
+            default = "release",
+            doc = "Build profile to use for composition",
+        ),
+        "registry_config": attr.label(
+            providers = [WasmRegistryInfo],
+            doc = "Registry configuration for OCI authentication",
+        ),
+        "verify_signatures": attr.bool(
+            default = False,
+            doc = "Verify component signatures during pull",
+        ),
+        "public_key": attr.label(
+            allow_files = True,
+            doc = "Public key for signature verification",
+        ),
+        "_providers": attr.label(
+            default = "//providers:providers.bzl",
+        ),
+    },
+    toolchains = [
+        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
+        "//toolchains:wkg_toolchain_type",
+    ],
+    doc = """
+    Compose WebAssembly components using WAC with support for OCI registry components.
+
+    This rule extends WAC composition to support pulling components from OCI registries
+    alongside local components, enabling distributed component architectures.
+
+    Example:
+        wac_compose_with_oci(
+            name = "distributed_app",
+            local_components = {
+                "frontend": ":frontend_component",
+            },
+            oci_components = {
+                "auth_service": "ghcr.io/my-org/auth:v1.0.0",
+                "data_service": "docker.io/company/data-api:latest",
+            },
+            registry_config = ":production_registries",
+            verify_signatures = True,
+            public_key = ":verification_key",
+            composition = '''
+                let frontend = new frontend:component { ... };
+                let auth = new auth_service:component { ... };
+                let data = new data_service:component { ... };
+
+                connect frontend.auth -> auth.validate;
+                connect frontend.data -> data.query;
+
+                export frontend as main;
+            ''',
+        )
+    """,
+)
+
+# Convenience macros
+
+def wac_microservices_app(name, frontend_component, services, registry_config = None, **kwargs):
+    """
+    Convenience macro for creating microservices applications with OCI service dependencies.
+
+    Args:
+        name: Name of the composed application
+        frontend_component: Local frontend component target
+        services: Dict of service_name -> OCI image reference
+        registry_config: Registry configuration for authentication
+        **kwargs: Additional arguments passed to wac_compose_with_oci
+    """
+
+    # Auto-generate composition for microservices pattern
+    composition_lines = [
+        "// Auto-generated microservices composition",
+        "let frontend = new frontend:component { ... };",
+        "",
+    ]
+
+    # Add service instantiations
+    for service_name in services:
+        composition_lines.append("let {} = new {}:component {{ ... }};".format(service_name, service_name))
+
+    composition_lines.append("")
+
+    # Add service connections
+    for service_name in services:
+        composition_lines.append("connect frontend.{} -> {}.handler;".format(service_name, service_name))
+
+    composition_lines.extend([
+        "",
+        "export frontend as main;",
+    ])
+
+    wac_compose_with_oci(
+        name = name,
+        local_components = {
+            "frontend": frontend_component,
+        },
+        oci_components = services,
+        registry_config = registry_config,
+        composition = "\n".join(composition_lines),
+        **kwargs
+    )
+
+def wac_distributed_system(name, components, composition, registry_config = None, **kwargs):
+    """
+    Convenience macro for creating distributed systems with mixed local/OCI components.
+
+    Args:
+        name: Name of the composed system
+        components: Dict with 'local' and 'oci' keys containing component mappings
+        composition: WAC composition code
+        registry_config: Registry configuration for authentication
+        **kwargs: Additional arguments passed to wac_compose_with_oci
+    """
+
+    local_components = components.get("local", {})
+    oci_components = components.get("oci", {})
+
+    wac_compose_with_oci(
+        name = name,
+        local_components = local_components,
+        oci_components = oci_components,
+        registry_config = registry_config,
+        composition = composition,
+        **kwargs
+    )
