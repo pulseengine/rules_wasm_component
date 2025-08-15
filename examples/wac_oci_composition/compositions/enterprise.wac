@@ -1,0 +1,54 @@
+// Enterprise-grade system composition with comprehensive services
+// This composition demonstrates a full enterprise stack with
+// local gateway and multiple OCI-sourced backend services
+
+// Instantiate local components
+let gateway = new gateway:component {
+    // Gateway component configuration
+    ...
+};
+
+// Instantiate enterprise services from OCI registries
+let auth = new auth:component {
+    // SSO authentication service configuration
+    ...
+};
+
+let audit = new audit:component {
+    // Enterprise audit logging service
+    ...
+};
+
+let backup = new backup:component {
+    // Data backup and recovery service
+    ...
+};
+
+// Core service connections
+// Gateway routes authentication requests to SSO service
+connect gateway.user-api -> auth.authenticate;
+
+// Audit service captures all gateway operations
+connect gateway.routing -> audit.log-request;
+connect auth.authenticate -> audit.log-auth-event;
+
+// Backup service monitors data operations
+connect gateway.data-operations -> backup.schedule-backup;
+
+// Security monitoring connections
+connect auth.security-event -> audit.log-security-event;
+connect backup.backup-complete -> audit.log-system-event;
+
+// Health monitoring
+connect gateway.health-check -> auth.health-status;
+connect gateway.health-check -> backup.health-status;
+
+// Export gateway as the main entry point
+export gateway as main;
+
+// Optional: Export health monitoring interface
+export {
+    gateway.health-check as health,
+    audit.get-logs as audit-logs,
+    backup.get-status as backup-status,
+} as monitoring;

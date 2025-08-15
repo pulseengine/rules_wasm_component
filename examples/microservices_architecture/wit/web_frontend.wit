@@ -1,0 +1,184 @@
+// Web Frontend for microservices applications
+package frontend:web;
+
+// User interface interactions
+interface ui {
+    record user-action {
+        action-type: string,  // click, submit, navigate, etc.
+        element-id: string,
+        data: option<string>,  // JSON payload
+        timestamp: u64,
+    }
+    
+    record ui-state {
+        current-page: string,
+        user-context: option<string>,
+        session-data: option<string>,
+        preferences: list<tuple<string, string>>,
+    }
+    
+    record ui-event {
+        event-type: string,
+        target: string,
+        payload: option<string>,
+    }
+    
+    handle-user-action: func(action: user-action, state: ui-state) -> ui-state;
+    emit-ui-event: func(event: ui-event);
+}
+
+// API client for backend services
+interface api-client {
+    record api-request {
+        service: string,
+        endpoint: string,
+        method: string,  // GET, POST, PUT, DELETE
+        headers: list<tuple<string, string>>,
+        body: option<string>,
+        timeout-ms: option<u32>,
+    }
+    
+    record api-response {
+        status: u32,
+        headers: list<tuple<string, string>>,
+        body: option<string>,
+        error: option<string>,
+        duration-ms: u32,
+    }
+    
+    call-api: func(request: api-request) -> api-response;
+    batch-call: func(requests: list<api-request>) -> list<api-response>;
+}
+
+// State management and caching
+interface state-management {
+    record cache-entry {
+        key: string,
+        value: string,
+        expires-at: option<u64>,
+        tags: list<string>,
+    }
+    
+    record state-update {
+        path: string,  // JSON path or state key
+        value: string,
+        merge: bool,  // Whether to merge or replace
+    }
+    
+    // Local state management
+    get-state: func(path: string) -> option<string>;
+    set-state: func(update: state-update);
+    clear-state: func(path: string);
+    
+    // Client-side caching
+    cache-get: func(key: string) -> option<cache-entry>;
+    cache-set: func(entry: cache-entry);
+    cache-invalidate: func(key: string);
+    cache-invalidate-by-tags: func(tags: list<string>);
+}
+
+// Real-time communication
+interface realtime {
+    record websocket-message {
+        message-type: string,
+        channel: string,
+        payload: string,
+        timestamp: u64,
+    }
+    
+    record subscription {
+        channel: string,
+        filters: list<tuple<string, string>>,
+        qos: u32,  // Quality of service level
+    }
+    
+    // WebSocket communication
+    send-message: func(message: websocket-message);
+    subscribe: func(subscription: subscription);
+    unsubscribe: func(channel: string);
+}
+
+// Analytics and user tracking
+interface analytics {
+    record page-view {
+        page: string,
+        referrer: option<string>,
+        user-agent: string,
+        timestamp: u64,
+        session-id: string,
+    }
+    
+    record user-event {
+        event-name: string,
+        properties: list<tuple<string, string>>,
+        user-id: option<string>,
+        session-id: string,
+        timestamp: u64,
+    }
+    
+    record performance-metric {
+        metric-name: string,  // page-load-time, api-call-duration, etc.
+        value: f64,
+        unit: string,
+        page: string,
+        timestamp: u64,
+    }
+    
+    track-page-view: func(view: page-view);
+    track-event: func(event: user-event);
+    track-performance: func(metric: performance-metric);
+}
+
+// Progressive Web App features
+interface pwa {
+    record push-notification {
+        title: string,
+        body: string,
+        icon: option<string>,
+        data: option<string>,
+        actions: list<tuple<string, string>>,  // action-id, label
+    }
+    
+    record sync-task {
+        task-id: string,
+        data: string,
+        retry-count: u32,
+        scheduled-at: option<u64>,
+    }
+    
+    record offline-capability {
+        cache-strategy: string,  // cache-first, network-first, etc.
+        cached-resources: list<string>,
+        sync-enabled: bool,
+    }
+    
+    // Service worker integration
+    show-notification: func(notification: push-notification);
+    schedule-sync: func(task: sync-task);
+    configure-offline: func(config: offline-capability);
+    
+    // Installation and updates
+    check-for-updates: func() -> bool;
+    install-update: func();
+}
+
+world web-frontend {
+    // Frontend exports HTTP interface for serving static assets
+    export wasi:http/incoming-handler@0.2.0;
+    
+    // Frontend capabilities
+    export ui;
+    export state-management;
+    export analytics;
+    export pwa;
+    
+    // Frontend imports backend communication
+    import api-client;
+    import realtime;
+    
+    // System imports for web platform integration
+    import wasi:clocks/wall-clock@0.2.0;
+    import wasi:filesystem/types@0.2.0;
+    import wasi:random/random@0.2.0;
+    import wasi:sockets/network@0.2.0;
+}

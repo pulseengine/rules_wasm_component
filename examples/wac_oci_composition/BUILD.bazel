@@ -1,0 +1,355 @@
+"""Example demonstrating WAC composition with OCI registry components"""
+
+load("//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("//wit:defs.bzl", "wit_library")
+load("//wasm:defs.bzl", "wasm_keygen")
+load(
+    "//wkg:defs.bzl",
+    "wac_compose_with_oci",
+    "wac_distributed_system",
+    "wac_microservices_app",
+    "wasm_component_from_oci",
+    "wasm_component_oci_publish",
+    "wkg_registry_config",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+# Local component definitions
+
+# Frontend WIT interface
+wit_library(
+    name = "frontend_interfaces",
+    package_name = "frontend:app",
+    srcs = ["wit/frontend.wit"],
+    world = "frontend",
+)
+
+# Gateway WIT interface
+wit_library(
+    name = "gateway_interfaces",
+    package_name = "gateway:api",
+    srcs = ["wit/gateway.wit"],
+    world = "gateway",
+)
+
+# Local frontend component
+rust_wasm_component_bindgen(
+    name = "frontend_component",
+    srcs = ["src/frontend.rs"],
+    wit = ":frontend_interfaces",
+)
+
+# Local API gateway component
+rust_wasm_component_bindgen(
+    name = "gateway_component",
+    srcs = ["src/gateway.rs"],
+    wit = ":gateway_interfaces",
+)
+
+# Registry configuration for examples
+wkg_registry_config(
+    name = "example_registries",
+    default_registry = "localhost",
+    registries = [
+        "localhost|localhost:5000|oci",
+        "github|ghcr.io|oci|env|GITHUB_TOKEN",
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+    ],
+)
+
+# Advanced registry configuration with authentication
+wkg_registry_config(
+    name = "production_registries",
+    cache_dir = "/tmp/wkg_cache",
+    default_registry = "github",
+    enable_mirror_fallback = True,
+    registries = [
+        "local|localhost:5000|oci",
+        "github|ghcr.io|oci|env|GITHUB_TOKEN",
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+        "aws|123456789.dkr.ecr.us-west-2.amazonaws.com|oci|oauth|client_id|client_secret",
+        "azure|myregistry.azurecr.io|oci|basic|username|password",
+    ],
+    timeout_seconds = 60,
+)
+
+# Example 1: Basic OCI component pulling
+wasm_component_from_oci(
+    name = "auth_service_from_oci",
+    component_name = "auth-service",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    registry_config = ":example_registries",
+    tag = "v1.0.0",
+)
+
+wasm_component_from_oci(
+    name = "data_service_from_oci",
+    component_name = "data-service",
+    namespace = "wasm-examples",
+    registry = "localhost:5000",
+    registry_config = ":example_registries",
+    tag = "latest",
+)
+
+# Example 2: OCI component with signature verification
+wasm_keygen(
+    name = "verification_keys",
+    openssh_format = False,
+)
+
+wasm_component_from_oci(
+    name = "signed_service_from_oci",
+    image_ref = "localhost:5000/wasm-examples/signed-service:v1.0.0",
+    public_key = ":verification_keys",
+    registry_config = ":example_registries",
+    verify_signature = True,
+)
+
+# Example 3: Basic WAC composition with OCI components
+wac_compose_with_oci(
+    name = "basic_distributed_app",
+    composition = """
+        // Basic distributed application
+        let frontend = new frontend:component { ... };
+        let auth = new auth_service:component { ... };
+        let data = new data_service:component { ... };
+        
+        // Connect frontend to services
+        connect frontend.auth_request -> auth.validate;
+        connect frontend.data_request -> data.query;
+        
+        // Export frontend as main interface
+        export frontend as main;
+    """,
+    local_components = {
+        "frontend": ":frontend_component",
+    },
+    oci_components = {
+        "auth_service": "localhost:5000/wasm-examples/auth-service:v1.0.0",
+        "data_service": "localhost:5000/wasm-examples/data-service:latest",
+    },
+    registry_config = ":example_registries",
+)
+
+# Example 4: Secure composition with signature verification
+wac_compose_with_oci(
+    name = "secure_distributed_app",
+    composition = """
+        // Secure distributed application with verified components
+        let frontend = new frontend:component { ... };
+        let auth = new auth_service:component { ... };
+        let payment = new payment_service:component { ... };
+        
+        // Secure connection chain
+        connect frontend.auth_request -> auth.validate;
+        connect auth.payment_request -> payment.process;
+        
+        export frontend as main;
+    """,
+    local_components = {
+        "frontend": ":frontend_component",
+    },
+    oci_components = {
+        "auth_service": "localhost:5000/wasm-examples/signed-service:v1.0.0",
+        "payment_service": "ghcr.io/example/payment-service:v2.1.0",
+    },
+    public_key = ":verification_keys",
+    registry_config = ":production_registries",
+    verify_signatures = True,
+)
+
+# Example 5: Multi-registry composition
+wac_compose_with_oci(
+    name = "multi_registry_app",
+    composition = """
+        // Multi-registry microservices architecture
+        let gateway = new gateway:component { ... };
+        let users = new user_service:component { ... };
+        let analytics = new analytics:component { ... };
+        let cache = new cache:component { ... };
+        
+        // Gateway routes to services
+        connect gateway.user_api -> users.handler;
+        connect gateway.analytics_api -> analytics.collect;
+        connect users.cache_request -> cache.get;
+        connect users.cache_store -> cache.set;
+        
+        // Analytics collects from all services
+        connect users.analytics_event -> analytics.track;
+        connect cache.analytics_event -> analytics.track;
+        
+        export gateway as main;
+    """,
+    local_components = {
+        "gateway": ":gateway_component",
+    },
+    oci_components = {
+        "user_service": "ghcr.io/my-org/user-service:v1.5.0",
+        "analytics": "docker.io/analytics/collector:latest",
+        "cache": "localhost:5000/cache/redis-wasm:v6.0.0",
+    },
+    registry_config = ":production_registries",
+)
+
+# Example 6: Using the microservices convenience macro
+wac_microservices_app(
+    name = "ecommerce_app",
+    frontend_component = ":frontend_component",
+    public_key = ":verification_keys",
+    registry_config = ":production_registries",
+    services = {
+        "user_service": "ghcr.io/ecommerce/users:v2.0.0",
+        "product_service": "ghcr.io/ecommerce/products:v1.8.0",
+        "order_service": "ghcr.io/ecommerce/orders:v1.2.0",
+        "payment_service": "docker.io/payments/processor:v3.1.0",
+        "notification_service": "localhost:5000/notifications/email:latest",
+    },
+    verify_signatures = True,
+)
+
+# Example 7: Using the distributed system convenience macro
+wac_distributed_system(
+    name = "iot_platform",
+    components = {
+        "local": {
+            "gateway": ":gateway_component",
+            "frontend": ":frontend_component",
+        },
+        "oci": {
+            "device_manager": "ghcr.io/iot/device-manager:v1.0.0",
+            "data_processor": "aws-ecr.amazonaws.com/iot/processor:v2.3.0",
+            "alert_system": "azure.azurecr.io/iot/alerts:v1.1.0",
+            "time_series_db": "docker.io/timeseries/influxdb-wasm:v2.0.0",
+        },
+    },
+    composition = """
+        // IoT platform with edge and cloud components
+        let gateway = new gateway:component { ... };
+        let frontend = new frontend:component { ... };
+        let devices = new device_manager:component { ... };
+        let processor = new data_processor:component { ... };
+        let alerts = new alert_system:component { ... };
+        let timeseries = new time_series_db:component { ... };
+        
+        // Edge gateway collects device data
+        connect gateway.device_data -> devices.register;
+        connect devices.sensor_data -> processor.ingest;
+        
+        // Data processing pipeline
+        connect processor.processed_data -> timeseries.write;
+        connect processor.anomaly_detected -> alerts.trigger;
+        
+        // Frontend observability
+        connect frontend.metrics_request -> timeseries.query;
+        connect frontend.device_request -> devices.status;
+        connect alerts.notification -> frontend.alert_display;
+        
+        export gateway as main;
+    """,
+    registry_config = ":production_registries",
+)
+
+# Example 8: External composition file
+wac_compose_with_oci(
+    name = "enterprise_system",
+    composition_file = "compositions/enterprise.wac",
+    local_components = {
+        "gateway": ":gateway_component",
+    },
+    oci_components = {
+        "auth": "ghcr.io/enterprise/sso:v3.0.0",
+        "audit": "ghcr.io/enterprise/audit-log:v1.5.0",
+        "backup": "azure.azurecr.io/enterprise/backup:v2.0.0",
+    },
+    public_key = ":verification_keys",
+    registry_config = ":production_registries",
+    verify_signatures = True,
+)
+
+# Example 9: Development vs Production composition
+# Development version with local mock services
+wac_compose_with_oci(
+    name = "app_development",
+    composition = """
+        // Development environment with local mocks
+        let frontend = new frontend:component { ... };
+        let auth = new mock_auth:component { ... };
+        let data = new mock_data:component { ... };
+        
+        connect frontend.auth_request -> auth.validate;
+        connect frontend.data_request -> data.query;
+        
+        export frontend as main;
+    """,
+    local_components = {
+        "frontend": ":frontend_component",
+        "mock_auth": "//test:mock_auth_component",
+        "mock_data": "//test:mock_data_component",
+    },
+    oci_components = {},  # No external dependencies for development
+)
+
+# Production version with real OCI services
+wac_compose_with_oci(
+    name = "app_production",
+    composition = """
+        // Production environment with real services
+        let frontend = new frontend:component { ... };
+        let auth = new auth_service:component { ... };
+        let data = new data_service:component { ... };
+        let logger = new logging_service:component { ... };
+        
+        // Service connections
+        connect frontend.auth_request -> auth.validate;
+        connect frontend.data_request -> data.query;
+        
+        // Observability
+        connect auth.log_event -> logger.write;
+        connect data.log_event -> logger.write;
+        connect frontend.log_event -> logger.write;
+        
+        export frontend as main;
+    """,
+    local_components = {
+        "frontend": ":frontend_component",
+    },
+    oci_components = {
+        "auth_service": "ghcr.io/production/auth:v2.0.0",
+        "data_service": "ghcr.io/production/data-api:v1.8.0",
+        "logging_service": "docker.io/observability/logger:v1.0.0",
+    },
+    public_key = ":verification_keys",
+    registry_config = ":production_registries",
+    verify_signatures = True,
+)
+
+# Example 10: Mixed architectures (for demonstration of multi-arch support)
+wac_compose_with_oci(
+    name = "mixed_arch_system",
+    composition = """
+        // Mixed architecture system
+        let coordinator = new coordinator:component { ... };
+        let wasi = new wasi_service:component { ... };
+        let unknown = new unknown_service:component { ... };
+        let legacy = new legacy_service:component { ... };
+        
+        // Coordinator orchestrates all services
+        connect coordinator.wasi_request -> wasi.handler;
+        connect coordinator.unknown_request -> unknown.handler;
+        connect coordinator.legacy_request -> legacy.handler;
+        
+        export coordinator as main;
+    """,
+    local_components = {
+        "coordinator": ":gateway_component",  # Local wasm32-wasi component
+    },
+    oci_components = {
+        # These would be multi-arch images with different WASM targets
+        "wasi_service": "localhost:5000/services/wasi-service:multiarch",
+        "unknown_service": "localhost:5000/services/unknown-service:multiarch",
+        "legacy_service": "localhost:5000/services/legacy:wasm32-unknown-unknown",
+    },
+    registry_config = ":example_registries",
+)

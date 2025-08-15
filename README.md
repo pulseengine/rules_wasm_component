@@ -8,7 +8,10 @@ Modern Bazel rules for building and composing WebAssembly components.
 - 🦀 **Rust Integration**: Seamless integration with rules_rust
 - 🐹 **Go Integration**: TinyGo v0.38.0 with WASI Preview 2 component support
 - 🔧 **Toolchain Management**: Automatic wasm-tools and wit-bindgen setup
-- 📦 **Composition**: WAC-based component composition
+- 📦 **Composition**: WAC-based component composition with OCI registry support
+- 🐳 **OCI Publishing**: Publish and distribute components via container registries
+- 🔐 **Digital Signing**: Component signing with wasmsign2 and verification
+- 🏗️ **Enterprise Architecture**: Multi-registry microservices with security policies
 - 🎯 **Type Safety**: Strongly typed WIT interfaces
 - ⚡ **Performance**: Optimized builds with proper caching
 
@@ -123,7 +126,25 @@ wac_compose(
 ### Composition Rules
 
 - `wac_compose` - Compose multiple components
+- `wac_compose_with_oci` - Compose local and OCI registry components
+- `wac_microservices_app` - Microservices composition pattern
+- `wac_distributed_system` - Distributed system composition pattern
 - `wasm_component_new` - Convert modules to components
+
+### OCI Publishing Rules
+
+- `wasm_component_oci_image` - Prepare OCI images for components
+- `wasm_component_publish` - Publish components to registries
+- `wasm_component_from_oci` - Pull components from OCI registries
+- `wkg_registry_config` - Configure registry authentication
+- `wkg_multi_registry_publish` - Publish to multiple registries
+
+### Security Rules
+
+- `wasm_keygen` - Generate signing key pairs
+- `wasm_sign` - Sign WebAssembly components
+- `wasm_security_policy` - Define security policies
+- `wasm_component_secure_publish` - Policy-enforced publishing
 
 ### Analysis Rules
 
@@ -134,10 +155,30 @@ wac_compose(
 
 See the [`examples/`](examples/) directory for complete examples:
 
+### Core Examples
+
 - [Basic Component](examples/basic/) - Simple component with WIT
-- [Composition](examples/composition/) - Multi-component system
-- [WASI Integration](examples/wasi/) - Using WASI interfaces
-- [Testing](examples/testing/) - Component testing patterns
+- [Go Component](examples/go_component/) - TinyGo WASM components
+- [JavaScript Component](examples/js_component/) - JS components with ComponentizeJS
+- [C++ Component](examples/cpp_component/) - Native C++ component development
+
+### Composition and Architecture
+
+- [WAC Remote Compose](examples/wac_remote_compose/) - Remote component composition
+- [WAC + OCI Composition](examples/wac_oci_composition/) - OCI registry integration
+- [Microservices Architecture](examples/microservices_architecture/) - Production-ready microservices
+- [Multi-Language Composition](examples/multi_language_composition/) - Polyglot component systems
+
+### OCI and Distribution
+
+- [OCI Publishing](examples/oci_publishing/) - Container registry publishing
+- [Component Signing](examples/wasm_signing/) - Digital signatures with wasmsign2
+
+### Advanced Features
+
+- [Wizer Pre-initialization](examples/wizer_example/) - Startup optimization
+- [Wasmtime Runtime](examples/wasmtime_runtime/) - Custom runtime integration
+- [Multi-Profile Components](examples/multi_profile/) - Development vs production builds
 
 ## Documentation
 

@@ -1,0 +1,63 @@
+// Frontend component interface for distributed applications
+package frontend:app;
+
+interface auth {
+    // Authentication requests
+    record auth-request {
+        username: string,
+        password: string,
+    }
+    
+    record auth-response {
+        success: bool,
+        token: option<string>,
+        error: option<string>,
+    }
+    
+    // Make authentication request to backend service
+    validate-user: func(request: auth-request) -> auth-response;
+}
+
+interface data {
+    // Data access requests
+    record data-request {
+        query: string,
+        filters: list<string>,
+    }
+    
+    record data-response {
+        success: bool,
+        data: option<string>,  // JSON data
+        error: option<string>,
+    }
+    
+    // Query data from backend service
+    query-data: func(request: data-request) -> data-response;
+}
+
+interface logging {
+    // Logging events
+    record log-event {
+        level: string,  // info, warn, error
+        message: string,
+        timestamp: u64,
+    }
+    
+    // Send log event to logging service
+    log: func(event: log-event);
+}
+
+world frontend {
+    // Frontend exports HTTP interface
+    export wasi:http/incoming-handler@0.2.0;
+    
+    // Frontend imports backend services
+    import auth;
+    import data;
+    import logging;
+    
+    // WASI imports for filesystem, networking, etc.
+    import wasi:filesystem/types@0.2.0;
+    import wasi:sockets/network@0.2.0;
+    import wasi:clocks/wall-clock@0.2.0;
+}
