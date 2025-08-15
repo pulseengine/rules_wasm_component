@@ -151,37 +151,37 @@ record download-and-validate-result {
 interface http-downloader {
     /// Download a file from URL
     download-file: func(config: download-config) -> result<download-result, string>;
-    
+
     /// Fetch GitHub release information
     fetch-github-release: func(repo: string) -> result<github-release, string>;
-    
+
     /// Test network connectivity
     test-connectivity: func() -> result<bool, string>;
-    
+
     /// Get Go component version and info
     get-component-info: func() -> string;
 }
 
-/// Checksum validator interface (Rust component)  
+/// Checksum validator interface (Rust component)
 interface checksum-validator {
     /// Validate file checksum
     validate-checksum: func(config: validation-config) -> result<validation-result, string>;
-    
+
     /// List available tools in registry
     list-tools: func(registry-path: string) -> result<list<string>, string>;
-    
+
     /// Get detailed tool information
     get-tool-info: func(registry-path: string, tool-name: string) -> result<tool-info, string>;
-    
+
     /// Update tool information in registry
     update-tool-registry: func(registry-path: string, tool-name: string, version: string, platform: string, sha256: string) -> result<bool, string>;
-    
+
     /// Verify registry integrity
     verify-registry-integrity: func(registry-path: string) -> result<bool, string>;
-    
+
     /// Batch validate multiple files
     batch-validate: func(configs: list<validation-config>) -> result<list<validation-result>, string>;
-    
+
     /// Get Rust component version and info
     get-component-info: func() -> string;
 }
@@ -190,19 +190,19 @@ interface checksum-validator {
 interface orchestrator {
     /// Download file and validate checksum in one operation
     download-and-validate: func(config: download-and-validate-config) -> result<download-and-validate-result, string>;
-    
+
     /// Download latest release from GitHub and validate
     download-latest-release: func(repo: string, platform: string, output-dir: string) -> result<download-and-validate-result, string>;
-    
+
     /// Update tool registry from GitHub releases
     update-registry-from-github: func(registry-path: string, repo: string) -> result<registry-update-result, string>;
-    
+
     /// Comprehensive tool validation (download + checksum + registry update)
     validate-tool-comprehensive: func(registry-path: string, tool-name: string, version: option<string>) -> result<validation-result, string>;
-    
+
     /// Get system status and component information
     get-system-status: func() -> string;
-    
+
     /// Self-test both Go and Rust components
     run-self-test: func() -> result<bool, string>;
 }
@@ -217,7 +217,7 @@ world checksum-validator {
     import wasi:io/streams@0.2.0;
     import wasi:clocks/wall-clock@0.2.0;
     import wasi:random/random@0.2.0;
-    
+
     /// Export component interfaces
     export http-downloader;
     export checksum-validator;

@@ -57,6 +57,7 @@ bazel build //examples/multi_language_composition:all
 ### 🦀 Rust Checksum Component
 
 **Capabilities:**
+
 - ✅ Complete CLI interface (`test`, `validate`, `update-all`, `list`)
 - ✅ Full Rust crate ecosystem (anyhow, hex, chrono, clap, serde_json)
 - ✅ WASI Preview 2 support through std library
@@ -64,6 +65,7 @@ bazel build //examples/multi_language_composition:all
 - ✅ JSON configuration processing
 
 **Testing:**
+
 ```bash
 wasmtime run checksum_updater_simple.wasm test --verbose
 wasmtime run checksum_updater_simple.wasm list
@@ -73,6 +75,7 @@ wasmtime run checksum_updater_simple.wasm validate --all
 ### 🐹 Go HTTP Component (Architecture Complete)
 
 **Planned Capabilities:**
+
 - 🏗️ GitHub API integration
 - 🏗️ Release asset downloading
 - 🏗️ Checksum file retrieval
@@ -80,6 +83,7 @@ wasmtime run checksum_updater_simple.wasm validate --all
 - 🏗️ HTTP/HTTPS networking
 
 **Bazel Rule:**
+
 ```starlark
 go_wasm_component(
     name = "http_downloader",
@@ -93,6 +97,7 @@ go_wasm_component(
 ## 🔧 Composition Types
 
 ### Simple Composition
+
 Components are bundled together with a shared manifest:
 
 ```starlark
@@ -105,11 +110,12 @@ multi_language_wasm_component(
 ```
 
 ### Orchestrated Composition
+
 Components communicate through shared interfaces:
 
 ```starlark
 multi_language_wasm_component(
-    name = "orchestrated_composition", 
+    name = "orchestrated_composition",
     components = [
         "//tools/http_downloader_go:http_downloader",
         "//tools/checksum_updater_wasm:checksum_updater",
@@ -124,6 +130,7 @@ multi_language_wasm_component(
 ```
 
 ### Linked Composition
+
 Components are merged into a single optimized module:
 
 ```starlark
@@ -174,18 +181,21 @@ Workflows:
 ### Rule Features
 
 #### ✅ Pure Bazel Implementation
+
 - **Zero shell scripts** - complete adherence to "THE BAZEL WAY"
 - **Cross-platform compatibility** (Windows/macOS/Linux)
 - **Hermetic builds** with proper toolchain integration
 - **Provider-based architecture** following Bazel best practices
 
 #### ✅ Multi-Language Support
-- **Rust components** via `rust_wasm_component` 
+
+- **Rust components** via `rust_wasm_component`
 - **Go components** via `go_wasm_component` (architecture complete)
 - **JavaScript components** via `jco_wasm_component` (planned)
 - **Component composition** via `multi_language_wasm_component`
 
 #### ✅ WebAssembly Component Model
+
 - **WASI Preview 2** support through standard libraries
 - **WIT interface definitions** for component communication
 - **Component orchestration** with workflow management
@@ -204,7 +214,7 @@ multi_language_wasm_component = rule(
             mandatory = True,
         ),
         "wit": attr.label(
-            providers = [WitInfo], 
+            providers = [WitInfo],
             doc = "WIT library defining component interfaces",
         ),
         "composition_type": attr.string(
@@ -236,7 +246,7 @@ multi_language_wasm_component = rule(
    - Python via Pyodide
 
 3. **Production Tooling**
-   - Component debugging support  
+   - Component debugging support
    - Performance profiling
    - Deployment automation
 

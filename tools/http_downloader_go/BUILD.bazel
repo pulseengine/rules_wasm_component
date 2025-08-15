@@ -15,9 +15,9 @@ package(default_visibility = ["//visibility:public"])
 go_wasm_component(
     name = "http_downloader_go_component",
     srcs = ["main.go"],
-    world = "wasi:cli/command",
     go_mod = "go.mod",
     optimization = "release",
+    world = "wasi:cli/command",
 )
 
 # TODO: Wizer support for Go will be added later
@@ -25,7 +25,7 @@ go_wasm_component(
 #     name = "http_downloader_go_wizer",
 #     srcs = ["src/main.go"],
 #     wit = "wit/http-downloader.wit",
-#     world = "wasi:cli/command", 
+#     world = "wasi:cli/command",
 #     go_mod = "go.mod",
 #     optimization = "release",
 #     wizer_init_function = "wizer.initialize",

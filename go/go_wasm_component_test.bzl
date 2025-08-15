@@ -14,7 +14,7 @@ def _go_wasm_component_test_impl(ctx):
     # Get wasm-tools from toolchain
     wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     wasm_tools = wasm_tools_toolchain.wasm_tools
-    
+
     # TinyGo toolchain info is embedded in component metadata
 
     # Generate comprehensive test script
@@ -145,7 +145,7 @@ fi
 echo -e "${{GREEN}}🎉 All Go WebAssembly component tests passed!${{NC}}"
 echo "Component Details:"
 echo "  • Language: Go (TinyGo)"
-echo "  • Target: wasm32-wasip2"  
+echo "  • Target: wasm32-wasip2"
 echo "  • Format: WebAssembly Component Model"
 echo "  • Size: ${{COMPONENT_SIZE}} bytes"
 echo "  • Validation: ✅ Valid"

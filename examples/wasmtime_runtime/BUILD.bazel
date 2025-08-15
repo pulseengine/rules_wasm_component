@@ -77,9 +77,9 @@ rust_binary(
 rust_library(
     name = "wasmtime_utils",
     srcs = [
-        "src/lib.rs",
         "src/component_loader.rs",
         "src/host_functions.rs",
+        "src/lib.rs",
         "src/metrics.rs",
         "src/runtime_config.rs",
     ],
@@ -114,9 +114,9 @@ wasm_component_test(
     name = "calculator_runtime_test",
     srcs = ["tests/calculator_runtime_test.rs"],
     data = [
+        "//examples/basic:basic_component",
         "//examples/cpp_component/calculator:calculator_component",
         "//examples/go_component:calculator_component",
-        "//examples/basic:basic_component",
     ],
     deps = [
         ":wasmtime_utils",
@@ -150,8 +150,8 @@ wasm_component_test(
     name = "plugin_system_test",
     srcs = ["tests/plugin_system_test.rs"],
     data = [
-        "//examples/js_component:calculator_component",
         "//examples/basic:basic_component",
+        "//examples/js_component:calculator_component",
     ],
     deps = [
         ":wasmtime_utils",

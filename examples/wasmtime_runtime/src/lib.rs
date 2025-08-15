@@ -6,7 +6,7 @@ Enhanced utilities for running and testing WebAssembly components with Wasmtime.
 ## Features
 
 - **Component Loading**: Simplified component instantiation and management
-- **Host Functions**: Custom host-provided functionality for components  
+- **Host Functions**: Custom host-provided functionality for components
 - **Metrics**: Performance monitoring and measurement
 - **Runtime Configuration**: Flexible Wasmtime engine configuration
 - **Error Handling**: Comprehensive error types and handling
@@ -22,11 +22,11 @@ async fn main() -> anyhow::Result<()> {
     // Create runtime with optimized configuration
     let config = RuntimeConfig::production();
     let loader = ComponentLoader::new(config)?;
-    
+
     // Load and run a component
     let component = loader.load_component("calculator.wasm").await?;
     let result = component.call_function("add", &[1.0, 2.0]).await?;
-    
+
     println!("Result: {}", result);
     Ok(())
 }
@@ -77,19 +77,19 @@ pub const DEFAULT_EXECUTION_TIMEOUT: Duration = Duration::from_secs(10);
 pub enum WasmtimeError {
     #[error("Component loading failed: {0}")]
     ComponentLoadError(String),
-    
+
     #[error("Function execution failed: {0}")]
     ExecutionError(String),
-    
+
     #[error("Timeout occurred after {duration:?}")]
     TimeoutError { duration: Duration },
-    
+
     #[error("Security policy violation: {0}")]
     SecurityError(String),
-    
+
     #[error("Resource limit exceeded: {0}")]
     ResourceError(String),
-    
+
     #[error("Configuration error: {0}")]
     ConfigError(String),
 }
@@ -100,17 +100,17 @@ pub type WasmtimeResult<T> = Result<T, WasmtimeError>;
 /// Initialize tracing for wasmtime operations
 pub fn init_tracing() -> Result<()> {
     use tracing_subscriber::{fmt, EnvFilter};
-    
+
     let filter = EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| EnvFilter::new("wasmtime_runtime=info"));
-    
+
     fmt()
         .with_env_filter(filter)
         .with_target(false)
         .with_thread_ids(true)
         .with_line_number(true)
         .init();
-    
+
     Ok(())
 }
 
@@ -134,19 +134,19 @@ pub fn create_production_config() -> Result<RuntimeConfig> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_basic_config_creation() {
         let config = create_basic_config();
         assert!(config.is_ok());
     }
-    
+
     #[test]
     fn test_production_config_creation() {
         let config = create_production_config();
         assert!(config.is_ok());
     }
-    
+
     #[test]
     fn test_version_constant() {
         assert!(!VERSION.is_empty());

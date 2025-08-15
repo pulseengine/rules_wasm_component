@@ -77,12 +77,12 @@ impl ChecksumValidator {
                 Ok(tool_results) => {
                     for validation in tool_results {
                         total_validations += 1;
-                        
+
                         if validation.is_valid {
                             valid_checksums += 1;
                         } else {
                             invalid_checksums += 1;
-                            
+
                             if let Some(ref error) = validation.error {
                                 errors.push(ValidationError {
                                     tool_name: validation.tool_name.clone(),
@@ -93,7 +93,7 @@ impl ChecksumValidator {
                                 });
                             }
                         }
-                        
+
                         if fix_errors && !validation.is_valid && validation.actual_checksum.is_some() {
                             match self.fix_checksum(&validation, manager).await {
                                 Ok(()) => {
@@ -350,7 +350,7 @@ impl ValidationResults {
         if self.valid_checksums + self.invalid_checksums == 0 {
             return 100.0;
         }
-        
+
         (self.valid_checksums as f64 / (self.valid_checksums + self.invalid_checksums) as f64) * 100.0
     }
 }
@@ -371,7 +371,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let checksums_dir = temp_dir.path().join("checksums");
         let tools_dir = checksums_dir.join("tools");
-        
+
         fs::create_dir_all(&tools_dir).await.unwrap();
 
         let manager = ChecksumManager::new_with_paths(checksums_dir, tools_dir);
@@ -425,7 +425,7 @@ mod tests {
 
         // Validate JSON format
         let results = validator.validate_json_format(&manager).await.unwrap();
-        
+
         assert_eq!(results.tools_validated, 1);
         assert_eq!(results.valid_checksums, 1);
         assert_eq!(results.invalid_checksums, 0);

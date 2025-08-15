@@ -2,7 +2,7 @@
 Production Checksum Updater Rule for CI System
 
 This rule creates a Bazel target that our CI system uses to:
-1. Download latest releases from GitHub 
+1. Download latest releases from GitHub
 2. Calculate SHA256 checksums
 3. Update our checksums/ registry
 4. Validate tool dependencies
@@ -14,7 +14,7 @@ load("//providers:providers.bzl", "WasmComponentInfo")
 
 def _checksum_updater_impl(ctx):
     """Implementation of checksum_updater rule"""
-    
+
     # Get the production WebAssembly component
     if WasmComponentInfo in ctx.attr.component:
         component_info = ctx.attr.component[WasmComponentInfo]
@@ -22,10 +22,10 @@ def _checksum_updater_impl(ctx):
     else:
         # Fallback to direct file
         component_file = ctx.file.component
-    
+
     # Create wrapper script that invokes the WebAssembly component
     updater_script = ctx.actions.declare_file(ctx.label.name + "_updater")
-    
+
     # Find wasmtime or appropriate WASM runtime
     # In production CI, this would be provided by a toolchain
     script_content = """#!/bin/bash
@@ -69,13 +69,13 @@ exec $RUNTIME "$COMPONENT" "$COMMAND" "$TOOL_NAME" "$CHECKSUMS_DIR"
         component_path = component_file.short_path,
         checksums_dir = ctx.attr.checksums_dir,
     )
-    
+
     ctx.actions.write(
         output = updater_script,
         content = script_content,
         is_executable = True,
     )
-    
+
     return [
         DefaultInfo(
             executable = updater_script,
@@ -101,22 +101,22 @@ checksum_updater = rule(
     executable = True,
     doc = """
     Production checksum updater for CI system.
-    
+
     This rule creates an executable that our CI system uses to manage
     tool checksums and validate dependencies. The component:
-    
+
     1. Downloads latest releases from GitHub
-    2. Calculates SHA256 checksums  
+    2. Calculates SHA256 checksums
     3. Updates JSON registry files
     4. Validates existing tool versions
-    
+
     Example:
         checksum_updater(
-            name = "update_wasm_tools", 
+            name = "update_wasm_tools",
             component = ":production_checksum_component",
             checksums_dir = "checksums",
         )
-        
+
     Usage in CI:
         bazel run //tools/checksum_validator_multi:update_wasm_tools wasm-tools
     """,
@@ -124,20 +124,24 @@ checksum_updater = rule(
 
 def _validate_checksums_test_impl(ctx):
     """Test that validates our checksum registry is up-to-date"""
-    
+
     component_file = ctx.file.component
-    
+
     # Create test script that checks if tools need updates
     test_script = ctx.actions.declare_file(ctx.label.name + "_test")
-    
+
     tools_to_check = ctx.attr.tools if ctx.attr.tools else [
-        "wasm-tools", "wasmtime", "wit-bindgen", "wkg", "tinygo"
+        "wasm-tools",
+        "wasmtime",
+        "wit-bindgen",
+        "wkg",
+        "tinygo",
     ]
-    
+
     script_content = """#!/bin/bash
 set -e
 
-COMPONENT="{component_path}" 
+COMPONENT="{component_path}"
 CHECKSUMS_DIR="{checksums_dir}"
 
 echo "🔍 Validating Checksum Registry"
@@ -148,7 +152,7 @@ echo "Checksums: $CHECKSUMS_DIR"
 RUNTIME=""
 if command -v wasmtime &> /dev/null; then
     RUNTIME="wasmtime --dir=. --dir=$CHECKSUMS_DIR"
-elif command -v wasmer &> /dev/null; then  
+elif command -v wasmer &> /dev/null; then
     RUNTIME="wasmer --dir=. --dir=$CHECKSUMS_DIR"
 else
     echo "⚠️  No WASM runtime found, skipping runtime tests"
@@ -158,7 +162,7 @@ else
         if [[ -f "$tool_file" ]]; then
             echo "✅ $tool.json exists"
             if jq empty "$tool_file" 2>/dev/null; then
-                echo "✅ $tool.json is valid JSON"  
+                echo "✅ $tool.json is valid JSON"
             else
                 echo "❌ $tool.json is invalid JSON"
                 exit 1
@@ -195,13 +199,13 @@ fi
         checksums_dir = ctx.attr.checksums_dir,
         tools = " ".join(tools_to_check),
     )
-    
+
     ctx.actions.write(
         output = test_script,
         content = script_content,
         is_executable = True,
     )
-    
+
     return [
         DefaultInfo(
             executable = test_script,
@@ -230,14 +234,14 @@ validate_checksums_test = rule(
     test = True,
     doc = """
     Test rule that validates our checksum registry.
-    
+
     This test is used in CI to ensure our tool checksums are up-to-date
     and that the checksum updater component is working correctly.
-    
+
     Example:
         validate_checksums_test(
             name = "checksums_current_test",
-            component = ":production_checksum_component", 
+            component = ":production_checksum_component",
             checksums_dir = "checksums",
             tools = ["wasm-tools", "wasmtime", "tinygo"],
         )

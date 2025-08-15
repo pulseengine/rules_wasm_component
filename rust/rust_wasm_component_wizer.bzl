@@ -96,10 +96,10 @@ def rust_wasm_component_wizer(
 
         # Step 1: Create the regular WASM component
         component_name = "{}_component_{}".format(name, profile)
-        
+
         # Filter out conflicting kwargs
         filtered_kwargs = {k: v for k, v in kwargs.items() if k != "tags"}
-        
+
         rust_wasm_component(
             name = component_name,
             srcs = all_srcs,

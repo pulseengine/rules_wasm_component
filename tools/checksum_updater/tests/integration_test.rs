@@ -1,4 +1,4 @@
-/*! 
+/*!
 Integration tests for the checksum updater tool.
 
 These tests validate the full functionality of the checksum updater including
@@ -34,7 +34,7 @@ async fn test_checksum_manager_basic_operations() -> Result<()> {
     let temp_dir = TempDir::new()?;
     let checksums_dir = temp_dir.path().join("checksums");
     let tools_dir = checksums_dir.join("tools");
-    
+
     fs::create_dir_all(&tools_dir).await?;
 
     let manager = ChecksumManager::new_with_paths(checksums_dir.clone(), tools_dir.clone());
@@ -61,12 +61,12 @@ async fn test_checksum_manager_basic_operations() -> Result<()> {
 }
 
 /// Test JSON validation functionality
-#[tokio::test] 
+#[tokio::test]
 async fn test_json_validation() -> Result<()> {
     let temp_dir = TempDir::new()?;
     let checksums_dir = temp_dir.path().join("checksums");
     let tools_dir = checksums_dir.join("tools");
-    
+
     fs::create_dir_all(&tools_dir).await?;
 
     let manager = ChecksumManager::new_with_paths(checksums_dir.clone(), tools_dir.clone());
@@ -81,11 +81,11 @@ async fn test_json_validation() -> Result<()> {
 
     // Test JSON format validation
     let results = validator.validate_json_format(&manager).await?;
-    
+
     // Should have at least one valid file (valid-tool) and detect the invalid one
     assert!(results.valid_checksums >= 1);
     assert!(results.errors.len() >= 1);
-    
+
     // Check that the invalid file was detected
     let has_invalid_error = results.errors.iter().any(|e| {
         e.error_type == "json_format" && e.message.contains("Invalid JSON format")
@@ -101,7 +101,7 @@ async fn test_update_engine_initialization() -> Result<()> {
     let temp_dir = TempDir::new()?;
     let checksums_dir = temp_dir.path().join("checksums");
     let tools_dir = checksums_dir.join("tools");
-    
+
     fs::create_dir_all(&tools_dir).await?;
 
     let manager = ChecksumManager::new_with_paths(checksums_dir.clone(), tools_dir.clone());
@@ -109,10 +109,10 @@ async fn test_update_engine_initialization() -> Result<()> {
 
     // Test listing available tools (should include configured tools)
     let tools = engine.list_available_tools().await?;
-    
+
     // Should include at least the tools defined in tool_config
     assert!(!tools.is_empty());
-    
+
     // Should include wasm-tools as it's a configured tool
     assert!(tools.contains(&"wasm-tools".to_string()));
 
@@ -125,7 +125,7 @@ async fn test_real_json_files_validation() -> Result<()> {
     let workspace_root = get_workspace_root();
     let checksums_dir = workspace_root.join("checksums");
     let tools_dir = checksums_dir.join("tools");
-    
+
     // Only run this test if the checksums directory exists
     if !checksums_dir.exists() {
         println!("Skipping real JSON validation - checksums directory not found");
@@ -137,7 +137,7 @@ async fn test_real_json_files_validation() -> Result<()> {
 
     // Test validation of actual JSON files in the repository
     let results = validator.validate_json_format(&manager).await?;
-    
+
     println!("JSON validation results:");
     println!("  Valid files: {}", results.valid_checksums);
     println!("  Invalid files: {}", results.invalid_checksums);
@@ -160,21 +160,21 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
     let temp_dir = TempDir::new()?;
     let checksums_dir = temp_dir.path().join("checksums");
     let tools_dir = checksums_dir.join("tools");
-    
+
     fs::create_dir_all(&tools_dir).await?;
 
     let manager = ChecksumManager::new_with_paths(checksums_dir.clone(), tools_dir.clone());
 
     // Create a tool and verify the JSON file is created correctly
     let _tool_info = manager.create_tool("file-test-tool", "owner/file-test-tool").await?;
-    
+
     // Verify the JSON file exists and has correct content
     let json_path = tools_dir.join("file-test-tool.json");
     assert!(json_path.exists());
-    
+
     let json_content = fs::read_to_string(&json_path).await?;
     let parsed: Value = serde_json::from_str(&json_content)?;
-    
+
     assert_eq!(parsed["tool_name"], "file-test-tool");
     assert_eq!(parsed["github_repo"], "owner/file-test-tool");
     assert_eq!(parsed["latest_version"], "0.0.0");
@@ -182,21 +182,21 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
     // Test updating tool version
     use checksum_updater_lib::checksum_manager::{VersionInfo, PlatformInfo};
     use std::collections::HashMap;
-    
+
     let mut platforms = HashMap::new();
     platforms.insert("linux_amd64".to_string(), PlatformInfo {
         sha256: "test-checksum".to_string(),
         url_suffix: "linux_amd64.tar.gz".to_string(),
         platform_name: None,
     });
-    
+
     let version_info = VersionInfo {
         release_date: "2024-01-01".to_string(),
         platforms,
     };
-    
+
     manager.update_tool_version("file-test-tool", "1.0.0", version_info).await?;
-    
+
     // Verify the update was saved correctly
     let updated_tool_info = manager.get_tool_info("file-test-tool").await?;
     assert_eq!(updated_tool_info.latest_version, "1.0.0");
@@ -209,14 +209,14 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
 #[tokio::test]
 async fn test_tool_configuration() -> Result<()> {
     use checksum_updater_lib::tool_config::ToolConfig;
-    
+
     let tool_config = ToolConfig::default();
-    
+
     // Test that we can get configuration for known tools
     let wasm_tools_config = tool_config.get_tool_config("wasm-tools");
     assert_eq!(wasm_tools_config.github_repo, "bytecodealliance/wasm-tools");
     assert!(!wasm_tools_config.platforms.is_empty());
-    
+
     // Test URL generation
     let url = wasm_tools_config.generate_download_url("1.0.0", "linux_amd64")?;
     assert!(url.contains("github.com"));

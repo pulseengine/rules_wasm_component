@@ -120,7 +120,7 @@ impl ChecksumManager {
     /// Get tool information from JSON file
     pub async fn get_tool_info(&self, tool_name: &str) -> Result<ToolInfo> {
         let file_path = self.tools_dir.join(format!("{}.json", tool_name));
-        
+
         let content = fs::read_to_string(&file_path)
             .await
             .with_context(|| format!("Failed to read tool file: {}", file_path.display()))?;
@@ -142,7 +142,7 @@ impl ChecksumManager {
     /// Save tool information to JSON file
     pub async fn save_tool_info(&self, tool_info: &ToolInfo) -> Result<()> {
         let file_path = self.tools_dir.join(format!("{}.json", tool_info.tool_name));
-        
+
         debug!("Saving tool info to: {}", file_path.display());
 
         let json_content = serde_json::to_string_pretty(tool_info)
@@ -232,7 +232,7 @@ impl ChecksumManager {
     /// Update the registry.bzl file with hardcoded data
     pub async fn update_registry_bzl(&self) -> Result<()> {
         let registry_path = self.checksums_dir.join("registry.bzl");
-        
+
         debug!("Updating registry.bzl at: {}", registry_path.display());
 
         // Read current registry file
@@ -250,7 +250,7 @@ impl ChecksumManager {
             if let Some(end_pos) = content.find(end_marker) {
                 // Generate new hardcoded data
                 let new_data = self.generate_hardcoded_data().await?;
-                
+
                 // Replace the section
                 let before = &content[..start_pos];
                 let after = &content[end_pos..];

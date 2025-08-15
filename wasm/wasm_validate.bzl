@@ -1,6 +1,6 @@
 """WASM validation rule implementation"""
 
-load("//providers:providers.bzl", "WasmComponentInfo", "WasmValidationInfo", "WasmSignatureInfo", "WasmKeyInfo")
+load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmSignatureInfo", "WasmValidationInfo")
 
 def _wasm_validate_impl(ctx):
     """Implementation of wasm_validate rule"""
@@ -115,10 +115,10 @@ Date: $(date)
     # Step 5: Check for signature verification (optional)
     signature_result = None
     combine_inputs = [header_file, validation_result, component_result, module_result]
-    
+
     if ctx.attr.verify_signature:
         signature_result = ctx.actions.declare_file(ctx.label.name + "_signature.txt")
-        
+
         # Determine signature verification approach
         if ctx.attr.public_key:
             public_key = ctx.file.public_key
@@ -138,12 +138,12 @@ Date: $(date)
             # Try to auto-detect embedded signatures
             verify_args = []
             verify_inputs = [wasm_file]
-        
+
         # Add signature file if provided
         if ctx.file.signature_file:
             verify_args.extend(["-S", ctx.file.signature_file.path])
             verify_inputs.append(ctx.file.signature_file)
-        
+
         # Run signature verification
         ctx.actions.run_shell(
             command = """
@@ -170,7 +170,7 @@ Date: $(date)
             mnemonic = "WasmVerifySignature",
             progress_message = "Verifying signature for %s" % ctx.label,
         )
-        
+
         combine_inputs.append(signature_result)
 
     # Step 6: Combine all results into final report
@@ -245,7 +245,7 @@ wasm_validate = rule(
 
         wasm_validate(
             name = "validate_and_verify_signed_component",
-            component = ":my_component", 
+            component = ":my_component",
             verify_signature = True,
             signing_keys = ":my_keys",
         )

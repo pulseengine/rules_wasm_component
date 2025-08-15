@@ -5,8 +5,9 @@ This directory contains temporary test files used during development and debuggi
 ## Purpose
 
 These files are for:
+
 - Quick TinyGo compilation tests
-- Manual toolchain validation  
+- Manual toolchain validation
 - Debugging build issues
 - Temporary experimental code
 

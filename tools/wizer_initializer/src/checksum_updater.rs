@@ -109,7 +109,7 @@ fn get_tool_patterns() -> Vec<ToolPattern> {
                 "https://github.com/bytecodealliance/wasm-tools/releases/download/v{version}/wasm-tools-{version}-x86_64-macos.tar.gz",
             )
             .add_platform(
-                "darwin_arm64", 
+                "darwin_arm64",
                 "https://github.com/bytecodealliance/wasm-tools/releases/download/v{version}/wasm-tools-{version}-aarch64-macos.tar.gz",
             )
             .add_platform(

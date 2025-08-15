@@ -1,6 +1,6 @@
 """WebAssembly signing rules using wasmsign2"""
 
-load("//providers:providers.bzl", "WasmComponentInfo", "WasmSignatureInfo", "WasmKeyInfo")
+load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmSignatureInfo")
 
 def _wasm_keygen_impl(ctx):
     """Implementation of wasm_keygen rule"""
@@ -305,7 +305,7 @@ def _wasm_verify_impl(ctx):
             echo "Component: {}" >> {}
             echo "Date: $(date)" >> {}
             echo "" >> {}
-            
+
             if {} {} >> {} 2>&1; then
                 echo "✅ Signature verification PASSED" >> {}
                 echo "VERIFICATION_SUCCESS" > {}.status

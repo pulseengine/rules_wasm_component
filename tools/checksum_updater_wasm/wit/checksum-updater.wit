@@ -1,5 +1,5 @@
 /// WebAssembly Component Interface for Checksum Updater
-/// 
+///
 /// This component provides automated checksum management for WebAssembly tools,
 /// demonstrating self-bootstrapping capabilities using WASI Preview 2.
 
@@ -21,7 +21,7 @@ record update-config {
 record update-result {
     /// Number of tools processed
     tools-processed: u32,
-    /// Number of tools updated  
+    /// Number of tools updated
     tools-updated: u32,
     /// Number of new versions found
     new-versions-found: u32,
@@ -63,22 +63,22 @@ record validation-result {
 interface updater {
     /// List all available tools
     list-tools: func() -> result<list<string>, string>;
-    
+
     /// Update specific tools
     update-tools: func(tools: list<string>, config: update-config) -> result<update-result, string>;
-    
+
     /// Update all tools
     update-all-tools: func(config: update-config) -> result<update-result, string>;
-    
+
     /// Validate checksums for tools
     validate-tools: func(tools: list<string>, fix-errors: bool) -> result<validation-result, string>;
-    
+
     /// Get detailed information about updates (JSON format)
     get-update-details: func() -> result<string, string>;
-    
+
     /// Self-update: Check if this component has a newer version available
     check-self-update: func() -> result<option<string>, string>;
-    
+
     /// Self-update: Download and prepare new version of this component
     perform-self-update: func(version: string) -> result<bool, string>;
 }
@@ -87,13 +87,13 @@ interface updater {
 interface bootstrap {
     /// Get the current version of this component
     get-version: func() -> string;
-    
+
     /// Get the path where this component is located
     get-component-path: func() -> result<string, string>;
-    
+
     /// Replace this component with a new version
     replace-self: func(new-component-path: string) -> result<bool, string>;
-    
+
     /// Verify that a component file is valid
     verify-component: func(component-path: string) -> result<bool, string>;
 }
@@ -106,7 +106,7 @@ world checksum-updater {
     import wasi:http/outgoing-handler@0.2.0;
     import wasi:io/streams@0.2.0;
     import wasi:clocks/wall-clock@0.2.0;
-    
+
     /// Export our interfaces
     export updater;
     export bootstrap;

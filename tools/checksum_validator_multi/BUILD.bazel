@@ -3,7 +3,7 @@ Production Checksum Management System for CI
 
 This is a CRITICAL CI COMPONENT that our build system uses to manage tool dependencies.
 We eat our own dog food - this WebAssembly component handles:
-- Downloading latest releases from GitHub  
+- Downloading latest releases from GitHub
 - Calculating SHA256 checksums
 - Updating our checksums/ registry
 - Validating tool dependencies in CI
@@ -38,7 +38,7 @@ package(default_visibility = ["//visibility:public"])
 go_wasm_component(
     name = "production_checksum_component",
     srcs = ["production_checksum_updater/main.go"],
-    go_mod = "production_checksum_updater/go.mod", 
+    go_mod = "production_checksum_updater/go.mod",
     optimization = "release",
 )
 
@@ -46,41 +46,41 @@ go_wasm_component(
 
 # Update checksums for all tools (used by CI)
 checksum_updater(
-    name = "update_checksums", 
-    component = ":production_checksum_component",
+    name = "update_checksums",
     checksums_dir = "checksums",
+    component = ":production_checksum_component",
 )
 
-# Update specific tools (used by CI and developers)  
+# Update specific tools (used by CI and developers)
 checksum_updater(
     name = "update_wasm_tools",
-    component = ":production_checksum_component", 
     checksums_dir = "checksums",
+    component = ":production_checksum_component",
 )
 
 checksum_updater(
     name = "update_tinygo",
+    checksums_dir = "checksums",
     component = ":production_checksum_component",
-    checksums_dir = "checksums", 
 )
 
 # CI Test: Validate our checksum registry is current
 validate_checksums_test(
     name = "checksums_current_test",
-    component = ":production_checksum_component",
     checksums_dir = "checksums",
+    component = ":production_checksum_component",
     tools = [
-        "wasm-tools",
-        "wasmtime", 
-        "wit-bindgen",
         "tinygo",
+        "wasm-tools",
+        "wasmtime",
+        "wit-bindgen",
         "wkg",
     ],
 )
 
 # Build test to ensure our production component compiles
 build_test(
-    name = "production_component_build_test", 
+    name = "production_component_build_test",
     targets = [
         ":production_checksum_component",
         ":update_checksums",
@@ -101,5 +101,5 @@ test_suite(
 # Main production component alias
 alias(
     name = "checksum_updater",
-    actual = ":production_checksum_component", 
+    actual = ":production_checksum_component",
 )

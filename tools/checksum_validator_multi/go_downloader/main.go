@@ -48,13 +48,13 @@ type ChecksumValidationRequest struct {
 
 // ChecksumValidationResult represents validation results
 type ChecksumValidationResult struct {
-	FilePath      string `json:"file_path"`
-	ActualSHA256  string `json:"actual_sha256"`
+	FilePath       string `json:"file_path"`
+	ActualSHA256   string `json:"actual_sha256"`
 	ExpectedSHA256 string `json:"expected_sha256"`
-	Valid         bool   `json:"valid"`
-	FileSize      int64  `json:"file_size"`
+	Valid          bool   `json:"valid"`
+	FileSize       int64  `json:"file_size"`
 	ValidationTime int64  `json:"validation_time_ms"`
-	Error         string `json:"error,omitempty"`
+	Error          string `json:"error,omitempty"`
 }
 
 func main() {
@@ -180,7 +180,7 @@ func handleDownloadAndValidate() {
 
 func handleTestConnection() {
 	fmt.Println("🔗 Testing network connectivity...")
-	
+
 	testURLs := []string{
 		"https://api.github.com",
 		"https://github.com",
@@ -189,7 +189,7 @@ func handleTestConnection() {
 
 	for _, url := range testURLs {
 		fmt.Printf("  Testing %s... ", url)
-		
+
 		client := &http.Client{Timeout: 10 * time.Second}
 		resp, err := client.Get(url)
 		if err != nil {
@@ -197,14 +197,14 @@ func handleTestConnection() {
 			continue
 		}
 		defer resp.Body.Close()
-		
+
 		fmt.Printf("✅ %s\n", resp.Status)
 	}
 }
 
 func downloadFile(url, outputPath string) DownloadResult {
 	startTime := time.Now()
-	
+
 	result := DownloadResult{
 		URL:       url,
 		LocalPath: outputPath,
@@ -243,7 +243,7 @@ func downloadFile(url, outputPath string) DownloadResult {
 	// Copy data and calculate SHA256
 	hasher := sha256.New()
 	writer := io.MultiWriter(file, hasher)
-	
+
 	size, err := io.Copy(writer, resp.Body)
 	if err != nil {
 		result.Error = fmt.Sprintf("Failed to copy data: %v", err)
@@ -260,7 +260,7 @@ func downloadFile(url, outputPath string) DownloadResult {
 
 func fetchLatestRelease(repo string) (*GitHubRelease, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo)
-	
+
 	fmt.Printf("🔍 Fetching release info: %s\n", url)
 
 	resp, err := http.Get(url)
@@ -288,7 +288,7 @@ func fetchLatestRelease(repo string) (*GitHubRelease, error) {
 
 func validateChecksum(filePath, expectedSHA256 string) ChecksumValidationResult {
 	startTime := time.Now()
-	
+
 	result := ChecksumValidationResult{
 		FilePath:       filePath,
 		ExpectedSHA256: expectedSHA256,
@@ -359,7 +359,7 @@ func printValidationResult(result ChecksumValidationResult) {
 	fmt.Println("\n🔍 Checksum Validation Result:")
 	fmt.Printf("  File: %s\n", result.FilePath)
 	fmt.Printf("  Size: %s\n", formatBytes(result.FileSize))
-	
+
 	if result.Error != "" {
 		fmt.Printf("  ❌ Status: FAILED\n")
 		fmt.Printf("  💥 Error: %s\n", result.Error)
@@ -369,7 +369,7 @@ func printValidationResult(result ChecksumValidationResult) {
 	fmt.Printf("  🔐 Expected SHA256: %s\n", result.ExpectedSHA256)
 	fmt.Printf("  🔐 Actual SHA256:   %s\n", result.ActualSHA256)
 	fmt.Printf("  ⏱️  Time: %dms\n", result.ValidationTime)
-	
+
 	if result.Valid {
 		fmt.Printf("  ✅ Status: VALID\n")
 	} else {

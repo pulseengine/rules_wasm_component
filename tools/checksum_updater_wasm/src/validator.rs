@@ -77,12 +77,12 @@ impl ChecksumValidator {
                 Ok(tool_results) => {
                     for validation in tool_results {
                         total_validations += 1;
-                        
+
                         if validation.is_valid {
                             valid_checksums += 1;
                         } else {
                             invalid_checksums += 1;
-                            
+
                             if let Some(ref error) = validation.error {
                                 errors.push(ValidationError {
                                     tool_name: validation.tool_name.clone(),
@@ -93,7 +93,7 @@ impl ChecksumValidator {
                                 });
                             }
                         }
-                        
+
                         if fix_errors && !validation.is_valid && validation.actual_checksum.is_some() {
                             match self.fix_checksum(&validation, manager).await {
                                 Ok(()) => {
@@ -350,7 +350,7 @@ impl ValidationResults {
         if self.valid_checksums + self.invalid_checksums == 0 {
             return 100.0;
         }
-        
+
         (self.valid_checksums as f64 / (self.valid_checksums + self.invalid_checksums) as f64) * 100.0
     }
 }

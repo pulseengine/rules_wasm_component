@@ -477,8 +477,8 @@ fn generate_update_summary(
             println!();
             for update in &results.updates {
                 println!("#### {}", update.tool_name);
-                println!("- **Version**: {} → {}", 
-                        update.old_version.as_deref().unwrap_or("none"), 
+                println!("- **Version**: {} → {}",
+                        update.old_version.as_deref().unwrap_or("none"),
                         update.new_version);
                 println!("- **Change type**: {}", update.version_change);
                 if let Some(release_notes) = &update.release_notes_url {
@@ -603,7 +603,7 @@ mod tests {
             "list",
         ]);
         assert!(cli.is_ok());
-        
+
         match cli.unwrap().output_format {
             OutputFormat::Json => (),
             _ => panic!("Expected JSON format"),

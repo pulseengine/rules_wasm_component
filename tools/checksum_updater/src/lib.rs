@@ -1,4 +1,4 @@
-/*! 
+/*!
 Checksum updater library for WebAssembly tools.
 
 This library provides functionality to automatically update checksums for

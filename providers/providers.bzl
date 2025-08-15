@@ -70,8 +70,84 @@ WasmKeyInfo = provider(
     doc = "Information about WebAssembly signing key pairs",
     fields = {
         "public_key": "Public key file",
-        "secret_key": "Secret key file", 
+        "secret_key": "Secret key file",
         "key_format": "Key format (compact, openssh, der, pem)",
         "key_metadata": "Dict with key information (algorithm, created_date, etc.)",
+    },
+)
+
+# Provider for WASM OCI image information
+WasmOciInfo = provider(
+    doc = "Information about WebAssembly component OCI images",
+    fields = {
+        "image_ref": "Full OCI image reference (registry/namespace/name:tag)",
+        "registry": "Registry URL",
+        "namespace": "Registry namespace/organization",
+        "name": "Component name",
+        "tags": "List of image tags",
+        "digest": "Image content digest (sha256:...)",
+        "annotations": "Dict of OCI annotations",
+        "manifest": "OCI manifest file (if available)",
+        "config": "OCI config file (if available)",
+        "component_file": "Associated WASM component file",
+        "is_signed": "Boolean indicating if OCI image is signed",
+        "signature_annotations": "Dict of signature-related annotations",
+    },
+)
+
+# Provider for registry configuration and authentication
+WasmRegistryInfo = provider(
+    doc = "Information about WebAssembly component registry configuration",
+    fields = {
+        "registries": "Dict of registry name to configuration",
+        "auth_configs": "Dict of registry to authentication configuration",
+        "default_registry": "Default registry for operations",
+        "config_file": "Generated wkg config file (if any)",
+        "credentials": "Dict of registry credentials (tokens, usernames)",
+    },
+)
+
+# Provider for WASM security policy information
+WasmSecurityPolicyInfo = provider(
+    doc = "Information about WebAssembly component security policies",
+    fields = {
+        "policy_file": "Security policy configuration file",
+        "default_signing_required": "Boolean indicating if signing is required by default",
+        "key_source": "Default key source (file, env, keychain)",
+        "signature_type": "Default signature type (embedded, detached)",
+        "openssh_format": "Boolean indicating if OpenSSH format is default",
+    },
+)
+
+# Provider for WASM multi-architecture information
+WasmMultiArchInfo = provider(
+    doc = "Information about WebAssembly component multi-architecture builds",
+    fields = {
+        "architectures": "Dict of architecture name to component information",
+        "manifest": "Multi-architecture manifest file",
+        "default_architecture": "Default architecture for single-arch scenarios",
+        "package_name": "Package name for the multi-arch component",
+        "version": "Package version",
+    },
+)
+
+# Provider for WASM component metadata extraction
+WasmComponentMetadataInfo = provider(
+    doc = "Information about extracted WebAssembly component metadata",
+    fields = {
+        "metadata_file": "JSON file containing extracted metadata",
+        "component_file": "Source WebAssembly component file",
+        "extraction_script": "Script used for metadata extraction",
+    },
+)
+
+# Provider for WASM OCI metadata mapping
+WasmOciMetadataMappingInfo = provider(
+    doc = "Information about OCI metadata mapping for WebAssembly components",
+    fields = {
+        "mapping_file": "JSON file containing OCI annotation mapping",
+        "oci_annotations": "Dict of OCI annotations",
+        "component_info": "WasmComponentInfo provider",
+        "metadata_sources": "List of metadata sources used",
     },
 )

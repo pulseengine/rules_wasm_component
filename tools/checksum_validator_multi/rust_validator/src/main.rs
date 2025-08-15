@@ -118,14 +118,18 @@ fn show_help() {
     println!("  manage-registry <checksums-dir>");
     println!("  list-tools <checksums-dir>");
     println!("  get-tool-info <checksums-dir> <tool-name>");
-    println!("  update-tool <checksums-dir> <tool-name> <version> <platform> <sha256> <url-suffix>");
+    println!(
+        "  update-tool <checksums-dir> <tool-name> <version> <platform> <sha256> <url-suffix>"
+    );
     println!("  verify-integrity <checksums-dir>");
     println!("  batch-validate <checksums-dir> <files-list>");
     println!("  test-rust");
     println!();
     println!("Examples:");
     println!("  validate ./file.tar.gz abc123...");
-    println!(r#"  validate-json '{{"file_path":"./file.tar.gz","expected_sha256":"abc123...","tool_name":"wasm-tools"}}'"#);
+    println!(
+        r#"  validate-json '{{"file_path":"./file.tar.gz","expected_sha256":"abc123...","tool_name":"wasm-tools"}}'"#
+    );
     println!("  manage-registry ./checksums");
     println!("  list-tools ./checksums");
     println!("  test-rust");
@@ -159,7 +163,7 @@ fn handle_validate_json(args: &[String]) {
                 Ok(result) => {
                     println!("📋 JSON Validation Result:");
                     print_validation_result(&result);
-                    
+
                     // Output JSON result for integration
                     match serde_json::to_string_pretty(&result) {
                         Ok(json_result) => println!("\n🔗 JSON Output:\n{}", json_result),
@@ -239,8 +243,18 @@ fn handle_update_tool(args: &[String]) {
     let sha256 = &args[6];
     let url_suffix = &args[7];
 
-    match update_tool_info(checksums_dir, tool_name, version, platform, sha256, url_suffix) {
-        Ok(_) => println!("✅ Tool updated successfully: {} v{} ({})", tool_name, version, platform),
+    match update_tool_info(
+        checksums_dir,
+        tool_name,
+        version,
+        platform,
+        sha256,
+        url_suffix,
+    ) {
+        Ok(_) => println!(
+            "✅ Tool updated successfully: {} v{} ({})",
+            tool_name, version, platform
+        ),
         Err(e) => eprintln!("❌ Failed to update tool: {}", e),
     }
 }
@@ -278,16 +292,20 @@ fn handle_batch_validate(args: &[String]) {
             println!("📊 Batch Validation Results:");
             let total = results.len();
             let valid = results.iter().filter(|r| r.valid).count();
-            
+
             println!("  Total files: {}", total);
             println!("  Valid: {}", valid);
             println!("  Invalid: {}", total - valid);
-            
+
             for result in &results {
                 if result.valid {
                     println!("  ✅ {}", result.file_path);
                 } else {
-                    println!("  ❌ {} ({})", result.file_path, result.error.as_ref().unwrap_or(&"mismatch".to_string()));
+                    println!(
+                        "  ❌ {} ({})",
+                        result.file_path,
+                        result.error.as_ref().unwrap_or(&"mismatch".to_string())
+                    );
                 }
             }
         }
@@ -297,13 +315,13 @@ fn handle_batch_validate(args: &[String]) {
 
 fn handle_test_rust() {
     println!("🧪 Testing Rust component functionality...");
-    
+
     // Test 1: SHA256 calculation
     println!("  Test 1: SHA256 calculation");
     let test_data = b"Hello, WebAssembly Component Model!";
     let hash = calculate_sha256_bytes(test_data);
     println!("    ✅ SHA256: {}", hash);
-    
+
     // Test 2: JSON serialization
     println!("  Test 2: JSON serialization");
     let test_result = ValidationResult {
@@ -315,27 +333,27 @@ fn handle_test_rust() {
         validation_time_ms: 42,
         error: None,
     };
-    
+
     match serde_json::to_string_pretty(&test_result) {
         Ok(_) => println!("    ✅ JSON serialization successful"),
         Err(e) => println!("    ❌ JSON serialization failed: {}", e),
     }
-    
+
     // Test 3: Current directory access
     println!("  Test 3: File system access");
     match std::env::current_dir() {
         Ok(dir) => println!("    ✅ Current directory: {}", dir.display()),
         Err(e) => println!("    ❌ Failed to get current directory: {}", e),
     }
-    
+
     println!("🎉 Rust component tests completed!");
 }
 
 fn validate_file_checksum(file_path: &str, expected_sha256: &str) -> Result<ValidationResult> {
     let start_time = std::time::Instant::now();
-    
+
     let path = Path::new(file_path);
-    
+
     // Check if file exists
     if !path.exists() {
         return Ok(ValidationResult {
@@ -357,17 +375,17 @@ fn validate_file_checksum(file_path: &str, expected_sha256: &str) -> Result<Vali
     let mut file = fs::File::open(path)?;
     let mut hasher = Sha256::new();
     let mut buffer = [0; 8192];
-    
+
     loop {
         match file.read(&mut buffer)? {
             0 => break,
             n => hasher.update(&buffer[..n]),
         }
     }
-    
+
     let actual_sha256 = format!("{:x}", hasher.finalize());
     let valid = actual_sha256.eq_ignore_ascii_case(expected_sha256);
-    
+
     Ok(ValidationResult {
         file_path: file_path.to_string(),
         actual_sha256,
@@ -388,7 +406,7 @@ fn calculate_sha256_bytes(data: &[u8]) -> String {
 fn manage_checksum_registry(checksums_dir: &Path) -> Result<RegistryUpdateResult> {
     let start_time = std::time::Instant::now();
     let tools_dir = checksums_dir.join("tools");
-    
+
     if !tools_dir.exists() {
         fs::create_dir_all(&tools_dir)?;
     }
@@ -406,10 +424,10 @@ fn manage_checksum_registry(checksums_dir: &Path) -> Result<RegistryUpdateResult
         for entry in fs::read_dir(&tools_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 result.tools_processed += 1;
-                
+
                 match validate_tool_json(&path) {
                     Ok(valid) => {
                         if valid {
@@ -435,12 +453,12 @@ fn validate_tool_json(json_path: &Path) -> Result<bool> {
 fn list_tools(checksums_dir: &Path) -> Result<Vec<String>> {
     let tools_dir = checksums_dir.join("tools");
     let mut tools = Vec::new();
-    
+
     if tools_dir.exists() {
         for entry in fs::read_dir(&tools_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
                     tools.push(stem.to_string());
@@ -448,21 +466,32 @@ fn list_tools(checksums_dir: &Path) -> Result<Vec<String>> {
             }
         }
     }
-    
+
     tools.sort();
     Ok(tools)
 }
 
 fn get_tool_info(checksums_dir: &Path, tool_name: &str) -> Result<ToolInfo> {
-    let tool_path = checksums_dir.join("tools").join(format!("{}.json", tool_name));
+    let tool_path = checksums_dir
+        .join("tools")
+        .join(format!("{}.json", tool_name));
     let content = fs::read_to_string(tool_path)?;
     let tool_info: ToolInfo = serde_json::from_str(&content)?;
     Ok(tool_info)
 }
 
-fn update_tool_info(checksums_dir: &Path, tool_name: &str, version: &str, platform: &str, sha256: &str, url_suffix: &str) -> Result<()> {
-    let tool_path = checksums_dir.join("tools").join(format!("{}.json", tool_name));
-    
+fn update_tool_info(
+    checksums_dir: &Path,
+    tool_name: &str,
+    version: &str,
+    platform: &str,
+    sha256: &str,
+    url_suffix: &str,
+) -> Result<()> {
+    let tool_path = checksums_dir
+        .join("tools")
+        .join(format!("{}.json", tool_name));
+
     let mut tool_info = if tool_path.exists() {
         let content = fs::read_to_string(&tool_path)?;
         serde_json::from_str::<ToolInfo>(&content)?
@@ -503,14 +532,14 @@ fn update_tool_info(checksums_dir: &Path, tool_name: &str, version: &str, platfo
 
 fn verify_registry_integrity(checksums_dir: &Path) -> Result<bool> {
     let tools = list_tools(checksums_dir)?;
-    
+
     for tool_name in tools {
         match get_tool_info(checksums_dir, &tool_name) {
-            Ok(_) => {}, // Valid JSON
+            Ok(_) => {}                 // Valid JSON
             Err(_) => return Ok(false), // Invalid JSON
         }
     }
-    
+
     Ok(true)
 }
 
@@ -524,7 +553,7 @@ fn print_validation_result(result: &ValidationResult) {
     println!("\n🔍 Checksum Validation Result:");
     println!("  File: {}", result.file_path);
     println!("  Size: {} bytes", result.file_size);
-    
+
     if let Some(error) = &result.error {
         println!("  ❌ Status: FAILED");
         println!("  💥 Error: {}", error);
@@ -534,7 +563,7 @@ fn print_validation_result(result: &ValidationResult) {
     println!("  🔐 Expected SHA256: {}", result.expected_sha256);
     println!("  🔐 Actual SHA256:   {}", result.actual_sha256);
     println!("  ⏱️  Time: {}ms", result.validation_time_ms);
-    
+
     if result.valid {
         println!("  ✅ Status: VALID");
     } else {
@@ -547,17 +576,24 @@ fn print_tool_info(tool_info: &ToolInfo) {
     println!("  Name: {}", tool_info.tool_name);
     println!("  Repository: {}", tool_info.github_repo);
     println!("  Latest Version: {}", tool_info.latest_version);
-    println!("  Last Checked: {}", tool_info.last_checked.format("%Y-%m-%d %H:%M:%S UTC"));
+    println!(
+        "  Last Checked: {}",
+        tool_info.last_checked.format("%Y-%m-%d %H:%M:%S UTC")
+    );
     println!("  Versions: {}", tool_info.versions.len());
     println!("  Platforms: {}", tool_info.supported_platforms.len());
-    
+
     if !tool_info.versions.is_empty() {
         println!("\n📋 Available Versions:");
         let mut versions: Vec<_> = tool_info.versions.keys().collect();
         versions.sort();
         for version in versions {
             if let Some(version_info) = tool_info.versions.get(version) {
-                println!("  - {} ({} platforms)", version, version_info.platforms.len());
+                println!(
+                    "  - {} ({} platforms)",
+                    version,
+                    version_info.platforms.len()
+                );
             }
         }
     }

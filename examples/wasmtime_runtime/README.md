@@ -55,12 +55,12 @@ async fn main() -> anyhow::Result<()> {
     // Create optimized runtime
     let config = RuntimeConfig::production().build()?;
     let loader = ComponentLoader::new(config)?;
-    
+
     // Load and run component
     let component = loader.load_component("calculator.wasm").await?;
     let mut instance = component.instantiate().await?;
     let result = instance.call_function("add", &[1.0.into(), 2.0.into()]).await?;
-    
+
     println!("Result: {}", result);
     Ok(())
 }
@@ -93,6 +93,7 @@ Interactive tool for testing and executing components.
 ```
 
 **Interactive mode commands:**
+
 - `function_name [args...]` - Call component functions
 - `metrics` - Show execution statistics
 - `help` - Show available commands
@@ -213,17 +214,21 @@ let config = RuntimeConfig::sandbox()
 The examples include a comprehensive set of host functions that components can import:
 
 ### Math Functions
+
 - `math_pow(base, exp)` - Power calculation
 - `math_sqrt(value)` - Square root
 
 ### String Functions
+
 - `string_length(str)` - Get string length
 - `string_upper(str)` - Convert to uppercase
 
 ### Array Functions
+
 - `array_sum(array)` - Sum numeric array
 
 ### Utility Functions
+
 - `current_timestamp()` - Get Unix timestamp
 - `random_number()` - Generate random 0-1
 - `host_log(message)` - Log from component
@@ -275,7 +280,7 @@ println!("Average load time: {:?}", stats.average_load_time);
 // Function call statistics
 let exec_metrics = metrics.get_execution_metrics("calculator");
 for (name, stats) in exec_metrics.functions {
-    println!("Function {}: {} calls, {:?} avg", 
+    println!("Function {}: {} calls, {:?} avg",
              name, stats.call_count, stats.average_execution_time);
 }
 
@@ -397,14 +402,14 @@ async fn execute_component_function(
     args: &[Value],
 ) -> Result<Value> {
     info!("Executing function {}", function_name);
-    
+
     let result = instance.call_function(function_name, args).await;
-    
+
     match &result {
         Ok(_) => info!("Function executed successfully"),
         Err(e) => warn!("Function execution failed: {}", e),
     }
-    
+
     result
 }
 ```

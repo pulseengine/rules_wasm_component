@@ -25,12 +25,12 @@ def _rust_wasm_component_impl(ctx):
     else:
         # Detect if the WASM module is already a component using wasm-tools
         detect_output = ctx.actions.declare_file(ctx.label.name + ".detect.txt")
-        
+
         args = ctx.actions.args()
         args.add("validate")
         args.add(wasm_module)
         args.add("--features", "component-model")
-        
+
         ctx.actions.run_shell(
             command = """
             if "$1" validate "$2" --features component-model >/dev/null 2>&1; then
@@ -45,7 +45,7 @@ def _rust_wasm_component_impl(ctx):
             mnemonic = "WasmDetect",
             progress_message = "Detecting WASM type for %s" % ctx.label,
         )
-        
+
         # For wasm32-wasip2 targets, the output is already a component
         # We can skip conversion by directly using the input
         component_wasm = wasm_module
@@ -193,10 +193,10 @@ def rust_wasm_component(
 
         # Use rust_shared_library to produce cdylib .wasm files
         # Add WASI SDK tools as data dependencies to ensure they're available
-        
+
         # Filter out conflicting kwargs to avoid multiple values for parameters
         filtered_kwargs = {k: v for k, v in kwargs.items() if k not in ["tags", "visibility"]}
-        
+
         rust_shared_library(
             name = rust_library_name,
             srcs = all_srcs,

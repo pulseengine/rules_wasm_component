@@ -18,10 +18,10 @@ import (
 
 // GitHubRelease represents a GitHub release from API
 type GitHubRelease struct {
-	TagName     string    `json:"tag_name"`
-	Name        string    `json:"name"`
-	PublishedAt string    `json:"published_at"`
-	Assets      []Asset   `json:"assets"`
+	TagName     string  `json:"tag_name"`
+	Name        string  `json:"name"`
+	PublishedAt string  `json:"published_at"`
+	Assets      []Asset `json:"assets"`
 }
 
 type Asset struct {
@@ -32,17 +32,17 @@ type Asset struct {
 
 // ToolInfo matches our existing JSON structure
 type ToolInfo struct {
-	ToolName           string                    `json:"tool_name"`
-	GitHubRepo         string                    `json:"github_repo"`
-	LatestVersion      string                    `json:"latest_version"`
-	LastChecked        string                    `json:"last_checked"`
-	SupportedPlatforms []string                  `json:"supported_platforms"`
-	Versions           map[string]VersionInfo    `json:"versions"`
+	ToolName           string                 `json:"tool_name"`
+	GitHubRepo         string                 `json:"github_repo"`
+	LatestVersion      string                 `json:"latest_version"`
+	LastChecked        string                 `json:"last_checked"`
+	SupportedPlatforms []string               `json:"supported_platforms"`
+	Versions           map[string]VersionInfo `json:"versions"`
 }
 
 type VersionInfo struct {
-	ReleaseDate string                     `json:"release_date"`
-	Platforms   map[string]PlatformInfo    `json:"platforms"`
+	ReleaseDate string                  `json:"release_date"`
+	Platforms   map[string]PlatformInfo `json:"platforms"`
 }
 
 type PlatformInfo struct {
@@ -253,7 +253,7 @@ func saveToolInfo(path string, toolInfo *ToolInfo) error {
 
 func fetchLatestRelease(repo string) (*GitHubRelease, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo)
-	
+
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
@@ -296,7 +296,7 @@ func findAssetForPlatform(assets []Asset, platform, toolName string) *Asset {
 
 	for _, asset := range assets {
 		name := strings.ToLower(asset.Name)
-		
+
 		// Skip source archives
 		if strings.Contains(name, "src") || strings.Contains(name, "source") {
 			continue
@@ -343,7 +343,7 @@ func downloadAndHash(url string) (string, error) {
 func extractURLSuffix(assetName, toolName, version string) string {
 	// Remove version and tool name from asset to get suffix
 	suffix := assetName
-	
+
 	// Remove version patterns
 	versionPatterns := []string{
 		version,
@@ -351,13 +351,13 @@ func extractURLSuffix(assetName, toolName, version string) string {
 		toolName + "-" + version,
 		toolName + "-" + strings.TrimPrefix(version, "v"),
 	}
-	
+
 	for _, pattern := range versionPatterns {
 		suffix = strings.ReplaceAll(suffix, pattern, "")
 	}
-	
+
 	// Clean up the suffix
 	suffix = strings.Trim(suffix, "-_")
-	
+
 	return suffix
 }

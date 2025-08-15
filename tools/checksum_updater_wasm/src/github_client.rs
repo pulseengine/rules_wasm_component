@@ -190,7 +190,7 @@ impl GitHubClient {
             .context("Failed to parse rate limit response")?;
 
         let core = &rate_limit_response["rate"];
-        
+
         Ok(RateLimitInfo {
             limit: core["limit"].as_u64().unwrap_or(0),
             remaining: core["remaining"].as_u64().unwrap_or(0),
@@ -224,7 +224,7 @@ mod tests {
         let release = client
             .get_latest_release("bytecodealliance/wasm-tools")
             .await;
-        
+
         assert!(release.is_ok());
         let release = release.unwrap();
         assert!(!release.tag_name.is_empty());
@@ -236,7 +236,7 @@ mod tests {
     async fn test_rate_limit_check() {
         let client = GitHubClient::new();
         let rate_limit = client.get_rate_limit().await;
-        
+
         assert!(rate_limit.is_ok());
         let rate_limit = rate_limit.unwrap();
         assert!(rate_limit.limit > 0);

@@ -64,14 +64,14 @@ fi
 
 if [[ -n "$WASM_TOOLS" && -x "$WASM_TOOLS" ]]; then
     echo "  Using wasm-tools: $WASM_TOOLS"
-    
+
     echo -e "${YELLOW}  Validating Go component...${NC}"
     if "$WASM_TOOLS" validate "$GO_COMPONENT"; then
         echo -e "${GREEN}  ✅ Go component validation: PASSED${NC}"
     else
         echo "  ❌ Go component validation: FAILED"
     fi
-    
+
     echo -e "${YELLOW}  Validating Rust component...${NC}"
     if "$WASM_TOOLS" validate "$RUST_COMPONENT"; then
         echo -e "${GREEN}  ✅ Rust component validation: PASSED${NC}"
@@ -143,7 +143,7 @@ rm -f "$TEST_FILE"
 echo ""
 echo -e "${GREEN}🎉 Multi-Language Component Test Summary:${NC}"
 echo "  ✅ Go HTTP Downloader Component: Built and validated"
-echo "  ✅ Rust Checksum Validator Component: Built and validated" 
+echo "  ✅ Rust Checksum Validator Component: Built and validated"
 echo "  ✅ WASI Preview 2 Architecture: Demonstrated"
 echo "  ✅ WebAssembly Component Model: Successfully utilized"
 echo "  ✅ Cross-language composition: Architecture proven"

@@ -7,7 +7,7 @@ This example demonstrates the complete WebAssembly component signing workflow us
 This example shows how to:
 
 1. **Generate cryptographic keys** for signing WebAssembly components
-2. **Sign components** with both embedded and detached signatures  
+2. **Sign components** with both embedded and detached signatures
 3. **Verify signatures** using public keys
 4. **Integrate signature verification** into validation workflows
 5. **Use different key formats** (OpenSSH and compact)
@@ -15,27 +15,31 @@ This example shows how to:
 ## Components
 
 ### Source Code
+
 - `src/lib.rs` - Simple Rust component demonstrating integrity checking
 - `wit/example.wit` - WebAssembly Interface Type definitions
 
 ### Build Targets
 
 #### Key Generation
+
 ```bash
 # Generate OpenSSH format keys
 bazel build //examples/wasm_signing:example_keys
 
-# Generate compact format keys  
+# Generate compact format keys
 bazel build //examples/wasm_signing:compact_keys
 ```
 
 #### Component Building
+
 ```bash
 # Build the example component
 bazel build //examples/wasm_signing:example_component
 ```
 
 #### Signing Workflow
+
 ```bash
 # Sign with embedded signature
 bazel build //examples/wasm_signing:signed_component_embedded
@@ -48,6 +52,7 @@ bazel build //examples/wasm_signing:signed_raw_wasm
 ```
 
 #### Verification
+
 ```bash
 # Verify embedded signature
 bazel build //examples/wasm_signing:verify_embedded
@@ -60,6 +65,7 @@ bazel build //examples/wasm_signing:validate_with_signature_check
 ```
 
 #### Complete Test
+
 ```bash
 # Run the complete signing workflow test
 bazel build //examples/wasm_signing:test_signing_workflow
@@ -71,6 +77,7 @@ cat bazel-bin/examples/wasm_signing/signing_test_results.txt
 ## Usage Patterns
 
 ### Basic Signing
+
 ```starlark
 # Generate keys
 wasm_keygen(
@@ -78,7 +85,7 @@ wasm_keygen(
     openssh_format = True,
 )
 
-# Sign component  
+# Sign component
 wasm_sign(
     name = "signed_component",
     component = ":my_component",
@@ -88,13 +95,14 @@ wasm_sign(
 
 # Verify signature
 wasm_verify(
-    name = "verify_component", 
+    name = "verify_component",
     signed_component = ":signed_component",
     keys = ":my_keys",
 )
 ```
 
 ### Validation with Signature Check
+
 ```starlark
 # Validate and verify signature in one step
 wasm_validate(
@@ -106,6 +114,7 @@ wasm_validate(
 ```
 
 ### Different Key Formats
+
 ```starlark
 # OpenSSH format (compatible with GitHub)
 wasm_keygen(
@@ -115,12 +124,13 @@ wasm_keygen(
 
 # Compact format (wasmsign2 native)
 wasm_keygen(
-    name = "compact_keys", 
+    name = "compact_keys",
     openssh_format = False,
 )
 ```
 
 ### GitHub Integration
+
 ```starlark
 # Verify using GitHub public keys
 wasm_verify(
@@ -133,14 +143,17 @@ wasm_verify(
 ## Security Features
 
 ### Supported Signature Types
+
 - **Embedded signatures**: Signature embedded in the WASM component
 - **Detached signatures**: Separate `.sig` file containing the signature
 
 ### Key Formats
+
 - **OpenSSH**: Ed25519 keys compatible with GitHub SSH keys
 - **Compact**: Native wasmsign2 format for optimal performance
 
 ### Verification Methods
+
 - **Public key files**: Direct verification using public key
 - **Key pairs**: Use generated key pairs for signing and verification
 - **GitHub accounts**: Fetch and verify using GitHub SSH keys
@@ -169,6 +182,7 @@ For production use:
 ## Advanced Features
 
 ### Partial Verification
+
 ```starlark
 wasm_verify(
     name = "partial_verify",
@@ -179,7 +193,9 @@ wasm_verify(
 ```
 
 ### Multi-signature Support
+
 Multiple signatures can be added to the same component by chaining signing operations.
 
 ### Custom Verification Workflows
+
 The provider system allows building custom verification workflows that combine multiple verification methods.
