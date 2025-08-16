@@ -1,0 +1,40 @@
+"""WASM Tools Integration Component for universal tool operations
+
+This component provides unified access to wasm-tools operations across
+different build systems and platforms, replacing direct tool invocations
+with a consistent interface.
+"""
+
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Build the WASM tools integration component as a CLI tool
+rust_binary(
+    name = "wasm_tools_component",
+    srcs = [
+        "src/lib.rs",
+        "src/main.rs",
+    ],
+    deps = [
+        "@crates//:anyhow",
+        "@crates//:serde",
+        "@crates//:serde_json",
+    ],
+    # Note: This component calls the system wasm-tools binary
+    # Future enhancement: integrate wasm-tools as a library dependency
+)
+
+# Export WIT interface for external use
+filegroup(
+    name = "wit_files",
+    srcs = ["wit/wasm-tools.wit"],
+    visibility = ["//visibility:public"],
+)
+
+# Export for toolchain use
+alias(
+    name = "wasm_tools",
+    actual = ":wasm_tools_component",
+    visibility = ["//visibility:public"],
+)

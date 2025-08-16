@@ -3,7 +3,7 @@
 This meta-test suite validates multi-language support across the entire ecosystem:
 - Rust components (existing, well-tested)
 - Go components with TinyGo + WASI Preview 2
-- JavaScript components with jco + ComponentizeJS  
+- JavaScript components with jco + ComponentizeJS
 - C/C++ components with WASI SDK + clang
 
 Test Coverage Achievement:

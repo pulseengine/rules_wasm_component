@@ -6,21 +6,21 @@ load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "valid
 
 def _get_nodejs_toolchain_info(repository_ctx):
     """Get Node.js toolchain info from the registered hermetic toolchain"""
-    
+
     # In MODULE.bazel mode with rules_nodejs, we need to access the hermetic binaries
     # The nodejs toolchain should make node and npm available through PATH
-    
+
     # Try to find binaries through repository_ctx.which
     # This should work if the nodejs toolchain properly sets up the PATH
     node_binary = repository_ctx.which("node")
     npm_binary = repository_ctx.which("npm")
-    
+
     if node_binary and npm_binary:
         return struct(
             node = str(node_binary),
             npm = str(npm_binary),
         )
-    
+
     return None
 
 # jco platform mapping
@@ -209,7 +209,7 @@ def _setup_npm_jco_tools(repository_ctx):
 
     # Use the Node.js toolchain from rules_nodejs
     # The hermetic npm should be available through the nodejs_toolchains
-    
+
     # Try to find the hermetic npm binary
     # In MODULE.bazel mode, we need to reference the registered toolchain
     node_info = _get_nodejs_toolchain_info(repository_ctx)
@@ -220,7 +220,7 @@ def _setup_npm_jco_tools(repository_ctx):
         print("Warning: Node.js toolchain not available during repository rule execution")
         print("This is expected in some BCR testing environments")
         print("jco functionality will be limited but basic WebAssembly builds will work")
-        
+
         # Create a placeholder jco binary that explains the situation
         repository_ctx.file("jco", """#!/bin/bash
 echo "jco not available - Node.js toolchain not accessible during repository rule execution"
@@ -230,7 +230,7 @@ echo "Use download strategy or system jco as an alternative"
 exit 1
 """, executable = True)
         return
-    
+
     npm_binary = node_info.npm
     node_binary = node_info.node
     print("Using hermetic npm from Node.js toolchain: {}".format(npm_binary))

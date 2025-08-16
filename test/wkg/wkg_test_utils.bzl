@@ -235,7 +235,7 @@ echo "Test components: ${{TEST_COMPONENTS[@]}}"
 
 # In a full implementation, this would:
 # 1. Start the test registry
-# 2. Upload test components 
+# 2. Upload test components
 # 3. Test fetch operations
 # 4. Test publish operations
 # 5. Test OCI image creation

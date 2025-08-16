@@ -3,16 +3,16 @@ name: Deploy Documentation to Netcup
 # Workflow for deploying documentation site to hosting
 on:
   push:
-    branches: 
+    branches:
       - main
-    paths: 
-      - 'docs-site/**'
+    paths:
+      - "docs-site/**"
   workflow_dispatch:
     inputs:
       force_deploy:
-        description: 'Force deployment even if no docs-site changes'
+        description: "Force deployment even if no docs-site changes"
         required: false
-        default: 'false'
+        default: "false"
 
 jobs:
   build-and-deploy:
@@ -32,8 +32,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: docs-site/package-lock.json
 
       - name: Install dependencies
@@ -62,7 +62,7 @@ jobs:
             **/node_modules/**
             **/.DS_Store
             **/Thumbs.db
-      
+
       - name: Skip deployment (secrets not configured)
         if: env.NETCUP_URI == '' || env.NETCUP_USER == '' || env.NETCUP_PASSWORD == ''
         run: echo "Skipping deployment - Netcup secrets not configured"

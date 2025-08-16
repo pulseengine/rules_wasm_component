@@ -3,6 +3,7 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
+load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_js_workspace_action")
 
 def _js_component_impl(ctx):
     """Implementation of js_component rule"""
@@ -36,87 +37,26 @@ def _js_component_impl(ctx):
             content = json.encode(package_content),
         )
 
-    # Create working directory
-    work_dir = ctx.actions.declare_directory(ctx.attr.name + "_work")
-
-    # Prepare source files in working directory
-    args = ctx.actions.args()
-    args.add("--work-dir", work_dir.path)
-    args.add("--output", component_wasm.path)
-    args.add("--wit", wit_file.path)
-    args.add("--package-json", package_json.path)
-    args.add("--entry-point", ctx.attr.entry_point)
-
-    # Add optimization flags
-    if ctx.attr.optimize:
-        args.add("--optimize")
-
-    if ctx.attr.minify:
-        args.add("--minify")
-
-    # Add source files
-    for src in source_files:
-        args.add("--src", src.path)
-
-    # Create preparation script
-    prep_script = ctx.actions.declare_file(ctx.attr.name + "_prep.js")
-    prep_script_content = """
-const fs = require('fs');
-const path = require('path');
-
-// Parse command line arguments
-const args = process.argv.slice(2);
-const config = {};
-for (let i = 0; i < args.length; i += 2) {
-    const key = args[i].replace('--', '').replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-    const value = args[i + 1];
-    if (key === 'src') {
-        if (!config.srcs) config.srcs = [];
-        config.srcs.push(value);
-    } else {
-        config[key] = value;
-    }
-}
-
-// Create working directory structure
-fs.mkdirSync(config.workDir, { recursive: true });
-
-// Copy package.json
-fs.copyFileSync(config.packageJson, path.join(config.workDir, 'package.json'));
-
-// Copy source files maintaining directory structure
-config.srcs.forEach(srcPath => {
-    const relativePath = path.relative(process.cwd(), srcPath);
-    const destPath = path.join(config.workDir, path.basename(relativePath));
-    fs.copyFileSync(srcPath, destPath);
-});
-
-// Copy WIT file
-fs.copyFileSync(config.wit, path.join(config.workDir, 'component.wit'));
-
-console.log('Prepared JavaScript component sources in', config.workDir);
-"""
-
-    ctx.actions.write(
-        output = prep_script,
-        content = prep_script_content,
+    # Prepare JavaScript workspace using File Operations Component
+    work_dir = setup_js_workspace_action(
+        ctx,
+        sources = source_files,
+        package_json = package_json,
+        npm_deps = None,
     )
 
-    # Run preparation script
-    ctx.actions.run(
-        executable = node,
-        arguments = [prep_script.path] + [args],
-        inputs = [prep_script, package_json, wit_file] + source_files,
-        outputs = [work_dir],
-        mnemonic = "PrepareJSComponent",
-        progress_message = "Preparing JavaScript component sources for %s" % ctx.label,
+    # Copy WIT file to workspace (needed for jco componentize)
+    wit_dest = ctx.actions.declare_file("component.wit")
+    ctx.actions.symlink(
+        output = wit_dest,
+        target_file = wit_file,
     )
 
     # Run jco to build component
     jco_args = ctx.actions.args()
     jco_args.add("componentize")
     jco_args.add(paths.join(work_dir.path, ctx.attr.entry_point))
-    jco_args.add("--wit", paths.join(work_dir.path, "component.wit"))
+    jco_args.add("--wit", wit_dest.path)
     jco_args.add("--out", component_wasm.path)
 
     if ctx.attr.world:
@@ -132,7 +72,7 @@ console.log('Prepared JavaScript component sources in', config.workDir);
     ctx.actions.run(
         executable = jco,
         arguments = [jco_args],
-        inputs = [work_dir],
+        inputs = [work_dir, wit_dest],
         outputs = [component_wasm],
         mnemonic = "JCOBuild",
         progress_message = "Building JavaScript component %s with jco" % ctx.label,
@@ -203,7 +143,10 @@ js_component = rule(
             doc = "Enable compatibility mode for older JavaScript engines",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:jco_toolchain_type"],
+    toolchains = [
+        "@rules_wasm_component//toolchains:jco_toolchain_type",
+        "@rules_wasm_component//toolchains:file_ops_toolchain_type",
+    ],
     doc = """
     Builds a WebAssembly component from JavaScript/TypeScript sources using jco.
 
@@ -336,51 +279,32 @@ def _npm_install_impl(ctx):
     # Output node_modules directory
     node_modules = ctx.actions.declare_directory("node_modules")
 
-    # Create a working directory to isolate npm install
-    work_dir = ctx.actions.declare_directory(ctx.attr.name + "_npm_work")
-
-    # Copy package.json to working directory and run npm install
-    setup_script = ctx.actions.declare_file(ctx.attr.name + "_npm_setup.sh")
-    setup_content = """#!/bin/bash
-set -e
-
-WORK_DIR="{work_dir}"
-PACKAGE_JSON="{package_json}"
-NODE_MODULES="{node_modules}"
-
-# Create working directory
-mkdir -p "$WORK_DIR"
-
-# Copy package.json
-cp "$PACKAGE_JSON" "$WORK_DIR/package.json"
-
-# Run npm install in working directory
-cd "$WORK_DIR"
-{npm} install
-
-# Copy node_modules to output
-cp -r node_modules/* "$NODE_MODULES/"
-
-echo "NPM install completed successfully"
-""".format(
-        work_dir = work_dir.path,
-        package_json = package_json.path,
-        node_modules = node_modules.path,
-        npm = npm.path,
+    # Prepare JavaScript workspace using File Operations Component
+    work_dir = setup_js_workspace_action(
+        ctx,
+        sources = [],  # No source files needed for npm install
+        package_json = package_json,
+        npm_deps = None,  # Will be generated
     )
 
-    ctx.actions.write(
-        output = setup_script,
-        content = setup_content,
-        is_executable = True,
-    )
+    # Run npm install in the prepared workspace
+    npm_args = ctx.actions.args()
+    npm_args.add("install")
 
     ctx.actions.run(
-        executable = setup_script,
-        inputs = [package_json],
-        outputs = [work_dir, node_modules],
+        executable = npm,
+        arguments = [npm_args],
+        inputs = [work_dir],
+        outputs = [node_modules],
         mnemonic = "NPMInstall",
         progress_message = "Installing NPM dependencies for %s" % ctx.label,
+        env = {
+            "npm_config_cache": "/tmp/npm-cache-" + ctx.attr.name,
+        },
+        execution_requirements = {
+            "local": "1",  # NPM install requires network access
+        },
+        use_default_shell_env = True,
     )
 
     return [
@@ -399,7 +323,10 @@ npm_install = rule(
             doc = "package.json file with dependencies",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:jco_toolchain_type"],
+    toolchains = [
+        "@rules_wasm_component//toolchains:jco_toolchain_type",
+        "@rules_wasm_component//toolchains:file_ops_toolchain_type",
+    ],
     doc = """
     Installs NPM dependencies for JavaScript components.
 

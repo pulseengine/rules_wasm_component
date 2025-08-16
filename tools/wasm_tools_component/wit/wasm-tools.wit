@@ -1,0 +1,124 @@
+package build:wasm-tools@1.0.0;
+
+/// Universal WASM Tools Integration Component
+/// 
+/// This component provides unified access to wasm-tools operations across
+/// different build systems and platforms, replacing direct tool invocations
+/// with a consistent interface.
+
+/// Core WASM operations interface
+interface wasm-operations {
+    /// Result type for WASM operations
+    variant wasm-result {
+        success(wasm-info),
+        error(string),
+    }
+
+    /// Information about a WASM file
+    record wasm-info {
+        path: string,
+        size: u64,
+        is-component: bool,
+        validation-status: validation-status,
+        metadata: list<tuple<string, string>>,
+    }
+
+    /// Validation status of a WASM file
+    enum validation-status {
+        valid,
+        invalid,
+        unknown,
+    }
+
+    /// Validate a WASM file
+    validate: func(wasm-path: string, features: list<string>) -> result<wasm-info, string>;
+
+    /// Get information about a WASM file
+    inspect: func(wasm-path: string) -> result<wasm-info, string>;
+
+    /// Check if a WASM file is a component
+    is-component: func(wasm-path: string) -> result<bool, string>;
+}
+
+/// Component creation and transformation interface
+interface component-operations {
+    /// Component creation configuration
+    record component-config {
+        input-module: string,
+        output-path: string,
+        adapter: option<string>,
+        options: list<string>,
+    }
+
+    /// Component embedding configuration
+    record embed-config {
+        wit-file: string,
+        wasm-module: string,
+        output-path: string,
+        world: option<string>,
+        options: list<string>,
+    }
+
+    /// Create a new component from a WASM module
+    component-new: func(config: component-config) -> result<string, string>;
+
+    /// Embed WIT metadata into a WASM module to create a component
+    component-embed: func(config: embed-config) -> result<string, string>;
+
+    /// Extract WIT interface from a component
+    component-wit: func(component-path: string, output-path: string) -> result<string, string>;
+}
+
+/// Composition and linking interface  
+interface composition-operations {
+    /// Composition configuration
+    record compose-config {
+        components: list<string>,
+        composition-file: string,
+        output-path: string,
+        options: list<string>,
+    }
+
+    /// Link multiple components into a composition
+    compose: func(config: compose-config) -> result<string, string>;
+
+    /// Merge multiple components
+    merge: func(input-components: list<string>, output-path: string) -> result<string, string>;
+}
+
+/// Conversion and transformation interface
+interface conversion-operations {
+    /// Convert component to JavaScript bindings
+    to-js: func(component-path: string, output-dir: string, options: list<string>) -> result<string, string>;
+
+    /// Convert component to other formats
+    convert: func(input-path: string, output-path: string, format: string, options: list<string>) -> result<string, string>;
+
+    /// Strip debug information from component
+    strip: func(input-path: string, output-path: string) -> result<string, string>;
+}
+
+/// Batch operations interface for multiple files
+interface batch-operations {
+    /// Batch validation configuration
+    record batch-validation-config {
+        input-files: list<string>,
+        output-dir: string,
+        parallel: bool,
+        features: list<string>,
+    }
+
+    /// Validate multiple WASM files in batch
+    validate-batch: func(config: batch-validation-config) -> result<list<wasm-operations.wasm-info>, string>;
+
+    /// Convert multiple modules to components
+    batch-component-new: func(input-modules: list<string>, output-dir: string, adapter: option<string>) -> result<list<string>, string>;
+}
+
+world wasm-tools-world {
+    export wasm-operations;
+    export component-operations;
+    export composition-operations;
+    export conversion-operations;
+    export batch-operations;
+}

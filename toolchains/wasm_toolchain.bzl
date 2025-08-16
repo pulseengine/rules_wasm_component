@@ -9,18 +9,18 @@ load("//checksums:registry.bzl", "get_tool_info")
 
 def _get_rust_toolchain_info(repository_ctx):
     """Get Rust toolchain info from the registered hermetic toolchain"""
-    
+
     # Method 1: Try to find hermetic cargo and rustc through repository_ctx.which
     # This works in some environments where the PATH is properly set
     cargo_binary = repository_ctx.which("cargo")
     rustc_binary = repository_ctx.which("rustc")
-    
+
     if cargo_binary and rustc_binary:
         return struct(
             cargo = str(cargo_binary),
             rustc = str(rustc_binary),
         )
-    
+
     # Method 2: Try to access the Rust toolchain repository directly
     # In MODULE.bazel mode, the rust_toolchains should provide hermetic binaries
     # Try common paths where rules_rust places the hermetic tools
@@ -30,11 +30,11 @@ def _get_rust_toolchain_info(repository_ctx):
         "@rust_toolchains//:cargo",
         "@rust_toolchains//:rustc",
     ]
-    
+
     # For now, if PATH-based discovery fails, we need to fail
     # The proper fix would require deeper integration with rules_rust
     # or using a different pattern (like using rules_rust's own repository rules)
-    
+
     return None
 
 def _get_wasm_tools_platform_info(platform, version):
@@ -405,7 +405,7 @@ def _setup_downloaded_tools(repository_ctx):
     _download_wasm_tools(repository_ctx)
     _download_wac(repository_ctx)
     _download_wit_bindgen(repository_ctx)
-    
+
     # Try to download wasmsign2, but don't fail if Rust toolchain unavailable
     rust_info = _get_rust_toolchain_info(repository_ctx)
     if rust_info:
@@ -413,6 +413,7 @@ def _setup_downloaded_tools(repository_ctx):
     else:
         print("Warning: Skipping wasmsign2 build - hermetic Rust toolchain not available")
         print("This is acceptable for basic WebAssembly component compilation")
+
         # Create a minimal placeholder for compatibility
         repository_ctx.file("wasmsign2", """#!/bin/bash
 echo "wasmsign2 not available - hermetic Rust toolchain required"
@@ -433,18 +434,18 @@ def _setup_built_tools_enhanced(repository_ctx):
     """Build tools from source using git_repository + genrule approach"""
 
     print("Using modernized build strategy with git_repository + genrule approach")
-    
+
     # For build strategy, we don't create local tool files at all.
     # Instead, we'll modify the BUILD file creation to reference external git repositories.
     # This avoids running cargo in repository rules entirely.
-    
+
     # wasmsign2 is not available from git repositories, so create placeholder
     repository_ctx.file("wasmsign2", """#!/bin/bash
 echo "wasmsign2 not available in build strategy - use download strategy instead"
 echo "Basic WebAssembly component functionality is not affected"
 exit 0
 """, executable = True)
-    
+
     print("✅ Build strategy configured - tools will be built from git repositories using genrules")
 
 def _setup_hybrid_tools_enhanced(repository_ctx):
@@ -805,7 +806,7 @@ def _create_build_files(repository_ctx):
     """Create BUILD files for the toolchain"""
 
     strategy = repository_ctx.attr.strategy
-    
+
     if strategy == "build":
         # For build strategy, reference external git repositories directly
         build_content = """
@@ -821,7 +822,7 @@ alias(
 )
 
 alias(
-    name = "wac_binary", 
+    name = "wac_binary",
     actual = "@wac_src//:wac_binary",
     visibility = ["//visibility:public"],
 )
@@ -834,7 +835,7 @@ alias(
 
 alias(
     name = "wrpc_binary",
-    actual = "@wrpc_src//:wrpc_binary", 
+    actual = "@wrpc_src//:wrpc_binary",
     visibility = ["//visibility:public"],
 )
 

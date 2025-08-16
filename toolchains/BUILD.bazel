@@ -52,6 +52,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for File Operations Component
+toolchain_type(
+    name = "file_ops_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for toolchain implementation
 bzl_library(
     name = "wasm_toolchain",
@@ -133,5 +139,31 @@ bzl_library(
     visibility = ["//visibility:public"],
 )
 
+# Bzl library for File Operations toolchain implementation
+bzl_library(
+    name = "file_ops_toolchain",
+    srcs = ["file_ops_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+)
+
 # Note: C++ toolchain configuration has been moved to @wasi_sdk repository
 # The cc_toolchain is now registered via @wasi_sdk//:cc_toolchain in MODULE.bazel
+
+# File Operations Component toolchain configuration
+load("//toolchains:file_ops_toolchain.bzl", "file_ops_toolchain")
+
+file_ops_toolchain(
+    name = "file_ops_toolchain_impl",
+    file_ops_component = "//tools/file_operations_component:file_ops",
+    wit_files = ["//tools/file_operations_component:wit_files"],
+)
+
+toolchain(
+    name = "file_ops_toolchain_local",
+    # Universal toolchain - works on all execution platforms
+    target_compatible_with = [
+        "@platforms//cpu:wasm32",
+    ],
+    toolchain = ":file_ops_toolchain_impl",
+    toolchain_type = ":file_ops_toolchain_type",
+)
