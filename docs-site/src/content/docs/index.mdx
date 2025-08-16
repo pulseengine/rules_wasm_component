@@ -1,0 +1,111 @@
+---
+title: WebAssembly Component Rules
+description: Modern Bazel rules for building and composing WebAssembly components with multi-language support.
+template: splash
+hero:
+  tagline: Build production-ready WebAssembly components with Bazel
+  image:
+    file: ../../assets/houston.webp
+  actions:
+    - text: Quick Start
+      link: /getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: View Examples
+      link: /examples/basic/
+      icon: external
+    - text: GitHub Repository
+      link: https://github.com/your-repo/rules_wasm_component
+      icon: github
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Features
+
+<CardGrid stagger>
+	<Card title="Rust Integration" icon="seti:rust">
+		Seamless integration with rules_rust for building WebAssembly components with wit-bindgen.
+	</Card>
+	<Card title="Go Support" icon="seti:go">
+		TinyGo v0.38.0 with WASI Preview 2 component support and official BytecodeAlliance modules.
+	</Card>
+	<Card title="C++ Components" icon="seti:cpp">
+		Native C++ component development with WASI SDK and Preview2 direct compilation.
+	</Card>
+	<Card title="JavaScript/TypeScript" icon="seti:javascript">
+		ComponentizeJS integration for building WebAssembly components from JS/TS source code.
+	</Card>
+	<Card title="WAC Composition" icon="puzzle">
+		WebAssembly Composition (WAC) support for building complex multi-component systems.
+	</Card>
+	<Card title="OCI Publishing" icon="docker">
+		Publish and distribute components via container registries with multi-registry support.
+	</Card>
+	<Card title="Digital Signing" icon="lock">
+		Component signing with wasmsign2 and verification for secure deployments.
+	</Card>
+	<Card title="Performance" icon="rocket">
+		Wizer pre-initialization for 1.35-6x startup performance improvements.
+	</Card>
+</CardGrid>
+
+## Quick Example
+
+Create your first WebAssembly component in just a few steps:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+
+wit_library(
+    name = "hello_interfaces",
+    srcs = ["hello.wit"],
+    package_name = "hello:world@1.0.0",
+)
+
+rust_wasm_component(
+    name = "hello_component",
+    srcs = ["src/lib.rs"],
+    wit_bindgen = ":hello_interfaces",
+)
+```
+
+<div class="demo-buttons">
+  <a href="https://stackblitz.com/github/your-repo/rules_wasm_component/tree/main/examples/basic" class="demo-button">
+    Try in StackBlitz
+  </a>
+  <a href="/getting-started/" class="demo-button">
+    Read the Guide
+  </a>
+  <a href="/examples/" class="demo-button">
+    See Examples
+  </a>
+</div>
+
+## Supported Languages
+
+Build WebAssembly components in your preferred language:
+
+<div class="feature-grid">
+  <div class="feature-card">
+    <h3>Rust</h3>
+    <p>Full Component Model support with wit-bindgen integration and multiple build profiles.</p>
+    <a href="/languages/rust/">Learn more →</a>
+  </div>
+  <div class="feature-card">
+    <h3>Go</h3>
+    <p>TinyGo v0.38.0 with WASI Preview 2 and official BytecodeAlliance Go modules.</p>
+    <a href="/languages/go/">Learn more →</a>
+  </div>
+  <div class="feature-card">
+    <h3>C++</h3>
+    <p>Native Preview2 compilation with WASI SDK and comprehensive error handling.</p>
+    <a href="/languages/cpp/">Learn more →</a>
+  </div>
+  <div class="feature-card">
+    <h3>JavaScript</h3>
+    <p>ComponentizeJS with NPM dependencies, TypeScript support, and optimization.</p>
+    <a href="/languages/javascript/">Learn more →</a>
+  </div>
+</div>

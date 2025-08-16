@@ -1,0 +1,247 @@
+"""Bazel-native rules for building and validating the documentation site
+
+This BUILD file defines simplified Bazel rules following 'The Bazel Way':
+- Minimal shell usage (single-command genrules only)
+- Direct tool validation using build_test
+- Focus on validation rather than complex builds
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Core documentation content (all source files)
+filegroup(
+    name = "docs_source",
+    srcs = glob([
+        "src/**/*",
+        "public/**/*",
+        "scripts/**/*",
+        "*.json",
+        "*.mjs",
+        "*.ts",
+        "*.js",
+        "*.md",
+    ], allow_empty = True),
+    visibility = ["//visibility:public"],
+)
+
+# Basic documentation validation (check essential files exist)
+genrule(
+    name = "docs_validation",
+    srcs = [":docs_source"],
+    outs = ["docs_validation.ok"],
+    cmd = """
+    ERROR_COUNT=0
+    
+    # Check for files in the docs-site directory structure
+    if [[ -f docs-site/package.json ]]; then
+        echo "✓ Found package.json"
+    else
+        echo "✗ Missing package.json"
+        ERROR_COUNT=$$((ERROR_COUNT + 1))
+    fi
+    
+    if [[ -f docs-site/src/content/docs/index.mdx ]]; then
+        echo "✓ Found docs index"
+    else
+        echo "✗ Missing src/content/docs/index.mdx"
+        ERROR_COUNT=$$((ERROR_COUNT + 1))
+    fi
+    
+    if [[ -f docs-site/astro.config.mjs ]]; then
+        echo "✓ Found astro config"
+    else
+        echo "✗ Missing astro.config.mjs"
+        ERROR_COUNT=$$((ERROR_COUNT + 1))
+    fi
+    
+    if [[ $$ERROR_COUNT -gt 0 ]]; then
+        echo "Documentation validation failed: $$ERROR_COUNT missing files"
+        exit 1
+    fi
+    
+    echo "Documentation validation passed" > $@
+    """,
+    tags = ["docs"],
+)
+
+# Content structure validation  
+genrule(
+    name = "content_structure",
+    srcs = [":docs_source"],
+    outs = ["content_structure.ok"],
+    cmd = """
+    # Check for key documentation sections (use docs-site/ prefix)
+    CONTENT_CHECKS=(
+        "docs-site/src/content/docs/getting-started.mdx:Getting Started"
+        "docs-site/src/content/docs/languages/rust.md:Rust"
+        "docs-site/src/content/docs/languages/go.mdx:Go"
+        "docs-site/src/content/docs/production/deployment-guide.mdx:Deployment"
+    )
+    
+    for check in "$${CONTENT_CHECKS[@]}"; do
+        FILE="$${check%%:*}"
+        KEYWORD="$${check##*:}"
+        
+        if [[ -f "$$FILE" ]]; then
+            echo "✓ Found $$FILE"
+            if ! grep -qi "$$KEYWORD" "$$FILE"; then
+                echo "⚠️  Warning: $$FILE may be missing $$KEYWORD content"
+            fi
+        else
+            echo "⚠️  Warning: Missing documentation file $$FILE"
+        fi
+    done
+    
+    echo "Content structure validation completed" > $@
+    """,
+    tags = ["docs"],
+)
+
+# Simple placeholder build (demonstrates build capability)
+genrule(
+    name = "placeholder_site",
+    srcs = [":docs_source"],
+    outs = ["site.html"],
+    cmd = """
+    cat > $@ << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAssembly Component Rules for Bazel</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 1200px; margin: 0 auto; padding: 2rem; line-height: 1.6; }
+        .hero { text-align: center; padding: 4rem 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 1rem; margin: 2rem 0; }
+        .feature { background: #f8fafc; padding: 2rem; margin: 1.5rem 0; border-radius: 0.5rem; border-left: 4px solid #3b82f6; }
+        .feature h3 { margin-top: 0; color: #1e40af; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 3rem 0; }
+        code { background: #e5e7eb; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: 'Monaco', monospace; }
+        .example { background: #1f2937; color: #f9fafb; padding: 1.5rem; border-radius: 0.5rem; overflow-x: auto; }
+        .footer { text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; color: #6b7280; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>🎯 WebAssembly Component Rules for Bazel</h1>
+        <p>Production-ready WebAssembly Component Model integration for Bazel build system</p>
+    </div>
+
+    <div class="grid">
+        <div class="feature">
+            <h3>🚀 Multi-Language Support</h3>
+            <p>Build WebAssembly components from <strong>Rust</strong>, <strong>Go (TinyGo)</strong>, <strong>C++</strong>, and <strong>JavaScript/TypeScript</strong> sources with unified toolchain management.</p>
+        </div>
+        
+        <div class="feature">
+            <h3>🔧 Production Ready</h3>
+            <p>Optimized builds with <strong>Wizer pre-initialization</strong> (1.35-6x startup improvement), <strong>OCI packaging</strong>, and <strong>digital signing</strong>.</p>
+        </div>
+        
+        <div class="feature">
+            <h3>⚡ Performance Optimized</h3>
+            <p>Platform-specific toolchains, hermetic builds, and advanced caching for fast, reproducible builds across Windows, macOS, and Linux.</p>
+        </div>
+        
+        <div class="feature">
+            <h3>🔐 Enterprise Security</h3>
+            <p>Component signing with <code>wasmsign2</code>, OCI registry integration, and comprehensive validation workflows.</p>
+        </div>
+    </div>
+
+    <div class="feature">
+        <h3>📦 Quick Start Example</h3>
+        <div class="example">
+<pre><code>load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+
+rust_wasm_component(
+    name = "hello_component",
+    srcs = ["src/lib.rs"],
+    wit = "component.wit",
+    crate_name = "hello",
+)
+
+wasm_component_validate(
+    name = "hello_validated", 
+    component = ":hello_component",
+)
+
+wasm_component_publish_oci(
+    name = "hello_published",
+    component = ":hello_validated", 
+    image_ref = "localhost:5001/hello:latest",
+)</code></pre>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="feature">
+            <h3>🎯 Key Features</h3>
+            <ul>
+                <li>Hermetic, reproducible builds</li>
+                <li>Cross-platform toolchain support</li>
+                <li>Component composition with WAC</li>
+                <li>OCI registry integration</li>
+                <li>Production deployment workflows</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <h3>📚 Documentation Sections</h3>
+            <ul>
+                <li>Getting Started Guide</li>
+                <li>Language-specific tutorials</li>
+                <li>Production deployment</li>
+                <li>Security and signing</li>
+                <li>Architecture overview</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><em>Bazel-native documentation site placeholder. Install Node.js and Astro for full interactive documentation.</em></p>
+        <p>🔧 Built with the Bazel Way: minimal shell scripts, hermetic builds, direct tool validation.</p>
+    </div>
+</body>
+</html>
+EOF
+    """,
+    tags = ["docs"],
+)
+
+# Documentation build validation using build_test
+build_test(
+    name = "docs_build_test",
+    targets = [
+        ":docs_validation",
+        ":content_structure", 
+        ":placeholder_site",
+    ],
+)
+
+# Main test suite
+test_suite(
+    name = "docs_tests",
+    tests = [
+        ":docs_build_test",
+    ],
+)
+
+# Deployment bundle (simple tar.gz of validated content)
+genrule(
+    name = "deployment_bundle",
+    srcs = [
+        ":placeholder_site",
+        ":docs_validation",
+        ":content_structure",
+    ],
+    outs = ["docs_deployment.tar.gz"],
+    cmd = """
+    mkdir -p dist
+    cp $(location :placeholder_site) dist/index.html
+    tar -czf $@ dist/
+    """,
+    message = "Creating documentation deployment bundle",
+)
