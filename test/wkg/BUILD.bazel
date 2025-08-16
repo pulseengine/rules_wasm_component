@@ -1,0 +1,67 @@
+"""Test suite for WebAssembly Package Tools (WKG) and OCI publishing capabilities"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//lib:unittest.bzl", "unittest")
+load(":wkg_test_utils.bzl", "olareg_test_registry", "wkg_integration_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Test registry instance for all WKG tests
+olareg_test_registry(
+    name = "test_registry",
+    auto_cleanup = True,
+    component = "//examples/olareg_wasm:olareg_component",
+    port = "5001",
+    visibility = ["//test/wkg:__subpackages__"],
+)
+
+# Secondary test registry for multi-registry scenarios
+olareg_test_registry(
+    name = "test_registry_secondary",
+    auto_cleanup = True,
+    component = "//examples/olareg_wasm:olareg_component",
+    port = "5002",
+    visibility = ["//test/wkg:__subpackages__"],
+)
+
+# Comprehensive WKG integration test suite
+wkg_integration_test(
+    name = "wkg_integration_tests",
+    test_components = [
+        "//examples/basic:hello_component",
+    ],
+    test_registry = ":test_registry",
+)
+
+# Build test to ensure all WKG test infrastructure builds correctly
+build_test(
+    name = "wkg_test_infrastructure_build_test",
+    targets = [
+        ":test_registry",
+        ":test_registry_secondary",
+        "//test/wkg/unit:all",
+        "//test/wkg/integration:all",
+        "//test/wkg/security:all",
+    ],
+)
+
+# Test suite combining all WKG test categories
+test_suite(
+    name = "wkg_tests",
+    tests = [
+        ":wkg_integration_tests",
+        "//test/wkg/integration:all",
+        "//test/wkg/security:all",
+        "//test/wkg/unit:all",
+    ],
+)
+
+# Quick smoke test for basic WKG functionality
+test_suite(
+    name = "wkg_smoke_tests",
+    tests = [
+        "//test/wkg/integration:oci_image_basic_test",
+        "//test/wkg/unit:wkg_fetch_basic_test",
+        "//test/wkg/unit:wkg_publish_basic_test",
+    ],
+)

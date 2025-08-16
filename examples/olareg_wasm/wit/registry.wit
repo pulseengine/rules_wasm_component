@@ -1,18 +1,43 @@
-// Minimal OCI registry interface for WASM
+// Enhanced OCI registry interface for WASM with testing capabilities
 package wasm:registry;
 
 interface registry {
-    // Start the registry server
+    // Basic server lifecycle
     start-server: func(addr: string, data-dir: string, read-only: bool, enable-push: bool, enable-delete: bool) -> tuple<s32, string>;
-
-    // Stop the registry server
     stop-server: func() -> tuple<s32, string>;
-
-    // Get server status
     get-status: func() -> string;
-
-    // Health check
     health-check: func() -> bool;
+
+    // Component operations for testing
+    upload-component: func(name: string, tag: string, component-data: list<u8>) -> tuple<s32, string>;
+    download-component: func(name: string, tag: string) -> tuple<s32, string, list<u8>>;
+    list-components: func() -> tuple<s32, string, list<string>>;
+    component-exists: func(name: string, tag: string) -> bool;
+    delete-component: func(name: string, tag: string) -> tuple<s32, string>;
+
+    // Manifest and blob operations
+    upload-manifest: func(name: string, tag: string, manifest-data: list<u8>) -> tuple<s32, string>;
+    download-manifest: func(name: string, tag: string) -> tuple<s32, string, list<u8>>;
+    upload-blob: func(digest: string, blob-data: list<u8>) -> tuple<s32, string>;
+    download-blob: func(digest: string) -> tuple<s32, string, list<u8>>;
+    blob-exists: func(digest: string) -> bool;
+
+    // Test lifecycle management
+    create-test-data: func(components: list<string>) -> tuple<s32, string>;
+    reset-registry: func() -> tuple<s32, string>;
+    get-metrics: func() -> tuple<s32, string>;
+    get-component-count: func() -> u32;
+    get-blob-count: func() -> u32;
+
+    // Error simulation for testing
+    simulate-failure: func(operation: string, error-type: string) -> tuple<s32, string>;
+    set-latency: func(operation: string, latency-ms: u32) -> tuple<s32, string>;
+    clear-simulations: func() -> tuple<s32, string>;
+
+    // Authentication and security testing
+    set-auth-mode: func(mode: string) -> tuple<s32, string>;
+    validate-signature: func(component-data: list<u8>, signature: list<u8>) -> bool;
+    get-component-signature: func(name: string, tag: string) -> tuple<s32, string, list<u8>>;
 }
 
 world registry-server {

@@ -137,11 +137,14 @@ def _setup_system_cpp_tools(repository_ctx):
         if "warning" in validation_result:
             print(validation_result["warning"])
 
-        # Create wrapper executable
+        # Create symlink to system tool (Bazel-native approach)
         output_name = "clang_cpp" if tool_name == "clang++" else tool_name.replace("-", "_")
-        repository_ctx.file(output_name, """#!/bin/bash
-exec {} "$@"
-""".format(binary_name), executable = True)
+        tool_path = validation_result.get("path", repository_ctx.which(binary_name))
+        if tool_path:
+            repository_ctx.symlink(tool_path, output_name)
+        else:
+            # Fallback: use PATH resolution
+            repository_ctx.file(output_name, binary_name, executable = True)
 
         print("Using system {}: {} at {}".format(
             tool_name,
@@ -238,59 +241,54 @@ def _get_wasi_sdk_url(platform, version):
     return base_url.format(version) + "/" + filename
 
 def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir):
-    """Create wrapper scripts for WASI SDK tools"""
+    """Create Bazel-native tool configurations for WASI SDK tools"""
 
     # Get absolute path to the repository root
     repo_root = repository_ctx.path(".")
 
-    # Clang wrapper with Preview2 target
-    repository_ctx.file("clang", """#!/bin/bash
-exec {}/bin/clang \\
-  --target=wasm32-wasip2 \\
-  --sysroot={}/share/wasi-sysroot \\
-  -D_WASI_EMULATED_PROCESS_CLOCKS \\
-  -D_WASI_EMULATED_SIGNAL \\
-  -D_WASI_EMULATED_MMAN \\
-  "$@"
-""".format(repo_root, repo_root), executable = True)
+    # Create configuration file for WASI Preview2 settings
+    wasi_config = [
+        "--target=wasm32-wasip2",
+        "--sysroot={}/share/wasi-sysroot".format(repo_root),
+        "-D_WASI_EMULATED_PROCESS_CLOCKS",
+        "-D_WASI_EMULATED_SIGNAL",
+        "-D_WASI_EMULATED_MMAN",
+    ]
 
-    # Clang++ wrapper with Preview2 target and C++ support
-    repository_ctx.file("clang_cpp", """#!/bin/bash
-exec {}/bin/clang++ \\
-  --target=wasm32-wasip2 \\
-  --sysroot={}/share/wasi-sysroot \\
-  -D_WASI_EMULATED_PROCESS_CLOCKS \\
-  -D_WASI_EMULATED_SIGNAL \\
-  -D_WASI_EMULATED_MMAN \\
-  "$@"
-""".format(repo_root, repo_root), executable = True)
+    repository_ctx.file("wasi_config.txt", "\n".join(wasi_config))
 
-    # LLVM AR wrapper
-    repository_ctx.file("llvm_ar", """#!/bin/bash
-exec {}/bin/llvm-ar "$@"
-""".format(repo_root), executable = True)
+    # Create direct symlinks to WASI SDK binaries (Bazel-native approach)
+    clang_path = "{}/bin/clang".format(repo_root)
+    clang_cpp_path = "{}/bin/clang++".format(repo_root)
+    llvm_ar_path = "{}/bin/llvm-ar".format(repo_root)
+
+    if repository_ctx.path(clang_path).exists:
+        repository_ctx.symlink(clang_path, "clang")
+    else:
+        fail("WASI SDK clang not found at {}".format(clang_path))
+
+    if repository_ctx.path(clang_cpp_path).exists:
+        repository_ctx.symlink(clang_cpp_path, "clang_cpp")
+    else:
+        fail("WASI SDK clang++ not found at {}".format(clang_cpp_path))
+
+    if repository_ctx.path(llvm_ar_path).exists:
+        repository_ctx.symlink(llvm_ar_path, "llvm_ar")
+    else:
+        fail("WASI SDK llvm-ar not found at {}".format(llvm_ar_path))
 
 def _setup_component_tools(repository_ctx):
-    """Set up wit-bindgen and wasm-tools"""
+    """Set up wit-bindgen and wasm-tools using Bazel toolchain resolution"""
 
-    # Create symlinks to the tools from the wasm toolchain
-    # These will be resolved by Bazel's toolchain resolution system
+    # These will be properly resolved by Bazel's toolchain system in BUILD.bazel
+    # No need for placeholder scripts - use aliases in BUILD file instead
     print("Using wit-bindgen and wasm-tools from configured WASM toolchain")
 
-    # Create placeholder scripts that will be replaced by toolchain resolution
-    repository_ctx.file("wit_bindgen", """#!/bin/bash
-# This placeholder should be replaced by Bazel's toolchain resolution
-# with the actual wit-bindgen from @wasm_tools_toolchains
-echo "Error: wit-bindgen not properly resolved from WASM toolchain"
-exit 1
-""", executable = True)
-
-    repository_ctx.file("wasm_tools", """#!/bin/bash
-# This placeholder should be replaced by Bazel's toolchain resolution
-# with the actual wasm-tools from @wasm_tools_toolchains
-echo "Error: wasm-tools not properly resolved from WASM toolchain"
-exit 1
-""", executable = True)
+    # Create marker file to indicate tools are configured via toolchain resolution
+    repository_ctx.file(
+        "WASM_TOOLS_FROM_TOOLCHAIN",
+        "wit-bindgen and wasm-tools resolved via @wasm_tools_toolchains",
+    )
 
 def _setup_downloaded_sysroot(repository_ctx):
     """Set up sysroot for downloaded WASI SDK"""

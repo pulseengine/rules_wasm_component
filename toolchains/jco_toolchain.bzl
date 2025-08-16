@@ -119,10 +119,13 @@ def _setup_system_jco_tools(repository_ctx):
         if "warning" in validation_result:
             print(validation_result["warning"])
 
-        # Create wrapper executable
-        repository_ctx.file(tool_name, """#!/bin/bash
-exec {} "$@"
-""".format(binary_name), executable = True)
+        # Create symlink to system tool (Bazel-native approach)
+        tool_path = validation_result.get("path", repository_ctx.which(binary_name))
+        if tool_path:
+            repository_ctx.symlink(tool_path, tool_name)
+        else:
+            # Fallback: use PATH resolution
+            repository_ctx.file(tool_name, binary_name, executable = True)
 
         print("Using system {}: {} at {}".format(
             tool_name,
@@ -228,10 +231,11 @@ def _setup_npm_jco_tools(repository_ctx):
     node_validation = validate_system_tool(repository_ctx, "node")
     node_path = node_validation.get("path", "node")
 
-    # Create wrapper that uses Node.js to run JCO
-    repository_ctx.file("jco", """#!/bin/bash
-exec {} {} "$@"
-""".format(node_path, jco_path), executable = True)
+    # Create symlink to jco binary (Bazel-native approach)
+    if repository_ctx.path(jco_path).exists:
+        repository_ctx.symlink(jco_path, "jco")
+    else:
+        fail("jco binary not found after installation at {}".format(jco_path))
 
     print("Installed jco via npm globally")
 
@@ -260,14 +264,19 @@ def _setup_node_tools_system(repository_ctx):
     node_path = node_validation.get("path", "node")
     npm_path = npm_validation.get("path", "npm")
 
-    # Create wrapper executables with absolute paths
-    repository_ctx.file("node", """#!/bin/bash
-exec {} "$@"
-""".format(node_path), executable = True)
+    # Create symlink to Node.js binary (Bazel-native approach)
+    if node_path and repository_ctx.path(node_path).exists:
+        repository_ctx.symlink(node_path, "node")
+    else:
+        # Fallback: use PATH resolution
+        repository_ctx.file("node", "node", executable = True)
 
-    repository_ctx.file("npm", """#!/bin/bash
-exec {} "$@"
-""".format(npm_path), executable = True)
+    # Create symlink to npm binary (Bazel-native approach)
+    if npm_path and repository_ctx.path(npm_path).exists:
+        repository_ctx.symlink(npm_path, "npm")
+    else:
+        # Fallback: use PATH resolution
+        repository_ctx.file("npm", "npm", executable = True)
 
 def _create_jco_build_files(repository_ctx):
     """Create BUILD files for jco toolchain"""

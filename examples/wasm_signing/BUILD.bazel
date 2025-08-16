@@ -49,7 +49,7 @@ wasm_sign(
     name = "signed_component_embedded",
     component = ":example_component",
     detached = False,
-    keys = ":example_keys",
+    keys = ":compact_keys",
 )
 
 # Step 5: Sign the component with detached signature
@@ -63,7 +63,7 @@ wasm_sign(
 # Step 6: Verify embedded signature
 wasm_verify(
     name = "verify_embedded",
-    keys = ":example_keys",
+    keys = ":compact_keys",
     signed_component = ":signed_component_embedded",
 )
 
@@ -78,7 +78,7 @@ wasm_verify(
 wasm_validate(
     name = "validate_with_signature_check",
     component = ":signed_component_embedded",
-    signing_keys = ":example_keys",
+    signing_keys = ":compact_keys",
     verify_signature = True,
 )
 
@@ -86,7 +86,7 @@ wasm_validate(
 wasm_validate(
     name = "validate_with_public_key",
     component = ":signed_component_embedded",
-    public_key = ":example_keys",
+    signing_keys = ":compact_keys",
     verify_signature = True,
 )
 
@@ -94,13 +94,13 @@ wasm_validate(
 wasm_sign(
     name = "signed_raw_wasm",
     detached = False,
-    keys = ":example_keys",
+    keys = ":compact_keys",
     wasm_file = ":example_component",
 )
 
 wasm_verify(
     name = "verify_raw_wasm",
-    keys = ":example_keys",
+    keys = ":compact_keys",
     wasm_file = ":signed_raw_wasm",
 )
 
@@ -115,9 +115,21 @@ genrule(
     outs = ["signing_test_results.txt"],
     cmd = """
         echo "=== WebAssembly Signing Test Results ===" > $@
-        echo "Embedded signature verification: $(if [ -f $(location :verify_embedded) ]; then echo PASSED; else echo FAILED; fi)" >> $@
-        echo "Detached signature verification: $(if [ -f $(location :verify_detached) ]; then echo PASSED; else echo FAILED; fi)" >> $@
-        echo "Validation with signature check: $(if [ -f $(location :validate_with_signature_check) ]; then echo PASSED; else echo FAILED; fi)" >> $@
+        if [ -f $(location :verify_embedded) ]; then
+            echo "Embedded signature verification: PASSED" >> $@
+        else
+            echo "Embedded signature verification: FAILED" >> $@
+        fi
+        if [ -f $(location :verify_detached) ]; then
+            echo "Detached signature verification: PASSED" >> $@
+        else
+            echo "Detached signature verification: FAILED" >> $@
+        fi
+        if [ -f $(location :validate_with_signature_check) ]; then
+            echo "Validation with signature check: PASSED" >> $@
+        else
+            echo "Validation with signature check: FAILED" >> $@
+        fi
         echo "Test completed successfully" >> $@
     """,
 )

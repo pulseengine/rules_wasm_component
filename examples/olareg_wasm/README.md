@@ -7,6 +7,7 @@ Investigation into converting [olareg](https://github.com/criminaldou/olareg) to
 ## Olareg Analysis
 
 **✅ PROMISING ASPECTS:**
+
 - Simple, minimal Go codebase (~3000 lines)
 - Few external dependencies (spf13/cobra, opencontainers/go-digest)
 - Self-contained HTTP server design
@@ -43,6 +44,7 @@ For immediate testing, we're using Docker registry:2 on localhost:5001 as our te
 ## Recommendation
 
 **DEFER** full olareg WASM implementation until:
+
 - TinyGo has better WASI Preview 2 HTTP support, OR
 - Rust implementation path becomes clearer, OR
 - Host-provided HTTP adapter pattern is established
