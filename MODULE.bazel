@@ -52,7 +52,7 @@ register_toolchains("@go_toolchains//:all")
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
-    strategy = "download",
+    strategy = "build",
     version = "1.235.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
@@ -99,7 +99,7 @@ register_toolchains("@tinygo_toolchain//:tinygo_toolchain_def")
 wizer = use_extension("//wasm:extensions.bzl", "wizer")
 wizer.register(
     name = "wizer",
-    strategy = "cargo",
+    strategy = "build",
     version = "9.0.0",
 )
 use_repo(wizer, "wizer_toolchain")
@@ -128,6 +128,14 @@ use_repo(cpp_component, "cpp_toolchain")
 
 register_toolchains("@cpp_toolchain//:cpp_component_toolchain")
 
+# Hermetic Node.js toolchain for JavaScript/TypeScript support
+bazel_dep(name = "rules_nodejs", version = "6.5.0")
+
+# Configure Node.js version and tools
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "18.19.0")
+use_repo(node, "nodejs_toolchains")
+
 # JavaScript/TypeScript WebAssembly components with JCO
 jco = use_extension("//wasm:extensions.bzl", "jco")
 jco.register(
@@ -137,6 +145,10 @@ jco.register(
 )
 use_repo(jco, "jco_toolchain")
 
+# Register Node.js toolchains for JavaScript/TypeScript support
+register_toolchains("@nodejs_toolchains//:all")
+
+# Register jco toolchain for JavaScript/TypeScript components
 register_toolchains("@jco_toolchain//:jco_toolchain")
 
 # Rust crates for tools

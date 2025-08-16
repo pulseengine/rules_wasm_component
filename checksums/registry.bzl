@@ -191,8 +191,8 @@ def _get_hardcoded_checksums(tool_name):
                             "url_suffix": "linux.tar.gz",
                         },
                         "linux_arm64": {
-                            "sha256": "52640dde13599bf127a95499e61d6d640256119456d1af8897ab6725bcf3d89c",
-                            "url_suffix": "linux.tar.gz",
+                            "sha256": "47fccad8b2498f2239e05e1115c3ffc652bf37e7de2f88fb64b2d663c976ce2d",
+                            "url_suffix": "arm64-linux.tar.gz",
                         },
                         "windows_amd64": {
                             "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",

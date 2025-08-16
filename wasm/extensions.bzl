@@ -409,9 +409,9 @@ wizer = module_extension(
                     default = "9.0.0",
                 ),
                 "strategy": attr.string(
-                    doc = "Installation strategy: 'cargo' (install via cargo) or 'system' (use system install)",
+                    doc = "Installation strategy: 'build' (build from source), 'cargo' (install via cargo) or 'system' (use system install)",
                     default = "cargo",
-                    values = ["cargo", "system"],
+                    values = ["build", "cargo", "system"],
                 ),
             },
         ),

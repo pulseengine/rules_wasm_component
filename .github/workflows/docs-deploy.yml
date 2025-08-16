@@ -1,5 +1,6 @@
 name: Deploy Documentation to Netcup
 
+# Workflow for deploying documentation site to hosting
 on:
   push:
     branches: 
