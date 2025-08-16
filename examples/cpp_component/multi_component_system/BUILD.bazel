@@ -1,4 +1,7 @@
 load("//cpp:defs.bzl", "cpp_component")
+load("//go:defs.bzl", "go_wasm_component")
+load("//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("//wit:defs.bzl", "wit_library")
 
 # Simple C++ component to test build system
 cpp_component(
@@ -7,6 +10,46 @@ cpp_component(
     target_compatible_with = ["@platforms//cpu:wasm32"],
     wit = "wit/auth_service.wit",
     world = "auth-service-world",
+)
+
+# WIT interfaces for components
+wit_library(
+    name = "analytics_service_wit",
+    package_name = "analytics:service",
+    srcs = ["wit/analytics_service.wit"],
+    world = "analytics-service",
+)
+
+wit_library(
+    name = "user_service_wit",
+    package_name = "user:service",
+    srcs = ["wit/user_service.wit"],
+    world = "user-service",
+)
+
+# Go analytics service component
+go_wasm_component(
+    name = "analytics_service",
+    srcs = ["components/analytics_service.go"],
+    go_mod = "go.mod",
+    visibility = ["//visibility:public"],
+    wit = ":analytics_service_wit",
+    world = "analytics-service",
+)
+
+# Rust user service component
+rust_wasm_component_bindgen(
+    name = "user_service",
+    srcs = ["components/user_service.rs"],
+    visibility = ["//visibility:public"],
+    wit = ":user_service_wit",
+)
+
+# Alias for auth service to match expected name
+alias(
+    name = "auth_service",
+    actual = ":auth_service_cpp",
+    visibility = ["//visibility:public"],
 )
 
 # Test binary

@@ -35,11 +35,7 @@ use std::path::PathBuf;
 use tracing::{info, warn};
 
 use checksum_updater_lib::{
-    ChecksumManager,
-    UpdateEngine,
-    ChecksumValidator,
-    UpdateConfig,
-    UpdateResults,
+    ChecksumManager, ChecksumValidator, UpdateConfig, UpdateEngine, UpdateResults,
     ValidationResults,
 };
 
@@ -148,12 +144,16 @@ async fn main() -> Result<()> {
 
     // Execute the command
     let result = match cli.command {
-        Commands::UpdateAll { force, dry_run, skip_errors } => {
-            update_all_tools(force, dry_run, skip_errors, &cli.output_format).await
-        }
-        Commands::Update { tools, force, dry_run } => {
-            update_specific_tools(&tools, force, dry_run, &cli.output_format).await
-        }
+        Commands::UpdateAll {
+            force,
+            dry_run,
+            skip_errors,
+        } => update_all_tools(force, dry_run, skip_errors, &cli.output_format).await,
+        Commands::Update {
+            tools,
+            force,
+            dry_run,
+        } => update_specific_tools(&tools, force, dry_run, &cli.output_format).await,
         Commands::Validate { all, tools, fix } => {
             validate_checksums(all, tools.as_deref(), fix, &cli.output_format).await
         }
@@ -180,7 +180,8 @@ fn init_tracing(verbose: bool) -> Result<()> {
     let filter = if verbose {
         EnvFilter::new("checksum_updater=debug,info")
     } else {
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("checksum_updater=info"))
+        EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| EnvFilter::new("checksum_updater=info"))
     };
 
     fmt()
@@ -310,8 +311,8 @@ async fn generate_summary(results_file: &PathBuf, output_format: &OutputFormat) 
         .await
         .with_context(|| format!("Failed to read results file: {}", results_file.display()))?;
 
-    let results: UpdateResults = serde_json::from_str(&results_content)
-        .context("Failed to parse results JSON")?;
+    let results: UpdateResults =
+        serde_json::from_str(&results_content).context("Failed to parse results JSON")?;
 
     generate_update_summary(&results, output_format)?;
 
@@ -385,10 +386,7 @@ fn output_results(results: &UpdateResults, format: &OutputFormat) -> Result<()> 
 }
 
 /// Output validation results
-fn output_validation_results(
-    results: &ValidationResults,
-    format: &OutputFormat,
-) -> Result<()> {
+fn output_validation_results(results: &ValidationResults, format: &OutputFormat) -> Result<()> {
     match format {
         OutputFormat::Human => {
             println!("=== Validation Results ===");
@@ -427,17 +425,17 @@ fn output_validation_results(
 }
 
 /// Generate update summary in markdown format
-fn generate_update_summary(
-    results: &UpdateResults,
-    format: &OutputFormat,
-) -> Result<()> {
+fn generate_update_summary(results: &UpdateResults, format: &OutputFormat) -> Result<()> {
     match format {
         OutputFormat::Markdown => {
             println!("### 📊 Update Summary");
             println!();
             println!("- **Tools processed**: {}", results.summary.tools_processed);
             println!("- **Tools updated**: {}", results.summary.tools_updated);
-            println!("- **New versions found**: {}", results.summary.new_versions_found);
+            println!(
+                "- **New versions found**: {}",
+                results.summary.new_versions_found
+            );
             println!("- **Errors encountered**: {}", results.summary.errors);
             println!("- **Duration**: {:?}", results.summary.duration);
             println!();
@@ -477,9 +475,11 @@ fn generate_update_summary(
             println!();
             for update in &results.updates {
                 println!("#### {}", update.tool_name);
-                println!("- **Version**: {} → {}",
-                        update.old_version.as_deref().unwrap_or("none"),
-                        update.new_version);
+                println!(
+                    "- **Version**: {} → {}",
+                    update.old_version.as_deref().unwrap_or("none"),
+                    update.new_version
+                );
                 println!("- **Change type**: {}", update.version_change);
                 if let Some(release_notes) = &update.release_notes_url {
                     println!("- **Release notes**: [View changes]({})", release_notes);
@@ -596,12 +596,7 @@ mod tests {
 
     #[test]
     fn test_output_format_parsing() {
-        let cli = Cli::try_parse_from(&[
-            "checksum_updater",
-            "--output-format",
-            "json",
-            "list",
-        ]);
+        let cli = Cli::try_parse_from(&["checksum_updater", "--output-format", "json", "list"]);
         assert!(cli.is_ok());
 
         match cli.unwrap().output_format {

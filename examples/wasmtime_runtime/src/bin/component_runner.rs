@@ -134,7 +134,10 @@ async fn run_component_runner(matches: ArgMatches) -> Result<()> {
     let enable_host_functions = matches.get_flag("host-functions");
     let validate_only = matches.get_flag("validate-only");
 
-    info!("Starting component runner with component: {}", component_path);
+    info!(
+        "Starting component runner with component: {}",
+        component_path
+    );
 
     // Parse timeout
     let execution_timeout = parse_duration(timeout_str)
@@ -148,8 +151,7 @@ async fn run_component_runner(matches: ArgMatches) -> Result<()> {
     let config = create_runtime_config(config_preset, execution_timeout)?;
 
     // Create component loader
-    let loader = ComponentLoader::new(config)
-        .context("Failed to create component loader")?;
+    let loader = ComponentLoader::new(config).context("Failed to create component loader")?;
 
     // Set up host functions if requested
     let host_registry = if enable_host_functions {
@@ -157,7 +159,10 @@ async fn run_component_runner(matches: ArgMatches) -> Result<()> {
         for func in create_common_host_functions() {
             registry.register_function(func).await?;
         }
-        info!("Registered {} host functions", registry.list_functions().await.len());
+        info!(
+            "Registered {} host functions",
+            registry.list_functions().await.len()
+        );
         Some(registry)
     } else {
         None
@@ -292,7 +297,10 @@ async fn run_interactive_mode(
             "help" => show_interactive_help(),
             "metrics" => {
                 let metrics = instance.execution_metrics();
-                println!("Execution metrics: {}", serde_json::to_string_pretty(&metrics)?);
+                println!(
+                    "Execution metrics: {}",
+                    serde_json::to_string_pretty(&metrics)?
+                );
             }
             _ => {
                 // Parse command as "function_name arg1 arg2 ..."
@@ -356,23 +364,41 @@ async fn show_execution_metrics(
     println!("Total calls: {}", exec_metrics.total_calls);
     println!("Successful calls: {}", exec_metrics.successful_calls);
     println!("Failed calls: {}", exec_metrics.failed_calls);
-    println!("Total execution time: {:?}", exec_metrics.total_execution_time);
-    println!("Average execution time: {:?}", exec_metrics.average_execution_time);
+    println!(
+        "Total execution time: {:?}",
+        exec_metrics.total_execution_time
+    );
+    println!(
+        "Average execution time: {:?}",
+        exec_metrics.average_execution_time
+    );
 
     if !exec_metrics.functions.is_empty() {
         println!("\nFunction statistics:");
         for (name, stats) in &exec_metrics.functions {
-            println!("  {}: {} calls, avg {:?}", name, stats.call_count, stats.average_execution_time);
+            println!(
+                "  {}: {} calls, avg {:?}",
+                name, stats.call_count, stats.average_execution_time
+            );
         }
     }
 
     // Global metrics
     let global_metrics = loader.metrics().get_summary();
     println!("\n=== Global Metrics ===");
-    println!("Total components loaded: {}", global_metrics.total_components_loaded);
-    println!("Total functions called: {}", global_metrics.total_functions_called);
+    println!(
+        "Total components loaded: {}",
+        global_metrics.total_components_loaded
+    );
+    println!(
+        "Total functions called: {}",
+        global_metrics.total_functions_called
+    );
     println!("Average load time: {:?}", global_metrics.average_load_time);
-    println!("Average execution time: {:?}", global_metrics.average_execution_time);
+    println!(
+        "Average execution time: {:?}",
+        global_metrics.average_execution_time
+    );
 }
 
 /// Parse duration string (e.g., "10s", "1m", "500ms")

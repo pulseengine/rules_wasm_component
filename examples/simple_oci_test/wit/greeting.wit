@@ -1,0 +1,11 @@
+// Simple greeting component interface
+package simple:greeting;
+
+interface greet {
+    // Simple greeting function
+    greet: func(name: string) -> string;
+}
+
+world greeting {
+    export greet;
+}

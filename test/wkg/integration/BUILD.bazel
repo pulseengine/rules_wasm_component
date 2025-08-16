@@ -1,0 +1,167 @@
+"""Integration tests for OCI publishing pipeline using olareg_wasm"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//test/wkg:wkg_test_utils.bzl", "olareg_mock_data", "wkg_test_suite")
+load(
+    "//wkg:defs.bzl",
+    "wac_compose_with_oci",
+    "wasm_component_from_oci",
+    "wasm_component_oci_image",
+    "wasm_component_publish",
+)
+load("//wasm:defs.bzl", "wasm_keygen")
+
+package(default_visibility = ["//test/wkg:__subpackages__"])
+
+# Generate test signing keys
+wasm_keygen(
+    name = "test_signing_keys",
+    openssh_format = False,
+    public_key_name = "test.pub",
+    secret_key_name = "test.key",
+)
+
+# Test OCI image creation
+wasm_component_oci_image(
+    name = "test_oci_image",
+    package_name = "test/integration-component",
+    annotations = [
+        "org.opencontainers.image.description=Integration test component",
+        "org.opencontainers.image.version=1.0.0",
+        "com.wasm.test=true",
+    ],
+    authors = ["test@example.com"],
+    component = "//examples/basic:hello_component",
+    description = "Integration test WebAssembly component",
+    license = "MIT",
+    namespace = "test",
+    registry = "localhost:5001",
+    tag = "integration-test",
+)
+
+# Test OCI image creation with signing
+wasm_component_oci_image(
+    name = "test_oci_signed_image",
+    package_name = "test/integration-signed-component",
+    annotations = [
+        "org.opencontainers.image.description=Signed integration test component",
+        "org.opencontainers.image.version=1.0.0",
+        "com.wasm.test=true",
+        "com.wasm.signed=true",
+    ],
+    authors = ["test@example.com"],
+    component = "//examples/basic:hello_component",
+    description = "Signed integration test WebAssembly component",
+    license = "MIT",
+    namespace = "test",
+    registry = "localhost:5001",
+    sign_component = True,
+    signing_keys = ":test_signing_keys",
+    tag = "signed-integration-test",
+)
+
+# Test component publishing
+wasm_component_publish(
+    name = "test_publish_workflow",
+    description = "Integration test for component publishing",
+    oci_image = ":test_oci_image",
+    registry_config = "//test/wkg/unit:test_registry_config",
+)
+
+# Test signed component publishing
+wasm_component_publish(
+    name = "test_publish_signed_workflow",
+    description = "Integration test for signed component publishing",
+    oci_image = ":test_oci_signed_image",
+    registry_config = "//test/wkg/unit:test_registry_config",
+)
+
+# Test component retrieval from OCI
+wasm_component_from_oci(
+    name = "test_pull_component",
+    image_ref = "localhost:5001/test/integration-component:integration-test",
+    registry_config = "//test/wkg/unit:test_registry_config",
+)
+
+# Test WAC composition with OCI components
+wac_compose_with_oci(
+    name = "test_oci_composition",
+    composition = """
+package test:integration@1.0.0;
+
+// Simple composition using OCI components
+let hello = new test:integration-component { };
+
+export hello as main;
+    """,
+    local_components = {},
+    oci_components = {
+        "hello": "localhost:5001/test/integration-component:integration-test",
+    },
+    registry_config = "//test/wkg/unit:test_registry_config",
+)
+
+# Build tests for OCI operations
+build_test(
+    name = "oci_image_basic_test",
+    targets = [":test_oci_image"],
+)
+
+build_test(
+    name = "oci_signed_image_test",
+    targets = [":test_oci_signed_image"],
+)
+
+build_test(
+    name = "oci_publish_test",
+    targets = [":test_publish_workflow"],
+)
+
+build_test(
+    name = "oci_signed_publish_test",
+    targets = [":test_publish_signed_workflow"],
+)
+
+build_test(
+    name = "oci_pull_test",
+    targets = [":test_pull_component"],
+)
+
+build_test(
+    name = "oci_composition_test",
+    targets = [":test_oci_composition"],
+)
+
+# Comprehensive WKG integration test suite using test utilities
+wkg_test_suite(
+    name = "oci_integration_suite",
+    test_components = [
+        "//examples/basic:hello_component",
+        "//examples/go_component:calculator_component",
+    ],
+    test_registry = "//test/wkg:test_registry",
+)
+
+# All integration tests
+test_suite(
+    name = "all",
+    tests = [
+        ":oci_composition_test",
+        ":oci_image_basic_test",
+        ":oci_integration_suite",
+        ":oci_publish_test",
+        ":oci_pull_test",
+        ":oci_signed_image_test",
+        ":oci_signed_publish_test",
+    ],
+)
+
+# Critical path integration tests
+test_suite(
+    name = "critical",
+    tests = [
+        ":oci_image_basic_test",
+        ":oci_publish_test",
+        ":oci_pull_test",
+    ],
+)

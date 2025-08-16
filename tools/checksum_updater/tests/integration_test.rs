@@ -7,9 +7,7 @@ file operations, JSON validation, and tool execution.
 
 use anyhow::Result;
 use checksum_updater_lib::{
-    checksum_manager::ChecksumManager,
-    update_engine::UpdateEngine,
-    validator::ChecksumValidator,
+    checksum_manager::ChecksumManager, update_engine::UpdateEngine, validator::ChecksumValidator,
 };
 use serde_json::Value;
 use std::env;
@@ -24,7 +22,12 @@ fn get_workspace_root() -> PathBuf {
         PathBuf::from(srcdir).join("__main__")
     } else {
         // Fallback for non-Bazel execution
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_path_buf()
     }
 }
 
@@ -73,7 +76,9 @@ async fn test_json_validation() -> Result<()> {
     let validator = ChecksumValidator::new();
 
     // Create a valid tool JSON file
-    manager.create_tool("valid-tool", "owner/valid-tool").await?;
+    manager
+        .create_tool("valid-tool", "owner/valid-tool")
+        .await?;
 
     // Create an invalid JSON file
     let invalid_json_path = tools_dir.join("invalid-tool.json");
@@ -87,9 +92,10 @@ async fn test_json_validation() -> Result<()> {
     assert!(results.errors.len() >= 1);
 
     // Check that the invalid file was detected
-    let has_invalid_error = results.errors.iter().any(|e| {
-        e.error_type == "json_format" && e.message.contains("Invalid JSON format")
-    });
+    let has_invalid_error = results
+        .errors
+        .iter()
+        .any(|e| e.error_type == "json_format" && e.message.contains("Invalid JSON format"));
     assert!(has_invalid_error);
 
     Ok(())
@@ -149,7 +155,10 @@ async fn test_real_json_files_validation() -> Result<()> {
     }
 
     // All real JSON files should be valid
-    assert_eq!(results.invalid_checksums, 0, "Found invalid JSON files in the repository");
+    assert_eq!(
+        results.invalid_checksums, 0,
+        "Found invalid JSON files in the repository"
+    );
 
     Ok(())
 }
@@ -166,7 +175,9 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
     let manager = ChecksumManager::new_with_paths(checksums_dir.clone(), tools_dir.clone());
 
     // Create a tool and verify the JSON file is created correctly
-    let _tool_info = manager.create_tool("file-test-tool", "owner/file-test-tool").await?;
+    let _tool_info = manager
+        .create_tool("file-test-tool", "owner/file-test-tool")
+        .await?;
 
     // Verify the JSON file exists and has correct content
     let json_path = tools_dir.join("file-test-tool.json");
@@ -180,22 +191,27 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
     assert_eq!(parsed["latest_version"], "0.0.0");
 
     // Test updating tool version
-    use checksum_updater_lib::checksum_manager::{VersionInfo, PlatformInfo};
+    use checksum_updater_lib::checksum_manager::{PlatformInfo, VersionInfo};
     use std::collections::HashMap;
 
     let mut platforms = HashMap::new();
-    platforms.insert("linux_amd64".to_string(), PlatformInfo {
-        sha256: "test-checksum".to_string(),
-        url_suffix: "linux_amd64.tar.gz".to_string(),
-        platform_name: None,
-    });
+    platforms.insert(
+        "linux_amd64".to_string(),
+        PlatformInfo {
+            sha256: "test-checksum".to_string(),
+            url_suffix: "linux_amd64.tar.gz".to_string(),
+            platform_name: None,
+        },
+    );
 
     let version_info = VersionInfo {
         release_date: "2024-01-01".to_string(),
         platforms,
     };
 
-    manager.update_tool_version("file-test-tool", "1.0.0", version_info).await?;
+    manager
+        .update_tool_version("file-test-tool", "1.0.0", version_info)
+        .await?;
 
     // Verify the update was saved correctly
     let updated_tool_info = manager.get_tool_info("file-test-tool").await?;

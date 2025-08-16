@@ -62,7 +62,7 @@ load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
 rust_wasm_component(
     name = "my_component",
     srcs = ["src/lib.rs"],
-    wit_bindgen = ":my_interfaces",
+    wit = ":my_interfaces",
     deps = [
         "//third_party/rust:wit_bindgen",
     ],

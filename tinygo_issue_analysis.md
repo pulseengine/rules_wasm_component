@@ -14,6 +14,7 @@ The TinyGo v0.38.0 toolchain is properly installed and working, but there are in
    - TinyGo v0.38.0 properly downloaded and installed
    - All target files present including `wasip2.json`
    - Binary executable and wit-bindgen-go available
+
    - ```bash
      $ bazel run @tinygo_toolchain//:tinygo_binary -- version
      tinygo version 0.38.0 darwin/arm64 (using go version go1.24.4 and LLVM version 19.1.2)

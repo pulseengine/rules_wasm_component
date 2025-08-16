@@ -39,7 +39,7 @@ rust_wasm_component(
     name = "my_component",
     srcs = ["src/lib.rs"],
     profiles = ["debug", "release"],  # Build both variants
-    wit_bindgen = ":my_interfaces",
+    wit = ":my_interfaces",
 )
 ```
 
@@ -57,7 +57,7 @@ rust_wasm_component(
     name = "ai_component",
     srcs = ["src/ai.rs"],
     profiles = ["debug", "release", "custom"],
-    wit_bindgen = ":ai_interfaces",
+    wit = ":ai_interfaces",
     crate_features = ["wasi-nn"],
     rustc_flags = ["-C", "target-cpu=native"],
 )

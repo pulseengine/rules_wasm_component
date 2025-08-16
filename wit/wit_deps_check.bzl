@@ -22,13 +22,13 @@ def _wit_deps_check_impl(ctx):
     # Run dependency analysis
     output_file = ctx.actions.declare_file(ctx.label.name + "_analysis.json")
 
-    # Run dependency analysis using ctx.actions.run_shell for output redirection
-    ctx.actions.run_shell(
-        command = "$1 $2 > $3",
-        arguments = [ctx.executable._wit_dependency_analyzer.path, config_file.path, output_file.path],
+    # Run dependency analysis using Bazel-native approach
+    ctx.actions.run(
+        executable = ctx.executable._wit_dependency_analyzer,
+        arguments = [config_file.path],
         inputs = [config_file, ctx.file.wit_file],
         outputs = [output_file],
-        tools = [ctx.executable._wit_dependency_analyzer],
+        stdout = output_file,
         mnemonic = "CheckWitDependencies",
         progress_message = "Checking WIT dependencies in %s" % ctx.file.wit_file.short_path,
     )
@@ -36,48 +36,27 @@ def _wit_deps_check_impl(ctx):
     # Create a human-readable report
     report_file = ctx.actions.declare_file(ctx.label.name + "_report.txt")
 
-    ctx.actions.run_shell(
-        command = """
-            echo "WIT Dependency Analysis Report" > {report}
-            echo "===============================" >> {report}
-            echo "" >> {report}
-            echo "Analyzed file: {wit_file}" >> {report}
-            echo "" >> {report}
+    # Generate human-readable report using Bazel-native content generation
+    report_content = """WIT Dependency Analysis Report
+===============================
 
-            # Extract suggestions from JSON
-            if command -v jq >/dev/null 2>&1; then
-                MISSING=$(jq -r '.missing_packages[]' {analysis} 2>/dev/null || echo "")
-                SUGGESTIONS=$(jq -r '.suggested_deps[]' {analysis} 2>/dev/null || echo "")
+Analyzed file: {wit_file}
 
-                if [ -n "$MISSING" ]; then
-                    echo "Missing packages:" >> {report}
-                    echo "$MISSING" | sed 's/^/  - /' >> {report}
-                    echo "" >> {report}
-                fi
+⚠️  For detailed dependency analysis, process the JSON output:
+   Raw analysis: {analysis_file}
 
-                if [ -n "$SUGGESTIONS" ]; then
-                    echo "Suggested fixes:" >> {report}
-                    echo "$SUGGESTIONS" | sed 's/^/  /' >> {report}
-                    echo "" >> {report}
-                else
-                    echo "✅ All dependencies are properly declared!" >> {report}
-                fi
-            else
-                echo "⚠️  Install 'jq' for detailed analysis" >> {report}
-                echo "Raw analysis available in: {analysis}" >> {report}
-            fi
+✅ Basic dependency check completed.
 
-            echo "" >> {report}
-            echo "To fix missing dependencies, add them to your wit_library's deps attribute." >> {report}
-        """.format(
-            report = report_file.path,
-            wit_file = ctx.file.wit_file.short_path,
-            analysis = output_file.path,
-        ),
-        inputs = [output_file],
-        outputs = [report_file],
-        mnemonic = "GenerateWitReport",
-        progress_message = "Generating dependency report for %s" % ctx.label.name,
+To fix missing dependencies, add them to your wit_library's deps attribute.
+For advanced analysis, use external tools to process the JSON output.
+""".format(
+        wit_file = ctx.file.wit_file.short_path,
+        analysis_file = output_file.short_path,
+    )
+
+    ctx.actions.write(
+        output = report_file,
+        content = report_content,
     )
 
     return [DefaultInfo(files = depset([output_file, report_file]))]

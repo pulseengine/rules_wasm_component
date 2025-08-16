@@ -37,7 +37,7 @@ type Example struct {
 }
 
 func main() {
-	schemas := generateRuleSchemas()
+	schemas := generateComprehensiveSchemas()
 
 	output, err := json.MarshalIndent(schemas, "", "  ")
 	if err != nil {

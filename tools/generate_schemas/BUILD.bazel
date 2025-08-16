@@ -2,6 +2,9 @@ load("@rules_go//go:def.bzl", "go_binary")
 
 go_binary(
     name = "generate_schemas",
-    srcs = ["main.go"],
+    srcs = [
+        "comprehensive_schemas.go",
+        "main.go",
+    ],
     visibility = ["//visibility:public"],
 )

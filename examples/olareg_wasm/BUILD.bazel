@@ -1,0 +1,23 @@
+"""WASM-based OCI registry using olareg as inspiration"""
+
+load("//go:defs.bzl", "go_wasm_component")
+load("//wit:defs.bzl", "wit_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# WIT interface for registry operations
+wit_library(
+    name = "registry_wit",
+    package_name = "wasm:registry",
+    srcs = ["wit/registry.wit"],
+    world = "registry-server",
+)
+
+# Go-based registry component (simplified olareg)
+go_wasm_component(
+    name = "olareg_component",
+    srcs = ["src/main.go"],
+    go_mod = "go.mod",
+    wit = ":registry_wit",
+    world = "registry-server",
+)

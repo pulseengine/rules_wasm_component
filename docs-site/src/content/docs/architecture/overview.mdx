@@ -1,0 +1,267 @@
+---
+title: Architecture Overview
+description: Complete WebAssembly component development workflow and toolchain architecture
+---
+
+# WebAssembly Component Architecture
+
+Understanding the complete development workflow from WIT interfaces to deployed components, including multi-language support and advanced composition patterns.
+
+## Development Workflow Overview
+
+The WebAssembly Component Model development process follows a structured pipeline that transforms high-level interface definitions into optimized, deployable components.
+
+### Core Development Pipeline
+
+```mermaid
+graph TD
+    A[WIT Interface Definition] --> B[Language-Specific Bindgen]
+    B --> C[Component Implementation] 
+    C --> D[WebAssembly Core Module]
+    D --> E[WASI Adapter Integration]
+    E --> F[Component Wrapping]
+    F --> G[Validation & Optimization]
+    G --> H[Component Registry/Deployment]
+    
+    B1[wit-bindgen-rust] --> C1[Rust Implementation]
+    B2[wit-bindgen-go] --> C2[Go Implementation]
+    B3[wit-bindgen-c] --> C3[C++ Implementation]
+    B4[jco] --> C4[JS Implementation]
+    
+    B --> B1
+    B --> B2
+    B --> B3
+    B --> B4
+    
+    C1 --> D
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    
+    style A fill:#e1f5fe
+    style H fill:#f3e5f5
+    style G fill:#fff3e0
+```
+
+### Tool Ecosystem
+
+The build system orchestrates multiple specialized tools, each handling specific aspects of the component lifecycle:
+
+```mermaid
+graph LR
+    subgraph "Interface Definition"
+        WIT[WIT Files]
+        WL[wit_library rule]
+    end
+    
+    subgraph "Code Generation" 
+        WBR[wit-bindgen-rust]
+        WBG[wit-bindgen-go]
+        WBC[wit-bindgen-c]
+        JCO[jco/componentize-js]
+    end
+    
+    subgraph "Language Toolchains"
+        RUST[Rust Compiler]
+        TINYGO[TinyGo Compiler]
+        WASISDK[WASI SDK]
+        NODE[Node.js]
+    end
+    
+    subgraph "WebAssembly Tools"
+        WT[wasm-tools]
+        WZ[Wizer]
+        VA[WASI Adapters]
+    end
+    
+    subgraph "Composition & Deployment"
+        WAC[WAC Composer]
+        WKG[WKG Registry]
+        OCI[OCI Registries]
+    end
+    
+    WIT --> WL
+    WL --> WBR
+    WL --> WBG  
+    WL --> WBC
+    WL --> JCO
+    
+    WBR --> RUST
+    WBG --> TINYGO
+    WBC --> WASISDK
+    JCO --> NODE
+    
+    RUST --> WT
+    TINYGO --> WT
+    WASISDK --> WT
+    NODE --> WT
+    
+    WT --> WZ
+    WT --> VA
+    WZ --> WAC
+    VA --> WAC
+    WAC --> WKG
+    WAC --> OCI
+```
+
+## Language-Specific Implementation Flows
+
+### Rust Component Development
+
+The Rust workflow follows this pattern from the `examples/basic/BUILD.bazel` file:
+
+1. **WIT Interface Processing**: The `wit_library` rule processes WIT files and validates interface definitions
+2. **Binding Generation**: `rust_wasm_component_bindgen` generates Rust traits and types
+3. **Component Implementation**: Developer implements the generated traits
+4. **Module Compilation**: Rust compiler produces WebAssembly core module
+5. **Component Wrapping**: `wasm-tools component new` wraps the module with component metadata
+6. **Validation**: `wasm-tools validate` ensures component compliance
+
+### Go Component Development
+
+The Go workflow leverages TinyGo's WebAssembly support from the `examples/go_component/BUILD.bazel` file:
+
+1. **WIT Processing**: Same `wit_library` rule as other languages
+2. **Go Binding Generation**: `go_wit_bindgen` creates Go interfaces and types
+3. **TinyGo Compilation**: TinyGo compiler with WASI Preview 2 target
+4. **Adapter Integration**: WASI snapshot preview1 adapter for compatibility
+5. **Component Assembly**: Same component wrapping process as Rust
+
+### Multi-Language Architecture
+
+```mermaid
+flowchart TB
+    subgraph "Shared Interface Layer"
+        WIT1[calculator.wit]
+        WIT2[http-service.wit]
+        WIT3[storage.wit]
+    end
+    
+    subgraph "Language Implementations"
+        RUST1[Rust Calculator]
+        GO1[Go HTTP Service]
+        CPP1[C++ Storage]
+        JS1[JS Frontend]
+    end
+    
+    subgraph "Component Layer"
+        COMP1[Calculator Component]
+        COMP2[HTTP Component]
+        COMP3[Storage Component]
+        COMP4[Frontend Component]
+    end
+    
+    subgraph "Composition Layer"
+        WAC1[microservices.wac]
+        SYS[Distributed System]
+    end
+    
+    WIT1 --> RUST1
+    WIT2 --> GO1
+    WIT3 --> CPP1
+    WIT1 --> JS1
+    
+    RUST1 --> COMP1
+    GO1 --> COMP2
+    CPP1 --> COMP3
+    JS1 --> COMP4
+    
+    COMP1 --> WAC1
+    COMP2 --> WAC1
+    COMP3 --> WAC1
+    COMP4 --> WAC1
+    
+    WAC1 --> SYS
+```
+
+## Advanced Features Integration
+
+### Wizer Pre-initialization
+
+The Wizer integration optimizes component startup by pre-initializing runtime state:
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Wizer as Wizer Tool
+    participant Runtime as Runtime Host
+    
+    Dev->>Wizer: Core Module + Init Function
+    Wizer->>Wizer: Execute Initialization
+    Wizer->>Wizer: Snapshot Memory State
+    Wizer->>Dev: Pre-initialized Module
+    Dev->>Runtime: Deploy Optimized Component
+    Runtime->>Runtime: Skip Initialization (1.35-6x faster)
+```
+
+### Component Composition with WAC
+
+The WebAssembly Composition (WAC) format enables building complex systems, as demonstrated in `examples/multi_profile/production.wac`:
+
+1. **Component Registry**: Components stored in OCI registries or local builds
+2. **Composition Definition**: WAC files describe component relationships
+3. **Dependency Resolution**: Automatic component and dependency fetching
+4. **Runtime Assembly**: Dynamic component linking and instantiation
+
+### OCI Registry Integration
+
+```mermaid
+graph TB
+    subgraph "Local Development"
+        BUILD[bazel build]
+        COMP[Component Binary]
+    end
+    
+    subgraph "Registry Publishing"
+        PUSH[oci_push rule]
+        REG[OCI Registry]
+        META[Component Metadata]
+    end
+    
+    subgraph "Consumption"
+        PULL[oci_pull rule]
+        DEP[Dependency Resolution]
+        COMPOSE[WAC Composition]
+    end
+    
+    BUILD --> COMP
+    COMP --> PUSH
+    PUSH --> REG
+    PUSH --> META
+    
+    REG --> PULL
+    META --> DEP
+    PULL --> COMPOSE
+    DEP --> COMPOSE
+```
+
+## Key Architectural Principles
+
+### Hermetic Builds
+
+All toolchains are automatically downloaded and cached by Bazel:
+
+- **Language Toolchains**: Rust, TinyGo, WASI SDK managed as Bazel toolchains
+- **WebAssembly Tools**: wasm-tools, wizer, wit-bindgen downloaded from releases
+- **Cross-Platform**: Automatic platform detection and tool selection
+- **Reproducible**: Exact version pinning ensures consistent builds
+
+### Component Model Compliance
+
+Every component produced follows WebAssembly Component Model specifications:
+
+- **Interface Types**: Rich type system with records, variants, and resources
+- **World Isolation**: Clear component boundaries and capabilities
+- **WASI Integration**: Standardized system interface support
+- **Versioning**: Semantic versioning for component interfaces
+
+### Performance Optimization
+
+Multiple optimization strategies are available:
+
+- **Build-time**: Release optimizations, dead code elimination
+- **Runtime**: Wizer pre-initialization, efficient memory layouts
+- **Composition**: Lazy loading, dynamic linking strategies
+- **Deployment**: Container registry caching, bandwidth optimization
+
+This architecture enables building scalable, maintainable WebAssembly applications while preserving the benefits of strong typing, component isolation, and cross-language interoperability.

@@ -1,5 +1,7 @@
 // Web Frontend implementation for microservices applications
-use frontend::web::exports::wasi::http::incoming_handler::{Guest, IncomingRequest, ResponseOutparam};
+use frontend::web::exports::wasi::http::incoming_handler::{
+    Guest, IncomingRequest, ResponseOutparam,
+};
 
 struct WebFrontend;
 
@@ -7,14 +9,14 @@ impl Guest for WebFrontend {
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         // Simplified web frontend implementation
         println!("Web Frontend: Serving request");
-        
+
         // In a real implementation, this would:
         // 1. Serve static assets (HTML, CSS, JS)
         // 2. Handle SPA routing
         // 3. Proxy API calls to backend services
         // 4. Manage user sessions
         // 5. Handle real-time updates
-        
+
         let html_response = r#"
 <!DOCTYPE html>
 <html>
@@ -33,7 +35,7 @@ impl Guest for WebFrontend {
     </div>
 </body>
 </html>"#;
-        
+
         send_html_response(response_out, 200, html_response);
     }
 }

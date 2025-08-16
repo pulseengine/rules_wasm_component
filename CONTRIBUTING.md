@@ -317,7 +317,7 @@ my_rule = rule(
 
 - **Issues**: GitHub issues for bugs and feature requests
 - **Discussions**: GitHub discussions for questions
-- **Email**: maintainers@rules-wasm-component.dev
+- **Email**: <maintainers@rules-wasm-component.dev>
 
 ### Common Issues
 

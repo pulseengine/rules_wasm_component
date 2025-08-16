@@ -1,0 +1,19 @@
+"""Build file for Bazel helper functions"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# File operations helper functions
+bzl_library(
+    name = "file_ops_actions",
+    srcs = ["file_ops_actions.bzl"],
+    visibility = ["//visibility:public"],
+)
+
+# WASM Tools integration helper functions
+bzl_library(
+    name = "wasm_tools_actions",
+    srcs = ["wasm_tools_actions.bzl"],
+    visibility = ["//visibility:public"],
+)

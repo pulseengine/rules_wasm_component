@@ -1,8 +1,27 @@
 """jco (JavaScript Component Tools) toolchain definitions"""
 
-load("//toolchains:tool_versions.bzl", "get_tool_info")
+load("//checksums:registry.bzl", "get_tool_info")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
 load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
+
+def _get_nodejs_toolchain_info(repository_ctx):
+    """Get Node.js toolchain info from the registered hermetic toolchain"""
+
+    # In MODULE.bazel mode with rules_nodejs, we need to access the hermetic binaries
+    # The nodejs toolchain should make node and npm available through PATH
+
+    # Try to find binaries through repository_ctx.which
+    # This should work if the nodejs toolchain properly sets up the PATH
+    node_binary = repository_ctx.which("node")
+    npm_binary = repository_ctx.which("npm")
+
+    if node_binary and npm_binary:
+        return struct(
+            node = str(node_binary),
+            npm = str(npm_binary),
+        )
+
+    return None
 
 # jco platform mapping
 JCO_PLATFORMS = {
@@ -119,10 +138,13 @@ def _setup_system_jco_tools(repository_ctx):
         if "warning" in validation_result:
             print(validation_result["warning"])
 
-        # Create wrapper executable
-        repository_ctx.file(tool_name, """#!/bin/bash
-exec {} "$@"
-""".format(binary_name), executable = True)
+        # Create symlink to system tool (Bazel-native approach)
+        tool_path = validation_result.get("path", repository_ctx.which(binary_name))
+        if tool_path:
+            repository_ctx.symlink(tool_path, tool_name)
+        else:
+            # Fallback: use PATH resolution
+            repository_ctx.file(tool_name, binary_name, executable = True)
 
         print("Using system {}: {} at {}".format(
             tool_name,
@@ -183,20 +205,39 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, version):
     _setup_node_tools_system(repository_ctx)
 
 def _setup_npm_jco_tools(repository_ctx):
-    """Set up jco via npm installation"""
+    """Set up jco via hermetic npm installation"""
 
-    # Check if npm is available
-    npm_validation = validate_system_tool(repository_ctx, "npm")
-    if not npm_validation["valid"]:
-        fail(format_diagnostic_error(
-            "E006",
-            "npm not found for jco installation",
-            "Install Node.js and npm, then try again",
-        ))
+    # Use the Node.js toolchain from rules_nodejs
+    # The hermetic npm should be available through the nodejs_toolchains
+
+    # Try to find the hermetic npm binary
+    # In MODULE.bazel mode, we need to reference the registered toolchain
+    node_info = _get_nodejs_toolchain_info(repository_ctx)
+    if not node_info:
+        # In repository rules, the Node.js toolchain may not be available during execution
+        # This is a known limitation of rules_nodejs + MODULE.bazel + repository rules
+        # Create a placeholder that indicates the issue
+        print("Warning: Node.js toolchain not available during repository rule execution")
+        print("This is expected in some BCR testing environments")
+        print("jco functionality will be limited but basic WebAssembly builds will work")
+
+        # Create a placeholder jco binary that explains the situation
+        repository_ctx.file("jco", """#!/bin/bash
+echo "jco not available - Node.js toolchain not accessible during repository rule execution"
+echo "This is a known limitation with rules_nodejs + MODULE.bazel + repository rules"
+echo "JavaScript/TypeScript WebAssembly component builds are not available"
+echo "Use download strategy or system jco as an alternative"
+exit 1
+""", executable = True)
+        return
+
+    npm_binary = node_info.npm
+    node_binary = node_info.node
+    print("Using hermetic npm from Node.js toolchain: {}".format(npm_binary))
 
     # Install jco and componentize-js globally via npm
     result = repository_ctx.execute([
-        "npm",
+        npm_binary,
         "install",
         "-g",
         "@bytecodealliance/jco@{}".format(repository_ctx.attr.version),
@@ -228,10 +269,11 @@ def _setup_npm_jco_tools(repository_ctx):
     node_validation = validate_system_tool(repository_ctx, "node")
     node_path = node_validation.get("path", "node")
 
-    # Create wrapper that uses Node.js to run JCO
-    repository_ctx.file("jco", """#!/bin/bash
-exec {} {} "$@"
-""".format(node_path, jco_path), executable = True)
+    # Create symlink to jco binary (Bazel-native approach)
+    if repository_ctx.path(jco_path).exists:
+        repository_ctx.symlink(jco_path, "jco")
+    else:
+        fail("jco binary not found after installation at {}".format(jco_path))
 
     print("Installed jco via npm globally")
 
@@ -260,14 +302,19 @@ def _setup_node_tools_system(repository_ctx):
     node_path = node_validation.get("path", "node")
     npm_path = npm_validation.get("path", "npm")
 
-    # Create wrapper executables with absolute paths
-    repository_ctx.file("node", """#!/bin/bash
-exec {} "$@"
-""".format(node_path), executable = True)
+    # Create symlink to Node.js binary (Bazel-native approach)
+    if node_path and repository_ctx.path(node_path).exists:
+        repository_ctx.symlink(node_path, "node")
+    else:
+        # Fallback: use PATH resolution
+        repository_ctx.file("node", "node", executable = True)
 
-    repository_ctx.file("npm", """#!/bin/bash
-exec {} "$@"
-""".format(npm_path), executable = True)
+    # Create symlink to npm binary (Bazel-native approach)
+    if npm_path and repository_ctx.path(npm_path).exists:
+        repository_ctx.symlink(npm_path, "npm")
+    else:
+        # Fallback: use PATH resolution
+        repository_ctx.file("npm", "npm", executable = True)
 
 def _create_jco_build_files(repository_ctx):
     """Create BUILD files for jco toolchain"""

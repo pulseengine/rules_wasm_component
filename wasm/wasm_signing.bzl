@@ -182,6 +182,8 @@ def _wasm_sign_impl(ctx):
             imports = component_info.imports,
             exports = component_info.exports,
             metadata = dict(component_info.metadata, signed = True),
+            profile = component_info.profile,
+            profile_variants = component_info.profile_variants,
         )
         providers = [signature_info, signed_component_info]
     else:

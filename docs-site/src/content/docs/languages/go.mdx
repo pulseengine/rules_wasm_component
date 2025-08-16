@@ -1,0 +1,504 @@
+---
+title: Go Components  
+description: Build WebAssembly components with Go using TinyGo and WASI Preview 2
+---
+
+Build efficient WebAssembly components with Go using TinyGo v0.38.0 and native WASI Preview 2 support.
+
+## Features
+
+- **TinyGo v0.38.0** - Latest WebAssembly support with Component Model
+- **WASI Preview 2** - Native support for latest WASI specification  
+- **Component Model** - Full WebAssembly Component Model compatibility
+- **Official Go Modules** - BytecodeAlliance go.bytecodealliance.org packages
+- **Automatic Toolchain** - TinyGo downloaded and managed by Bazel
+
+## Quick Start
+
+### WIT Interface Definition
+
+import CodeFromFile from '@components/CodeFromFile.astro';
+
+<CodeFromFile file="examples/go_component/wit/calculator.wit" title="examples/go_component/wit/calculator.wit" />
+
+### Build Configuration
+
+<CodeFromFile file="examples/go_component/BUILD.bazel" title="examples/go_component/BUILD.bazel" lines="40-60" />
+
+### Go Module Setup
+
+```go title="go.mod"
+module calculator
+
+go 1.21
+
+require (
+    go.bytecodealliance.org/cm v0.1.0
+    go.bytecodealliance.org/wit-bindgen v0.1.0
+)
+```
+
+### Go Implementation
+
+<CodeFromFile file="examples/go_component/main.go" title="examples/go_component/main.go" />
+
+This minimal example demonstrates the complete TinyGo + Component Model pipeline working. For more complex implementations, check the other Go component examples in the repository.
+
+## HTTP Service Example
+
+### WIT Interface for HTTP
+
+```wit title="wit/http-service.wit"
+package http:service@1.0.0;
+
+interface handler {
+    record request {
+        method: string,
+        path: string,
+        headers: list<tuple<string, string>>,
+        body: list<u8>,
+    }
+    
+    record response {
+        status: u16,
+        headers: list<tuple<string, string>>,
+        body: list<u8>,
+    }
+    
+    handle-request: func(req: request) -> response;
+}
+
+world http-service {
+    export handler;
+    import wasi:http/outgoing-handler@0.2.0;
+    import wasi:io/streams@0.2.0;
+}
+```
+
+### HTTP Service Implementation
+
+```go title="service.go"
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "strings"
+    "service/gen"
+)
+
+type HTTPService struct{}
+
+func NewHTTPService() HTTPService {
+    return HTTPService{}
+}
+
+func (s HTTPService) HandleRequest(req gen.HttpServiceHandlerRequest) gen.HttpServiceHandlerResponse {
+    switch {
+    case req.Method == "GET" && req.Path == "/":
+        return s.handleRoot()
+    case req.Method == "POST" && strings.HasPrefix(req.Path, "/calculate"):
+        return s.handleCalculate(req)
+    case req.Method == "GET" && req.Path == "/health":
+        return s.handleHealth()
+    default:
+        return gen.HttpServiceHandlerResponse{
+            Status:  404,
+            Headers: []gen.Tuple2[string, string]{{"Content-Type", "text/plain"}},
+            Body:    []byte("Not Found"),
+        }
+    }
+}
+
+func (s HTTPService) handleRoot() gen.HttpServiceHandlerResponse {
+    html := `<!DOCTYPE html>
+<html>
+<head><title>Go WebAssembly Calculator</title></head>
+<body>
+    <h1>Calculator Service</h1>
+    <p>POST to /calculate with JSON: {"a": 5, "b": 3, "op": "add"}</p>
+</body>
+</html>`
+
+    return gen.HttpServiceHandlerResponse{
+        Status:  200,
+        Headers: []gen.Tuple2[string, string]{{"Content-Type", "text/html"}},
+        Body:    []byte(html),
+    }
+}
+
+type CalculateRequest struct {
+    A  int32  `json:"a"`
+    B  int32  `json:"b"`
+    Op string `json:"op"`
+}
+
+type CalculateResponse struct {
+    Result int32  `json:"result"`
+    Error  string `json:"error,omitempty"`
+}
+
+func (s HTTPService) handleCalculate(req gen.HttpServiceHandlerRequest) gen.HttpServiceHandlerResponse {
+    var calcReq CalculateRequest
+    if err := json.Unmarshal(req.Body, &calcReq); err != nil {
+        return s.errorResponse(400, "Invalid JSON")
+    }
+
+    var result int32
+    var errMsg string
+
+    switch calcReq.Op {
+    case "add":
+        result = calcReq.A + calcReq.B
+    case "subtract":
+        result = calcReq.A - calcReq.B
+    case "multiply":
+        result = calcReq.A * calcReq.B
+    case "divide":
+        if calcReq.B == 0 {
+            errMsg = "Division by zero"
+        } else {
+            result = calcReq.A / calcReq.B
+        }
+    default:
+        errMsg = "Unknown operation"
+    }
+
+    response := CalculateResponse{
+        Result: result,
+        Error:  errMsg,
+    }
+
+    responseBody, _ := json.Marshal(response)
+    statusCode := uint16(200)
+    if errMsg != "" {
+        statusCode = 400
+    }
+
+    return gen.HttpServiceHandlerResponse{
+        Status:  statusCode,
+        Headers: []gen.Tuple2[string, string]{{"Content-Type", "application/json"}},
+        Body:    responseBody,
+    }
+}
+
+func (s HTTPService) handleHealth() gen.HttpServiceHandlerResponse {
+    return gen.HttpServiceHandlerResponse{
+        Status:  200,
+        Headers: []gen.Tuple2[string, string]{{"Content-Type", "application/json"}},
+        Body:    []byte(`{"status": "healthy", "service": "go-calculator"}`),
+    }
+}
+
+func (s HTTPService) errorResponse(status uint16, message string) gen.HttpServiceHandlerResponse {
+    return gen.HttpServiceHandlerResponse{
+        Status:  status,
+        Headers: []gen.Tuple2[string, string]{{"Content-Type", "text/plain"}},
+        Body:    []byte(message),
+    }
+}
+```
+
+## Advanced Features
+
+### Error Handling Patterns
+
+```go title="errors.go"
+package main
+
+import (
+    "fmt"
+    "calculator/gen"
+)
+
+// Custom error types
+type CalculationError struct {
+    Operation string
+    Message   string
+}
+
+func (e CalculationError) Error() string {
+    return fmt.Sprintf("%s error: %s", e.Operation, e.Message)
+}
+
+func safeDivide(a, b int32) gen.Result[int32, string] {
+    if b == 0 {
+        err := CalculationError{
+            Operation: "division",
+            Message:   "cannot divide by zero",
+        }
+        return gen.ResultErr[int32, string](err.Error())
+    }
+    
+    return gen.ResultOk[int32, string](a / b)
+}
+
+func safeRoot(n int32) gen.Result[float64, string] {
+    if n < 0 {
+        return gen.ResultErr[float64, string]("cannot calculate square root of negative number")
+    }
+    
+    // Note: This is a simplified square root calculation
+    // In practice, you'd use a more sophisticated algorithm
+    result := float64(n)
+    for i := 0; i < 10; i++ {
+        result = 0.5 * (result + float64(n)/result)
+    }
+    
+    return gen.ResultOk[float64, string](result)
+}
+```
+
+### Resource Management
+
+```go title="resources.go"
+package main
+
+import (
+    "sync"
+    "calculator/gen"
+)
+
+// Global resource pool
+var (
+    calculatorPool = sync.Pool{
+        New: func() interface{} {
+            return &Calculator{
+                cache: make(map[string]int32),
+            }
+        },
+    }
+)
+
+type Calculator struct {
+    cache map[string]int32
+    mu    sync.RWMutex
+}
+
+func (c *Calculator) CachedCalculate(operation string, a, b int32) int32 {
+    key := fmt.Sprintf("%s:%d:%d", operation, a, b)
+    
+    // Try to get from cache first
+    c.mu.RLock()
+    if result, exists := c.cache[key]; exists {
+        c.mu.RUnlock()
+        return result
+    }
+    c.mu.RUnlock()
+
+    // Calculate and cache the result
+    var result int32
+    switch operation {
+    case "add":
+        result = a + b
+    case "multiply":
+        result = a * b
+    default:
+        return 0
+    }
+
+    c.mu.Lock()
+    c.cache[key] = result
+    c.mu.Unlock()
+
+    return result
+}
+
+func getCalculator() *Calculator {
+    return calculatorPool.Get().(*Calculator)
+}
+
+func putCalculator(c *Calculator) {
+    // Clear cache to prevent memory leaks
+    c.mu.Lock()
+    for k := range c.cache {
+        delete(c.cache, k)
+    }
+    c.mu.Unlock()
+    
+    calculatorPool.Put(c)
+}
+```
+
+## Performance Optimization
+
+### Build Optimization
+
+```python title="BUILD.bazel"
+go_wasm_component(
+    name = "calculator_optimized",
+    srcs = ["main.go", "calculator.go"],
+    wit = ":calculator_interfaces",
+    world = "calculator",
+    go_mod = "go.mod",
+    optimization = "release",
+    # TinyGo specific optimizations
+    gc = "leaking",  # For maximum performance, no GC overhead
+    scheduler = "none",  # Single-threaded, no scheduler overhead
+)
+```
+
+### Memory Management
+
+```go title="memory.go"
+package main
+
+import (
+    "runtime"
+    "calculator/gen"
+)
+
+// Minimize allocations for high-frequency functions
+func (c Calculator) FastAdd(numbers []int32) int32 {
+    var sum int32
+    for _, n := range numbers {
+        sum += n
+    }
+    return sum
+}
+
+// Memory-efficient batch processing
+func (c Calculator) BatchCalculate(operations []string, operands [][2]int32) []gen.Result[int32, string] {
+    // Pre-allocate result slice to avoid multiple allocations
+    results := make([]gen.Result[int32, string], len(operations))
+    
+    for i, op := range operations {
+        a, b := operands[i][0], operands[i][1]
+        
+        switch op {
+        case "add":
+            results[i] = gen.ResultOk[int32, string](a + b)
+        case "subtract":
+            results[i] = gen.ResultOk[int32, string](a - b)
+        case "multiply":
+            results[i] = gen.ResultOk[int32, string](a * b)
+        case "divide":
+            if b == 0 {
+                results[i] = gen.ResultErr[int32, string]("division by zero")
+            } else {
+                results[i] = gen.ResultOk[int32, string](a / b)
+            }
+        default:
+            results[i] = gen.ResultErr[int32, string]("unknown operation")
+        }
+    }
+    
+    // Force garbage collection to keep memory usage low
+    runtime.GC()
+    
+    return results
+}
+```
+
+## Testing
+
+### Component Testing
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component_test")
+
+go_wasm_component_test(
+    name = "calculator_test",
+    component = ":calculator_component",
+    test_data = ["test_cases.json"],
+)
+```
+
+### Integration Tests
+
+```go title="calculator_test.go"
+//go:build !tinygo
+
+package main
+
+import (
+    "testing"
+    "context"
+    "github.com/bytecodealliance/wasmtime-go/v23"
+)
+
+func TestCalculatorComponent(t *testing.T) {
+    engine := wasmtime.NewEngine()
+    store := wasmtime.NewStore(engine)
+    
+    // Load the component
+    component, err := wasmtime.NewComponentFromFile(engine, "calculator_component.wasm")
+    if err != nil {
+        t.Fatalf("Failed to load component: %v", err)
+    }
+    
+    linker := wasmtime.NewLinker(engine)
+    
+    // Add WASI support
+    if err := linker.DefineWasi(); err != nil {
+        t.Fatalf("Failed to define WASI: %v", err)
+    }
+    
+    instance, err := linker.Instantiate(store, component)
+    if err != nil {
+        t.Fatalf("Failed to instantiate: %v", err)
+    }
+    
+    // Test the add function
+    addFunc := instance.GetFunc(store, "add")
+    if addFunc == nil {
+        t.Fatal("add function not found")
+    }
+    
+    result, err := addFunc.Call(store, 5, 3)
+    if err != nil {
+        t.Fatalf("add function call failed: %v", err)
+    }
+    
+    if result.(int32) != 8 {
+        t.Errorf("Expected 8, got %v", result)
+    }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**TinyGo target mismatch:**
+```bash
+# Check TinyGo version and targets
+tinygo version
+tinygo targets | grep wasi
+```
+
+**Missing WASI adapter:**
+```python
+# Ensure adapter is specified
+go_wasm_component(
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",  # Required
+)
+```
+
+**Go module dependencies:**
+```go
+// Use BytecodeAlliance official modules
+go.bytecodealliance.org/cm v0.1.0
+go.bytecodealliance.org/wit-bindgen v0.1.0
+```
+
+<div class="demo-buttons">
+  <a href="https://stackblitz.com/github/your-repo/rules_wasm_component/tree/main/examples/go_component" class="demo-button">
+    Try Go Example
+  </a>
+  <a href="/examples/http-service/" class="demo-button">
+    HTTP Service Example
+  </a>
+</div>
+
+## Performance Characteristics
+
+<div class="perf-indicator">Small binary size (~1-2MB)</div>
+<div class="perf-indicator">Fast startup (~10ms)</div>
+<div class="perf-indicator">Low memory usage with leaking GC</div>
+
+Go components with TinyGo offer:
+- **Familiar Go syntax** - Use standard Go patterns and libraries
+- **WASI Preview 2** - Latest WebAssembly system interface
+- **Component Model** - Full interoperability with other languages
+- **Performance optimized** - TinyGo produces efficient WebAssembly code

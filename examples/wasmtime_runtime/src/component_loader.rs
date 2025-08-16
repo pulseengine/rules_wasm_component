@@ -104,18 +104,18 @@ impl ComponentLoader {
         info!("Loading component from {}", path.display());
 
         // Read component bytes
-        let component_bytes = tokio::fs::read(path)
-            .await
-            .map_err(|e| WasmtimeError::ComponentLoadError(format!("Failed to read file: {}", e)))?;
+        let component_bytes = tokio::fs::read(path).await.map_err(|e| {
+            WasmtimeError::ComponentLoadError(format!("Failed to read file: {}", e))
+        })?;
 
         // Load component with timeout
         let component = timeout(
             self.config.instantiation_timeout(),
-            self.load_component_from_bytes(&component_bytes, path.to_string_lossy().to_string())
+            self.load_component_from_bytes(&component_bytes, path.to_string_lossy().to_string()),
         )
         .await
         .map_err(|_| WasmtimeError::TimeoutError {
-            duration: self.config.instantiation_timeout()
+            duration: self.config.instantiation_timeout(),
         })?
         .map_err(|e| WasmtimeError::ComponentLoadError(e.to_string()))?;
 
@@ -149,11 +149,9 @@ impl ComponentLoader {
         let engine = self.engine.clone();
         let bytes = bytes.to_vec();
 
-        tokio::task::spawn_blocking(move || {
-            Component::from_binary(&engine, &bytes)
-        })
-        .await?
-        .context("Failed to parse component binary")
+        tokio::task::spawn_blocking(move || Component::from_binary(&engine, &bytes))
+            .await?
+            .context("Failed to parse component binary")
     }
 
     /// Extract metadata from a loaded component
@@ -192,10 +190,7 @@ impl LoadedComponent {
         info!("Instantiating component '{}'", self.metadata.name);
 
         // Create WASI context
-        let wasi_ctx = WasiCtxBuilder::new()
-            .inherit_stdio()
-            .inherit_env()
-            .build();
+        let wasi_ctx = WasiCtxBuilder::new().inherit_stdio().inherit_env().build();
 
         let host_data = HostData { wasi_ctx };
         let mut store = Store::new(&self.loader.engine, host_data);
@@ -204,24 +199,28 @@ impl LoadedComponent {
         store.limiter(|_| {
             wasmtime::ResourceLimiter::new()
                 .memory_size(64 * 1024 * 1024) // 64MB memory limit
-                .table_elements(10_000)        // Table elements limit
-                .instances(100)                // Instance limit
+                .table_elements(10_000) // Table elements limit
+                .instances(100) // Instance limit
         });
 
         // Instantiate with timeout
         let instance = timeout(
             self.loader.config.instantiation_timeout(),
-            self.loader.linker.instantiate_async(&mut store, &self.component)
+            self.loader
+                .linker
+                .instantiate_async(&mut store, &self.component),
         )
         .await
         .map_err(|_| WasmtimeError::TimeoutError {
-            duration: self.loader.config.instantiation_timeout()
+            duration: self.loader.config.instantiation_timeout(),
         })?
         .map_err(|e| WasmtimeError::ComponentLoadError(format!("Instantiation failed: {}", e)))?;
 
         let instantiation_time = start_time.elapsed();
 
-        self.loader.metrics.record_component_instantiated(&self.metadata, instantiation_time);
+        self.loader
+            .metrics
+            .record_component_instantiated(&self.metadata, instantiation_time);
 
         info!(
             "Successfully instantiated component '{}' in {:?}",
@@ -252,7 +251,10 @@ impl ComponentInstance {
     ) -> WasmtimeResult<Value> {
         let start_time = Instant::now();
 
-        info!("Calling function '{}' on component '{}'", function_name, self.metadata.name);
+        info!(
+            "Calling function '{}' on component '{}'",
+            function_name, self.metadata.name
+        );
 
         // This is a simplified implementation
         // In practice, you'd need to:

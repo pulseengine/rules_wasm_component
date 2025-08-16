@@ -1,0 +1,53 @@
+name: Deploy Documentation to Netcup
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs-site/**']
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs-site/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd docs-site
+          npm ci
+
+      - name: Build documentation site
+        run: |
+          cd docs-site
+          npm run build
+
+      - name: Deploy to Netcup hosting
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.NETCUP_URI }}
+          username: ${{ secrets.NETCUP_USER }}
+          password: ${{ secrets.NETCUP_PASSWORD }}
+          local-dir: ./docs-site/dist/
+          server-dir: /
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.DS_Store
+            **/Thumbs.db
+
+      - name: Purge Cloudflare cache (optional)
+        if: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        uses: jakejarvis/cloudflare-purge-action@master
+        env:
+          CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}

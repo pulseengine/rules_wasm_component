@@ -85,18 +85,22 @@ docker run -d -p 5000:5000 --name registry registry:2
 
 1. Create a Personal Access Token with `write:packages` permission
 2. Set the environment variable:
+
    ```bash
    export GITHUB_TOKEN=ghp_your_token_here
    ```
+
 3. Modify the `dry_run = False` in the GitHub publish target
 
 ### Docker Hub
 
 1. Create a Docker Hub access token
 2. Set the environment variable:
+
    ```bash
    export DOCKER_TOKEN=your_docker_token_here
    ```
+
 3. Configure the registry in `wkg_registry_config`
 
 ## Registry Configuration

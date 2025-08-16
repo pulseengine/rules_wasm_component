@@ -203,7 +203,10 @@ impl ChecksumManager {
 
     /// Check if a version is newer than the current latest
     fn is_newer_version(&self, new_version: &str, current_latest: &str) -> bool {
-        match (semver::Version::parse(new_version), semver::Version::parse(current_latest)) {
+        match (
+            semver::Version::parse(new_version),
+            semver::Version::parse(current_latest),
+        ) {
             (Ok(new), Ok(current)) => new > current,
             _ => {
                 // Fall back to string comparison if semver parsing fails
@@ -425,7 +428,10 @@ mod tests {
     async fn test_update_tool_version() {
         let (manager, _temp_dir) = create_test_manager().await;
 
-        manager.create_tool("test-tool", "owner/test-tool").await.unwrap();
+        manager
+            .create_tool("test-tool", "owner/test-tool")
+            .await
+            .unwrap();
 
         let version_info = VersionInfo {
             release_date: "2024-01-01".to_string(),

@@ -1,0 +1,14 @@
+// Simple calculator component interface
+package simple:calculator;
+
+interface calculate {
+    // Basic arithmetic operations
+    add: func(a: s32, b: s32) -> s32;
+    subtract: func(a: s32, b: s32) -> s32;
+    multiply: func(a: s32, b: s32) -> s32;
+    divide: func(a: s32, b: s32) -> result<s32, string>;
+}
+
+world calculator {
+    export calculate;
+}

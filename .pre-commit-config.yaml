@@ -39,13 +39,24 @@ repos:
     hooks:
       - id: go-fmt
 
-  # JavaScript/TypeScript formatting
+  # JavaScript/TypeScript/Documentation formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        files: '\.(js|ts|json|yaml|yml|md)$'
+        files: '\.(js|ts|jsx|tsx|json|yaml|yml|md|mdx|astro|css)$'
         exclude: '(package-lock\.json|\.lock)$'
+        additional_dependencies:
+          - 'prettier-plugin-astro@^0.14.0'
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.42.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        files: '\.(md|mdx)$'
+        exclude: '^docs-site/node_modules/'
 
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -108,6 +119,24 @@ repos:
         entry: bash -c 'echo "Running tests for changed files..." && bazel test //test/unit:unit_tests'
         language: system
         files: '\.bzl$|\.bazel$|BUILD$'
+        pass_filenames: false
+
+      # Documentation build validation
+      - id: docs-build-check
+        name: Documentation Build Check
+        description: Validate documentation builds successfully
+        entry: bash -c 'cd docs-site && npm ci --silent && npm run generate:docs && npm run check'
+        language: system
+        files: '^docs-site/.*\.(js|ts|astro|mdx|md|json)$'
+        pass_filenames: false
+
+      # Documentation link validation
+      - id: docs-link-check
+        name: Documentation Link Check
+        description: Check for broken internal links in documentation
+        entry: bash -c 'cd docs-site && npm run check'
+        language: system
+        files: '^docs-site/.*\.(mdx|md)$'
         pass_filenames: false
 
 ci:

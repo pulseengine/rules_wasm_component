@@ -1,0 +1,773 @@
+---
+title: Rule Reference
+description: Complete reference for all WebAssembly Component Model Bazel rules
+---
+
+# Rule Reference
+
+Complete reference documentation for all Bazel rules provided by rules_wasm_component.
+
+> **Note:** This documentation is automatically generated from rule definitions in the source code.
+> For the most up-to-date information, see the [source repository](https://github.com/pulseengine/rules_wasm_component).
+
+## Table of Contents
+
+- [WIT & Interface Rules](#wit-interface-rules)
+  - [go_wit_bindgen](#go_wit_bindgen)
+  - [wit_bindgen](#wit_bindgen)
+  - [wit_deps_check](#wit_deps_check)
+  - [wit_library](#wit_library)
+  - [wit_markdown](#wit_markdown)
+- [Component Rules](#component-rules)
+  - [cpp_component](#cpp_component)
+  - [go_wasm_component](#go_wasm_component)
+  - [js_component](#js_component)
+  - [rust_wasm_component](#rust_wasm_component)
+  - [rust_wasm_component_bindgen](#rust_wasm_component_bindgen)
+  - [rust_wasm_component_test](#rust_wasm_component_test)
+  - [wasm_component_from_oci](#wasm_component_from_oci)
+  - [wasm_component_new](#wasm_component_new)
+- [Composition Rules](#composition-rules)
+  - [wac_compose](#wac_compose)
+  - [wac_remote_compose](#wac_remote_compose)
+- [Providers](#providers)
+  - [WacCompositionInfo](#waccompositioninfo)
+  - [WasmComponentInfo](#wasmcomponentinfo)
+  - [WitInfo](#witinfo)
+- [Other Rules](#other-rules)
+  - [jco_transpile](#jco_transpile)
+  - [wasm_keygen](#wasm_keygen)
+  - [wasm_signing](#wasm_signing)
+  - [wasm_validate](#wasm_validate)
+  - [wkg_registry_config](#wkg_registry_config)
+
+## WIT & Interface Rules
+
+### go_wit_bindgen
+
+Generates Go bindings from WIT files using wit-bindgen-go. Creates Go language bindings for WebAssembly Interface Types.
+
+**Load from:**
+```python
+load("@rules_wasm_component//go:defs.bzl", "go_wit_bindgen")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `world` | String | ✅ | WIT world to generate bindings for |
+
+**Examples:**
+
+Generate Go bindings from WIT
+
+```python
+go_wit_bindgen(
+    name = "calculator_bindings",
+    world = "calculator-world",
+)
+```
+
+### wit_bindgen
+
+Generates language bindings from WIT files using wit-bindgen tool. Creates bindings for various target languages from WebAssembly Interface Types.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wit:defs.bzl", "wit_bindgen")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `language` | String<br/>*Values: rust, c, go, python, js* | ✅ | Target language for binding generation |
+| `name` | String | ✅ | A unique name for this target |
+| `options` | List of Strings | ❌ | Additional options for wit-bindgen |
+| `wit` | Label | ✅ | WIT library to generate bindings for |
+| `world` | String | ❌ | Specific world to generate bindings for |
+
+**Examples:**
+
+Generate Rust bindings from WIT
+
+```python
+wit_bindgen(
+    name = "rust_bindings",
+    wit = ":my_interfaces",
+    language = "rust",
+)
+```
+
+### wit_deps_check
+
+Analyzes a WIT file for missing dependencies and suggests fixes. Helps developers identify and resolve dependency issues.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wit:defs.bzl", "wit_deps_check")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `wit_file` | Label | ✅ | WIT file to analyze for dependencies |
+
+**Examples:**
+
+Check a WIT file for missing dependencies
+
+```python
+wit_deps_check(
+    name = "check_deps",
+    wit_file = "consumer.wit",
+)
+```
+
+### wit_library
+
+Defines a WIT (WebAssembly Interface Types) library. Processes WIT files and makes them available for use in WASM component builds and binding generation.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `deps` | List of Labels | ❌ | WIT library dependencies. Each dependency must provide WitInfo. |
+| `interfaces` | List of Strings | ❌ | List of interface names defined in this library |
+| `name` | String | ✅ | A unique name for this target |
+| `package_name` | String | ❌ | WIT package name (e.g., 'my:package@1.0.0'). Defaults to target name if not specified. |
+| `srcs` | List of Labels | ✅ | WIT source files (*.wit) |
+| `world` | String | ❌ | Optional world name to export from this library |
+
+**Examples:**
+
+#### Simple WIT library
+
+Basic WIT library with a single interface file
+
+```python
+wit_library(
+    name = "my_interfaces",
+    package_name = "my:pkg@1.0.0",
+    srcs = ["interfaces.wit"],
+)
+```
+
+#### WIT library with dependencies
+
+WIT library that imports from another package
+
+```python
+wit_library(
+    name = "consumer_interfaces",
+    package_name = "consumer:app@1.0.0",
+    srcs = ["consumer.wit"],
+    deps = ["//external:lib_interfaces"],
+)
+```
+
+### wit_markdown
+
+Generates markdown documentation from WIT files. Creates human-readable documentation from WebAssembly Interface Types.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wit:defs.bzl", "wit_markdown")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `wit` | Label | ✅ | WIT library to generate documentation for |
+
+**Examples:**
+
+Create markdown documentation from WIT
+
+```python
+wit_markdown(
+    name = "api_docs",
+    wit = ":my_interfaces",
+)
+```
+
+## Component Rules
+
+### cpp_component
+
+Builds a C++ WebAssembly component using WASI SDK. Compiles C++ source code into a WASM component with Preview2 support.
+
+**Load from:**
+```python
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_component")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `deps` | List of Labels | ❌ | C++ dependencies |
+| `hdrs` | List of Labels | ❌ | C++ header files |
+| `name` | String | ✅ | A unique name for this target |
+| `srcs` | List of Labels | ✅ | C++ source files |
+| `wit` | Label | ❌ | WIT library for component interfaces |
+
+**Examples:**
+
+C++ WebAssembly component
+
+```python
+cpp_component(
+    name = "calculator_cpp",
+    srcs = ["calculator.cpp"],
+    hdrs = ["calculator.h"],
+)
+```
+
+### go_wasm_component
+
+Builds a Go WebAssembly component using TinyGo. Compiles Go source code into a WASM component with WASI Preview 2 support.
+
+**Load from:**
+```python
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `adapter` | Label | ❌ | Optional WASI adapter |
+| `go_mod` | Label | ❌ | go.mod file for dependency management |
+| `name` | String | ✅ | A unique name for this target |
+| `optimization` | String<br/>*Default: 'release'*<br/>*Values: debug, release* | ❌ | Build optimization level |
+| `srcs` | List of Labels | ✅ | Go source files |
+| `world` | String | ❌ | WIT world for the component |
+
+**Examples:**
+
+Simple Go WASM component with TinyGo
+
+```python
+go_wasm_component(
+    name = "calculator_component",
+    srcs = ["calculator.go", "main.go"],
+    go_mod = "go.mod",
+    optimization = "release",
+)
+```
+
+### js_component
+
+Builds a JavaScript WebAssembly component using ComponentizeJS. Transpiles JavaScript/TypeScript source code into a WASM component.
+
+**Load from:**
+```python
+load("@rules_wasm_component//js:defs.bzl", "js_component")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `entry` | String | ❌ | Entry point for the component |
+| `name` | String | ✅ | A unique name for this target |
+| `package` | Label | ❌ | package.json file |
+| `srcs` | List of Labels | ✅ | JavaScript/TypeScript source files |
+| `wit` | Label | ✅ | WIT library for the component interfaces |
+
+**Examples:**
+
+JavaScript WebAssembly component
+
+```python
+js_component(
+    name = "calculator_js",
+    srcs = ["src/calculator.js"],
+    wit = ":calculator_wit",
+)
+```
+
+### rust_wasm_component
+
+Builds a Rust WebAssembly component. Compiles Rust source code into a WASM component using the Rust toolchain.
+
+**Load from:**
+```python
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `adapter` | Label | ❌ | Optional WASI adapter |
+| `crate_features` | List of Strings | ❌ | Rust crate features |
+| `deps` | List of Labels | ❌ | Rust dependencies (crates) |
+| `name` | String | ✅ | A unique name for this target |
+| `rustc_flags` | List of Strings | ❌ | Additional rustc flags |
+| `srcs` | List of Labels | ✅ | Rust source files |
+
+**Examples:**
+
+Simple Rust WASM component
+
+```python
+rust_wasm_component(
+    name = "my_component",
+    srcs = ["src/lib.rs"],
+    deps = ["@crates//:serde"],
+)
+```
+
+### rust_wasm_component_bindgen
+
+Builds a Rust WebAssembly component with WIT binding generation. Compiles Rust source code into a WASM component and generates language bindings from WIT interfaces.
+
+**Load from:**
+```python
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `deps` | List of Labels | ❌ | Rust dependencies (crates) |
+| `name` | String | ✅ | A unique name for this target |
+| `profiles` | List of Strings<br/>*Default: ['release']*<br/>*Values: debug, release, custom* | ❌ | Build profiles to generate |
+| `srcs` | List of Labels | ✅ | Rust source files |
+| `wit` | Label | ✅ | WIT library target that provides interfaces for this component |
+
+**Examples:**
+
+#### Basic Rust component
+
+Simple Rust WASM component with WIT bindings
+
+```python
+rust_wasm_component_bindgen(
+    name = "my_component",
+    srcs = ["src/lib.rs"],
+    wit = ":my_interfaces",
+)
+```
+
+#### Multi-profile component
+
+Component built with multiple optimization profiles
+
+```python
+rust_wasm_component_bindgen(
+    name = "my_component",
+    srcs = ["src/lib.rs"],
+    wit = ":my_interfaces",
+    profiles = ["debug", "release"],
+)
+```
+
+### rust_wasm_component_test
+
+Tests a Rust WASM component using wasmtime runtime. Provides automated testing for WebAssembly components.
+
+**Load from:**
+```python
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_test")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `component` | Label | ✅ | WASM component to test |
+| `name` | String | ✅ | A unique name for this target |
+
+**Examples:**
+
+Test a WASM component
+
+```python
+rust_wasm_component_test(
+    name = "my_component_test",
+    component = ":my_component",
+)
+```
+
+### wasm_component_from_oci
+
+Downloads WebAssembly components from OCI registries. Enables using remote components from container registries in builds.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_from_oci")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `component_name` | String | ✅ | Component name |
+| `name` | String | ✅ | A unique name for this target |
+| `namespace` | String | ✅ | Registry namespace |
+| `registry` | String | ✅ | Registry hostname |
+| `registry_config` | Label | ❌ | Registry configuration |
+| `tag` | String<br/>*Default: 'latest'* | ❌ | Component tag or version |
+
+**Examples:**
+
+Pull component from OCI registry
+
+```python
+wasm_component_from_oci(
+    name = "auth_service",
+    registry = "ghcr.io",
+    namespace = "my-org",
+    component_name = "auth-service",
+    tag = "v1.0.0",
+)
+```
+
+### wasm_component_new
+
+Creates a WebAssembly component from a core WASM module using wasm-tools component new. Wraps core modules into the component model.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_component_new")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `adapter` | Label | ❌ | WASI adapter to use |
+| `module` | Label | ✅ | Core WASM module to wrap |
+| `name` | String | ✅ | A unique name for this target |
+
+**Examples:**
+
+Convert core WASM module to component
+
+```python
+wasm_component_new(
+    name = "my_component",
+    module = ":my_module",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+)
+```
+
+## Composition Rules
+
+### wac_compose
+
+Composes multiple WebAssembly components into a single application using WAC (WebAssembly Composition) format.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `components` | String Dictionary | ✅ | Map of component targets to component names in composition |
+| `composition` | String | ❌ | Inline WAC composition script |
+| `composition_file` | Label | ❌ | WAC composition file (alternative to inline composition) |
+| `name` | String | ✅ | A unique name for this target |
+| `profile` | String<br/>*Default: 'release'* | ❌ | Build profile for components |
+
+**Examples:**
+
+Compose two components with inline WAC script
+
+```python
+wac_compose(
+    name = "my_app",
+    components = {
+        ":component_a": "comp_a",
+        ":component_b": "comp_b",
+    },
+    composition = '''
+        let a = new comp_a {};
+        let b = new comp_b {};
+        export a;
+    ''',
+)
+```
+
+### wac_remote_compose
+
+Composes WebAssembly components including remote components from OCI registries. Enables distributed component architecture.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wac:defs.bzl", "wac_remote_compose")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `composition_file` | Label | ❌ | WAC composition file |
+| `local_components` | String Dictionary | ❌ | Local component targets |
+| `name` | String | ✅ | A unique name for this target |
+| `registry_config` | Label | ❌ | Registry configuration for OCI access |
+| `remote_components` | String Dictionary | ❌ | Remote OCI component references |
+
+**Examples:**
+
+Compose local and remote components
+
+```python
+wac_remote_compose(
+    name = "distributed_app",
+    local_components = {
+        ":frontend": "frontend",
+    },
+    remote_components = {
+        "ghcr.io/org/backend:v1.0.0": "backend",
+    },
+    composition_file = "app.wac",
+)
+```
+
+## Providers
+
+### WacCompositionInfo
+
+Provider that contains information about a WAC composition of multiple components.
+
+**Provider Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `components` | dict | Dictionary of component name to WasmComponentInfo |
+| `composed_wasm` | File | The composed WASM file |
+| `composition_wit` | File | WIT file describing the composition |
+| `connections` | List of Strings | List of inter-component connections |
+| `instantiations` | List of Strings | List of component instantiations |
+
+**Examples:**
+
+Access composition metadata
+
+```python
+def _my_rule_impl(ctx):
+    composition_info = ctx.attr.composition[WacCompositionInfo]
+    composed_wasm = composition_info.composed_wasm
+    components = composition_info.components
+    # Use composition_info...
+```
+
+### WasmComponentInfo
+
+Provider that contains information about a compiled WebAssembly component.
+
+**Provider Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `component_type` | String | Type of component (module or component) |
+| `exports` | List of Strings | List of exported interfaces |
+| `imports` | List of Strings | List of imported interfaces |
+| `metadata` | dict | Component metadata dictionary |
+| `wasm_file` | File | The compiled WASM component file |
+| `wit_info` | WitInfo | WitInfo provider from the component's interfaces |
+
+**Examples:**
+
+Access component metadata
+
+```python
+def _my_rule_impl(ctx):
+    component_info = ctx.attr.component[WasmComponentInfo]
+    wasm_file = component_info.wasm_file
+    exports = component_info.exports
+    # Use component_info...
+```
+
+### WitInfo
+
+Provider that contains information about WIT interfaces and their dependencies.
+
+**Provider Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `interface_names` | List of Strings | List of interface names defined in this library |
+| `package_name` | String | WIT package name (e.g., 'my:package@1.0.0') |
+| `wit_deps` | Depset | Depset of transitive WIT dependencies |
+| `wit_files` | Depset | Depset of WIT source files for this library |
+| `world_name` | String | World name exported by this library (optional) |
+
+**Examples:**
+
+Access WIT metadata in rule implementations
+
+```python
+def _my_rule_impl(ctx):
+    wit_info = ctx.attr.wit[WitInfo]
+    package_name = wit_info.package_name
+    wit_files = wit_info.wit_files.to_list()
+    # Use wit_info...
+```
+
+## Other Rules
+
+### jco_transpile
+
+Transpiles WebAssembly components to JavaScript using jco (JavaScript Component Tools). Converts WASM components into JavaScript modules.
+
+**Load from:**
+```python
+load("@rules_wasm_component//js:defs.bzl", "jco_transpile")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `component` | Label | ✅ | WebAssembly component to transpile |
+| `name` | String | ✅ | A unique name for this target |
+| `options` | List of Strings | ❌ | Additional jco options |
+
+**Examples:**
+
+Convert WASM component to JavaScript
+
+```python
+jco_transpile(
+    name = "calculator_js_bindings",
+    component = ":calculator_component",
+)
+```
+
+### wasm_keygen
+
+Generates cryptographic keys for WebAssembly component signing using wasmsign2. Creates key pairs for secure component distribution.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `openssh_format` | Boolean | ❌ | Generate keys in OpenSSH format |
+
+**Examples:**
+
+Create signing keys
+
+```python
+wasm_keygen(
+    name = "production_keys",
+    openssh_format = True,
+)
+```
+
+### wasm_signing
+
+Signs WebAssembly components using wasmsign2 for secure deployment. Provides cryptographic signatures for component integrity.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_signing")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `component` | Label | ✅ | Component to sign |
+| `detached` | Boolean | ❌ | Create detached signature |
+| `keys` | Label | ✅ | Signing keys |
+| `name` | String | ✅ | A unique name for this target |
+
+**Examples:**
+
+Sign a WebAssembly component
+
+```python
+wasm_signing(
+    name = "signed_component",
+    component = ":my_component",
+    keys = ":signing_keys",
+)
+```
+
+### wasm_validate
+
+Validates WebAssembly components and modules using wasm-tools validate. Ensures WASM files are well-formed.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_validate")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `wasm` | Label | ✅ | WASM file to validate |
+
+**Examples:**
+
+Validate a WASM component
+
+```python
+wasm_validate(
+    name = "validate_component",
+    wasm = ":my_component",
+)
+```
+
+### wkg_registry_config
+
+Configures WebAssembly component registries for OCI distribution. Sets up authentication and registry endpoints for component publishing and retrieval.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_registry_config")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cache_dir` | String | ❌ | Directory for caching components |
+| `default_registry` | String | ❌ | Default registry to use |
+| `enable_mirror_fallback` | Boolean | ❌ | Enable fallback to mirror registries |
+| `name` | String | ✅ | A unique name for this target |
+| `registries` | List of Strings | ✅ | List of registry configurations |
+
+**Examples:**
+
+Configure multiple component registries
+
+```python
+wkg_registry_config(
+    name = "production_registries",
+    registries = [
+        "github|ghcr.io|oci|env|GITHUB_TOKEN",
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+    ],
+    default_registry = "github",
+)
+```

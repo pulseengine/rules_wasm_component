@@ -19,7 +19,12 @@ fn get_workspace_root() -> PathBuf {
         PathBuf::from(srcdir).join("__main__")
     } else {
         // Fallback for non-Bazel execution
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_path_buf()
     }
 }
 
@@ -42,13 +47,27 @@ async fn test_json_schema_validation() -> Result<()> {
     for tool_name in &tools {
         println!("Validating JSON schema for: {}", tool_name);
 
-        let tool_info = manager.get_tool_info(&tool_name).await
+        let tool_info = manager
+            .get_tool_info(&tool_name)
+            .await
             .map_err(|e| anyhow::anyhow!("Failed to parse {}: {}", tool_name, e))?;
 
         // Validate required fields
-        assert!(!tool_info.tool_name.is_empty(), "Tool name cannot be empty for {}", tool_name);
-        assert!(!tool_info.github_repo.is_empty(), "GitHub repo cannot be empty for {}", tool_name);
-        assert!(!tool_info.latest_version.is_empty(), "Latest version cannot be empty for {}", tool_name);
+        assert!(
+            !tool_info.tool_name.is_empty(),
+            "Tool name cannot be empty for {}",
+            tool_name
+        );
+        assert!(
+            !tool_info.github_repo.is_empty(),
+            "GitHub repo cannot be empty for {}",
+            tool_name
+        );
+        assert!(
+            !tool_info.latest_version.is_empty(),
+            "Latest version cannot be empty for {}",
+            tool_name
+        );
 
         // Validate GitHub repo format (should be owner/repo)
         assert!(
@@ -60,8 +79,14 @@ async fn test_json_schema_validation() -> Result<()> {
 
         // Validate version format (should be semantic version)
         if tool_info.latest_version != "0.0.0" {
-            semver::Version::parse(&tool_info.latest_version)
-                .map_err(|e| anyhow::anyhow!("Invalid version format for {}: {} ({})", tool_name, tool_info.latest_version, e))?;
+            semver::Version::parse(&tool_info.latest_version).map_err(|e| {
+                anyhow::anyhow!(
+                    "Invalid version format for {}: {} ({})",
+                    tool_name,
+                    tool_info.latest_version,
+                    e
+                )
+            })?;
         }
 
         // Validate that versions contain the latest version
@@ -78,23 +103,33 @@ async fn test_json_schema_validation() -> Result<()> {
         for (version, version_info) in &tool_info.versions {
             // Validate version format
             if version != "0.0.0" {
-                semver::Version::parse(version)
-                    .map_err(|e| anyhow::anyhow!("Invalid version format for {} {}: {}", tool_name, version, e))?;
+                semver::Version::parse(version).map_err(|e| {
+                    anyhow::anyhow!(
+                        "Invalid version format for {} {}: {}",
+                        tool_name,
+                        version,
+                        e
+                    )
+                })?;
             }
 
             // Validate release date format (YYYY-MM-DD)
             let date_parts: Vec<&str> = version_info.release_date.split('-').collect();
             assert_eq!(
-                date_parts.len(), 3,
+                date_parts.len(),
+                3,
                 "Release date should be YYYY-MM-DD format for {} {}: {}",
-                tool_name, version, version_info.release_date
+                tool_name,
+                version,
+                version_info.release_date
             );
 
             // Validate platforms
             assert!(
                 !version_info.platforms.is_empty(),
                 "Platforms cannot be empty for {} {}",
-                tool_name, version
+                tool_name,
+                version
             );
 
             for (platform, platform_info) in &version_info.platforms {
@@ -102,20 +137,29 @@ async fn test_json_schema_validation() -> Result<()> {
                 assert!(
                     platform.contains('-'),
                     "Platform should be in format like 'linux-x64' for {} {} {}",
-                    tool_name, version, platform
+                    tool_name,
+                    version,
+                    platform
                 );
 
                 // Validate SHA256 checksum format (64 hex characters)
                 assert_eq!(
-                    platform_info.sha256.len(), 64,
+                    platform_info.sha256.len(),
+                    64,
                     "SHA256 should be 64 characters for {} {} {}: {}",
-                    tool_name, version, platform, platform_info.sha256
+                    tool_name,
+                    version,
+                    platform,
+                    platform_info.sha256
                 );
 
                 assert!(
                     platform_info.sha256.chars().all(|c| c.is_ascii_hexdigit()),
                     "SHA256 should contain only hex characters for {} {} {}: {}",
-                    tool_name, version, platform, platform_info.sha256
+                    tool_name,
+                    version,
+                    platform,
+                    platform_info.sha256
                 );
 
                 // Validate that either url_suffix or platform_name is present
@@ -123,7 +167,9 @@ async fn test_json_schema_validation() -> Result<()> {
                     assert!(
                         !platform_info.url_suffix.is_empty(),
                         "Either platform_name or url_suffix must be present for {} {} {}",
-                        tool_name, version, platform
+                        tool_name,
+                        version,
+                        platform
                     );
                 }
             }
@@ -183,10 +229,26 @@ async fn test_json_formatting() -> Result<()> {
 
         // Validate required root fields exist
         let obj = parsed.as_object().unwrap();
-        assert!(obj.contains_key("tool_name"), "Missing tool_name in {}", file_name);
-        assert!(obj.contains_key("github_repo"), "Missing github_repo in {}", file_name);
-        assert!(obj.contains_key("latest_version"), "Missing latest_version in {}", file_name);
-        assert!(obj.contains_key("versions"), "Missing versions in {}", file_name);
+        assert!(
+            obj.contains_key("tool_name"),
+            "Missing tool_name in {}",
+            file_name
+        );
+        assert!(
+            obj.contains_key("github_repo"),
+            "Missing github_repo in {}",
+            file_name
+        );
+        assert!(
+            obj.contains_key("latest_version"),
+            "Missing latest_version in {}",
+            file_name
+        );
+        assert!(
+            obj.contains_key("versions"),
+            "Missing versions in {}",
+            file_name
+        );
 
         // Validate that versions is an object
         assert!(
@@ -232,7 +294,8 @@ async fn test_tool_name_consistency() -> Result<()> {
         assert!(
             file_path.exists(),
             "Expected file {} should exist for tool {}",
-            expected_file_name, tool_name
+            expected_file_name,
+            tool_name
         );
     }
 
@@ -271,23 +334,34 @@ async fn test_checksum_validity() -> Result<()> {
 
                 // Should be exactly 64 characters
                 assert_eq!(
-                    checksum.len(), 64,
+                    checksum.len(),
+                    64,
                     "Invalid SHA256 length for {} {} {}: {} (should be 64 chars)",
-                    tool_name, version, platform, checksum
+                    tool_name,
+                    version,
+                    platform,
+                    checksum
                 );
 
                 // Should contain only hexadecimal characters
                 assert!(
                     checksum.chars().all(|c| c.is_ascii_hexdigit()),
                     "Invalid SHA256 format for {} {} {}: {} (should be hex only)",
-                    tool_name, version, platform, checksum
+                    tool_name,
+                    version,
+                    platform,
+                    checksum
                 );
 
                 // Should be lowercase (standard convention)
                 assert_eq!(
-                    checksum, &checksum.to_lowercase(),
+                    checksum,
+                    &checksum.to_lowercase(),
                     "SHA256 should be lowercase for {} {} {}: {}",
-                    tool_name, version, platform, checksum
+                    tool_name,
+                    version,
+                    platform,
+                    checksum
                 );
 
                 valid_checksums += 1;
@@ -296,7 +370,10 @@ async fn test_checksum_validity() -> Result<()> {
     }
 
     println!("Validated {} checksums across all tools", total_checksums);
-    assert_eq!(total_checksums, valid_checksums, "All checksums should be valid");
+    assert_eq!(
+        total_checksums, valid_checksums,
+        "All checksums should be valid"
+    );
 
     Ok(())
 }

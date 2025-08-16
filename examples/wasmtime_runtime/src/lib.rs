@@ -57,7 +57,7 @@ pub mod host_functions;
 pub mod metrics;
 pub mod runtime_config;
 
-pub use component_loader::{ComponentLoader, ComponentInstance, LoadedComponent};
+pub use component_loader::{ComponentInstance, ComponentLoader, LoadedComponent};
 pub use host_functions::{HostFunction, HostFunctionRegistry};
 pub use metrics::{ComponentMetrics, ExecutionMetrics, Metrics};
 pub use runtime_config::{RuntimeConfig, SecurityPolicy};

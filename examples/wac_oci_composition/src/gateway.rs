@@ -1,9 +1,11 @@
-use gateway::api::exports::wasi::http::incoming_handler::{Guest, IncomingRequest, ResponseOutparam};
-use gateway::api::exports::routing::{RouteRequest, RouteResponse, RouteConfig};
-use gateway::api::user_api::{UserRequest, UserResponse};
 use gateway::api::analytics_api::AnalyticsEvent;
-use gateway::api::metrics::{MetricRequest, MetricResponse};
 use gateway::api::device_management::{DeviceData, DeviceStatus};
+use gateway::api::exports::routing::{RouteConfig, RouteRequest, RouteResponse};
+use gateway::api::exports::wasi::http::incoming_handler::{
+    Guest, IncomingRequest, ResponseOutparam,
+};
+use gateway::api::metrics::{MetricRequest, MetricResponse};
+use gateway::api::user_api::{UserRequest, UserResponse};
 
 // Re-export the generated world
 use gateway::api::Gateway;
@@ -15,7 +17,7 @@ impl Guest for GatewayComponent {
         // Gateway acts as a reverse proxy/router
         let path = get_request_path(&request);
         let method = get_request_method(&request);
-        
+
         // Create route request
         let route_req = RouteRequest {
             path: path.clone(),
@@ -23,7 +25,7 @@ impl Guest for GatewayComponent {
             headers: vec![],
             body: None,
         };
-        
+
         // Route to appropriate service based on path
         let response = match path.as_str() {
             path if path.starts_with("/users") => route_to_user_service(route_req),
@@ -36,7 +38,7 @@ impl Guest for GatewayComponent {
                 body: Some(r#"{"error": "Service not found"}"#.to_string()),
             },
         };
-        
+
         send_response(response_out, response);
     }
 }
@@ -71,17 +73,20 @@ fn route_to_user_service(request: RouteRequest) -> RouteResponse {
         user_id: extract_user_id_from_path(&request.path),
         data: request.body,
     };
-    
+
     // Call user service through imported interface
     let user_response = gateway::api::user_api::handle_user(user_req);
-    
+
     let status = if user_response.success { 200 } else { 400 };
     let body = if user_response.success {
         user_response.data
     } else {
-        Some(format!(r#"{{"error": "{}"}}"#, user_response.error.unwrap_or_default()))
+        Some(format!(
+            r#"{{"error": "{}"}}"#,
+            user_response.error.unwrap_or_default()
+        ))
     };
-    
+
     RouteResponse {
         status,
         headers: vec![("content-type".to_string(), "application/json".to_string())],
@@ -100,10 +105,10 @@ fn route_to_analytics_service(request: RouteRequest) -> RouteResponse {
         ],
         timestamp: current_timestamp(),
     };
-    
+
     // Send event to analytics service
     gateway::api::analytics_api::collect_event(event);
-    
+
     RouteResponse {
         status: 202,
         headers: vec![("content-type".to_string(), "application/json".to_string())],
@@ -118,15 +123,17 @@ fn route_to_metrics_service(request: RouteRequest) -> RouteResponse {
         time_range: (current_timestamp() - 3600, current_timestamp()), // Last hour
         filters: vec![],
     };
-    
+
     // Query metrics service
     let metric_response = gateway::api::metrics::query_metrics(metric_req);
-    
+
     let status = if metric_response.success { 200 } else { 400 };
     let body = metric_response.data.or_else(|| {
-        metric_response.error.map(|e| format!(r#"{{"error": "{}"}}"#, e))
+        metric_response
+            .error
+            .map(|e| format!(r#"{{"error": "{}"}}"#, e))
     });
-    
+
     RouteResponse {
         status,
         headers: vec![("content-type".to_string(), "application/json".to_string())],
@@ -144,9 +151,9 @@ fn route_to_device_service(request: RouteRequest) -> RouteResponse {
                 value: "23.5".to_string(),
                 timestamp: current_timestamp(),
             };
-            
+
             gateway::api::device_management::collect_data(device_data);
-            
+
             RouteResponse {
                 status: 201,
                 headers: vec![("content-type".to_string(), "application/json".to_string())],
@@ -157,12 +164,12 @@ fn route_to_device_service(request: RouteRequest) -> RouteResponse {
             // Handle device status query
             let device_id = extract_device_id_from_path(&request.path);
             let status = gateway::api::device_management::get_status(device_id);
-            
+
             let response_body = format!(
                 r#"{{"device_id": "{}", "online": {}, "last_seen": {}}}"#,
                 status.device_id, status.online, status.last_seen
             );
-            
+
             RouteResponse {
                 status: 200,
                 headers: vec![("content-type".to_string(), "application/json".to_string())],
@@ -179,11 +186,11 @@ fn route_to_device_service(request: RouteRequest) -> RouteResponse {
 
 // Helper functions for path/header parsing
 fn get_request_path(request: &IncomingRequest) -> String {
-    "/users".to_string()  // Placeholder implementation
+    "/users".to_string() // Placeholder implementation
 }
 
 fn get_request_method(request: &IncomingRequest) -> String {
-    "GET".to_string()  // Placeholder implementation
+    "GET".to_string() // Placeholder implementation
 }
 
 fn extract_user_id_from_path(path: &str) -> Option<String> {
@@ -192,7 +199,8 @@ fn extract_user_id_from_path(path: &str) -> Option<String> {
 }
 
 fn extract_user_id_from_headers(headers: &[(String, String)]) -> Option<String> {
-    headers.iter()
+    headers
+        .iter()
         .find(|(key, _)| key.to_lowercase() == "x-user-id")
         .map(|(_, value)| value.clone())
 }
@@ -208,12 +216,15 @@ fn extract_device_id_from_path(path: &str) -> String {
 }
 
 fn current_timestamp() -> u64 {
-    1234567890  // Placeholder implementation
+    1234567890 // Placeholder implementation
 }
 
 fn send_response(response_out: ResponseOutparam, response: RouteResponse) {
     // Simplified response sending
-    println!("Gateway response: {} - {:?}", response.status, response.body);
+    println!(
+        "Gateway response: {} - {:?}",
+        response.status, response.body
+    );
 }
 
 // Export the component

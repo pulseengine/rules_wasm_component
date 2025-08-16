@@ -1,0 +1,149 @@
+---
+title: Getting Started
+description: Quick start guide for building WebAssembly components with Bazel
+---
+
+Get up and running with WebAssembly Component Model in minutes using Bazel.
+
+## Prerequisites
+
+- **Bazelisk** (recommended) - Automatically manages Bazel versions
+  ```bash
+  # Quick install on macOS
+  brew install bazelisk
+  
+  # Or cross-platform via NPM
+  npm install -g @bazel/bazelisk
+  ```
+- **Git** - For cloning repositories
+- **Language-specific tools** (installed automatically by Bazel):
+  - Rust: `cargo`, `rustc` (via rules_rust)
+  - Go: TinyGo v0.38.0 (via toolchain)
+  - C++: WASI SDK (via toolchain)
+  - JavaScript: Node.js, jco (via toolchain)
+
+## Installation
+
+Add rules_wasm_component to your Bazel project:
+
+### 1. Add to MODULE.bazel
+
+```python title="MODULE.bazel"
+bazel_dep(name = "rules_wasm_component", version = "1.0.0")
+
+# Optional: Configure WASM toolchain version
+wasm_toolchain = use_extension(
+    "@rules_wasm_component//wasm:extensions.bzl",
+    "wasm_toolchain",
+)
+wasm_toolchain.register(
+    name = "wasm_tools",
+    version = "1.0.60",  # Optional, defaults to latest stable
+)
+
+# Optional: Configure TinyGo toolchain version
+tinygo = use_extension("@rules_wasm_component//wasm:extensions.bzl", "tinygo")
+tinygo.register(
+    name = "tinygo",
+    tinygo_version = "0.38.0"  # Optional, defaults to 0.38.0
+)
+```
+
+### 2. Add Rust dependencies (if using Rust)
+
+```python title="MODULE.bazel"
+bazel_dep(name = "rules_rust", version = "0.48.0")
+
+# Configure crate dependencies
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml"],
+)
+use_repo(crate, "crates")
+```
+
+```toml title="Cargo.toml"
+[package]
+name = "my-components"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wit-bindgen = { version = "0.30.0", default-features = false, features = ["realloc"] }
+```
+
+## Your First Component
+
+Let's create a simple "Hello World" WebAssembly component:
+
+### 1. Define the WIT Interface
+
+import CodeFromFile from '@components/CodeFromFile.astro';
+
+<CodeFromFile file="examples/basic/wit/hello.wit" title="examples/basic/wit/hello.wit" />
+
+### 2. Create the Build File
+
+<CodeFromFile file="examples/basic/BUILD.bazel" title="examples/basic/BUILD.bazel" />
+
+### 3. Implement the Component
+
+<CodeFromFile file="examples/basic/src/lib.rs" title="examples/basic/src/lib.rs" />
+
+### 4. Build the Component
+
+```bash
+# Build the component
+bazel build //:hello_component
+
+# Test with wasmtime
+wasmtime run --wasi preview2 bazel-bin/hello_component.wasm
+```
+
+<div class="demo-buttons">
+  <a href="https://stackblitz.com/github/your-repo/rules_wasm_component/tree/main/examples/basic" class="demo-button">
+    Try this example in StackBlitz
+  </a>
+</div>
+
+## What's Next?
+
+Now that you have your first component working, explore more advanced features:
+
+### Language-Specific Guides
+- [**Rust Components**](/languages/rust/) - Advanced Rust patterns and optimization
+- [**Go Components**](/languages/go/) - TinyGo with WASI Preview 2
+- [**C++ Components**](/languages/cpp/) - Native C++ development
+- [**JavaScript Components**](/languages/javascript/) - ComponentizeJS integration
+
+### Advanced Topics
+- [**Component Composition**](/composition/wac/) - Building multi-component systems
+- [**OCI Publishing**](/production/publishing/) - Distribute via container registries
+- [**Performance Optimization**](/production/performance/) - Wizer pre-initialization
+
+### Examples
+- [**Basic Component**](/examples/basic/) - Simple hello world
+- [**Calculator (C++)**](/examples/calculator/) - Math operations with error handling
+- [**HTTP Service (Go)**](/examples/http-service/) - Web service component
+- [**Multi-Language System**](/examples/multi-language/) - Polyglot composition
+
+## Getting Help
+
+- **Documentation**: Browse this site for comprehensive guides
+- **Examples**: Check the `/examples` directory in the repository
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/your-repo/rules_wasm_component/issues)
+- **Discussions**: Ask questions in [GitHub Discussions](https://github.com/your-repo/rules_wasm_component/discussions)
+
+## Performance Note
+
+<div class="perf-indicator">
+Fast Builds: Bazel's incremental builds make iteration quick
+</div>
+
+Components built with these rules benefit from:
+- **Bazel's build caching** - Only rebuild what changed
+- **Hermetic toolchains** - Consistent builds across environments  
+- **Parallel compilation** - Build multiple components simultaneously
+- **Wizer pre-initialization** - 1.35-6x startup performance improvements

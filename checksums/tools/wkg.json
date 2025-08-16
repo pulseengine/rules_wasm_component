@@ -1,32 +1,32 @@
 {
   "tool_name": "wkg",
-  "github_repo": "bytecodealliance/wkg",
+  "github_repo": "bytecodealliance/wasm-pkg-tools",
   "latest_version": "0.11.0",
-  "last_checked": "2025-01-02T10:30:00Z",
-  "note": "Checksums need verification - current values are placeholders",
+  "last_checked": "2025-08-15T16:00:00Z",
+  "note": "Updated with real checksums from GitHub releases",
   "versions": {
     "0.11.0": {
-      "release_date": "2024-11-15",
+      "release_date": "2025-06-19",
       "platforms": {
         "darwin_amd64": {
-          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "sha256": "f1b6f71ce8b45e4fae0139f4676bc3efb48a89c320b5b2df1a1fd349963c5f82",
           "binary_name": "wkg-x86_64-apple-darwin"
         },
         "darwin_arm64": {
-          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "sha256": "e90a1092b1d1392052f93684afbd28a18fdf5f98d7175f565e49389e913d7cea",
           "binary_name": "wkg-aarch64-apple-darwin"
         },
         "linux_amd64": {
-          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
-          "binary_name": "wkg-x86_64-unknown-linux-musl"
+          "sha256": "e3bec9add5a739e99ee18503ace07d474ce185d3b552763785889b565cdcf9f2",
+          "binary_name": "wkg-x86_64-unknown-linux-gnu"
         },
         "linux_arm64": {
-          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
-          "binary_name": "wkg-aarch64-unknown-linux-musl"
+          "sha256": "159ffe5d321217bf0f449f2d4bde9fe82fee2f9387b55615f3e4338eb0015e96",
+          "binary_name": "wkg-aarch64-unknown-linux-gnu"
         },
         "windows_amd64": {
-          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
-          "binary_name": "wkg-x86_64-pc-windows-gnu.exe"
+          "sha256": "ac7b06b91ea80973432d97c4facd78e84187e4d65b42613374a78c4c584f773c",
+          "binary_name": "wkg-x86_64-pc-windows-gnu"
         }
       }
     }

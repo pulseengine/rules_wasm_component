@@ -214,9 +214,7 @@ async fn fetch_latest_release(github: &Octocrab, repo: &str) -> Result<Release> 
 async fn download_and_hash(url: &str) -> Result<String> {
     println!("Downloading and hashing: {}", url);
 
-    let response = reqwest::get(url)
-        .await
-        .context("Failed to download file")?;
+    let response = reqwest::get(url).await.context("Failed to download file")?;
 
     if !response.status().is_success() {
         anyhow::bail!("Download failed with status: {}", response.status());
@@ -253,7 +251,9 @@ async fn update_tool_checksums(
 
     println!("Latest version: {} (clean: {})", version, clean_version);
 
-    let config_path = checksums_dir.join("tools").join(format!("{}.json", tool_pattern.name));
+    let config_path = checksums_dir
+        .join("tools")
+        .join(format!("{}.json", tool_pattern.name));
     let mut config: ToolConfig = if config_path.exists() {
         let content = fs::read_to_string(&config_path)?;
         serde_json::from_str(&content)?
@@ -281,7 +281,10 @@ async fn update_tool_checksums(
         return Ok(false);
     }
 
-    println!("New version {} found, calculating checksums...", clean_version);
+    println!(
+        "New version {} found, calculating checksums...",
+        clean_version
+    );
 
     let mut platforms = HashMap::new();
     for platform_pattern in &tool_pattern.url_patterns {
@@ -316,11 +319,15 @@ async fn update_tool_checksums(
                 // Infer url_suffix from URL if not provided
                 if platform_info.url_suffix.is_none() {
                     if let Some(suffix) = url.split('/').last() {
-                        if let Some(tool_and_suffix) = suffix.strip_prefix(&format!("{}-{}-", tool_pattern.name, clean_version)) {
+                        if let Some(tool_and_suffix) = suffix
+                            .strip_prefix(&format!("{}-{}-", tool_pattern.name, clean_version))
+                        {
                             platform_info.url_suffix = Some(tool_and_suffix.to_string());
                         } else if suffix.contains(&tool_pattern.name) {
                             // For wasmtime format: wasmtime-v{version}-{platform}.tar.xz
-                            if let Some(platform_suffix) = suffix.split(&format!("v{}-", clean_version)).nth(1) {
+                            if let Some(platform_suffix) =
+                                suffix.split(&format!("v{}-", clean_version)).nth(1)
+                            {
                                 platform_info.url_suffix = Some(platform_suffix.to_string());
                             }
                         }
@@ -397,7 +404,10 @@ async fn main() -> Result<()> {
     let dry_run = matches.get_flag("dry-run");
 
     if !checksums_dir.exists() {
-        anyhow::bail!("Checksums directory does not exist: {}", checksums_dir.display());
+        anyhow::bail!(
+            "Checksums directory does not exist: {}",
+            checksums_dir.display()
+        );
     }
 
     let tool_patterns = get_tool_patterns();

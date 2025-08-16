@@ -1,0 +1,24 @@
+"""BUILD file for wizer repository
+
+This file creates wizer binary using cargo within the git repository.
+This is a hybrid approach - git_repository for source + genrule for cargo build.
+"""
+
+# Build wizer using cargo (hybrid approach)
+genrule(
+    name = "wizer",
+    srcs = glob(["**/*"]),  # All source files
+    outs = ["wizer"],
+    cmd = """cd $$(dirname $(location Cargo.toml)) && \
+             cargo build --release --bin wizer --all-features && \
+             cp target/release/wizer $(location wizer)""",
+    visibility = ["//visibility:public"],
+    tags = ["requires-network"],  # Cargo may need to fetch dependencies
+)
+
+# Export the binary for toolchain use
+filegroup(
+    name = "wizer_binary",
+    srcs = [":wizer"],
+    visibility = ["//visibility:public"],
+)

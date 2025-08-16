@@ -175,71 +175,71 @@ wac_distributed_system(
     },
     composition = """
         // Financial services platform composition
-        
+
         // Client interfaces
         let gateway = new api_gateway:component { ... };
         let mobile = new mobile_app:component { ... };
-        
+
         // Core banking services
         let accounts = new account_service:component { ... };
         let transactions = new transaction_service:component { ... };
         let balances = new balance_service:component { ... };
         let loans = new loan_service:component { ... };
-        
+
         // Security and compliance layer
         let auth = new auth_service:component { ... };
         let kyc = new kyc_service:component { ... };
         let fraud = new fraud_monitor:component { ... };
         let audit = new audit_service:component { ... };
-        
+
         // External services
         let credit = new credit_bureau:component { ... };
         let payments = new payment_rails:component { ... };
-        
+
         // Analytics
         let risk = new risk_analytics:component { ... };
         let reporting = new reporting_service:component { ... };
-        
+
         // Authentication flow
         connect gateway.auth_request -> auth.authenticate;
         connect mobile.auth_request -> auth.authenticate;
-        
+
         // KYC and onboarding
         connect gateway.kyc_request -> kyc.verify;
         connect kyc.credit_check -> credit.query;
-        
+
         // Core banking operations
         connect gateway.account_request -> accounts.handle;
         connect gateway.transaction_request -> transactions.process;
         connect gateway.balance_request -> balances.query;
         connect gateway.loan_request -> loans.process;
-        
+
         // Transaction processing
         connect transactions.payment_request -> payments.process;
         connect transactions.fraud_check -> fraud.analyze;
         connect loans.credit_check -> credit.score;
-        
+
         // Audit and compliance
         connect auth.audit_event -> audit.log;
         connect transactions.audit_event -> audit.log;
         connect kyc.audit_event -> audit.log;
         connect accounts.audit_event -> audit.log;
-        
+
         // Risk management
         connect transactions.risk_data -> risk.analyze;
         connect loans.risk_data -> risk.analyze;
         connect fraud.risk_alert -> risk.escalate;
-        
+
         // Reporting
         connect accounts.reporting_data -> reporting.collect;
         connect transactions.reporting_data -> reporting.collect;
         connect risk.reporting_data -> reporting.collect;
-        
+
         // Mobile app connections
         connect mobile.account_request -> accounts.handle;
         connect mobile.balance_request -> balances.query;
         connect mobile.transaction_request -> transactions.process;
-        
+
         export gateway as main;
     """,
     registry_config = ":microservices_registries",
@@ -280,68 +280,68 @@ wac_distributed_system(
     },
     composition = """
         // IoT Edge Computing Platform
-        
+
         // Edge gateway (local processing)
         let gateway = new edge_gateway:component { ... };
-        
+
         // Device management
         let registry = new device_registry:component { ... };
         let config = new device_config:component { ... };
         let ota = new ota_updates:component { ... };
-        
+
         // Data processing
         let ingestion = new data_ingestion:component { ... };
         let stream = new stream_processor:component { ... };
         let batch = new batch_processor:component { ... };
-        
+
         // Storage
         let timeseries = new time_series_db:component { ... };
         let warehouse = new data_warehouse:component { ... };
         let ml = new ml_inference:component { ... };
-        
+
         // Monitoring
         let metrics = new metrics_collector:component { ... };
         let alerts = new alert_manager:component { ... };
         let dashboard = new dashboard_service:component { ... };
-        
+
         // Cloud connectors
         let aws = new aws_connector:component { ... };
         let azure = new azure_connector:component { ... };
-        
+
         // Device data flow
         connect gateway.device_data -> ingestion.receive;
         connect gateway.device_registration -> registry.register;
         connect gateway.device_status -> registry.update_status;
-        
+
         // Data processing pipeline
         connect ingestion.raw_data -> stream.process;
         connect stream.processed_data -> timeseries.write;
         connect stream.batch_trigger -> batch.process;
         connect batch.aggregated_data -> warehouse.store;
-        
+
         // ML inference
         connect stream.feature_data -> ml.predict;
         connect ml.predictions -> timeseries.write;
         connect ml.anomalies -> alerts.trigger;
-        
+
         // Device management
         connect registry.config_request -> config.provide;
         connect config.update_available -> ota.deploy;
         connect ota.deployment_status -> registry.update_device;
-        
+
         // Monitoring and alerting
         connect timeseries.metrics -> metrics.collect;
         connect warehouse.metrics -> metrics.collect;
         connect gateway.metrics -> metrics.collect;
-        
+
         connect metrics.alert_data -> alerts.evaluate;
         connect alerts.notifications -> dashboard.display;
-        
+
         // Cloud synchronization
         connect warehouse.sync_request -> aws.upload;
         connect timeseries.backup_request -> azure.backup;
         connect ml.model_update -> aws.download;
-        
+
         export gateway as main;
     """,
     registry_config = ":microservices_registries",
@@ -358,12 +358,12 @@ wac_compose_with_oci(
         let gateway = new gateway:component { ... };
         let users = new user_service:component { ... };
         let products = new product_catalog:component { ... };
-        
+
         connect frontend.user_request -> users.handle;
         connect frontend.product_request -> products.handle;
         connect gateway.user_api -> users.handle;
         connect gateway.product_api -> products.handle;
-        
+
         export frontend as main;
     """,
     local_components = {
@@ -425,31 +425,31 @@ wac_compose_with_oci(
         let balancer = new load_balancer:component { ... };
         let splitter = new traffic_splitter:component { ... };
         let metrics = new metrics_collector:component { ... };
-        
+
         // Stable services
         let users_stable = new user_service_stable:component { ... };
         let products_stable = new product_catalog_stable:component { ... };
-        
-        // Canary services  
+
+        // Canary services
         let users_canary = new user_service_canary:component { ... };
         let products_canary = new product_catalog_canary:component { ... };
-        
+
         // Traffic routing (90% stable, 10% canary)
         connect balancer.user_request -> splitter.route_user;
         connect splitter.user_stable -> users_stable.handle;
         connect splitter.user_canary -> users_canary.handle;
-        
+
         connect balancer.product_request -> splitter.route_product;
         connect splitter.product_stable -> products_stable.handle;
         connect splitter.product_canary -> products_canary.handle;
-        
+
         // Metrics collection
         connect users_stable.metrics -> metrics.collect;
         connect users_canary.metrics -> metrics.collect;
         connect products_stable.metrics -> metrics.collect;
         connect products_canary.metrics -> metrics.collect;
         connect splitter.routing_metrics -> metrics.collect;
-        
+
         export balancer as main;
     """,
     local_components = {
