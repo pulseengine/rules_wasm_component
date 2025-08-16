@@ -76,7 +76,7 @@ def _wizer_toolchain_repository_impl(ctx):
     if strategy == "build":
         # Use the git repository + genrule approach for hermetic builds
         print("Using hermetic build strategy with git_repository + genrule approach")
-        
+
         # Create a placeholder since the actual binary will be built by git repository
         ctx.file("wizer", """#!/bin/bash
 # This is a placeholder - actual wizer is built by git_repository + genrule
@@ -85,7 +85,7 @@ echo "Use the proper toolchain integration instead"
 exit 1
 """, executable = True)
         wizer_path = "wizer"
-        
+
     elif strategy == "cargo":
         # Create a script that installs Wizer via Cargo
         ctx.file("install_wizer.sh", """#!/bin/bash
@@ -126,7 +126,7 @@ fi
                 print("Warning: Wizer installation skipped - cargo not available in hermetic environment")
                 print("This is expected in BCR testing environments")
                 print("Wizer functionality will be limited but basic WebAssembly builds will work")
-                
+
                 # Create a placeholder wizer binary that explains the situation
                 ctx.file("bin/wizer", """#!/bin/bash
 echo "Wizer not available - cargo not accessible in hermetic environment"

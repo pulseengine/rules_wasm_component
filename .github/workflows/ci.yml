@@ -136,6 +136,86 @@ jobs:
           bazel build //examples/basic:hello_component
           wasm-tools validate bazel-bin/examples/basic/hello_component.wasm || true
 
+  bcr-docker-test:
+    name: BCR Docker Environment Test
+    runs-on: ubuntu-latest
+    needs: lint # Run in parallel with regular tests
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Test Hermetic Build in BCR Docker Environment
+        run: |
+          echo "🐳 Testing in BCR (Bazel Central Registry) Docker environment"
+          echo "This simulates the exact environment used for BCR acceptance testing"
+
+          # Test the primary build target that was failing in BCR testing
+          docker run --rm -v "$(pwd):/workspace" -w /workspace \
+            gcr.io/bazel-public/ubuntu2204 bash -c "
+            echo '=== BCR Environment Information ==='
+            uname -a
+            cat /etc/os-release
+            echo
+
+            echo '=== Testing Hermetic Build ==='
+            echo 'Building: //examples/basic:hello_component'
+            echo 'This verifies all toolchains work without system dependencies'
+            echo
+
+            # Set up proper Bazel cache with permissions
+            mkdir -p /tmp/bazel_cache
+            chmod 755 /tmp/bazel_cache
+
+            # Test the build with timeout to prevent hanging
+            timeout 600 bazel --output_base=/tmp/bazel_cache build //examples/basic:hello_component
+
+            BUILD_EXIT_CODE=\$?
+            echo
+
+            if [ \$BUILD_EXIT_CODE -eq 0 ]; then
+              echo '✅ BCR Docker build SUCCESSFUL!'
+              echo 'Verifying component file...'
+
+              # Verify the built component
+              if [ -f bazel-bin/examples/basic/hello_component.wasm ]; then
+                file bazel-bin/examples/basic/hello_component.wasm
+                ls -la bazel-bin/examples/basic/hello_component.wasm
+                echo '✅ WebAssembly component successfully created'
+              else
+                echo '⚠️  Component file not found but build succeeded'
+              fi
+            elif [ \$BUILD_EXIT_CODE -eq 124 ]; then
+              echo '❌ BCR Docker build TIMED OUT (600s)'
+              exit 1
+            else
+              echo '❌ BCR Docker build FAILED'
+              exit 1
+            fi
+            "
+
+      - name: Test Additional BCR Scenarios
+        run: |
+          echo "🧪 Testing additional BCR scenarios"
+
+          # Test that toolchain setup works without failures
+          docker run --rm -v "$(pwd):/workspace" -w /workspace \
+            gcr.io/bazel-public/ubuntu2204 bash -c "
+            echo '=== Testing Toolchain Configuration ==='
+            mkdir -p /tmp/bazel_cache
+
+            # Just query to verify toolchain setup
+            timeout 300 bazel --output_base=/tmp/bazel_cache query --output=label //examples/basic:hello_component
+
+            if [ \$? -eq 0 ]; then
+              echo '✅ Toolchain analysis successful in BCR environment'
+            else
+              echo '❌ Toolchain analysis failed'
+              exit 1
+            fi
+            "
+
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
@@ -232,7 +312,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [test, integration]
+    needs: [test, integration, bcr-docker-test]
     if: github.ref == 'refs/heads/main'
 
     steps:

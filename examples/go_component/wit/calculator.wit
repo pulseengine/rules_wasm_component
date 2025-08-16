@@ -38,6 +38,6 @@ interface calculator {
 world calculator-world {
     /// Import WASI interfaces required by TinyGo stdlib
     import wasi:io/streams@0.2.0;
-    
+
     export calculator;
 }

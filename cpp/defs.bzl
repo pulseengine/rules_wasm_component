@@ -2,6 +2,7 @@
 
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
+load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
 
 def _cpp_component_impl(ctx):
     """Implementation of cpp_component rule"""
@@ -54,65 +55,13 @@ def _cpp_component_impl(ctx):
         progress_message = "Generating C/C++ bindings for %s" % ctx.label,
     )
 
-    # Create working directory for compilation
-    work_dir = ctx.actions.declare_directory(ctx.attr.name + "_work")
-
-    # Prepare sources and headers
-    prep_script = ctx.actions.declare_file(ctx.attr.name + "_prep.sh")
-    prep_content = """#!/bin/bash
-set -e
-
-WORK_DIR="{work_dir}"
-BINDINGS_DIR="{bindings_dir}"
-
-# Create working directory structure
-mkdir -p "$WORK_DIR"
-
-# Copy source files
-{copy_sources}
-
-# Copy header files
-{copy_headers}
-
-# Copy dependency headers
-{copy_dep_headers}
-
-# Copy generated bindings
-if [ -d "$BINDINGS_DIR" ]; then
-    cp -r "$BINDINGS_DIR"/* "$WORK_DIR/"
-fi
-
-echo "Prepared C/C++ component sources in $WORK_DIR"
-""".format(
-        work_dir = work_dir.path,
-        bindings_dir = bindings_dir.path,
-        copy_sources = "\n".join([
-            'cp "{}" "$WORK_DIR/{}"'.format(src.path, src.basename)
-            for src in sources
-        ]),
-        copy_headers = "\n".join([
-            'cp "{}" "$WORK_DIR/{}"'.format(hdr.path, hdr.basename)
-            for hdr in headers
-        ]),
-        copy_dep_headers = "\n".join([
-            'cp "{}" "$WORK_DIR/{}"'.format(hdr.path, hdr.basename)
-            for hdr in dep_headers
-        ]),
-    )
-
-    ctx.actions.write(
-        output = prep_script,
-        content = prep_content,
-        is_executable = True,
-    )
-
-    # Run preparation
-    ctx.actions.run(
-        executable = prep_script,
-        inputs = [bindings_dir] + sources + headers + dep_headers + dep_libraries,
-        outputs = [work_dir],
-        mnemonic = "PrepareCppComponent",
-        progress_message = "Preparing C/C++ component sources for %s" % ctx.label,
+    # Create working directory for compilation using File Operations Component
+    work_dir = setup_cpp_workspace_action(
+        ctx,
+        sources = sources,
+        headers = headers,
+        dep_headers = dep_headers,
+        bindings_dir = bindings_dir,
     )
 
     # Compile to WASM
@@ -285,7 +234,10 @@ cpp_component = rule(
             doc = "Enable C++ exceptions (increases binary size)",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:cpp_component_toolchain_type"],
+    toolchains = [
+        "@rules_wasm_component//toolchains:cpp_component_toolchain_type",
+        "@rules_wasm_component//toolchains:file_ops_toolchain_type",
+    ],
     doc = """
     Builds a WebAssembly component from C/C++ source code using Preview2.
 
@@ -372,7 +324,10 @@ cpp_wit_bindgen = rule(
             doc = "String encoding to use in generated bindings",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:cpp_component_toolchain_type"],
+    toolchains = [
+        "@rules_wasm_component//toolchains:cpp_component_toolchain_type",
+        "@rules_wasm_component//toolchains:file_ops_toolchain_type",
+    ],
     doc = """
     Generates C/C++ bindings from WIT interface definitions.
 
@@ -544,7 +499,10 @@ cc_component_library = rule(
             doc = "Enable C++ exceptions (increases binary size)",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:cpp_component_toolchain_type"],
+    toolchains = [
+        "@rules_wasm_component//toolchains:cpp_component_toolchain_type",
+        "@rules_wasm_component//toolchains:file_ops_toolchain_type",
+    ],
     doc = """
     Creates a static library for use in WebAssembly components.
 

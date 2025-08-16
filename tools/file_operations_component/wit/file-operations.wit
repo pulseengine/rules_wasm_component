@@ -1,5 +1,5 @@
 /// Universal File Operations Component for WebAssembly Build Systems
-/// 
+///
 /// This component provides cross-platform file operations that replace
 /// platform-specific shell scripts in build systems like Bazel.
 /// Designed to unify file handling across Go, C++, JavaScript, and Rust toolchains.
@@ -11,36 +11,36 @@ interface file-operations {
     /// Copy a single file from source to destination
     /// Returns success or error message
     copy-file: func(src: string, dest: string) -> result<_, string>;
-    
+
     /// Copy a directory recursively from source to destination
     /// Preserves file permissions and timestamps
     copy-directory: func(src: string, dest: string) -> result<_, string>;
-    
+
     /// Create a directory and all parent directories if they don't exist
     /// Equivalent to `mkdir -p` but cross-platform
     create-directory: func(path: string) -> result<_, string>;
-    
+
     /// Remove a file or directory (recursively if directory)
     /// Safe operation that handles missing files gracefully
     remove-path: func(path: string) -> result<_, string>;
-    
+
     /// Check if a path exists and return its type
     path-exists: func(path: string) -> path-info;
-    
+
     /// Get absolute path resolution
     /// Resolves relative paths to absolute paths cross-platform
     resolve-absolute-path: func(path: string) -> result<string, string>;
-    
+
     /// Join multiple path segments into a single path
     /// Uses appropriate path separators for the platform
     join-paths: func(paths: list<string>) -> string;
-    
+
     /// Get the directory name from a file path
     get-dirname: func(path: string) -> string;
-    
+
     /// Get the filename from a file path
     get-basename: func(path: string) -> string;
-    
+
     /// List files in a directory with optional pattern matching
     list-directory: func(dir: string, pattern: option<string>) -> result<list<string>, string>;
 }
@@ -50,22 +50,22 @@ interface workspace-management {
     /// Prepare a complete workspace from configuration
     /// This is the main entry point for build system integration
     prepare-workspace: func(config: workspace-config) -> result<workspace-info, string>;
-    
+
     /// Copy source files to workspace with proper organization
     copy-sources: func(sources: list<file-spec>, dest-dir: string) -> result<_, string>;
-    
+
     /// Copy header files to workspace
     copy-headers: func(headers: list<file-spec>, dest-dir: string) -> result<_, string>;
-    
+
     /// Copy generated bindings to workspace
     copy-bindings: func(bindings-dir: string, dest-dir: string) -> result<_, string>;
-    
+
     /// Set up package.json for JavaScript/Node.js builds
     setup-package-json: func(config: package-config, work-dir: string) -> result<_, string>;
-    
+
     /// Organize Go module structure for TinyGo builds
     setup-go-module: func(config: go-module-config, work-dir: string) -> result<_, string>;
-    
+
     /// Organize C/C++ source structure for compilation
     setup-cpp-workspace: func(config: cpp-workspace-config, work-dir: string) -> result<_, string>;
 }
@@ -74,19 +74,19 @@ interface workspace-management {
 record workspace-config {
     /// Target workspace directory
     work-dir: string,
-    
+
     /// Source files to include
     sources: list<file-spec>,
-    
+
     /// Header files to include (C/C++)
     headers: list<file-spec>,
-    
+
     /// Generated bindings directory
     bindings-dir: option<string>,
-    
+
     /// Dependencies to include
     dependencies: list<file-spec>,
-    
+
     /// Workspace type for language-specific setup
     workspace-type: workspace-type,
 }
@@ -95,13 +95,13 @@ record workspace-config {
 record workspace-info {
     /// List of files that were prepared
     prepared-files: list<string>,
-    
+
     /// Final workspace path
     workspace-path: string,
-    
+
     /// Success message
     message: string,
-    
+
     /// Time taken for preparation (milliseconds)
     preparation-time-ms: u64,
 }
@@ -110,10 +110,10 @@ record workspace-info {
 record file-spec {
     /// Source file path
     source: string,
-    
+
     /// Optional destination path (defaults to basename)
     destination: option<string>,
-    
+
     /// Whether to preserve file permissions
     preserve-permissions: bool,
 }
@@ -122,16 +122,16 @@ record file-spec {
 record package-config {
     /// Package name
     name: string,
-    
+
     /// Package version
     version: string,
-    
+
     /// Module type (module, commonjs)
     module-type: string,
-    
+
     /// NPM dependencies
     dependencies: list<dependency>,
-    
+
     /// Additional package.json fields
     additional-fields: list<json-field>,
 }
@@ -140,16 +140,16 @@ record package-config {
 record go-module-config {
     /// Module name from go.mod
     module-name: string,
-    
+
     /// Go version
     go-version: string,
-    
+
     /// Source files
     sources: list<file-spec>,
-    
+
     /// go.mod file
     go-mod-file: option<string>,
-    
+
     /// WIT file for binding generation
     wit-file: option<string>,
 }
@@ -158,13 +158,13 @@ record go-module-config {
 record cpp-workspace-config {
     /// Source files (.c, .cpp)
     sources: list<file-spec>,
-    
+
     /// Header files (.h, .hpp)
     headers: list<file-spec>,
-    
+
     /// Generated bindings from WIT
     bindings-dir: option<string>,
-    
+
     /// Dependency headers
     dependency-headers: list<file-spec>,
 }
@@ -173,7 +173,7 @@ record cpp-workspace-config {
 record dependency {
     /// Package name
     name: string,
-    
+
     /// Version specification
     version: string,
 }
@@ -182,7 +182,7 @@ record dependency {
 record json-field {
     /// Field name
     key: string,
-    
+
     /// Field value (JSON-encoded string)
     value: string,
 }
@@ -191,16 +191,16 @@ record json-field {
 variant workspace-type {
     /// Rust workspace
     rust,
-    
+
     /// Go/TinyGo workspace
     go,
-    
+
     /// C/C++ workspace
     cpp,
-    
+
     /// JavaScript/TypeScript workspace
     javascript,
-    
+
     /// Generic workspace
     generic,
 }
@@ -209,16 +209,16 @@ variant workspace-type {
 variant path-info {
     /// Path does not exist
     not-found,
-    
+
     /// Path is a regular file
     file,
-    
+
     /// Path is a directory
     directory,
-    
+
     /// Path is a symbolic link
     symlink,
-    
+
     /// Path exists but type is unknown
     other,
 }

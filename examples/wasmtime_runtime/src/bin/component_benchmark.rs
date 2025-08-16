@@ -119,7 +119,11 @@ fn create_cli() -> Command {
 }
 
 async fn run_benchmark(matches: ArgMatches) -> Result<()> {
-    let components: Vec<&str> = matches.get_many::<String>("components").unwrap().map(|s| s.as_str()).collect();
+    let components: Vec<&str> = matches
+        .get_many::<String>("components")
+        .unwrap()
+        .map(|s| s.as_str())
+        .collect();
     let function = matches.get_one::<String>("function");
     let iterations: usize = matches.get_one::<String>("iterations").unwrap().parse()?;
     let warmup: usize = matches.get_one::<String>("warmup").unwrap().parse()?;
@@ -127,7 +131,10 @@ async fn run_benchmark(matches: ArgMatches) -> Result<()> {
     let memory_benchmark = matches.get_flag("memory-benchmark");
     let compare_mode = matches.get_flag("compare");
 
-    info!("Starting benchmark with {} iterations and {} warmup", iterations, warmup);
+    info!(
+        "Starting benchmark with {} iterations and {} warmup",
+        iterations, warmup
+    );
 
     // Create runtime configuration optimized for benchmarking
     let config = RuntimeConfig::benchmark_optimized();
@@ -135,7 +142,7 @@ async fn run_benchmark(matches: ArgMatches) -> Result<()> {
 
     for component_path in components {
         info!("Benchmarking component: {}", component_path);
-        
+
         let component_results = benchmark_component(
             component_path,
             function,
@@ -144,7 +151,8 @@ async fn run_benchmark(matches: ArgMatches) -> Result<()> {
             memory_benchmark,
             &config,
             &host_functions,
-        ).await?;
+        )
+        .await?;
 
         output_results(&component_results, output_format)?;
     }
@@ -167,7 +175,7 @@ async fn benchmark_component(
     host_functions: &HostFunctionRegistry,
 ) -> Result<BenchmarkResults> {
     let path = Path::new(component_path);
-    
+
     // Load time benchmark
     let load_start = Instant::now();
     let loader = ComponentLoader::new_with_config(config.clone(), host_functions.clone()).await?;
@@ -212,7 +220,9 @@ async fn benchmark_component(
     })
 }
 
-async fn measure_memory_usage(instance: &wasmtime_runtime::ComponentInstance) -> Result<MemoryUsage> {
+async fn measure_memory_usage(
+    instance: &wasmtime_runtime::ComponentInstance,
+) -> Result<MemoryUsage> {
     // Placeholder for memory usage measurement
     // In a real implementation, this would use Wasmtime's memory introspection APIs
     Ok(MemoryUsage {
@@ -242,12 +252,13 @@ fn output_human_results(results: &BenchmarkResults) -> Result<()> {
     println!("=== Benchmark Results: {} ===", results.component_path);
     println!("Load time: {:?}", results.load_time);
     println!("Instantiation time: {:?}", results.instantiation_time);
-    
+
     if !results.execution_times.is_empty() {
-        let avg_execution = results.execution_times.iter().sum::<Duration>() / results.execution_times.len() as u32;
+        let avg_execution =
+            results.execution_times.iter().sum::<Duration>() / results.execution_times.len() as u32;
         let min_execution = results.execution_times.iter().min().unwrap();
         let max_execution = results.execution_times.iter().max().unwrap();
-        
+
         println!("Function '{}' execution:", results.function_name);
         println!("  Average: {:?}", avg_execution);
         println!("  Min: {:?}", min_execution);
@@ -267,15 +278,26 @@ fn output_human_results(results: &BenchmarkResults) -> Result<()> {
 
 fn output_csv_results(results: &BenchmarkResults) -> Result<()> {
     println!("component,function,load_time_ms,instantiation_time_ms,avg_execution_ms,min_execution_ms,max_execution_ms,iterations");
-    
+
     let avg_execution = if !results.execution_times.is_empty() {
-        results.execution_times.iter().sum::<Duration>().as_millis() / results.execution_times.len() as u128
+        results.execution_times.iter().sum::<Duration>().as_millis()
+            / results.execution_times.len() as u128
     } else {
         0
     };
-    
-    let min_execution = results.execution_times.iter().min().map(|d| d.as_millis()).unwrap_or(0);
-    let max_execution = results.execution_times.iter().max().map(|d| d.as_millis()).unwrap_or(0);
+
+    let min_execution = results
+        .execution_times
+        .iter()
+        .min()
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let max_execution = results
+        .execution_times
+        .iter()
+        .max()
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
 
     println!(
         "{},{},{},{},{},{},{},{}",

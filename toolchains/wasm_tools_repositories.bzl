@@ -46,7 +46,7 @@ def register_wasm_tool_repositories():
         tag = "crates/cli/v0.6.0",  # Use latest CLI release
         build_file = "//toolchains:BUILD.wrpc",
     )
-    
+
     # wizer: WebAssembly pre-initialization tool
     git_repository(
         name = "wizer_src",

@@ -108,20 +108,24 @@ fn create_cli() -> Command {
 async fn run_plugin_system(matches: ArgMatches) -> Result<()> {
     let interactive = matches.get_flag("interactive");
     let hot_reload = matches.get_flag("hot-reload");
-    
+
     // Initialize plugin manager
     let mut plugin_manager = PluginManager::new().await?;
 
     // Load plugins from directory or explicit list
     if let Some(plugin_dir) = matches.get_one::<String>("plugin-dir") {
-        plugin_manager.load_plugins_from_directory(plugin_dir).await?;
+        plugin_manager
+            .load_plugins_from_directory(plugin_dir)
+            .await?;
     } else if let Some(plugins_str) = matches.get_one::<String>("plugins") {
         let plugin_files: Vec<&str> = plugins_str.split(',').collect();
         for plugin_file in plugin_files {
             plugin_manager.load_plugin(plugin_file.trim()).await?;
         }
     } else {
-        return Err(anyhow::anyhow!("Must specify either --plugin-dir or --plugins"));
+        return Err(anyhow::anyhow!(
+            "Must specify either --plugin-dir or --plugins"
+        ));
     }
 
     // Load API configuration if provided
@@ -160,7 +164,7 @@ async fn run_interactive_mode(plugin_manager: &mut PluginManager) -> Result<()> 
 
 async fn run_hot_reload_mode(plugin_manager: &mut PluginManager) -> Result<()> {
     info!("Starting hot-reload plugin system...");
-    
+
     // Hot reload implementation placeholder
     // In a real implementation, this would watch filesystem for changes
     loop {
@@ -202,7 +206,8 @@ impl PluginManager {
     async fn new() -> Result<Self> {
         let config = RuntimeConfig::plugin_optimized();
         let host_functions = create_common_host_functions();
-        let loader = ComponentLoader::new_with_config(config.clone(), host_functions.clone()).await?;
+        let loader =
+            ComponentLoader::new_with_config(config.clone(), host_functions.clone()).await?;
 
         Ok(Self {
             plugins: HashMap::new(),
@@ -215,7 +220,8 @@ impl PluginManager {
     async fn load_plugin(&mut self, plugin_path: &str) -> Result<()> {
         let path = Path::new(plugin_path);
         let component = self.loader.load_component(path).await?;
-        let plugin_name = path.file_stem()
+        let plugin_name = path
+            .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown")
             .to_string();
@@ -257,8 +263,15 @@ impl PluginManager {
         self.plugins.keys().cloned().collect()
     }
 
-    async fn call_plugin(&self, plugin_name: &str, function: &str, args: &[Value]) -> Result<Value> {
-        let component = self.plugins.get(plugin_name)
+    async fn call_plugin(
+        &self,
+        plugin_name: &str,
+        function: &str,
+        args: &[Value],
+    ) -> Result<Value> {
+        let component = self
+            .plugins
+            .get(plugin_name)
             .ok_or_else(|| anyhow::anyhow!("Plugin not found: {}", plugin_name))?;
 
         let instance = component.instantiate().await?;

@@ -67,8 +67,8 @@ go_wasm_component(
     name = "http_service_component",
     srcs = [
         "handlers.go",
-        "service.go",
         "main.go",
+        "service.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
@@ -98,4 +98,3 @@ go_wasm_component(
     optimization = "debug",
     world = "simple-test",
 )
-

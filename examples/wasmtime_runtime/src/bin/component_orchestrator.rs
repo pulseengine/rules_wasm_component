@@ -128,7 +128,10 @@ async fn run_orchestrator(matches: ArgMatches) -> Result<()> {
     let monitor = matches.get_flag("monitor");
     let status = matches.get_flag("status");
     let parallel = matches.get_flag("parallel");
-    let max_concurrent: usize = matches.get_one::<String>("max-concurrent").unwrap().parse()?;
+    let max_concurrent: usize = matches
+        .get_one::<String>("max-concurrent")
+        .unwrap()
+        .parse()?;
 
     // Create orchestrator instance
     let mut orchestrator = ComponentOrchestrator::new(max_concurrent).await?;
@@ -167,7 +170,7 @@ async fn run_interactive_orchestration(orchestrator: &mut ComponentOrchestrator)
 
 async fn run_monitoring_mode(orchestrator: &ComponentOrchestrator) -> Result<()> {
     info!("Starting monitoring mode...");
-    
+
     // Monitoring loop placeholder
     // In a real implementation, this would continuously monitor component health
     orchestrator.show_runtime_metrics().await?;
@@ -193,7 +196,8 @@ impl ComponentOrchestrator {
     async fn new(max_concurrent: usize) -> Result<Self> {
         let config = RuntimeConfig::orchestration_optimized();
         let host_functions = create_common_host_functions();
-        let loader = ComponentLoader::new_with_config(config.clone(), host_functions.clone()).await?;
+        let loader =
+            ComponentLoader::new_with_config(config.clone(), host_functions.clone()).await?;
 
         Ok(Self {
             components: Arc::new(RwLock::new(HashMap::new())),
@@ -208,7 +212,7 @@ impl ComponentOrchestrator {
     async fn load_config(&mut self, config_path: &str) -> Result<()> {
         let config_content = tokio::fs::read_to_string(config_path).await?;
         let config: Value = serde_json::from_str(&config_content)?;
-        
+
         // Parse and load component configurations
         info!("Loaded orchestration configuration from: {}", config_path);
         Ok(())
@@ -216,7 +220,7 @@ impl ComponentOrchestrator {
 
     async fn execute_workflow(&self, workflow_name: &str) -> Result<()> {
         info!("Executing workflow: {}", workflow_name);
-        
+
         if let Some(workflow) = self.workflows.get(workflow_name) {
             self.run_workflow(workflow).await?;
         } else {
@@ -228,8 +232,10 @@ impl ComponentOrchestrator {
 
     async fn execute_all_workflows(&self) -> Result<()> {
         info!("Executing all configured workflows...");
-        
-        let workflow_futures: Vec<_> = self.workflows.values()
+
+        let workflow_futures: Vec<_> = self
+            .workflows
+            .values()
             .map(|workflow| self.run_workflow(workflow))
             .collect();
 
@@ -239,9 +245,11 @@ impl ComponentOrchestrator {
 
     async fn run_workflow(&self, workflow: &WorkflowDefinition) -> Result<()> {
         info!("Running workflow: {}", workflow.name);
-        
+
         // Execute workflow steps in parallel if possible
-        let step_futures: Vec<_> = workflow.steps.iter()
+        let step_futures: Vec<_> = workflow
+            .steps
+            .iter()
             .map(|step| self.execute_workflow_step(step))
             .collect();
 
@@ -251,12 +259,12 @@ impl ComponentOrchestrator {
 
     async fn execute_workflow_step(&self, step: &WorkflowStep) -> Result<()> {
         info!("Executing workflow step: {}", step.name);
-        
+
         // Load and execute the component for this step
         let component = self.loader.load_component(&step.component_path).await?;
         let instance = component.instantiate().await?;
         let _result = instance.call_function(&step.function, &step.args).await?;
-        
+
         Ok(())
     }
 

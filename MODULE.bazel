@@ -151,6 +151,9 @@ register_toolchains("@nodejs_toolchains//:all")
 # Register jco toolchain for JavaScript/TypeScript components
 register_toolchains("@jco_toolchain//:jco_toolchain")
 
+# File Operations Component toolchain for universal file handling
+register_toolchains("//toolchains:file_ops_toolchain_local")
+
 # Rust crates for tools
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(

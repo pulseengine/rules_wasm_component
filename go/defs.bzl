@@ -6,6 +6,7 @@ State-of-the-art Go support for WebAssembly Component Model using:
 - Cross-platform compatibility (Windows/macOS/Linux)
 - Proper toolchain integration with hermetic builds
 - Component composition support
+- Universal File Operations Component for workspace preparation
 
 Example usage:
 
@@ -20,6 +21,7 @@ Example usage:
 
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//rust:transitions.bzl", "wasm_transition")
+load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_go_module_action")
 
 def _go_wasm_component_impl(ctx):
     """Implementation of go_wasm_component rule - THE BAZEL WAY"""
@@ -77,89 +79,22 @@ def _go_wasm_component_impl(ctx):
     ]
 
 def _prepare_go_module(ctx, tinygo_toolchain):
-    """Prepare Go module structure using Bazel-native file operations"""
+    """Prepare Go module structure using File Operations Component"""
 
-    # Create module directory structure
-    module_dir = ctx.actions.declare_directory(ctx.attr.name + "_gomod")
-
-    # Collect all inputs for the module
-    inputs = list(ctx.files.srcs)
-    if ctx.file.go_mod:
-        inputs.append(ctx.file.go_mod)
-
-    # WIT files are handled differently - through providers
-    wit_files = []
+    # Get WIT files from providers
+    wit_file = None
     if ctx.attr.wit:
         wit_info = ctx.attr.wit[WitInfo]
         wit_files = wit_info.wit_files.to_list()
-        inputs.extend(wit_files)
+        if wit_files:
+            wit_file = wit_files[0]  # Use first WIT file
 
-    # THE BAZEL WAY: Use ctx.actions.run with a simple copy tool instead of shell
-    # Create a simple script that sets up the module directory
-    setup_script = ctx.actions.declare_file(ctx.attr.name + "_module_setup.py")
-
-    # Generate Python setup script (cross-platform)
-    setup_content = '''#!/usr/bin/env python3
-import os
-import sys
-import shutil
-
-def main():
-    module_dir = sys.argv[1]
-    os.makedirs(module_dir, exist_ok=True)
-
-    # Copy source files - ensure main.go is at the root for TinyGo
-    sources = sys.argv[2:sys.argv.index("--go-mod") if "--go-mod" in sys.argv else len(sys.argv)]
-    for src in sources:
-        if src and os.path.exists(src):
-            filename = os.path.basename(src)
-            shutil.copy2(src, os.path.join(module_dir, filename))
-
-    # Copy go.mod if provided
-    if "--go-mod" in sys.argv:
-        go_mod_idx = sys.argv.index("--go-mod") + 1
-        if go_mod_idx < len(sys.argv):
-            go_mod = sys.argv[go_mod_idx]
-            if os.path.exists(go_mod):
-                shutil.copy2(go_mod, os.path.join(module_dir, "go.mod"))
-
-    # Copy WIT file if provided
-    if "--wit" in sys.argv:
-        wit_idx = sys.argv.index("--wit") + 1
-        if wit_idx < len(sys.argv):
-            wit = sys.argv[wit_idx]
-            if os.path.exists(wit):
-                shutil.copy2(wit, os.path.join(module_dir, "component.wit"))
-
-if __name__ == "__main__":
-    main()
-'''
-
-    ctx.actions.write(
-        output = setup_script,
-        content = setup_content,
-        is_executable = True,
-    )
-
-    # Build arguments for setup script
-    setup_args = [module_dir.path]
-    setup_args.extend([src.path for src in ctx.files.srcs])
-
-    if ctx.file.go_mod:
-        setup_args.extend(["--go-mod", ctx.file.go_mod.path])
-    if wit_files:
-        # Use first WIT file for now
-        setup_args.extend(["--wit", wit_files[0].path])
-
-    # Run the setup script
-    ctx.actions.run(
-        executable = setup_script,
-        arguments = setup_args,
-        inputs = inputs + [setup_script],
-        outputs = [module_dir],
-        mnemonic = "GoModuleSetup",
-        progress_message = "Setting up Go module for %s" % ctx.attr.name,
-        use_default_shell_env = False,
+    # Use the File Operations Component for workspace preparation
+    module_dir = setup_go_module_action(
+        ctx,
+        sources = ctx.files.srcs,
+        go_mod = ctx.file.go_mod,
+        wit_file = wit_file,
     )
 
     return module_dir
@@ -392,6 +327,7 @@ go_wasm_component = rule(
     toolchains = [
         "@rules_wasm_component//toolchains:tinygo_toolchain_type",
         "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
+        "@rules_wasm_component//toolchains:file_ops_toolchain_type",
     ],
     doc = """Builds a WebAssembly component from Go source using TinyGo + WASI Preview 2.
 
