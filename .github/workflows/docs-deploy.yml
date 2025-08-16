@@ -2,8 +2,10 @@ name: Deploy Documentation to Netcup
 
 on:
   push:
-    branches: [main]
-    paths: ['docs-site/**']
+    branches: 
+      - main
+    paths: 
+      - 'docs-site/**'
   workflow_dispatch:
     inputs:
       force_deploy:
