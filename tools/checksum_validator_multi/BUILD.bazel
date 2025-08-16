@@ -28,9 +28,9 @@ Architecture:
 └─────────────────────────────────────────────────────────────┘
 """
 
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//go:defs.bzl", "go_wasm_component")
 load(":checksum_updater.bzl", "checksum_updater", "validate_checksums_test")
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 package(default_visibility = ["//visibility:public"])
 

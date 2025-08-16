@@ -14,7 +14,6 @@ Test Coverage:
 - Language-specific optimization and standards testing
 """
 
-load("@bazel_skylib//lib:unittest.bzl", "unittest")
 load(
     "//test/cpp:cpp_component_tests.bzl",
     "cc_component_library_test",

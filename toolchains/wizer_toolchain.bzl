@@ -1,10 +1,5 @@
 """Wizer WebAssembly pre-initialization toolchain definitions"""
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//checksums:registry.bzl", "get_tool_info", "validate_tool_compatibility")
-load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error")
-load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
-
 WIZER_VERSIONS = {
     "9.0.0": {
         "release_date": "2024-06-03",

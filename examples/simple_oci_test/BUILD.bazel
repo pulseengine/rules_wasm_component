@@ -1,8 +1,8 @@
 """Simple, working OCI test example for validation"""
 
 load("//rust:defs.bzl", "rust_wasm_component_bindgen")
-load("//wit:defs.bzl", "wit_library")
 load("//wasm:defs.bzl", "wasm_keygen", "wasm_validate")
+load("//wit:defs.bzl", "wit_library")
 load(
     "//wkg:defs.bzl",
     "wac_compose_with_oci",

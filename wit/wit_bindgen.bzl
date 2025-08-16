@@ -1,7 +1,6 @@
 """WIT binding generation rule"""
 
 load("//providers:providers.bzl", "WitInfo")
-load("@bazel_skylib//lib:paths.bzl", "paths")
 
 def _wit_bindgen_impl(ctx):
     """Implementation of wit_bindgen rule"""

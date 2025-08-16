@@ -294,7 +294,7 @@
     },
     "//wasm:extensions.bzl%cpp_component": {
       "general": {
-        "bzlTransitiveDigest": "fZBDjEAcz6it2Ln9V62CIJ3FV7K3Zqj+KkgcpfHASSk=",
+        "bzlTransitiveDigest": "UXSVJDCNQVpRe4QZkAX534KEUKrw2vkOga6P5KHJ/3Y=",
         "usagesDigest": "KERVkkyQzlvYNLbCaBpMj9urmK7glE2PKp9/GlHysFg=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -308,23 +308,12 @@
             }
           }
         },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_skylib",
-            "bazel_skylib+"
-          ],
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
+        "recordedRepoMappingEntries": []
       }
     },
     "//wasm:extensions.bzl%jco": {
       "general": {
-        "bzlTransitiveDigest": "fZBDjEAcz6it2Ln9V62CIJ3FV7K3Zqj+KkgcpfHASSk=",
+        "bzlTransitiveDigest": "UXSVJDCNQVpRe4QZkAX534KEUKrw2vkOga6P5KHJ/3Y=",
         "usagesDigest": "DXiLGomW2OOrv+SlaQ7tVKkcs5yNCi6UxlzQ13AvvIA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -338,23 +327,12 @@
             }
           }
         },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_skylib",
-            "bazel_skylib+"
-          ],
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
+        "recordedRepoMappingEntries": []
       }
     },
     "//wasm:extensions.bzl%tinygo": {
       "general": {
-        "bzlTransitiveDigest": "fZBDjEAcz6it2Ln9V62CIJ3FV7K3Zqj+KkgcpfHASSk=",
+        "bzlTransitiveDigest": "UXSVJDCNQVpRe4QZkAX534KEUKrw2vkOga6P5KHJ/3Y=",
         "usagesDigest": "tE5hZWIXf+a1hThQOIcRRVjPbVQjFDb2aj5a1eEhvaA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -367,23 +345,12 @@
             }
           }
         },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_skylib",
-            "bazel_skylib+"
-          ],
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
+        "recordedRepoMappingEntries": []
       }
     },
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "fZBDjEAcz6it2Ln9V62CIJ3FV7K3Zqj+KkgcpfHASSk=",
+        "bzlTransitiveDigest": "UXSVJDCNQVpRe4QZkAX534KEUKrw2vkOga6P5KHJ/3Y=",
         "usagesDigest": "alR+pUqsJ738YkyooBLo61S409k3zQk0DMrGQ+rPP0w=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -399,23 +366,12 @@
             }
           }
         },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_skylib",
-            "bazel_skylib+"
-          ],
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
+        "recordedRepoMappingEntries": []
       }
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "fZBDjEAcz6it2Ln9V62CIJ3FV7K3Zqj+KkgcpfHASSk=",
+        "bzlTransitiveDigest": "UXSVJDCNQVpRe4QZkAX534KEUKrw2vkOga6P5KHJ/3Y=",
         "usagesDigest": "j2w0KsG/e6tltUI+WAeNH505251eBn4uleGJW2ExVag=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -438,23 +394,12 @@
             }
           }
         },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_skylib",
-            "bazel_skylib+"
-          ],
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
+        "recordedRepoMappingEntries": []
       }
     },
     "//wasm:extensions.bzl%wasmtime": {
       "general": {
-        "bzlTransitiveDigest": "fZBDjEAcz6it2Ln9V62CIJ3FV7K3Zqj+KkgcpfHASSk=",
+        "bzlTransitiveDigest": "UXSVJDCNQVpRe4QZkAX534KEUKrw2vkOga6P5KHJ/3Y=",
         "usagesDigest": "s1jIaDZbU9PAsYZLH9PgXwfrefil+sn/XLcVn/P9Q6U=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -468,23 +413,12 @@
             }
           }
         },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_skylib",
-            "bazel_skylib+"
-          ],
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
+        "recordedRepoMappingEntries": []
       }
     },
     "//wasm:extensions.bzl%wizer": {
       "general": {
-        "bzlTransitiveDigest": "fZBDjEAcz6it2Ln9V62CIJ3FV7K3Zqj+KkgcpfHASSk=",
+        "bzlTransitiveDigest": "UXSVJDCNQVpRe4QZkAX534KEUKrw2vkOga6P5KHJ/3Y=",
         "usagesDigest": "l311F9Nj3d1YQoceADo6hVjpHHGB3rw6EduthvFPE0A=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -498,23 +432,12 @@
             }
           }
         },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_skylib",
-            "bazel_skylib+"
-          ],
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
+        "recordedRepoMappingEntries": []
       }
     },
     "//wasm:extensions.bzl%wkg": {
       "general": {
-        "bzlTransitiveDigest": "fZBDjEAcz6it2Ln9V62CIJ3FV7K3Zqj+KkgcpfHASSk=",
+        "bzlTransitiveDigest": "UXSVJDCNQVpRe4QZkAX534KEUKrw2vkOga6P5KHJ/3Y=",
         "usagesDigest": "mH3SUo8xNuIm+C21hj2zQVuSslC4w2RVQ5JRqzScS24=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -531,18 +454,7 @@
             }
           }
         },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_skylib",
-            "bazel_skylib+"
-          ],
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
+        "recordedRepoMappingEntries": []
       }
     },
     "@@apple_support+//crosstool:setup.bzl%apple_cc_configure_extension": {
@@ -3530,7 +3442,7 @@
         "usagesDigest": "iEtV2a2kz5lz8dCn1oAU+o++UCyYrDXJQrUQBR1wsUU=",
         "recordedFileInputs": {
           "@@//toolchains/bazel_tools_deps/Cargo.lock": "89271fc699b84f5311598556c03a2291864f0bcf00655b2928a92706e0f99111",
-          "@@//toolchains/bazel_tools_deps/Cargo.toml": "6efa92d5d90af417d9cc44ae97aa1af0b68ba84f565811d3b7fc46f89dfb7d8b",
+          "@@//toolchains/bazel_tools_deps/Cargo.toml": "ff628d6a79566fb89fd08e59b4577055477c86acd43790351c141571a117cfda",
           "@@//tools/checksum_updater/Cargo.lock": "3c896fd630a74c15a739f89d21384b30757ab925eb0cb839a32fd693727fd241",
           "@@//tools/checksum_updater/Cargo.toml": "2187e8d26f9e1d1eb7d4dbb1be6b0e1f1bd21bd300486ca216c82218d5b675f0",
           "@@//tools/wizer_initializer/Cargo.lock": "bd142c8b2512a9781a017f72865a603e1ee10b1fecc8a80bda89c54734f3fd5f",

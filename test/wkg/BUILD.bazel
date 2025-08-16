@@ -1,7 +1,6 @@
 """Test suite for WebAssembly Package Tools (WKG) and OCI publishing capabilities"""
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@bazel_skylib//lib:unittest.bzl", "unittest")
 load(":wkg_test_utils.bzl", "olareg_test_registry", "wkg_integration_test")
 
 package(default_visibility = ["//visibility:public"])

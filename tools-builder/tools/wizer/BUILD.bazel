@@ -4,10 +4,12 @@ load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-# Main wizer binary  
+# Main wizer binary
 rust_binary(
     name = "wizer",
     srcs = ["@wizer_src//:src/main.rs"],
+    crate_name = "wizer",
+    edition = "2021",
     deps = [
         "@wizer_src//:anyhow",
         "@wizer_src//:clap",
@@ -15,14 +17,16 @@ rust_binary(
         "@wizer_src//:log",
         "@wizer_src//:wizer_lib",
     ],
-    crate_name = "wizer",
-    edition = "2021",
 )
 
 # Multi-platform builds
 rust_binary(
     name = "wizer-linux-x86_64",
     srcs = ["@wizer_src//:src/main.rs"],
+    crate_name = "wizer",
+    edition = "2021",
+    platform = "//platforms:linux_x86_64",
+    target_compatible_with = ["//platforms:linux_x86_64"],
     deps = [
         "@wizer_src//:anyhow",
         "@wizer_src//:clap",
@@ -30,15 +34,15 @@ rust_binary(
         "@wizer_src//:log",
         "@wizer_src//:wizer_lib",
     ],
-    crate_name = "wizer",
-    edition = "2021",
-    platform = "//platforms:linux_x86_64",
-    target_compatible_with = ["//platforms:linux_x86_64"],
 )
 
 rust_binary(
     name = "wizer-linux-arm64",
     srcs = ["@wizer_src//:src/main.rs"],
+    crate_name = "wizer",
+    edition = "2021",
+    platform = "//platforms:linux_arm64",
+    target_compatible_with = ["//platforms:linux_arm64"],
     deps = [
         "@wizer_src//:anyhow",
         "@wizer_src//:clap",
@@ -46,15 +50,15 @@ rust_binary(
         "@wizer_src//:log",
         "@wizer_src//:wizer_lib",
     ],
-    crate_name = "wizer",
-    edition = "2021",
-    platform = "//platforms:linux_arm64",
-    target_compatible_with = ["//platforms:linux_arm64"],
 )
 
 rust_binary(
     name = "wizer-macos-x86_64",
     srcs = ["@wizer_src//:src/main.rs"],
+    crate_name = "wizer",
+    edition = "2021",
+    platform = "//platforms:macos_x86_64",
+    target_compatible_with = ["//platforms:macos_x86_64"],
     deps = [
         "@wizer_src//:anyhow",
         "@wizer_src//:clap",
@@ -62,15 +66,15 @@ rust_binary(
         "@wizer_src//:log",
         "@wizer_src//:wizer_lib",
     ],
-    crate_name = "wizer",
-    edition = "2021",
-    platform = "//platforms:macos_x86_64", 
-    target_compatible_with = ["//platforms:macos_x86_64"],
 )
 
 rust_binary(
     name = "wizer-macos-arm64",
     srcs = ["@wizer_src//:src/main.rs"],
+    crate_name = "wizer",
+    edition = "2021",
+    platform = "//platforms:macos_arm64",
+    target_compatible_with = ["//platforms:macos_arm64"],
     deps = [
         "@wizer_src//:anyhow",
         "@wizer_src//:clap",
@@ -78,15 +82,15 @@ rust_binary(
         "@wizer_src//:log",
         "@wizer_src//:wizer_lib",
     ],
-    crate_name = "wizer",
-    edition = "2021",
-    platform = "//platforms:macos_arm64",
-    target_compatible_with = ["//platforms:macos_arm64"],
 )
 
 rust_binary(
     name = "wizer-windows-x86_64",
     srcs = ["@wizer_src//:src/main.rs"],
+    crate_name = "wizer",
+    edition = "2021",
+    platform = "//platforms:windows_x86_64",
+    target_compatible_with = ["//platforms:windows_x86_64"],
     deps = [
         "@wizer_src//:anyhow",
         "@wizer_src//:clap",
@@ -94,8 +98,4 @@ rust_binary(
         "@wizer_src//:log",
         "@wizer_src//:wizer_lib",
     ],
-    crate_name = "wizer",
-    edition = "2021",
-    platform = "//platforms:windows_x86_64",
-    target_compatible_with = ["//platforms:windows_x86_64"],
 )

@@ -8,7 +8,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 
 def _wasm_hermetic_impl(module_ctx):
     """Implementation for wasm_hermetic module extension"""
-    
+
     # wasm-tools hermetic binary (linux_amd64 for now)
     http_archive(
         name = "wasm_tools_hermetic",
@@ -26,7 +26,7 @@ filegroup(
 )
 """,
     )
-    
+
     # wit-bindgen hermetic binary (linux_amd64 for now)
     http_archive(
         name = "wit_bindgen_hermetic",
@@ -44,7 +44,7 @@ filegroup(
 )
 """,
     )
-    
+
     # wasmtime hermetic binary (linux_amd64 for now)
     http_archive(
         name = "wasmtime_hermetic",
@@ -62,7 +62,7 @@ filegroup(
 )
 """,
     )
-    
+
     # wac hermetic binary (linux_amd64 for now) - single binary download
     http_file(
         name = "wac_hermetic",
@@ -73,7 +73,7 @@ filegroup(
         executable = True,
         downloaded_file_path = "wac",
     )
-    
+
     # wkg hermetic binary (linux_amd64 for now) - single binary download
     http_file(
         name = "wkg_hermetic",

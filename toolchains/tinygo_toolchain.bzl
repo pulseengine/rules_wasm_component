@@ -10,11 +10,6 @@ Architecture:
 - wasm-tools for component transformation
 """
 
-load("@bazel_skylib//lib:versions.bzl", "versions")
-load("//checksums:registry.bzl", "get_tool_info")
-load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool")
-load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "log_diagnostic_info")
-
 def _detect_host_platform(repository_ctx):
     """Detect the host platform for tool downloads"""
     os_name = repository_ctx.os.name.lower()

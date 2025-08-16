@@ -1,8 +1,8 @@
 """Example of WebAssembly Package Tools (wkg) integration"""
 
-load("//wkg:defs.bzl", "wkg_fetch", "wkg_lock", "wkg_publish")
 load("//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("//wit:defs.bzl", "wit_library")
+load("//wkg:defs.bzl", "wkg_fetch", "wkg_lock", "wkg_publish")
 
 package(default_visibility = ["//visibility:public"])
 

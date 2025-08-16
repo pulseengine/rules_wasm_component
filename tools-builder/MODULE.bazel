@@ -19,11 +19,11 @@ rust.toolchain(
     edition = "2021",
     extra_target_triples = [
         # All platforms we want to support
-        "x86_64-unknown-linux-gnu",      # Linux x64
-        "aarch64-unknown-linux-gnu",     # Linux ARM64
-        "x86_64-apple-darwin",           # macOS x64
-        "aarch64-apple-darwin",          # macOS ARM64 (M1/M2)
-        "x86_64-pc-windows-msvc",        # Windows x64
+        "x86_64-unknown-linux-gnu",  # Linux x64
+        "aarch64-unknown-linux-gnu",  # Linux ARM64
+        "x86_64-apple-darwin",  # macOS x64
+        "aarch64-apple-darwin",  # macOS ARM64 (M1/M2)
+        "x86_64-pc-windows-msvc",  # Windows x64
     ],
     versions = ["1.88.0"],
 )
@@ -34,16 +34,15 @@ register_toolchains("@rust_toolchains//:all")
 # External tool sources via git_repository
 git_repos = use_extension("//toolchains:builder_extensions.bzl", "git_repos")
 git_repos.wasm_tools(tag = "v1.235.0")
-git_repos.wit_bindgen(tag = "v0.43.0") 
+git_repos.wit_bindgen(tag = "v0.43.0")
 git_repos.wizer(tag = "v9.0.0")
 git_repos.wac(tag = "v0.7.0")
 git_repos.wasmtime(tag = "v35.0.0")
-
 use_repo(
     git_repos,
-    "wasm_tools_src",
-    "wit_bindgen_src", 
-    "wizer_src",
     "wac_src",
+    "wasm_tools_src",
     "wasmtime_src",
+    "wit_bindgen_src",
+    "wizer_src",
 )

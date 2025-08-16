@@ -2,6 +2,12 @@
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
+# File Operations Component toolchain configuration
+load("//toolchains:file_ops_toolchain.bzl", "file_ops_toolchain")
+
+# WASM Tools Component toolchain configuration
+load("//toolchains:wasm_tools_component_toolchain.bzl", "wasm_tools_component_toolchain")
+
 package(default_visibility = ["//visibility:public"])
 
 # Toolchain type for WebAssembly tools
@@ -157,9 +163,6 @@ bzl_library(
 # Note: C++ toolchain configuration has been moved to @wasi_sdk repository
 # The cc_toolchain is now registered via @wasi_sdk//:cc_toolchain in MODULE.bazel
 
-# File Operations Component toolchain configuration
-load("//toolchains:file_ops_toolchain.bzl", "file_ops_toolchain")
-
 file_ops_toolchain(
     name = "file_ops_toolchain_impl",
     file_ops_component = "//tools/file_operations_component:file_ops",
@@ -172,9 +175,6 @@ toolchain(
     toolchain = ":file_ops_toolchain_impl",
     toolchain_type = ":file_ops_toolchain_type",
 )
-
-# WASM Tools Component toolchain configuration
-load("//toolchains:wasm_tools_component_toolchain.bzl", "wasm_tools_component_toolchain")
 
 wasm_tools_component_toolchain(
     name = "wasm_tools_component_toolchain_impl",
@@ -207,7 +207,7 @@ filegroup(
 
 filegroup(
     name = "wit_bindgen_hermetic_filegroup",
-    srcs = ["@wit_bindgen_hermetic//:bin"], 
+    srcs = ["@wit_bindgen_hermetic//:bin"],
     visibility = ["//visibility:public"],
 )
 
@@ -230,13 +230,13 @@ alias(
 )
 
 alias(
-    name = "wasmtime_hermetic", 
+    name = "wasmtime_hermetic",
     actual = ":wasmtime_hermetic_filegroup",
 )
 
 alias(
     name = "wit_bindgen_hermetic",
-    actual = ":wit_bindgen_hermetic_filegroup", 
+    actual = ":wit_bindgen_hermetic_filegroup",
 )
 
 alias(

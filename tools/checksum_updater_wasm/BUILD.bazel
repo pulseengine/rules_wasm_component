@@ -5,9 +5,9 @@ This demonstrates self-bootstrapping capabilities and showcases the maturity
 of the WebAssembly component model for real-world tooling.
 """
 
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("//rust:defs.bzl", "rust_wasm_component")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("//rust:defs.bzl", "rust_wasm_component", "rust_wasm_component_wizer")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -46,9 +46,6 @@ alias(
     name = "checksum_updater_wasm",
     actual = ":checksum_updater_wasm_component",
 )
-
-# Wizer-optimized WebAssembly component for performance comparison
-load("//rust:defs.bzl", "rust_wasm_component_wizer")
 
 rust_wasm_component_wizer(
     name = "checksum_updater_wasm_wizer",

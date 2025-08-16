@@ -14,7 +14,7 @@ Test Coverage:
 - Transpilation and binding generation testing
 """
 
-load("@bazel_skylib//lib:unittest.bzl", "unittest")
+load("//test/integration:integration_tests.bzl", "component_validation_test")
 load(
     "//test/js:js_component_tests.bzl",
     "jco_transpile_test",
@@ -23,7 +23,6 @@ load(
     "js_component_validation_test",
     "npm_install_test",
 )
-load("//test/integration:integration_tests.bzl", "component_validation_test")
 
 package(default_visibility = ["//visibility:public"])
 

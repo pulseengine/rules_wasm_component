@@ -1,7 +1,8 @@
 """Integration tests for OCI publishing pipeline using olareg_wasm"""
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("//test/wkg:wkg_test_utils.bzl", "olareg_mock_data", "wkg_test_suite")
+load("//test/wkg:wkg_test_utils.bzl", "wkg_test_suite")
+load("//wasm:defs.bzl", "wasm_keygen")
 load(
     "//wkg:defs.bzl",
     "wac_compose_with_oci",
@@ -9,7 +10,6 @@ load(
     "wasm_component_oci_image",
     "wasm_component_publish",
 )
-load("//wasm:defs.bzl", "wasm_keygen")
 
 package(default_visibility = ["//test/wkg:__subpackages__"])
 

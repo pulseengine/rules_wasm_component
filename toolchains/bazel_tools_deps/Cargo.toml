@@ -17,7 +17,7 @@ serde_json = "1.0"
 
 # WebAssembly tools core
 wat = "1.235"
-wasm-encoder = "0.235" 
+wasm-encoder = "0.235"
 wasmparser = "0.235"
 wasm-mutate = "0.235"
 wasm-shrink = "0.235"

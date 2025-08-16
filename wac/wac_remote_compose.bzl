@@ -1,7 +1,6 @@
 """WAC composition rule with remote component support via wkg"""
 
 load("//providers:providers.bzl", "WacCompositionInfo", "WasmComponentInfo")
-load("//wkg:defs.bzl", "wkg_fetch")
 
 def _wac_remote_compose_impl(ctx):
     """Implementation of wac_remote_compose rule"""

@@ -1,13 +1,13 @@
 """Module extensions for WebAssembly toolchain configuration"""
 
-load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
-load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
-load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
-load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
 load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_repository")
+load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
 load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
-load("//toolchains:wizer_toolchain.bzl", "wizer_toolchain_repository")
+load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
+load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
 load("//toolchains:wasmtime_toolchain.bzl", "wasmtime_repository")
+load("//toolchains:wizer_toolchain.bzl", "wizer_toolchain_repository")
+load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
 
 def _wasm_toolchain_extension_impl(module_ctx):
     """Implementation of wasm_toolchain module extension"""

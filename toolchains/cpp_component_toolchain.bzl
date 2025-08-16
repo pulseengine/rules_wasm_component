@@ -1,8 +1,6 @@
 """C/C++ WebAssembly component toolchain definitions for Preview2"""
 
-load("//checksums:registry.bzl", "get_tool_info")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
-load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
 
 def _cpp_component_toolchain_impl(ctx):
     """Implementation of cpp_component_toolchain rule"""

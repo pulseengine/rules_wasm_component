@@ -2,10 +2,10 @@
 
 def _git_repos_impl(module_ctx):
     """Extension implementation for git repositories"""
-    
+
     # Track which repos we've created to avoid duplicates
     repos_created = {}
-    
+
     for mod in module_ctx.modules:
         for call in mod.tags.wasm_tools:
             if "wasm_tools_src" not in repos_created:
@@ -15,16 +15,16 @@ def _git_repos_impl(module_ctx):
                     strip_prefix = "wasm-tools-{}".format(call.tag.lstrip("v")),
                 )
                 repos_created["wasm_tools_src"] = True
-                
+
         for call in mod.tags.wit_bindgen:
             if "wit_bindgen_src" not in repos_created:
                 module_ctx.download_and_extract(
-                    name = "wit_bindgen_src", 
+                    name = "wit_bindgen_src",
                     url = "https://github.com/bytecodealliance/wit-bindgen/archive/refs/tags/{}.tar.gz".format(call.tag),
                     strip_prefix = "wit-bindgen-{}".format(call.tag.lstrip("v")),
                 )
                 repos_created["wit_bindgen_src"] = True
-                
+
         for call in mod.tags.wizer:
             if "wizer_src" not in repos_created:
                 module_ctx.download_and_extract(
@@ -33,16 +33,16 @@ def _git_repos_impl(module_ctx):
                     strip_prefix = "wizer-{}".format(call.tag.lstrip("v")),
                 )
                 repos_created["wizer_src"] = True
-                
+
         for call in mod.tags.wac:
             if "wac_src" not in repos_created:
                 module_ctx.download_and_extract(
                     name = "wac_src",
-                    url = "https://github.com/bytecodealliance/wac/archive/refs/tags/{}.tar.gz".format(call.tag), 
+                    url = "https://github.com/bytecodealliance/wac/archive/refs/tags/{}.tar.gz".format(call.tag),
                     strip_prefix = "wac-{}".format(call.tag.lstrip("v")),
                 )
                 repos_created["wac_src"] = True
-                
+
         for call in mod.tags.wasmtime:
             if "wasmtime_src" not in repos_created:
                 module_ctx.download_and_extract(

@@ -1,0 +1,57 @@
+"""Hermetic WebAssembly toolchain using Nix packages
+
+This file provides WebAssembly tools through nixpkgs for true hermetic builds.
+These replace the cargo-based genrule patterns with pre-built, cached binaries.
+"""
+
+load("@rules_nixpkgs_core//:nixpkgs.bzl", "nixpkgs_package")
+
+package(default_visibility = ["//visibility:public"])
+
+# wasm-tools: WebAssembly manipulation tools from nixpkgs
+nixpkgs_package(
+    name = "wasm_tools_binary",
+    attribute_path = "wasm-tools",
+    repository = "@nixpkgs",
+)
+
+# wasm-bindgen: WebAssembly JavaScript bindings generator
+nixpkgs_package(
+    name = "wasm_bindgen_binary",
+    attribute_path = "wasm-bindgen-cli",
+    repository = "@nixpkgs",
+)
+
+# wasmtime: WebAssembly runtime
+nixpkgs_package(
+    name = "wasmtime_binary",
+    attribute_path = "wasmtime",
+    repository = "@nixpkgs",
+)
+
+# Create filegroups for easy access
+filegroup(
+    name = "wasm_tools",
+    srcs = [":wasm_tools_binary"],
+)
+
+filegroup(
+    name = "wasm_bindgen",
+    srcs = [":wasm_bindgen_binary"],
+)
+
+filegroup(
+    name = "wasmtime",
+    srcs = [":wasmtime_binary"],
+)
+
+# Create aliases for backwards compatibility
+alias(
+    name = "wasm-tools",
+    actual = ":wasm_tools",
+)
+
+alias(
+    name = "wasm-bindgen",
+    actual = ":wasm_bindgen",
+)

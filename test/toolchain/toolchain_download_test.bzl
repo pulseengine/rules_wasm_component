@@ -1,7 +1,5 @@
 """Integration test for toolchain download functionality"""
 
-load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
-
 def _mock_wasm_toolchain_repository_impl(repository_ctx):
     """Mock implementation that tests the URL and prefix generation"""
 

@@ -1,10 +1,10 @@
 """Rust WASM component rule implementation"""
 
 load("@rules_rust//rust:defs.bzl", "rust_shared_library")
-load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//common:common.bzl", "WASM_TARGET_TRIPLE")
+load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
+load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action")
 load(":transitions.bzl", "wasm_transition")
-load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action", "create_component_action")
 
 def _rust_wasm_component_impl(ctx):
     """Implementation of rust_wasm_component rule"""

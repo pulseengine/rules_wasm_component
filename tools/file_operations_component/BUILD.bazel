@@ -5,7 +5,6 @@ platform-specific shell scripts in Bazel rules for Go, C++, and JavaScript.
 """
 
 load("@rules_rust//rust:defs.bzl", "rust_binary")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
 
 package(default_visibility = ["//visibility:public"])
 

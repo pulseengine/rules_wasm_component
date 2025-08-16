@@ -7,6 +7,7 @@ This workspace provides a self-hosted solution for building WebAssembly toolchai
 ### Problem Statement
 
 The main rules_wasm_component workspace faces cargo sandbox issues when building Rust tools in CI:
+
 - `error: failed to open cargo registry cache: Read-only file system (os error 30)`
 - BCR tests fail because they require hermetic builds without external dependencies
 - rules_rust has known limitations with sandboxed cargo builds (GitHub issues #1462, #1534, #2145)
@@ -31,6 +32,7 @@ This workspace builds all required WebAssembly tools from source and publishes t
 ## Supported Tools
 
 ### Core Tools (have upstream releases)
+
 - **wasm-tools**: WebAssembly binary toolkit
 - **wit-bindgen**: WIT binding generator
 - **wasmtime**: WebAssembly runtime
@@ -38,11 +40,13 @@ This workspace builds all required WebAssembly tools from source and publishes t
 - **wkg**: WebAssembly Package tools
 
 ### Extended Tools (build-only, no upstream releases)
+
 - **wizer**: WebAssembly pre-initialization (main driver for this solution)
 
 ## Platform Support
 
 Cross-compilation for all major platforms:
+
 - `x86_64-unknown-linux-gnu` (Linux x64)
 - `aarch64-unknown-linux-gnu` (Linux ARM64)
 - `x86_64-apple-darwin` (macOS x64)

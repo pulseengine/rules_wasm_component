@@ -3,9 +3,11 @@
 ## Problem Summary
 
 The main issue was **cargo filesystem sandbox restrictions** in Bazel Central Registry (BCR) testing:
+
 - `error: failed to open cargo registry cache: Read-only file system (os error 30)`
 - BCR tests require hermetic builds without external dependencies
-- rules_rust has known limitations with sandboxed cargo builds ([GitHub issues #1462, #1534, #2145](https://github.com/bazelbuild/rules_rust/issues))
+- rules_rust has known limitations with sandboxed cargo builds
+  ([GitHub issues #1462, #1534, #2145](https://github.com/bazelbuild/rules_rust/issues))
 
 ## Solution Implemented
 
@@ -29,7 +31,7 @@ All tools building successfully via pre-built binaries:
 
 ```bash
 bazel build //toolchains:wasm_tools_hermetic  # ✅ Working
-bazel build //toolchains:wit_bindgen_hermetic # ✅ Working  
+bazel build //toolchains:wit_bindgen_hermetic # ✅ Working
 bazel build //toolchains:wasmtime_hermetic    # ✅ Working
 bazel build //toolchains:wac_hermetic         # ✅ Working
 bazel build //toolchains:wkg_hermetic         # ✅ Working
@@ -39,10 +41,10 @@ bazel build //toolchains:wkg_hermetic         # ✅ Working
 
 Self-hosted tool building workspace in `tools-builder/`:
 
-```
+```text
 tools-builder/
 ├── MODULE.bazel              # Cross-compilation setup
-├── BUILD.bazel               # Tool suite orchestration  
+├── BUILD.bazel               # Tool suite orchestration
 ├── README.md                 # Complete documentation
 ├── platforms/
 │   ├── BUILD.bazel           # Platform definitions
@@ -60,16 +62,18 @@ tools-builder/
 ### 1. Hermetic Extension Improvements
 
 **Fixed Binary Downloads**:
-- ✅ wac: Direct binary download from GitHub releases 
+
+- ✅ wac: Direct binary download from GitHub releases
 - ✅ wkg: Direct binary download from GitHub releases
 - ✅ Proper `http_file` usage with `downloaded_file_path`
 - ✅ Verified SHA256 checksums from JSON registry
 
 **Implementation**:
+
 ```starlark
 # toolchains/hermetic_extension.bzl
 http_file(
-    name = "wac_hermetic", 
+    name = "wac_hermetic",
     urls = ["https://github.com/bytecodealliance/wac/releases/download/v0.7.0/wac-cli-x86_64-unknown-linux-musl"],
     sha256 = "dd734c4b049287b599a3f8c553325307687a17d070290907e3d5bbe481b89cc6",
     executable = True,
@@ -80,16 +84,19 @@ http_file(
 ### 2. Self-Hosted Tool Builder
 
 **Complete Cross-Platform Setup**:
+
 - ✅ All 5 major platforms: Linux x64/ARM64, macOS x64/ARM64, Windows x64
 - ✅ rules_rust with extra_target_triples for cross-compilation
 - ✅ Git repository management for tool sources
 - ✅ Platform-specific build targets
 
 **Tool Coverage**:
+
 - **Core Tools**: wasm-tools, wit-bindgen, wasmtime (have upstream releases)
 - **Extended Tools**: wizer (build-only), wac, wkg
 
 **Build Commands**:
+
 ```bash
 # Build all tools for all platforms
 bazel build //:all_tools
@@ -102,6 +109,7 @@ bazel build //tools/wasm-tools:wasm-tools-macos-arm64
 ### 3. Platform Architecture
 
 **Comprehensive Platform Support**:
+
 ```starlark
 # platforms/defs.bzl
 PLATFORM_MAPPINGS = {
@@ -110,7 +118,7 @@ PLATFORM_MAPPINGS = {
         "os": "linux", "arch": "x86_64", "suffix": "",
     },
     "//platforms:macos_arm64": {
-        "rust_target": "aarch64-apple-darwin", 
+        "rust_target": "aarch64-apple-darwin",
         "os": "macos", "arch": "aarch64", "suffix": "",
     },
     # ... all 5 platforms
@@ -120,19 +128,21 @@ PLATFORM_MAPPINGS = {
 ## Workflow
 
 ### Current State: Hermetic Success
-```
+
+```text
 Main Workspace ──http_file──▶ GitHub Releases ──verified checksums──▶ ✅ BCR Compatible
 ```
 
 ### Future State: Self-Hosted
-```
+
+```text
 tools-builder/ ──build──▶ GitHub Releases ──publish──▶ Main Workspace ──download──▶ ✅ Complete Control
 ```
 
 ## Benefits Achieved
 
 1. **✅ Complete Hermeticity**: No external cargo registry dependencies
-2. **✅ BCR Compatibility**: All tests pass in sandboxed environment  
+2. **✅ BCR Compatibility**: All tests pass in sandboxed environment
 3. **✅ Cross-Platform**: Supports all major development platforms
 4. **✅ Version Control**: Explicit tool versioning with checksum verification
 5. **✅ CI Efficiency**: Pre-built binaries eliminate build-time compilation
@@ -142,11 +152,13 @@ tools-builder/ ──build──▶ GitHub Releases ──publish──▶ Main 
 ## Implementation Files
 
 ### Modified Files
+
 - `MODULE.bazel`: Added wac_hermetic and wkg_hermetic to use_repo
 - `toolchains/hermetic_extension.bzl`: Added http_file downloads for wac/wkg
 - `toolchains/BUILD.bazel`: Added filegroups for new hermetic tools
 
 ### New Files (Tool Builder Workspace)
+
 - `tools-builder/MODULE.bazel`: Cross-compilation setup
 - `tools-builder/BUILD.bazel`: Tool suite orchestration
 - `tools-builder/README.md`: Complete documentation
@@ -174,9 +186,11 @@ The architecture is complete and working. Remaining work:
 
 ```bash
 # Test all hermetic tools
-bazel build //toolchains:wasm_tools_hermetic //toolchains:wit_bindgen_hermetic //toolchains:wasmtime_hermetic //toolchains:wac_hermetic //toolchains:wkg_hermetic
+bazel build //toolchains:wasm_tools_hermetic //toolchains:wit_bindgen_hermetic \
+  //toolchains:wasmtime_hermetic //toolchains:wac_hermetic //toolchains:wkg_hermetic
 
 # Result: ✅ All tools building successfully
 ```
 
-The solution successfully addresses the cargo sandbox issue while providing a scalable architecture for future tool management.
+The solution successfully addresses the cargo sandbox issue while providing a scalable architecture for
+future tool management.

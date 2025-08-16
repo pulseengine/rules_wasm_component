@@ -1,14 +1,13 @@
 """Real-world microservices architecture example using WAC + OCI"""
 
 load("//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("//wasm:defs.bzl", "wasm_keygen")
 load("//wit:defs.bzl", "wit_library")
-load("//wasm:defs.bzl", "wasm_keygen", "wasm_sign")
 load(
     "//wkg:defs.bzl",
     "wac_compose_with_oci",
     "wac_distributed_system",
     "wac_microservices_app",
-    "wasm_component_oci_publish",
     "wasm_component_secure_publish",
     "wasm_security_policy",
     "wkg_registry_config",

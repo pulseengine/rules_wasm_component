@@ -13,7 +13,7 @@ platform(
 
 # Linux ARM64
 platform(
-    name = "linux_arm64", 
+    name = "linux_arm64",
     constraint_values = [
         "@platforms//cpu:arm64",
         "@platforms//os:linux",
@@ -24,7 +24,7 @@ platform(
 platform(
     name = "macos_x86_64",
     constraint_values = [
-        "@platforms//cpu:x86_64", 
+        "@platforms//cpu:x86_64",
         "@platforms//os:macos",
     ],
 )
@@ -34,7 +34,7 @@ platform(
     name = "macos_arm64",
     constraint_values = [
         "@platforms//cpu:arm64",
-        "@platforms//os:macos", 
+        "@platforms//os:macos",
     ],
 )
 
