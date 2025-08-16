@@ -43,8 +43,16 @@ def register_wasm_tool_repositories():
     git_repository(
         name = "wrpc_src",
         remote = "https://github.com/bytecodealliance/wrpc.git",
-        tag = "v0.1.0",  # Use tagged release for stability
+        tag = "crates/cli/v0.6.0",  # Use latest CLI release
         build_file = "//toolchains:BUILD.wrpc",
+    )
+    
+    # wizer: WebAssembly pre-initialization tool
+    git_repository(
+        name = "wizer_src",
+        remote = "https://github.com/bytecodealliance/wizer.git",
+        tag = "v9.0.0",
+        build_file = "//toolchains:BUILD.wizer",
     )
 
     print("✅ Modernized WASM tool repositories registered - replaced all git clone operations")

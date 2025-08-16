@@ -1,0 +1,26 @@
+[package]
+name = "file_operations_component"
+version = "1.0.0"
+edition = "2021"
+description = "Universal file operations component for WebAssembly build systems"
+license = "Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.43.0"
+anyhow = "1.0"
+serde = "1.0"
+serde_json = "1.0"
+walkdir = "2.3"
+filetime = "0.2"
+
+[dependencies.wit-bindgen-rt]
+version = "0.43.0"
+features = ["bitflags"]
+
+[package.metadata.component]
+package = "build:file-ops"
+
+[package.metadata.component.dependencies]
