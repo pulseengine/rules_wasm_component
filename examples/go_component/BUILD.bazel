@@ -15,14 +15,14 @@ package(default_visibility = ["//visibility:public"])
 wit_library(
     name = "calculator_wit",
     srcs = ["wit/calculator.wit"],
-    world = "calculator-world",
+    world = "wasi:cli/command",
 )
 
 # WIT library definitions for HTTP service interface
 wit_library(
     name = "http_service_wit",
     srcs = ["wit/http-service.wit"],
-    world = "http-service-world",
+    world = "wasi:cli/command",
 )
 
 # Generate markdown documentation for calculator interface
@@ -40,8 +40,7 @@ wit_markdown(
 # Generate Go bindings from WIT for calculator
 go_wit_bindgen(
     name = "calculator_bindings",
-    wit = "wit/calculator.wit",
-    world = "calculator-world",
+    world = "wasi:cli/command",
 )
 
 # Build calculator component using TinyGo + WASI Preview 2
@@ -54,15 +53,13 @@ go_wasm_component(
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "release",
-    wit = "wit/calculator.wit",
-    world = "calculator-world",
+    world = "wasi:cli/command",
 )
 
 # Generate Go bindings for HTTP service
 go_wit_bindgen(
     name = "http_service_bindings",
-    wit = "wit/http-service.wit",
-    world = "http-service-world",
+    world = "wasi:cli/command",
 )
 
 # Build HTTP service component using TinyGo + WASI Preview 2
@@ -71,12 +68,12 @@ go_wasm_component(
     srcs = [
         "handlers.go",
         "service.go",
+        "main.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "release",
-    wit = "wit/http-service.wit",
-    world = "http-service-world",
+    world = "wasi:cli/command",
 )
 
 # Debug version for development
@@ -89,8 +86,7 @@ go_wasm_component(
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",
-    wit = "wit/calculator.wit",
-    world = "calculator-world",
+    world = "wasi:cli/command",
 )
 
 # Simple test without WIT bindings to isolate asyncify issues
@@ -102,3 +98,4 @@ go_wasm_component(
     optimization = "debug",
     world = "simple-test",
 )
+
