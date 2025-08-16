@@ -317,7 +317,7 @@ def _js_component_optimization_test_impl(ctx):
             "Component should have .wasm file",
         )
 
-    # Test optimization comparison between targets
+        # Test optimization comparison between targets
     elif ctx.attr.optimized_target and ctx.attr.unoptimized_target:
         optimized_info = ctx.attr.optimized_target[WasmComponentInfo]
         unoptimized_info = ctx.attr.unoptimized_target[WasmComponentInfo]

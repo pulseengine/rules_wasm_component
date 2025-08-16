@@ -24,13 +24,13 @@ graph TD
     C[Docker Hub] --> D
     E[Private Registry] --> D
     D --> F[Composed Application]
-    
+
     G[Component Signing] --> B
     G --> C
     G --> E
-    
+
     H[Signature Verification] --> D
-    
+
     style A fill:#e1f5fe
     style F fill:#f3e5f5
     style G fill:#fff3e0
@@ -80,7 +80,7 @@ wasm_component_from_oci(
     name = "data_service",
     registry = "docker.io",
     namespace = "my-org",
-    component_name = "data-service", 
+    component_name = "data-service",
     tag = "latest",
     registry_config = ":registries",
 )
@@ -103,20 +103,20 @@ wac_compose_with_oci(
     },
     composition = """
         package distributed:app@1.0.0;
-        
+
         let frontend = new frontend:ui { ... };
         let gateway = new gateway:service { ... };
         let auth = new auth:service { ... };
         let data = new data:service { ... };
-        
+
         // Connect frontend to gateway
         connect frontend.make-request -> gateway.handle-request;
-        
+
         // Connect gateway to services
         connect gateway.authenticate -> auth.verify-token;
         connect gateway.fetch-data -> data.query;
         connect gateway.store-data -> data.save;
-        
+
         // Export frontend as main interface
         export frontend as main;
     """,
@@ -138,12 +138,12 @@ wac_microservices_app(
     services = {
         # Core services from GitHub Container Registry
         "user_service": "ghcr.io/ecommerce/users:v2.0.0",
-        "product_service": "ghcr.io/ecommerce/products:v1.8.0", 
+        "product_service": "ghcr.io/ecommerce/products:v1.8.0",
         "order_service": "ghcr.io/ecommerce/orders:v1.2.0",
-        
+
         # Payment from Docker Hub
         "payment_service": "docker.io/payments/processor:v3.1.0",
-        
+
         # Analytics from private registry
         "analytics_service": "registry.company.com/analytics:v1.0.0",
     },
@@ -168,10 +168,10 @@ wac_distributed_system(
             # Core platform from GitHub
             "data_processor": "ghcr.io/iot/processor:v2.3.0",
             "alert_system": "ghcr.io/iot/alerts:v1.1.0",
-            
+
             # Storage from AWS ECR
             "time_series_db": "123456789.dkr.ecr.us-west-2.amazonaws.com/timeseries:v2.0.0",
-            
+
             # Analytics from Azure
             "ml_analytics": "myregistry.azurecr.io/iot/ml-engine:v1.5.0",
         },
@@ -219,19 +219,19 @@ wkg_registry_config(
     registries = [
         # Local development
         "local|localhost:5000|oci",
-        
+
         # GitHub Container Registry
         "github|ghcr.io|oci|env|GITHUB_TOKEN",
-        
+
         # Docker Hub
-        "docker|docker.io|oci|env|DOCKER_TOKEN", 
-        
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+
         # AWS Elastic Container Registry
         "aws|123456789.dkr.ecr.us-west-2.amazonaws.com|oci|oauth|client_id|client_secret",
-        
+
         # Azure Container Registry
         "azure|myregistry.azurecr.io|oci|basic|username|password",
-        
+
         # Private corporate registry
         "corp|registry.company.com|oci|env|CORP_REGISTRY_TOKEN",
     ],
@@ -254,7 +254,7 @@ wkg_registry_config(
 
 # Production configuration with enhanced security
 wkg_registry_config(
-    name = "prod_registries", 
+    name = "prod_registries",
     default_registry = "corp",
     enable_signature_verification = True,
     registries = [
@@ -279,13 +279,13 @@ package enterprise:services@1.0.0;
 interface auth {
     verify-token: func(token: string) -> result<user-info, auth-error>;
     refresh-token: func(refresh-token: string) -> result<string, auth-error>;
-    
+
     record user-info {
         id: string,
         email: string,
         roles: list<string>,
     }
-    
+
     variant auth-error {
         invalid-token,
         expired-token,
@@ -293,17 +293,17 @@ interface auth {
     }
 }
 
-// Data service interface  
+// Data service interface
 interface data {
     query: func(sql: string) -> result<list<record>, data-error>;
     save: func(data: record) -> result<string, data-error>;
-    
+
     record record {
         id: string,
         data: string,
         timestamp: u64,
     }
-    
+
     variant data-error {
         invalid-query,
         connection-failed,
@@ -314,14 +314,14 @@ interface data {
 // Gateway service exports
 interface gateway {
     handle-request: func(request: http-request) -> http-response;
-    
+
     record http-request {
         method: string,
         path: string,
         headers: list<tuple<string, string>>,
         body: option<list<u8>>,
     }
-    
+
     record http-response {
         status: u32,
         headers: list<tuple<string, string>>,
@@ -433,10 +433,10 @@ wac_compose_with_oci(
     },
     verify_signatures = True,
     trusted_keys = ":production_verification_keys",
-    
+
     # Reject any unsigned components
     require_signed_components = True,
-    
+
     # Additional security policies
     allowed_registries = [
         "ghcr.io/trusted-org/*",
@@ -460,7 +460,7 @@ wac_compose_with_oci(
 
 # Staging - partial verification
 wac_compose_with_oci(
-    name = "staging_system", 
+    name = "staging_system",
     oci_components = {
         "auth": "ghcr.io/org/auth:staging",
     },
@@ -500,14 +500,14 @@ wac_compose(
     },
     composition = """
         package dev:app@1.0.0;
-        
+
         let frontend = new frontend:ui { ... };
         let auth = new mock:auth { ... };
         let data = new mock:data { ... };
-        
+
         connect frontend.authenticate -> auth.dev-login;
         connect frontend.fetch-data -> data.mock-query;
-        
+
         export frontend as main;
     """,
 )
@@ -524,7 +524,7 @@ wac_compose_with_oci(
     },
     oci_components = {
         "auth": "ghcr.io/org/auth:integration",
-        "data": "ghcr.io/org/data:integration", 
+        "data": "ghcr.io/org/data:integration",
     },
     registry_config = ":integration_registries",
     verify_signatures = True,
@@ -564,16 +564,16 @@ wkg_registry_config(
     name = "optimized_registries",
     # Local cache for faster rebuilds
     cache_dir = "/var/cache/wkg",
-    
+
     # Enable aggressive caching
     cache_ttl_hours = 24,
-    
+
     # Parallel downloads
     max_concurrent_downloads = 10,
-    
+
     # Enable compression
     enable_compression = True,
-    
+
     registries = [
         "github|ghcr.io|oci|env|GITHUB_TOKEN",
         "docker|docker.io|oci|env|DOCKER_TOKEN",
@@ -613,33 +613,33 @@ interface health {
     // Health check for composed systems
     check-component-health: func(component-id: string) -> health-status;
     check-system-health: func() -> system-health;
-    
+
     record health-status {
         status: health-state,
         message: string,
         timestamp: u64,
         metrics: list<metric>,
     }
-    
+
     record system-health {
         overall-status: health-state,
         component-statuses: list<tuple<string, health-status>>,
         composition-info: composition-metadata,
     }
-    
+
     variant health-state {
         healthy,
         degraded,
         unhealthy,
         unknown,
     }
-    
+
     record metric {
         name: string,
         value: f64,
         unit: string,
     }
-    
+
     record composition-metadata {
         local-components: list<string>,
         oci-components: list<string>,

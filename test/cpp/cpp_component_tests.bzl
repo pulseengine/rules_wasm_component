@@ -205,7 +205,7 @@ def _cpp_component_language_test_impl(ctx):
             "Component should have .wasm file",
         )
 
-    # Test language variant comparison between C and C++ targets
+        # Test language variant comparison between C and C++ targets
     elif ctx.attr.c_target and ctx.attr.cpp_target:
         c_info = ctx.attr.c_target[WasmComponentInfo]
         cpp_info = ctx.attr.cpp_target[WasmComponentInfo]

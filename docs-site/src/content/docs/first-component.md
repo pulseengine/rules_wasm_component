@@ -16,7 +16,8 @@ Build your first WebAssembly component from scratch in under 10 minutes.
 ## Prerequisites
 
 Make sure you have:
-- **Bazelisk installed** - [See installation guide](/installation/) 
+
+- **Bazelisk installed** - [See installation guide](/installation/)
 - **Git** - For repository management
 
 Bazelisk will automatically download the correct Bazel version for you.
@@ -98,10 +99,10 @@ package greeting:api@1.0.0;
 interface greeter {
     /// Generate a personalized greeting
     greet: func(name: string) -> string;
-    
+
     /// Get a random greeting
     random-greeting: func() -> string;
-    
+
     /// Count how many greetings have been made
     greeting-count: func() -> u32;
 }
@@ -174,7 +175,7 @@ impl Guest for GreetingComponent {
     fn greet(name: String) -> String {
         // Increment the counter
         let count = GREETING_COUNTER.fetch_add(1, Ordering::SeqCst) + 1;
-        
+
         // Generate personalized greeting
         format!("Hello, {}! This is greeting #{} 👋", name, count)
     }
@@ -182,10 +183,10 @@ impl Guest for GreetingComponent {
     fn random_greeting() -> String {
         // Increment the counter
         let count = GREETING_COUNTER.fetch_add(1, Ordering::SeqCst) + 1;
-        
+
         // Simple pseudo-random selection based on counter
         let greeting = GREETINGS[count as usize % GREETINGS.len()];
-        
+
         format!("{}, friend! 🎉", greeting)
     }
 
@@ -212,6 +213,7 @@ ls bazel-bin/
 ```
 
 If the build succeeds, you'll see output like:
+
 ```
 INFO: Build completed successfully, 15 total actions
 ```
@@ -264,26 +266,34 @@ wasmtime run --wasi preview2 bazel-bin/greeting_component.wasm
 ## Understanding What Happened
 
 ### 1. WIT Interface Definition
+
 The WIT file defined three functions that your component exports:
+
 - `greet(name: string) -> string` - Personalized greeting
 - `random-greeting() -> string` - Random greeting selection
 - `greeting-count() -> u32` - Counter tracking
 
 ### 2. Code Generation
+
 wit-bindgen automatically generated Rust bindings that:
+
 - Define the `Guest` trait you implemented
 - Handle WebAssembly memory management
 - Marshal data between WebAssembly and the host
 
 ### 3. Component Building
+
 Bazel orchestrated the build process:
+
 - Processed WIT interfaces
 - Generated Rust bindings
 - Compiled Rust to WebAssembly
 - Created a WebAssembly component
 
 ### 4. Component Model Features
+
 Your component demonstrates:
+
 - **Interface Types** - Rich type system beyond basic WebAssembly
 - **Capability Security** - Isolated execution environment
 - **Language Interoperability** - Can be called from any language
@@ -293,16 +303,19 @@ Your component demonstrates:
 Congratulations! You've built your first WebAssembly component. Now you can:
 
 ### Explore Different Languages
+
 - **[Go Components](/languages/go/)** - Build the same functionality with TinyGo
 - **[C++ Components](/languages/cpp/)** - Try native C++ development
 - **[JavaScript Components](/languages/javascript/)** - Use ComponentizeJS
 
 ### Add Advanced Features
+
 - **[Component Composition](/composition/wac/)** - Combine multiple components
 - **[Error Handling](/examples/calculator/)** - Use WIT result types
 - **[Performance Optimization](/production/performance/)** - Optimize with Wizer
 
 ### Build Real Applications
+
 - **[HTTP Service](/examples/http-service/)** - Create web services
 - **[Multi-Language System](/examples/multi-language/)** - Polyglot applications
 - **[OCI Publishing](/production/publishing/)** - Distribute components
@@ -310,6 +323,7 @@ Congratulations! You've built your first WebAssembly component. Now you can:
 ## Troubleshooting
 
 **Bazel can't find rules_wasm_component:**
+
 ```bash
 # Check MODULE.bazel syntax
 bazel mod deps
@@ -319,6 +333,7 @@ bazel query '@rules_wasm_component//...' >/dev/null
 ```
 
 **Rust compilation errors:**
+
 ```bash
 # Check Cargo.lock is present
 ls Cargo.lock
@@ -328,12 +343,14 @@ cargo generate-lockfile
 ```
 
 **Component doesn't export functions:**
+
 ```rust
 // Make sure you have the export macro at the end of lib.rs
 greeting_component_bindings::export!(GreetingComponent with_types_in greeting_component_bindings);
 ```
 
 **wasmtime execution issues:**
+
 ```bash
 # Ensure you're using WASI Preview 2
 wasmtime run --wasi preview2 component.wasm

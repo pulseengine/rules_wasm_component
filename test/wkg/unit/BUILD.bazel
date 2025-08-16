@@ -56,8 +56,8 @@ wkg_lock(
 # Build test for wkg_lock
 build_test(
     name = "wkg_lock_basic_test",
-    targets = [":test_lock_dependencies"],
     tags = ["manual"],  # Skip until wkg 0.12.0+ available
+    targets = [":test_lock_dependencies"],
 )
 
 # Unit test for wkg_publish rule (using existing component)

@@ -114,11 +114,11 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   \`;
   document.body.insertAdjacentHTML('beforeend', modalHTML);
-  
+
   const modal = document.getElementById('diagramModal');
   const modalContent = document.getElementById('modalContent');
   const closeBtn = document.querySelector('.modal-close');
-  
+
   function addClickListeners() {
     const diagrams = document.querySelectorAll('svg[id^="mermaid-"]');
     diagrams.forEach(diagram => {
@@ -132,31 +132,31 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
-  
+
   function closeModal() {
     modal.classList.remove('active');
     document.body.style.overflow = '';
     modalContent.innerHTML = '';
   }
-  
+
   if (closeBtn) {
     closeBtn.addEventListener('click', closeModal);
   }
-  
+
   if (modal) {
     modal.addEventListener('click', function(e) {
       if (e.target === modal) closeModal();
     });
   }
-  
+
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
       closeModal();
     }
   });
-  
+
   addClickListeners();
-  
+
   // Re-add listeners after navigation
   document.addEventListener('astro:page-load', addClickListeners);
 });

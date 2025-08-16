@@ -26,7 +26,7 @@ graph TD
     E --> F[OCI Registry Publishing]
     F --> G[Production Deployment]
     G --> H[Runtime Verification]
-    
+
     style A fill:#e1f5fe
     style E fill:#f3e5f5
     style H fill:#fff3e0
@@ -51,7 +51,7 @@ wasm_keygen(
 
 # Generate compact format keys (optimal performance)
 wasm_keygen(
-    name = "dev_keys", 
+    name = "dev_keys",
     openssh_format = False,
 )
 ```
@@ -72,7 +72,7 @@ wasm_sign(
 # Sign with detached signature (separate .sig file)
 wasm_sign(
     name = "signed_component_detached",
-    component = ":my_component", 
+    component = ":my_component",
     keys = ":production_keys",
     detached = True,  # Creates component.wasm.sig
 )
@@ -134,7 +134,7 @@ wasm_keygen(
 **Compact Format (Optimal Performance):**
 ```python
 wasm_keygen(
-    name = "performance_keys", 
+    name = "performance_keys",
     openssh_format = False,  # Native wasmsign2 format
     # Smaller key size
     # Faster verification
@@ -222,7 +222,7 @@ wasm_sign(
 ```python
 wasm_sign(
     name = "detached_signed",
-    component = ":my_component", 
+    component = ":my_component",
     keys = ":signing_keys",
     detached = True,  # Creates .wasm and .wasm.sig files
 )
@@ -246,7 +246,7 @@ wasm_sign(
 
 # Staging signing
 wasm_sign(
-    name = "staging_signed", 
+    name = "staging_signed",
     component = ":component",
     keys = ":staging_keys",
     detached = True,
@@ -255,7 +255,7 @@ wasm_sign(
 # Production signing
 wasm_sign(
     name = "prod_signed",
-    component = ":component", 
+    component = ":component",
     keys = ":production_keys",
     detached = True,
     # Additional security for production
@@ -278,7 +278,7 @@ wasm_sign(
 wasm_sign(
     name = "security_signed",
     component = ":developer_signed",  # Sign the already-signed component
-    keys = ":security_keys", 
+    keys = ":security_keys",
     detached = True,
 )
 
@@ -305,7 +305,7 @@ wasm_validate(
 # Production - mandatory verification
 wasm_validate(
     name = "prod_validate",
-    component = ":prod_component", 
+    component = ":prod_component",
     verify_signature = True,   # Required in production
     signing_keys = ":production_keys",
 )
@@ -341,7 +341,7 @@ load("@rules_wasm_component//oci:defs.bzl", "wasm_component_from_oci")
 wasm_component_from_oci(
     name = "verified_remote_component",
     registry = "ghcr.io",
-    namespace = "trusted-org", 
+    namespace = "trusted-org",
     component_name = "auth-service",
     tag = "v2.1.0",
     verify_signature = True,
@@ -367,22 +367,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Bazel
         uses: bazelbuild/setup-bazelisk@v2
-      
+
       - name: Build component
         run: bazel build //src:my_component
-        
+
       - name: Generate keys (if needed)
         run: bazel build //keys:production_keys
-        
+
       - name: Sign component
         run: bazel build //src:signed_component
-        
+
       - name: Verify signature
         run: bazel build //src:verify_signature
-        
+
       - name: Push to registry
         run: bazel run //src:push_signed_component
         env:
@@ -394,30 +394,30 @@ jobs:
 ```groovy title="Jenkinsfile"
 pipeline {
     agent any
-    
+
     environment {
         SIGNING_KEY = credentials('production-signing-key')
     }
-    
+
     stages {
         stage('Build') {
             steps {
                 sh 'bazel build //src:my_component'
             }
         }
-        
+
         stage('Sign') {
             steps {
                 sh 'bazel build //src:signed_component'
             }
         }
-        
+
         stage('Verify') {
             steps {
                 sh 'bazel build //src:verify_signature'
             }
         }
-        
+
         stage('Deploy') {
             when {
                 tag pattern: 'v\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
@@ -452,7 +452,7 @@ wac_compose_with_oci(
     name = "secure_microservices",
     oci_components = {
         "auth": "ghcr.io/org/auth:v1.0.0",
-        "data": "ghcr.io/org/data:v1.0.0", 
+        "data": "ghcr.io/org/data:v1.0.0",
     },
     verify_signatures = True,  # Verify all OCI components
     trusted_keys = ":production_keys",
@@ -469,7 +469,7 @@ wasm_keygen(
     openssh_format = True,
 )
 
-# Next generation keys 
+# Next generation keys
 wasm_keygen(
     name = "prod_keys_v2",
     openssh_format = True,

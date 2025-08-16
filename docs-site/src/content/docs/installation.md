@@ -36,6 +36,7 @@ go install github.com/bazelbuild/bazelisk@latest
 ```
 
 **Why Bazelisk is Better:**
+
 - ✅ **Automatic version management** - No manual Bazel updates needed
 - ✅ **Project-specific versions** - Each project can use its required Bazel version
 - ✅ **Team consistency** - Everyone uses the same Bazel version automatically
@@ -43,6 +44,7 @@ go install github.com/bazelbuild/bazelisk@latest
 
 **Setting up .bazelversion:**
 Create a `.bazelversion` file in your project root:
+
 ```text title=".bazelversion"
 8.3.1
 ```
@@ -52,10 +54,12 @@ Bazelisk will automatically download and use this exact version.
 ### Alternative: Direct Bazel Installation
 
 If you prefer to install Bazel directly:
+
 - **Bazel 8.0 or later** - [Install Bazel](https://bazel.build/install)
 - **Recommended version: 8.3.1** - Current version used by this project
 
 The following tools will be automatically downloaded and managed by Bazel:
+
 - **wasm-tools** - WebAssembly toolchain
 - **wit-bindgen** - Interface binding generator
 - **Language-specific toolchains** (Rust, TinyGo, WASI SDK, jco)
@@ -147,7 +151,7 @@ tinygo.register(
 For C++ components using WASI SDK:
 
 ```python title="MODULE.bazel"
-# Configure WASI SDK toolchain  
+# Configure WASI SDK toolchain
 wasi_sdk = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasi_sdk")
 wasi_sdk.register(
     name = "wasi_sdk",
@@ -192,7 +196,7 @@ wasm_toolchain.register(
     version = "1.0.60",
 )
 wasm_toolchain.register(
-    name = "wit_bindgen", 
+    name = "wit_bindgen",
     version = "0.30.0",
 )
 
@@ -204,7 +208,7 @@ tinygo.register(
 )
 
 # WASI SDK for C++ components
-wasi_sdk = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasi_sdk") 
+wasi_sdk = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasi_sdk")
 wasi_sdk.register(
     name = "wasi_sdk",
     version = "25",
@@ -214,7 +218,7 @@ wasi_sdk.register(
 jco = use_extension("@rules_wasm_component//wasm:extensions.bzl", "jco")
 jco.register(
     strategy = "npm",
-    version = "1.4.0", 
+    version = "1.4.0",
 )
 
 # Rust crate dependencies
@@ -277,7 +281,7 @@ Test with the provided examples:
 # Build basic example
 bazel build @rules_wasm_component//examples/basic:basic_component
 
-# Run tests  
+# Run tests
 bazel test @rules_wasm_component//test/...
 ```
 
@@ -286,6 +290,7 @@ bazel test @rules_wasm_component//test/...
 ### Common Issues
 
 **Bazel version too old:**
+
 ```bash
 # Check Bazel version
 bazel --version
@@ -295,6 +300,7 @@ bazel --version
 ```
 
 **Network connectivity issues:**
+
 ```bash
 # Test with verbose output
 bazel build //... --verbose_failures
@@ -304,6 +310,7 @@ bazel build //... --experimental_repository_cache_urls_as_default_canonical_id
 ```
 
 **Platform not supported:**
+
 ```bash
 # Check current platform
 bazel info
@@ -313,6 +320,7 @@ bazel query '@platforms//...'
 ```
 
 **Memory issues during build:**
+
 ```bash
 # Increase Bazel memory limits
 bazel build //... --local_ram_resources=8192

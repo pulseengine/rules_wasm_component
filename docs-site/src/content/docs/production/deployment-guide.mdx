@@ -27,13 +27,13 @@ graph TD
     E --> F[Signature Verification]
     F --> G[Production Deployment]
     G --> H[Runtime Monitoring]
-    
+
     I[CI/CD Pipeline] --> B
     J[Key Management] --> C
     K[Registry Auth] --> D
     L[Security Policies] --> F
     M[Orchestration] --> G
-    
+
     style A fill:#e1f5fe
     style G fill:#f3e5f5
     style C fill:#fff3e0
@@ -81,7 +81,7 @@ rust_wasm_component_bindgen(
     name = "auth_service_dev",
     srcs = ["src/auth.rs"],
     profiles = ["dev"],
-    wit = ":auth_interfaces", 
+    wit = ":auth_interfaces",
     debug = True,
 )
 
@@ -94,7 +94,7 @@ rust_wasm_component_bindgen(
     optimization = "balanced",
 )
 
-# Production build  
+# Production build
 rust_wasm_component_bindgen(
     name = "auth_service_prod",
     srcs = ["src/auth.rs"],
@@ -123,7 +123,7 @@ wasm_keygen(
 
 # Staging keys for testing
 wasm_keygen(
-    name = "staging_keys", 
+    name = "staging_keys",
     openssh_format = True,
 )
 
@@ -145,7 +145,7 @@ wasm_sign(
     detached = True,  # Separate signature file
 )
 
-# Sign for production environment  
+# Sign for production environment
 wasm_sign(
     name = "auth_service_prod_signed",
     component = ":auth_service_prod",
@@ -174,7 +174,7 @@ wasm_sign(
 
 # Security team signature
 wasm_sign(
-    name = "auth_security_signed", 
+    name = "auth_security_signed",
     component = ":auth_dev_signed",
     keys = "//keys:security_keys",
     detached = True,
@@ -183,7 +183,7 @@ wasm_sign(
 # Release manager signature
 wasm_sign(
     name = "auth_release_signed",
-    component = ":auth_security_signed", 
+    component = ":auth_security_signed",
     keys = "//keys:release_keys",
     detached = True,
 )
@@ -206,10 +206,10 @@ wkg_registry_config(
     registries = [
         # Corporate registry (primary)
         "corp|registry.company.com|oci|env|CORP_REGISTRY_TOKEN",
-        
+
         # GitHub Container Registry (backup)
         "github|ghcr.io|oci|env|GITHUB_TOKEN",
-        
+
         # AWS ECR (specific regions)
         "aws|123456789.dkr.ecr.us-east-1.amazonaws.com|oci|oauth|client_id|client_secret",
     ],
@@ -258,14 +258,14 @@ genrule(
     cmd = """
         # Push to primary registry
         bazel run //registry:push_auth_production
-        
+
         # Push to backup registry
         bazel run //registry:push_auth_github
-        
+
         # Push to regional registries
         bazel run //registry:push_auth_eu
         bazel run //registry:push_auth_asia
-        
+
         echo "Component distributed to all registries" > $@
     """,
 )
@@ -282,29 +282,29 @@ load("@rules_wasm_component//wac:defs.bzl", "wac_compose_with_oci")
 
 # Production microservices composition
 wac_compose_with_oci(
-    name = "production_system", 
+    name = "production_system",
     composition_file = "compositions/production.wac",
-    
+
     # Local gateway components
     local_components = {
         "api_gateway": "//gateway:production_gateway",
         "load_balancer": "//lb:production_lb",
     },
-    
+
     # Production services from registries
     oci_components = {
         "auth_service": "registry.company.com/production/auth-service:v1.0.0",
-        "user_service": "registry.company.com/production/user-service:v2.1.0", 
+        "user_service": "registry.company.com/production/user-service:v2.1.0",
         "data_service": "registry.company.com/production/data-service:v1.8.0",
         "payment_service": "registry.company.com/production/payment-service:v3.0.0",
         "notification_service": "registry.company.com/production/notification-service:v1.5.0",
     },
-    
+
     # Security configuration
     verify_signatures = True,
     trusted_keys = "//keys:production_verification_keys",
     require_signed_components = True,
-    
+
     # Registry configuration
     registry_config = "//registry:production_registries",
 )
@@ -377,7 +377,7 @@ let users = new user:service {
 };
 
 let data = new data:service {
-    // Data service configuration  
+    // Data service configuration
     connection_pool_size: 100,
     query_timeout: 5000,
     ...
@@ -461,7 +461,7 @@ spec:
       - name: wasmtime-runtime
         image: wasmtime/wasmtime:latest
         command: ["wasmtime"]
-        args: 
+        args:
           - "run"
           - "--wasi"
           - "preview2"

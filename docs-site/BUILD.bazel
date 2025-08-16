@@ -13,16 +13,19 @@ package(default_visibility = ["//visibility:public"])
 # Core documentation content (all source files)
 filegroup(
     name = "docs_source",
-    srcs = glob([
-        "src/**/*",
-        "public/**/*",
-        "scripts/**/*",
-        "*.json",
-        "*.mjs",
-        "*.ts",
-        "*.js",
-        "*.md",
-    ], allow_empty = True),
+    srcs = glob(
+        [
+            "src/**/*",
+            "public/**/*",
+            "scripts/**/*",
+            "*.json",
+            "*.mjs",
+            "*.ts",
+            "*.js",
+            "*.md",
+        ],
+        allow_empty = True,
+    ),
     visibility = ["//visibility:public"],
 )
 
@@ -33,7 +36,7 @@ genrule(
     outs = ["docs_validation.ok"],
     cmd = """
     ERROR_COUNT=0
-    
+
     # Check for files in the docs-site directory structure
     if [[ -f docs-site/package.json ]]; then
         echo "✓ Found package.json"
@@ -41,32 +44,32 @@ genrule(
         echo "✗ Missing package.json"
         ERROR_COUNT=$$((ERROR_COUNT + 1))
     fi
-    
+
     if [[ -f docs-site/src/content/docs/index.mdx ]]; then
         echo "✓ Found docs index"
     else
         echo "✗ Missing src/content/docs/index.mdx"
         ERROR_COUNT=$$((ERROR_COUNT + 1))
     fi
-    
+
     if [[ -f docs-site/astro.config.mjs ]]; then
         echo "✓ Found astro config"
     else
         echo "✗ Missing astro.config.mjs"
         ERROR_COUNT=$$((ERROR_COUNT + 1))
     fi
-    
+
     if [[ $$ERROR_COUNT -gt 0 ]]; then
         echo "Documentation validation failed: $$ERROR_COUNT missing files"
         exit 1
     fi
-    
+
     echo "Documentation validation passed" > $@
     """,
     tags = ["docs"],
 )
 
-# Content structure validation  
+# Content structure validation
 genrule(
     name = "content_structure",
     srcs = [":docs_source"],
@@ -79,11 +82,11 @@ genrule(
         "docs-site/src/content/docs/languages/go.mdx:Go"
         "docs-site/src/content/docs/production/deployment-guide.mdx:Deployment"
     )
-    
+
     for check in "$${CONTENT_CHECKS[@]}"; do
         FILE="$${check%%:*}"
         KEYWORD="$${check##*:}"
-        
+
         if [[ -f "$$FILE" ]]; then
             echo "✓ Found $$FILE"
             if ! grep -qi "$$KEYWORD" "$$FILE"; then
@@ -93,7 +96,7 @@ genrule(
             echo "⚠️  Warning: Missing documentation file $$FILE"
         fi
     done
-    
+
     echo "Content structure validation completed" > $@
     """,
     tags = ["docs"],
@@ -134,17 +137,17 @@ genrule(
             <h3>🚀 Multi-Language Support</h3>
             <p>Build WebAssembly components from <strong>Rust</strong>, <strong>Go (TinyGo)</strong>, <strong>C++</strong>, and <strong>JavaScript/TypeScript</strong> sources with unified toolchain management.</p>
         </div>
-        
+
         <div class="feature">
             <h3>🔧 Production Ready</h3>
             <p>Optimized builds with <strong>Wizer pre-initialization</strong> (1.35-6x startup improvement), <strong>OCI packaging</strong>, and <strong>digital signing</strong>.</p>
         </div>
-        
+
         <div class="feature">
             <h3>⚡ Performance Optimized</h3>
             <p>Platform-specific toolchains, hermetic builds, and advanced caching for fast, reproducible builds across Windows, macOS, and Linux.</p>
         </div>
-        
+
         <div class="feature">
             <h3>🔐 Enterprise Security</h3>
             <p>Component signing with <code>wasmsign2</code>, OCI registry integration, and comprehensive validation workflows.</p>
@@ -164,13 +167,13 @@ rust_wasm_component(
 )
 
 wasm_component_validate(
-    name = "hello_validated", 
+    name = "hello_validated",
     component = ":hello_component",
 )
 
 wasm_component_publish_oci(
     name = "hello_published",
-    component = ":hello_validated", 
+    component = ":hello_validated",
     image_ref = "localhost:5001/hello:latest",
 )</code></pre>
         </div>
@@ -187,7 +190,7 @@ wasm_component_publish_oci(
                 <li>Production deployment workflows</li>
             </ul>
         </div>
-        
+
         <div class="feature">
             <h3>📚 Documentation Sections</h3>
             <ul>
@@ -216,7 +219,7 @@ build_test(
     name = "docs_build_test",
     targets = [
         ":docs_validation",
-        ":content_structure", 
+        ":content_structure",
         ":placeholder_site",
     ],
 )

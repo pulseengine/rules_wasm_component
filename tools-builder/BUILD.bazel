@@ -1,0 +1,49 @@
+"""WebAssembly Tools Builder
+
+This BUILD file orchestrates building all WebAssembly tools for multiple platforms.
+"""
+
+load("//platforms:defs.bzl", "ALL_PLATFORMS")
+load("//toolchains:builder_macros.bzl", "wasm_tool_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+# Build all WebAssembly tools for all supported platforms
+wasm_tool_suite(
+    name = "all_tools",
+    platforms = ALL_PLATFORMS,
+    tools = [
+        "wasm-tools",
+        "wit-bindgen", 
+        "wizer",
+        "wac",
+        "wasmtime",
+    ],
+)
+
+# Individual tool targets for selective building
+wasm_tool_suite(
+    name = "core_tools",
+    platforms = ALL_PLATFORMS,
+    tools = [
+        "wasm-tools",
+        "wit-bindgen",
+        "wasmtime",
+    ],
+)
+
+# Extended tools (including those without upstream releases)
+wasm_tool_suite(
+    name = "extended_tools", 
+    platforms = ALL_PLATFORMS,
+    tools = [
+        "wizer",  # No upstream releases - we build it!
+        "wac",
+    ],
+)
+
+# Release packaging
+filegroup(
+    name = "release_artifacts",
+    srcs = [":all_tools"],
+)

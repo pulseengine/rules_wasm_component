@@ -30,7 +30,7 @@ def wasm_tools_action(ctx, operation, **kwargs):
 
     if not wasm_tools_component_target:
         fail("WASM Tools Integration Component not available in toolchain")
-        
+
     # Extract executable from target
     wasm_tools_component = wasm_tools_component_target.files_to_run
 

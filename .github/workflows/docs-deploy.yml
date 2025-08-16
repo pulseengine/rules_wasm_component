@@ -41,21 +41,21 @@ jobs:
           # Run comprehensive validation and build
           echo "🧪 Running documentation validation tests..."
           bazel test //docs-site:docs_tests
-          
+
           echo "📦 Building deployment bundle..."
           bazel build //docs-site:deployment_bundle
-          
+
           # Extract deployment bundle for FTP upload
           echo "📂 Extracting deployment bundle..."
           cd bazel-bin/docs-site
           tar -xzf docs_deployment.tar.gz
-          
+
           # Verify deployment content
           echo "✅ Verifying deployment content..."
           ls -la dist/
           echo "📄 Documentation site preview:"
           head -5 dist/index.html | grep -E "(title|h1)" || echo "Basic HTML structure verified"
-          
+
           # Check file size (should be reasonable)
           SIZE=$(wc -c < dist/index.html)
           echo "📊 Site size: ${SIZE} bytes"
