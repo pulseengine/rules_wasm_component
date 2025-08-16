@@ -5,10 +5,17 @@ on:
     branches: [main]
     paths: ['docs-site/**']
   workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment even if no docs-site changes'
+        required: false
+        default: 'false'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    # Only run on main branch to prevent accidental deployments
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,6 +38,8 @@ jobs:
           npm run build
 
       - name: Deploy to Netcup hosting
+        # Only deploy if secrets are available
+        if: ${{ secrets.NETCUP_URI && secrets.NETCUP_USER && secrets.NETCUP_PASSWORD }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.NETCUP_URI }}
@@ -44,6 +53,10 @@ jobs:
             **/node_modules/**
             **/.DS_Store
             **/Thumbs.db
+      
+      - name: Skip deployment (secrets not configured)
+        if: ${{ !secrets.NETCUP_URI || !secrets.NETCUP_USER || !secrets.NETCUP_PASSWORD }}
+        run: echo "Skipping deployment - Netcup secrets not configured"
 
       - name: Purge Cloudflare cache (optional)
         if: ${{ secrets.CLOUDFLARE_ZONE_ID }}
