@@ -6,9 +6,10 @@ load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action"
 def _wasm_validate_impl(ctx):
     """Implementation of wasm_validate rule"""
 
-    # Get toolchain (still needed for wasmsign2)
+    # Get toolchain (still needed for wasmsign2 and wasm-tools)
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     wasmsign2 = toolchain.wasmsign2
+    wasm_tools = toolchain.wasm_tools
 
     # Get input WASM file
     if ctx.file.wasm_file:
@@ -28,6 +29,7 @@ def _wasm_validate_impl(ctx):
     component_check_marker = check_is_component_action(ctx, wasm_file)
 
     # Create validation report with modern Bazel approach
+    header_file = ctx.actions.declare_file(ctx.label.name + "_header.txt")
     report_header = """=== WASM Validation Report ===
 File: {}
 
@@ -36,13 +38,18 @@ File: {}
 
 """.format(wasm_file.short_path)
 
-    # Combine header and output (validation success is indicated by action success)
+    ctx.actions.write(
+        output = header_file,
+        content = report_header,
+    )
+
+    # Create validation result file (validation success is indicated by action success)
+    validation_result = ctx.actions.declare_file(ctx.label.name + "_validation_success.txt")
     success_content = """✅ WASM file is valid
 
 """
-    success_marker = ctx.actions.declare_file(ctx.label.name + "_validation_success.txt")
     ctx.actions.write(
-        output = success_marker,
+        output = validation_result,
         content = success_content,
     )
 
