@@ -173,6 +173,7 @@ crate.from_cargo(
         "wasm32-unknown-unknown",
         "wasm32-wasip1",
         "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",  # BCR environment ARM64 Linux
         "aarch64-apple-darwin",
         "x86_64-pc-windows-msvc",
     ],

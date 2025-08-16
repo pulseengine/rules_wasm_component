@@ -10,7 +10,7 @@ genrule(
     srcs = glob(["**/*"]),  # All source files
     outs = ["wrpc-wasmtime"],
     cmd = """cd $$(dirname $(location Cargo.toml)) && \
-             cargo build --release --bin wrpc-wasmtime && \
+             cargo build --release --bin wrpc-wasmtime --features bin-wasmtime && \
              cp target/release/wrpc-wasmtime $(location wrpc-wasmtime)""",
     visibility = ["//visibility:public"],
     tags = ["requires-network"],  # Cargo may need to fetch dependencies
