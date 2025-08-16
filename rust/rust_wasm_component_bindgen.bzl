@@ -228,7 +228,7 @@ def rust_wasm_component_bindgen(
         name = name,
         srcs = srcs,
         deps = deps + [":" + bindings_lib],
-        wit_bindgen = wit,  # Pass the WIT library for component detection
+        wit = wit,  # Pass the WIT library for component detection
         crate_features = crate_features,
         rustc_flags = rustc_flags,
         profiles = profiles,

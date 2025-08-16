@@ -11,7 +11,7 @@ Architecture:
 """
 
 load("@bazel_skylib//lib:versions.bzl", "versions")
-load("//toolchains:tool_versions.bzl", "get_tool_info")
+load("//checksums:registry.bzl", "get_tool_info")
 load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "log_diagnostic_info")
 

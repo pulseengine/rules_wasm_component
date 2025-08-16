@@ -86,7 +86,7 @@ bzl_library(
     deps = [
         ":diagnostics",
         ":tool_cache",
-        ":tool_versions",
+        "//checksums:registry",
     ],
 )
 
@@ -98,7 +98,7 @@ bzl_library(
     deps = [
         ":diagnostics",
         ":tool_cache",
-        ":tool_versions",
+        "//checksums:registry",
     ],
 )
 
@@ -110,7 +110,7 @@ bzl_library(
     deps = [
         ":diagnostics",
         ":tool_cache",
-        ":tool_versions",
+        "//checksums:registry",
     ],
 )
 
@@ -122,16 +122,11 @@ bzl_library(
     deps = [
         ":diagnostics",
         ":tool_cache",
-        ":tool_versions",
+        "//checksums:registry",
     ],
 )
 
 # Enhanced toolchain management libraries
-bzl_library(
-    name = "tool_versions",
-    srcs = ["tool_versions.bzl"],
-    visibility = ["//visibility:public"],
-)
 
 bzl_library(
     name = "diagnostics",

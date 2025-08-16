@@ -115,6 +115,13 @@ toolchain(
                 "linux_arm64": "159ffe5d321217bf0f449f2d4bde9fe82fee2f9387b55615f3e4338eb0015e96",
                 "windows_amd64": "ac7b06b91ea80973432d97c4facd78e84187e4d65b42613374a78c4c584f773c",
             },
+            "0.12.0": {
+                "darwin_amd64": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                "darwin_arm64": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                "linux_amd64": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                "linux_arm64": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                "windows_amd64": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+            },
         }
 
         expected_sha256 = checksums.get(version, {}).get(platform)

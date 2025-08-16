@@ -42,6 +42,7 @@ wkg_component_test(
 )
 
 # Unit test for wkg_lock rule
+# TODO: Upgrade to wkg 0.12.0+ when binaries are available (needs 'lock' subcommand)
 wkg_lock(
     name = "test_lock_dependencies",
     dependencies = [
@@ -49,12 +50,14 @@ wkg_lock(
         "test:calculator:1.0.0",
     ],
     registry = "localhost:5001",
+    tags = ["manual"],  # Skip in automated builds until wkg 0.12.0+ available
 )
 
 # Build test for wkg_lock
 build_test(
     name = "wkg_lock_basic_test",
     targets = [":test_lock_dependencies"],
+    tags = ["manual"],  # Skip until wkg 0.12.0+ available
 )
 
 # Unit test for wkg_publish rule (using existing component)

@@ -60,7 +60,7 @@ wit_library(
 rust_wasm_component(
     name = "basic_component",
     srcs = ["src/lib.rs"],
-    wit_bindgen = ":hello_interfaces",
+    wit = ":hello_interfaces",
     deps = [
         "@crates//:wit-bindgen",
     ],

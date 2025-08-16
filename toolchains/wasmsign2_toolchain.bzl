@@ -2,7 +2,6 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-load("//toolchains:tool_versions.bzl", "get_tool_info")
 load("//checksums:registry.bzl", "get_tool_info")
 
 def _get_wasmsign2_platform_info(platform, version):

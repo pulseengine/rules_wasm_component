@@ -1,6 +1,15 @@
 """Centralized checksum management for WebAssembly toolchain"""
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(default_visibility = ["//visibility:public"])
+
+# Centralized registry API
+bzl_library(
+    name = "registry",
+    srcs = ["registry.bzl"],
+    visibility = ["//visibility:public"],
+)
 
 # Export all tool checksum files for consumption by toolchains
 filegroup(

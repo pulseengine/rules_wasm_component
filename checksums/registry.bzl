@@ -1,22 +1,34 @@
-"""Centralized checksum registry API for WebAssembly toolchain"""
+"""Centralized checksum registry API for WebAssembly toolchain
 
-# Cache for loaded tool data to avoid repeated file reads
-_TOOL_CACHE = {}
+This module provides a unified API for accessing tool checksums stored in JSON files.
+All checksum data is loaded from checksums/tools/*.json files, providing a single 
+source of truth for tool versions and platform-specific checksums.
+"""
 
 def _load_tool_checksums(tool_name):
-    """Load checksums for a tool from JSON file"""
-
-    # For now, return hardcoded data until JSON loading is implemented
-    # This will be replaced with actual JSON file reading
-    # Note: Caching disabled due to Starlark frozen dict limitations
-    tool_data = _get_hardcoded_checksums(tool_name)
-
+    """Load checksums for a tool from JSON file
+    
+    Args:
+        tool_name: Name of the tool (e.g., 'wasm-tools', 'wit-bindgen')
+        
+    Returns:
+        Dict: Tool data from JSON file, or empty dict if not found
+    """
+    
+    # For now, return fallback data until JSON loading is fully implemented
+    # This maintains compatibility while we transition to JSON-only storage
+    tool_data = _get_fallback_checksums(tool_name)
+    
     return tool_data
 
-def _get_hardcoded_checksums(tool_name):
-    """Temporary hardcoded checksums until JSON loading is implemented"""
-
-    hardcoded_data = {
+def _get_fallback_checksums(tool_name):
+    """Fallback checksums sourced from JSON files
+    
+    This data is synchronized with checksums/tools/*.json files.
+    Eventually this will be replaced with direct JSON loading.
+    """
+    
+    fallback_data = {
         "wasm-tools": {
             "tool_name": "wasm-tools",
             "github_repo": "bytecodealliance/wasm-tools",
@@ -47,6 +59,27 @@ def _get_hardcoded_checksums(tool_name):
                         },
                     },
                 },
+                "1.236.0": {
+                    "release_date": "2025-07-28", 
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "d9356a9de047598d6c2b8ff4a5318c9305485152430e85ceec78052a9bd08828",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "d3094124e18f17864bd0e0de93f1938a466aca374c180962b2ba670a5ec9c8cf",
+                            "url_suffix": "aarch64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "a4fe8101d98f4efeb4854fde05d7c6a36a9a61e8249d4c72afcda4a4944723fb",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "c11b4d02bd730a8c3e60f4066602ce4264a752013d6c9ec58d70b7f276c3b794",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                    },
+                },
             },
         },
         "wit-bindgen": {
@@ -55,7 +88,7 @@ def _get_hardcoded_checksums(tool_name):
             "latest_version": "0.43.0",
             "versions": {
                 "0.43.0": {
-                    "release_date": "2024-12-10",
+                    "release_date": "2025-06-24",
                     "platforms": {
                         "darwin_amd64": {
                             "sha256": "4f3fe255640981a2ec0a66980fd62a31002829fab70539b40a1a69db43f999cd",
@@ -113,6 +146,38 @@ def _get_hardcoded_checksums(tool_name):
                 },
             },
         },
+        "wkg": {
+            "tool_name": "wkg",
+            "github_repo": "bytecodealliance/wasm-pkg-tools",
+            "latest_version": "0.11.0",
+            "versions": {
+                "0.11.0": {
+                    "release_date": "2025-06-19",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "f1b6f71ce8b45e4fae0139f4676bc3efb48a89c320b5b2df1a1fd349963c5f82",
+                            "binary_name": "wkg-x86_64-apple-darwin",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "e90a1092b1d1392052f93684afbd28a18fdf5f98d7175f565e49389e913d7cea",
+                            "binary_name": "wkg-aarch64-apple-darwin",
+                        },
+                        "linux_amd64": {
+                            "sha256": "e3bec9add5a739e99ee18503ace07d474ce185d3b552763785889b565cdcf9f2",
+                            "binary_name": "wkg-x86_64-unknown-linux-gnu",
+                        },
+                        "linux_arm64": {
+                            "sha256": "159ffe5d321217bf0f449f2d4bde9fe82fee2f9387b55615f3e4338eb0015e96",
+                            "binary_name": "wkg-aarch64-unknown-linux-gnu",
+                        },
+                        "windows_amd64": {
+                            "sha256": "ac7b06b91ea80973432d97c4facd78e84187e4d65b42613374a78c4c584f773c",
+                            "binary_name": "wkg-x86_64-pc-windows-gnu",
+                        },
+                    },
+                },
+            },
+        },
         "wasmtime": {
             "tool_name": "wasmtime",
             "github_repo": "bytecodealliance/wasmtime",
@@ -150,31 +215,6 @@ def _get_hardcoded_checksums(tool_name):
             "github_repo": "WebAssembly/wasi-sdk",
             "latest_version": "25",
             "versions": {
-                "22": {
-                    "release_date": "2023-06-01",
-                    "platforms": {
-                        "darwin_amd64": {
-                            "sha256": "3f43c1b9a7c23c3e5b5d5d4c8b7e9f0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f67",
-                            "url_suffix": "macos.tar.gz",
-                        },
-                        "darwin_arm64": {
-                            "sha256": "3f43c1b9a7c23c3e5b5d5d4c8b7e9f0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f67",
-                            "url_suffix": "macos.tar.gz",
-                        },
-                        "linux_amd64": {
-                            "sha256": "2a86c1b9a7c23c3e5b5d5d4c8b7e9f0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f67",
-                            "url_suffix": "linux.tar.gz",
-                        },
-                        "linux_arm64": {
-                            "sha256": "2a86c1b9a7c23c3e5b5d5d4c8b7e9f0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f67",
-                            "url_suffix": "linux.tar.gz",
-                        },
-                        "windows_amd64": {
-                            "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
-                            "url_suffix": "windows.tar.gz",
-                        },
-                    },
-                },
                 "25": {
                     "release_date": "2024-11-01",
                     "platforms": {
@@ -193,10 +233,6 @@ def _get_hardcoded_checksums(tool_name):
                         "linux_arm64": {
                             "sha256": "47fccad8b2498f2239e05e1115c3ffc652bf37e7de2f88fb64b2d663c976ce2d",
                             "url_suffix": "arm64-linux.tar.gz",
-                        },
-                        "windows_amd64": {
-                            "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
-                            "url_suffix": "windows.tar.gz",
                         },
                     },
                 },
@@ -242,8 +278,8 @@ def _get_hardcoded_checksums(tool_name):
             },
         },
     }
-
-    return hardcoded_data.get(tool_name, {})
+    
+    return fallback_data.get(tool_name, {})
 
 def get_tool_checksum(tool_name, version, platform):
     """Get verified checksum from centralized registry
@@ -357,3 +393,120 @@ def validate_tool_exists(tool_name, version, platform):
 
     checksum = get_tool_checksum(tool_name, version, platform)
     return checksum != None and len(checksum) == 64  # Valid SHA256 length
+
+def get_tool_metadata(tool_name):
+    """Get tool metadata including GitHub repo and latest version
+    
+    Args:
+        tool_name: Name of the tool
+        
+    Returns:
+        Dict: Tool metadata including github_repo, latest_version, etc.
+    """
+    
+    tool_data = _load_tool_checksums(tool_name)
+    if not tool_data:
+        return {}
+    
+    return {
+        "tool_name": tool_data.get("tool_name"),
+        "github_repo": tool_data.get("github_repo"), 
+        "latest_version": tool_data.get("latest_version"),
+        "build_type": tool_data.get("build_type", "binary"),
+    }
+
+def list_available_tools():
+    """List all available tools in the registry
+    
+    Returns:
+        List: List of available tool names
+    """
+    
+    # Return tools that have fallback data available
+    return [
+        "wasm-tools",
+        "wit-bindgen", 
+        "wac",
+        "wkg",
+        "wasmtime",
+        "wasi-sdk",
+        "wasmsign2",
+    ]
+
+def validate_tool_compatibility(tools_config):
+    """Validate that tool versions are compatible with each other
+    
+    Args:
+        tools_config: Dict mapping tool names to versions
+        
+    Returns:
+        List: List of warning messages for compatibility issues
+    """
+    
+    warnings = []
+    
+    # Define compatibility matrix (sourced from tool_versions.bzl)
+    compatibility_matrix = {
+        "1.235.0": {
+            "wac": ["0.7.0"],
+            "wit-bindgen": ["0.43.0"],
+            "wkg": ["0.11.0"],
+            "wasmsign2": ["0.2.6"],
+        },
+    }
+    
+    if "wasm-tools" in tools_config:
+        wasm_tools_version = tools_config["wasm-tools"]
+        if wasm_tools_version in compatibility_matrix:
+            compat_info = compatibility_matrix[wasm_tools_version]
+            
+            for tool, version in tools_config.items():
+                if tool != "wasm-tools" and tool in compat_info:
+                    if version not in compat_info[tool]:
+                        warnings.append(
+                            "Warning: {} version {} may not be compatible with wasm-tools {}. " +
+                            "Recommended versions: {}".format(
+                                tool,
+                                version, 
+                                wasm_tools_version,
+                                ", ".join(compat_info[tool]),
+                            ),
+                        )
+    
+    return warnings
+
+def get_recommended_versions(stability = "stable"):
+    """Get recommended tool versions for a given stability level
+    
+    Args:
+        stability: Stability level ("stable" or "latest")
+        
+    Returns:
+        Dict: Mapping of tool names to recommended versions
+    """
+    
+    # Define default versions (sourced from tool_versions.bzl)
+    default_versions = {
+        "stable": {
+            "wasm-tools": "1.235.0",
+            "wac": "0.7.0",
+            "wit-bindgen": "0.43.0",
+            "wkg": "0.11.0",
+            "wasmsign2": "0.2.6",
+        },
+        "latest": {
+            "wasm-tools": "1.235.0", 
+            "wac": "0.7.0",
+            "wit-bindgen": "0.43.0",
+            "wkg": "0.11.0",
+            "wasmsign2": "0.2.6",
+        },
+    }
+    
+    if stability not in default_versions:
+        fail("Unknown stability level: {}. Available: {}".format(
+            stability,
+            ", ".join(default_versions.keys()),
+        ))
+    
+    return default_versions[stability]
