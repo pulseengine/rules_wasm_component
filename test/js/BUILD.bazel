@@ -1,0 +1,170 @@
+"""Test suite for JavaScript WebAssembly component rules
+
+This test suite validates jco + ComponentizeJS integration:
+- js_component rule functionality and providers
+- jco_transpile rule for JavaScript binding generation
+- npm_install rule for dependency management
+- Component build validation and WIT interface compliance
+- JavaScript-specific optimization and transpilation testing
+
+Test Coverage:
+- Analysis tests for rule providers and outputs
+- Integration tests for component validation
+- Build verification for JavaScript component patterns
+- Transpilation and binding generation testing
+"""
+
+load("@bazel_skylib//lib:unittest.bzl", "unittest")
+load(
+    "//test/js:js_component_tests.bzl",
+    "jco_transpile_test",
+    "js_component_analysis_test",
+    "js_component_optimization_test",
+    "js_component_validation_test",
+    "npm_install_test",
+)
+load("//test/integration:integration_tests.bzl", "component_validation_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Analysis Tests for JavaScript Component Rules
+
+js_component_analysis_test(
+    name = "test_hello_js_component_provides_info",
+    target_under_test = "//examples/js_component:hello_js_component",
+)
+
+js_component_analysis_test(
+    name = "test_calc_js_component_provides_info",
+    target_under_test = "//examples/js_component:calc_js_component",
+)
+
+# JCO Transpile Tests
+
+jco_transpile_test(
+    name = "test_hello_js_bindings_generation",
+    target_under_test = "//examples/js_component:hello_js_bindings",
+)
+
+# NPM Install Tests
+
+npm_install_test(
+    name = "test_npm_dependencies_installation",
+    target_under_test = "//examples/js_component:npm_deps",
+)
+
+# Component Validation Tests
+
+component_validation_test(
+    name = "test_hello_js_component_valid_wasm",
+    component = "//examples/js_component:hello_js_component",
+    expected_exports = [
+        "hello-world",
+        "greet",
+    ],
+)
+
+component_validation_test(
+    name = "test_calc_js_component_valid_wasm",
+    component = "//examples/js_component:calc_js_component",
+    expected_exports = [
+        "calculator",
+        "add",
+        "subtract",
+        "multiply",
+        "divide",
+    ],
+)
+
+# Optimization and Feature Tests
+
+js_component_optimization_test(
+    name = "test_js_component_optimization_flags",
+    optimized_target = "//examples/js_component:calc_js_component",  # optimize=True, minify=True
+    unoptimized_target = "//examples/js_component:hello_js_component",  # optimize=True, minify=False
+)
+
+# JavaScript-specific Validation Tests
+
+js_component_validation_test(
+    name = "test_hello_component_javascript_metadata",
+    expected_entry_point = "index.js",
+    expected_language = "javascript",
+    expected_package_name = "example:hello@1.0.0",
+    target_under_test = "//examples/js_component:hello_js_component",
+)
+
+js_component_validation_test(
+    name = "test_calc_component_javascript_metadata",
+    expected_entry_point = "calculator.js",
+    expected_language = "javascript",
+    expected_package_name = "example:calculator@1.0.0",
+    target_under_test = "//examples/js_component:calc_js_component",
+)
+
+# Transpilation Validation Tests
+
+js_component_validation_test(
+    name = "test_transpiled_bindings_structure",
+    expected_instantiation = "async",
+    expected_world = "hello-world",
+    transpile_target = "//examples/js_component:hello_js_bindings",
+)
+
+# Test Suite Definition
+
+test_suite(
+    name = "js_component_tests",
+    tests = [
+        # Analysis tests
+        ":test_hello_js_component_provides_info",
+        ":test_calc_js_component_provides_info",
+
+        # Transpile tests
+        ":test_hello_js_bindings_generation",
+
+        # NPM tests
+        ":test_npm_dependencies_installation",
+
+        # Validation tests
+        ":test_hello_js_component_valid_wasm",
+        ":test_calc_js_component_valid_wasm",
+
+        # Optimization tests
+        ":test_js_component_optimization_flags",
+
+        # JavaScript-specific tests
+        ":test_hello_component_javascript_metadata",
+        ":test_calc_component_javascript_metadata",
+        ":test_transpiled_bindings_structure",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Component Integration Tests (requires runtime validation)
+
+js_component_validation_test(
+    name = "test_jco_toolchain_integration",
+    components = [
+        "//examples/js_component:hello_js_component",
+        "//examples/js_component:calc_js_component",
+    ],
+)
+
+test_suite(
+    name = "js_integration_tests",
+    tests = [
+        ":test_jco_toolchain_integration",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Comprehensive test suite combining all JavaScript component tests
+test_suite(
+    name = "all_js_tests",
+    tests = [
+        ":js_component_tests",
+        ":js_integration_tests",
+    ],
+    visibility = ["//visibility:public"],
+)

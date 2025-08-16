@@ -1,0 +1,196 @@
+"""Test suite for C/C++ WebAssembly component rules
+
+This test suite validates WASI SDK + clang integration:
+- cpp_component rule functionality and providers
+- cpp_wit_bindgen rule for C/C++ binding generation
+- cc_component_library rule for component libraries
+- Component build validation and WIT interface compliance
+- C vs C++ language variant testing
+
+Test Coverage:
+- Analysis tests for rule providers and outputs
+- Integration tests for component validation
+- Build verification for C and C++ component patterns
+- Language-specific optimization and standards testing
+"""
+
+load("@bazel_skylib//lib:unittest.bzl", "unittest")
+load(
+    "//test/cpp:cpp_component_tests.bzl",
+    "cc_component_library_test",
+    "cpp_component_analysis_test",
+    "cpp_component_language_test",
+    "cpp_component_validation_test",
+    "cpp_wit_bindgen_test",
+)
+load("//test/integration:integration_tests.bzl", "component_validation_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Analysis Tests for C/C++ Component Rules
+
+cpp_component_analysis_test(
+    name = "test_calculator_cpp_component_provides_info",
+    target_under_test = "//examples/cpp_component/calculator:calculator_cpp_component",
+)
+
+cpp_component_analysis_test(
+    name = "test_calculator_c_component_provides_info",
+    target_under_test = "//examples/cpp_component/calculator:calculator_c_component",
+)
+
+cpp_component_analysis_test(
+    name = "test_http_service_component_provides_info",
+    target_under_test = "//examples/cpp_component/http_service:http_service_component",
+)
+
+# WIT Bindgen Tests
+
+cpp_wit_bindgen_test(
+    name = "test_calculator_cpp_bindings_generation",
+    target_under_test = "//examples/cpp_component/calculator:calculator_bindings",
+)
+
+cpp_wit_bindgen_test(
+    name = "test_http_service_bindings_generation",
+    target_under_test = "//examples/cpp_component/http_service:http_service_bindings",
+)
+
+# Component Library Tests
+
+cc_component_library_test(
+    name = "test_math_utils_library",
+    target_under_test = "//examples/cpp_component/calculator:math_utils",
+)
+
+cc_component_library_test(
+    name = "test_http_service_library",
+    target_under_test = "//examples/cpp_component/http_service:http_service_lib",
+)
+
+# Component Validation Tests
+
+component_validation_test(
+    name = "test_calculator_cpp_component_valid_wasm",
+    component = "//examples/cpp_component/calculator:calculator_cpp_component",
+    expected_exports = [
+        "calculator",
+        "add",
+        "subtract",
+        "multiply",
+        "divide",
+    ],
+)
+
+component_validation_test(
+    name = "test_calculator_c_component_valid_wasm",
+    component = "//examples/cpp_component/calculator:calculator_c_component",
+    expected_exports = [
+        "calculator",
+        "add",
+        "subtract",
+    ],
+)
+
+component_validation_test(
+    name = "test_http_service_component_valid_wasm",
+    component = "//examples/cpp_component/http_service:http_service_component",
+    expected_exports = [
+        "http-service-world",
+        "handle-request",
+    ],
+)
+
+# Language Variant Tests
+
+cpp_component_language_test(
+    name = "test_c_vs_cpp_language_variants",
+    c_target = "//examples/cpp_component/calculator:calculator_c_component",
+    cpp_target = "//examples/cpp_component/calculator:calculator_cpp_component",
+)
+
+# Optimization and Standards Tests
+
+cpp_component_validation_test(
+    name = "test_cpp_component_optimization_features",
+    expected_cxx_std = "c++20",
+    expected_language = "cpp",
+    expected_optimization = True,
+    target_under_test = "//examples/cpp_component/calculator:calculator_cpp_component",
+)
+
+cpp_component_validation_test(
+    name = "test_c_component_features",
+    expected_language = "c",
+    expected_optimization = True,
+    target_under_test = "//examples/cpp_component/calculator:calculator_c_component",
+)
+
+cpp_component_validation_test(
+    name = "test_http_service_c_features",
+    expected_language = "c",
+    target_under_test = "//examples/cpp_component/http_service:http_service_component",
+)
+
+# Test Suite Definition
+
+test_suite(
+    name = "cpp_component_tests",
+    tests = [
+        # Analysis tests
+        ":test_calculator_cpp_component_provides_info",
+        ":test_calculator_c_component_provides_info",
+        ":test_http_service_component_provides_info",
+
+        # WIT bindgen tests
+        ":test_calculator_cpp_bindings_generation",
+        ":test_http_service_bindings_generation",
+
+        # Library tests
+        ":test_math_utils_library",
+        ":test_http_service_library",
+
+        # Validation tests
+        ":test_calculator_cpp_component_valid_wasm",
+        ":test_calculator_c_component_valid_wasm",
+        ":test_http_service_component_valid_wasm",
+
+        # Language tests
+        ":test_c_vs_cpp_language_variants",
+
+        # Feature tests
+        ":test_cpp_component_optimization_features",
+        ":test_c_component_features",
+        ":test_http_service_c_features",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Component Integration Tests (requires runtime validation)
+
+cpp_component_validation_test(
+    name = "test_wasi_sdk_toolchain_integration",
+    components = [
+        "//examples/cpp_component/calculator:calculator_cpp_component",
+        "//examples/cpp_component/calculator:calculator_c_component",
+        "//examples/cpp_component/http_service:http_service_component",
+    ],
+)
+
+test_suite(
+    name = "cpp_integration_tests",
+    tests = [
+        ":test_wasi_sdk_toolchain_integration",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Comprehensive test suite combining all C/C++ component tests
+test_suite(
+    name = "all_cpp_tests",
+    tests = [
+        ":cpp_component_tests",
+        ":cpp_integration_tests",
+    ],
+    visibility = ["//visibility:public"],
+)

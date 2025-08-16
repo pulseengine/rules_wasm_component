@@ -1,0 +1,102 @@
+"""Unit tests for core WKG rules using olareg_wasm"""
+
+load("@bazel_skylib//lib:unittest.bzl", "unittest")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//test/wkg:wkg_test_utils.bzl", "olareg_mock_data", "wkg_component_test")
+load("//wkg:defs.bzl", "wkg_fetch", "wkg_lock", "wkg_publish", "wkg_registry_config")
+
+package(default_visibility = ["//test/wkg:__subpackages__"])
+
+# Create test registry configuration
+wkg_registry_config(
+    name = "test_registry_config",
+    default_registry = "test",
+    registries = [
+        "test|localhost:5001|oci",
+        "backup|localhost:5002|oci",
+    ],
+)
+
+# Create mock test data
+olareg_mock_data(
+    name = "test_components_data",
+    components = [
+        "test/hello-world",
+        "test/calculator",
+        "test/greeting",
+    ],
+)
+
+# Unit test for wkg_fetch rule
+wkg_fetch(
+    name = "test_fetch_component",
+    package = "test:hello-world",
+    registry = "localhost:5001",
+    version = "1.0.0",
+)
+
+# Analysis test for wkg_fetch
+wkg_component_test(
+    name = "wkg_fetch_basic_test",
+    target_under_test = ":test_fetch_component",
+)
+
+# Unit test for wkg_lock rule
+wkg_lock(
+    name = "test_lock_dependencies",
+    dependencies = [
+        "test:hello-world:1.0.0",
+        "test:calculator:1.0.0",
+    ],
+    registry = "localhost:5001",
+)
+
+# Build test for wkg_lock
+build_test(
+    name = "wkg_lock_basic_test",
+    targets = [":test_lock_dependencies"],
+)
+
+# Unit test for wkg_publish rule (using existing component)
+wkg_publish(
+    name = "test_publish_component",
+    package_name = "test:published-component",
+    authors = ["test@example.com"],
+    component = "//examples/basic:hello_component",
+    description = "Test component for WKG publish validation",
+    license = "MIT",
+    registry = "localhost:5001",
+    version = "1.0.0",
+)
+
+# Analysis test for wkg_publish
+wkg_component_test(
+    name = "wkg_publish_basic_test",
+    target_under_test = ":test_publish_component",
+)
+
+# Test registry configuration validation
+build_test(
+    name = "registry_config_test",
+    targets = [":test_registry_config"],
+)
+
+# Comprehensive unit test suite
+test_suite(
+    name = "all",
+    tests = [
+        ":registry_config_test",
+        ":wkg_fetch_basic_test",
+        ":wkg_lock_basic_test",
+        ":wkg_publish_basic_test",
+    ],
+)
+
+# Quick smoke tests for CI
+test_suite(
+    name = "smoke",
+    tests = [
+        ":wkg_fetch_basic_test",
+        ":wkg_publish_basic_test",
+    ],
+)

@@ -352,14 +352,10 @@ def _convert_to_component(ctx, wasm_tools, wasm_module, component_wasm):
     """Convert WASM module to component using wasm-tools - THE BAZEL WAY"""
 
     # For TinyGo wasip2 target, output is already a component
-    # THE BAZEL WAY: Simply copy the WASM file since wasip2 produces components
-    ctx.actions.run(
-        executable = "cp",
-        arguments = [wasm_module.path, component_wasm.path],
-        inputs = [wasm_module],
-        outputs = [component_wasm],
-        mnemonic = "WasmComponentCopy",
-        progress_message = "Copying WebAssembly component %s" % ctx.attr.name,
+    # THE BAZEL WAY: Use Bazel-native symlink instead of system cp command
+    ctx.actions.symlink(
+        output = component_wasm,
+        target_file = wasm_module,
     )
 
 # Rule definition - following Rust pattern

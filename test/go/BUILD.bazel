@@ -1,0 +1,169 @@
+"""Test suite for Go WebAssembly component rules
+
+This test suite validates TinyGo + WASI Preview 2 integration:
+- go_wasm_component rule functionality and providers
+- go_wit_bindgen rule compatibility
+- Component build validation and WIT interface compliance
+- Cross-language interoperability testing
+
+Test Coverage:
+- Analysis tests for rule providers and outputs
+- Integration tests for component validation
+- Build verification for multiple Go component patterns
+"""
+
+load("@bazel_skylib//lib:unittest.bzl", "unittest")
+load(
+    "//test/go:go_component_tests.bzl",
+    "go_component_analysis_test",
+    "go_component_exports_test",
+    "go_component_validation_test",
+    "go_wit_bindgen_test",
+)
+load("//test/integration:integration_tests.bzl", "component_validation_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Analysis Tests for Go Component Rules
+
+go_component_analysis_test(
+    name = "test_calculator_component_provides_info",
+    target_under_test = "//examples/go_component:calculator_component",
+)
+
+go_component_analysis_test(
+    name = "test_http_service_component_provides_info",
+    target_under_test = "//examples/go_component:http_service_component",
+)
+
+go_component_analysis_test(
+    name = "test_debug_component_provides_info",
+    target_under_test = "//examples/go_component:calculator_component_debug",
+)
+
+go_component_analysis_test(
+    name = "test_simple_test_component_provides_info",
+    target_under_test = "//examples/go_component:simple_test",
+)
+
+# WIT Bindgen Compatibility Tests
+
+go_wit_bindgen_test(
+    name = "test_calculator_bindings_generation",
+    target_under_test = "//examples/go_component:calculator_bindings",
+)
+
+go_wit_bindgen_test(
+    name = "test_http_service_bindings_generation",
+    target_under_test = "//examples/go_component:http_service_bindings",
+)
+
+# Component Validation Tests
+
+component_validation_test(
+    name = "test_calculator_component_valid_wasm",
+    component = "//examples/go_component:calculator_component",
+    expected_exports = [
+        "calculator-world",
+        "add",
+        "subtract",
+    ],
+)
+
+component_validation_test(
+    name = "test_http_service_component_valid_wasm",
+    component = "//examples/go_component:http_service_component",
+    expected_exports = [
+        "http-service-world",
+        "handle-request",
+    ],
+)
+
+component_validation_test(
+    name = "test_debug_component_valid_wasm",
+    component = "//examples/go_component:calculator_component_debug",
+    expected_exports = ["calculator-world"],
+)
+
+# Export Verification Tests
+
+go_component_exports_test(
+    name = "test_calculator_exports_verification",
+    expected_language = "go",
+    expected_world = "calculator-world",
+    target_under_test = "//examples/go_component:calculator_component",
+)
+
+go_component_exports_test(
+    name = "test_http_service_exports_verification",
+    expected_language = "go",
+    expected_world = "http-service-world",
+    target_under_test = "//examples/go_component:http_service_component",
+)
+
+# Profile and Optimization Tests
+
+go_component_validation_test(
+    name = "test_release_vs_debug_profiles",
+    debug_target = "//examples/go_component:calculator_component_debug",
+    release_target = "//examples/go_component:calculator_component",
+)
+
+# Test Suite Definition
+
+test_suite(
+    name = "go_component_tests",
+    tests = [
+        # Analysis tests
+        ":test_calculator_component_provides_info",
+        ":test_http_service_component_provides_info",
+        ":test_debug_component_provides_info",
+        ":test_simple_test_component_provides_info",
+
+        # WIT bindgen tests
+        ":test_calculator_bindings_generation",
+        ":test_http_service_bindings_generation",
+
+        # Validation tests
+        ":test_calculator_component_valid_wasm",
+        ":test_http_service_component_valid_wasm",
+        ":test_debug_component_valid_wasm",
+
+        # Export verification tests
+        ":test_calculator_exports_verification",
+        ":test_http_service_exports_verification",
+
+        # Profile tests
+        ":test_release_vs_debug_profiles",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Component Integration Tests (requires runtime validation)
+
+go_component_validation_test(
+    name = "test_tinygo_toolchain_integration",
+    components = [
+        "//examples/go_component:calculator_component",
+        "//examples/go_component:http_service_component",
+        "//examples/go_component:simple_test",
+    ],
+)
+
+test_suite(
+    name = "go_integration_tests",
+    tests = [
+        ":test_tinygo_toolchain_integration",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Comprehensive test suite combining all Go component tests
+test_suite(
+    name = "all_go_tests",
+    tests = [
+        ":go_component_tests",
+        ":go_integration_tests",
+    ],
+    visibility = ["//visibility:public"],
+)

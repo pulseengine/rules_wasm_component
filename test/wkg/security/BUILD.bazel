@@ -1,0 +1,240 @@
+"""Security and signing workflow tests using olareg_wasm"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//test/wkg:wkg_test_utils.bzl", "wkg_component_test")
+load(
+    "//wkg:defs.bzl",
+    "wasm_component_secure_publish",
+    "wasm_security_policy",
+)
+load("//wasm:defs.bzl", "wasm_keygen", "wasm_sign", "wasm_validate", "wasm_verify")
+
+package(default_visibility = ["//test/wkg:__subpackages__"])
+
+# Generate test signing keys for security tests
+wasm_keygen(
+    name = "security_test_keys_compact",
+    openssh_format = False,
+    public_key_name = "security_test_compact.pub",
+    secret_key_name = "security_test_compact.key",
+)
+
+wasm_keygen(
+    name = "security_test_keys_openssh",
+    openssh_format = True,
+    public_key_name = "security_test_openssh.pub",
+    secret_key_name = "security_test_openssh.key",
+)
+
+# Test basic security policy
+wasm_security_policy(
+    name = "basic_security_policy",
+    default_signing_required = False,
+    key_source = "file",
+    openssh_format = False,
+    signature_type = "embedded",
+)
+
+# Test strict security policy
+wasm_security_policy(
+    name = "strict_security_policy",
+    component_policies = [
+        "test-*|required|security_test_keys_compact",
+        "*-secure|required",
+    ],
+    default_signing_required = True,
+    key_source = "file",
+    openssh_format = False,
+    registry_policies = [
+        "localhost:5001|required|security_test_keys_compact",
+        "localhost:5002|optional",
+    ],
+    signature_type = "embedded",
+)
+
+# Test enterprise security policy with OpenSSH
+wasm_security_policy(
+    name = "enterprise_security_policy",
+    component_policies = [
+        "*|required|security_test_keys_openssh",
+    ],
+    default_signing_required = True,
+    key_source = "file",
+    openssh_format = True,
+    registry_policies = [
+        "localhost:5001|required|security_test_keys_openssh",
+        "localhost:5002|required|security_test_keys_openssh",
+    ],
+    signature_type = "detached",
+)
+
+# Test component signing workflow
+wasm_sign(
+    name = "test_signed_component_embedded",
+    component = "//examples/basic:hello_component",
+    detached = False,
+    keys = ":security_test_keys_compact",
+)
+
+wasm_sign(
+    name = "test_signed_component_detached",
+    component = "//examples/basic:hello_component",
+    detached = True,
+    keys = ":security_test_keys_compact",
+)
+
+# Test signature verification
+wasm_verify(
+    name = "test_verify_embedded",
+    keys = ":security_test_keys_compact",
+    signed_component = ":test_signed_component_embedded",
+)
+
+wasm_verify(
+    name = "test_verify_detached",
+    keys = ":security_test_keys_compact",
+    signed_component = ":test_signed_component_detached",
+)
+
+# Test component validation with signature verification
+wasm_validate(
+    name = "test_validate_with_signature",
+    component = ":test_signed_component_embedded",
+    signing_keys = ":security_test_keys_compact",
+    verify_signature = True,
+)
+
+# Test secure publishing with basic policy
+wasm_component_secure_publish(
+    name = "test_secure_publish_basic",
+    package_name = "test/security-basic",
+    authors = ["security-test@example.com"],
+    component = "//examples/basic:hello_component",
+    description = "Security test with basic policy",
+    dry_run = True,
+    license = "MIT",
+    namespace = "test",
+    registry_config = "//test/wkg/unit:test_registry_config",
+    security_policy = ":basic_security_policy",
+    tag = "security-basic",
+    target_registries = ["test"],
+)
+
+# Test secure publishing with strict policy (requires signing)
+wasm_component_secure_publish(
+    name = "test_secure_publish_strict",
+    package_name = "test/security-strict",
+    authors = ["security-test@example.com"],
+    component = "//examples/basic:hello_component",
+    description = "Security test with strict policy requiring signatures",
+    dry_run = True,
+    license = "MIT",
+    namespace = "test",
+    registry_config = "//test/wkg/unit:test_registry_config",
+    security_policy = ":strict_security_policy",
+    signing_keys = ":security_test_keys_compact",
+    tag = "security-strict",
+    target_registries = ["test"],
+)
+
+# Test secure publishing with enterprise policy (OpenSSH signing)
+wasm_component_secure_publish(
+    name = "test_secure_publish_enterprise",
+    package_name = "test/security-enterprise",
+    authors = ["enterprise-security@example.com"],
+    component = "//examples/basic:hello_component",
+    description = "Security test with enterprise policy and OpenSSH signatures",
+    dry_run = True,
+    license = "MIT",
+    namespace = "test",
+    registry_config = "//test/wkg/unit:test_registry_config",
+    security_policy = ":enterprise_security_policy",
+    signing_keys = ":security_test_keys_openssh",
+    tag = "security-enterprise",
+    target_registries = ["test"],
+)
+
+# Analysis tests for security components
+wkg_component_test(
+    name = "security_policy_basic_test",
+    target_under_test = ":basic_security_policy",
+)
+
+wkg_component_test(
+    name = "security_policy_strict_test",
+    target_under_test = ":strict_security_policy",
+)
+
+wkg_component_test(
+    name = "signing_workflow_test",
+    target_under_test = ":test_signed_component_embedded",
+)
+
+# Build tests for security workflows
+build_test(
+    name = "signing_keys_test",
+    targets = [
+        ":security_test_keys_compact",
+        ":security_test_keys_openssh",
+    ],
+)
+
+build_test(
+    name = "security_policies_test",
+    targets = [
+        ":basic_security_policy",
+        ":strict_security_policy",
+        ":enterprise_security_policy",
+    ],
+)
+
+build_test(
+    name = "signing_workflow_build_test",
+    targets = [
+        ":test_signed_component_embedded",
+        ":test_signed_component_detached",
+    ],
+)
+
+build_test(
+    name = "verification_workflow_test",
+    targets = [
+        ":test_verify_embedded",
+        ":test_verify_detached",
+        ":test_validate_with_signature",
+    ],
+)
+
+build_test(
+    name = "secure_publishing_test",
+    targets = [
+        ":test_secure_publish_basic",
+        ":test_secure_publish_strict",
+        ":test_secure_publish_enterprise",
+    ],
+)
+
+# Complete security test suite
+test_suite(
+    name = "all",
+    tests = [
+        ":secure_publishing_test",
+        ":security_policies_test",
+        ":security_policy_basic_test",
+        ":security_policy_strict_test",
+        ":signing_keys_test",
+        ":signing_workflow_build_test",
+        ":signing_workflow_test",
+        ":verification_workflow_test",
+    ],
+)
+
+# Critical security tests
+test_suite(
+    name = "critical",
+    tests = [
+        ":secure_publishing_test",
+        ":signing_workflow_build_test",
+        ":verification_workflow_test",
+    ],
+)
