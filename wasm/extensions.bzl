@@ -64,9 +64,9 @@ wasm_toolchain = module_extension(
                     default = "wasm_tools",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'system', 'download', 'build', or 'hybrid'",
+                    doc = "Tool acquisition strategy: 'system', 'download', 'build', 'bazel', or 'hybrid'",
                     default = "system",
-                    values = ["system", "download", "build", "hybrid"],
+                    values = ["system", "download", "build", "bazel", "hybrid"],
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download/build strategies)",

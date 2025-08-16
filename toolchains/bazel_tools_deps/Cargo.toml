@@ -1,0 +1,36 @@
+[package]
+name = "bazel-wasm-tools-deps"
+version = "0.1.0"
+edition = "2021"
+
+# This is a dependency-only crate to manage Rust dependencies for Bazel-native tool builds
+# It includes all dependencies needed for wasm-tools, wizer, and other tools
+
+[dependencies]
+# Core utilities
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+env_logger = "0.11"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# WebAssembly tools core
+wat = "1.235"
+wasm-encoder = "0.235" 
+wasmparser = "0.235"
+wasm-mutate = "0.235"
+wasm-shrink = "0.235"
+wasm-smith = "0.235"
+
+# Component model
+wit-parser = "0.235"
+wit-component = "0.235"
+
+# Wizer-specific dependencies
+wasmtime = "26.0"
+wasmtime-wasi = "26.0"
+
+# Additional wasm-tools dependencies
+termcolor = "1.4"
+wasmprinter = "0.235"

@@ -1,12 +1,60 @@
 """BUILD file for wasm-tools repository
 
-This file creates wasm-tools binary using cargo within the git repository.
-This is a hybrid approach - git_repository for source + genrule for cargo build.
+This file creates wasm-tools binary using both cargo (legacy) and Bazel-native rust_binary.
+The rust_binary approach eliminates cargo sandbox issues.
 """
 
-# Build wasm-tools using cargo (hybrid approach)
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+# Bazel-native rust_binary build (NEW: eliminates cargo sandbox issues)
+rust_binary(
+    name = "wasm_tools_bazel",
+    srcs = [
+        "src/bin/wasm-tools/main.rs",
+    ],
+    crate_name = "wasm_tools",
+    edition = "2021",
+    deps = [
+        ":wasm_tools_lib",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Supporting library crate for Bazel-native build
+rust_library(
+    name = "wasm_tools_lib",
+    srcs = glob([
+        "src/**/*.rs",
+    ], exclude = [
+        "src/bin/**/*.rs",
+    ]),
+    crate_name = "wasm_tools",
+    edition = "2021",
+    deps = [
+        # Use dependencies from bazel_tools_crates
+        "@bazel_tools_crates//:anyhow",
+        "@bazel_tools_crates//:clap",
+        "@bazel_tools_crates//:env_logger",
+        "@bazel_tools_crates//:log",
+        "@bazel_tools_crates//:serde",
+        "@bazel_tools_crates//:serde_json",
+        "@bazel_tools_crates//:termcolor",
+        "@bazel_tools_crates//:wat",
+        "@bazel_tools_crates//:wasm-encoder",
+        "@bazel_tools_crates//:wasmparser",
+        "@bazel_tools_crates//:wasmprinter",
+        "@bazel_tools_crates//:wasm-mutate",
+        "@bazel_tools_crates//:wasm-shrink",
+        "@bazel_tools_crates//:wasm-smith",
+        "@bazel_tools_crates//:wit-parser",
+        "@bazel_tools_crates//:wit-component",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Legacy cargo build (for backward compatibility)
 genrule(
-    name = "wasm-tools",
+    name = "wasm_tools_cargo",
     srcs = glob(["**/*"]),  # All source files
     outs = ["wasm-tools"],
     cmd = """cd $$(dirname $(location Cargo.toml)) && \
@@ -16,9 +64,9 @@ genrule(
     tags = ["requires-network"],  # Cargo may need to fetch dependencies
 )
 
-# Export the binary for toolchain use
+# Export the legacy binary for toolchain use
 filegroup(
     name = "wasm_tools_binary",
-    srcs = [":wasm-tools"],
+    srcs = [":wasm_tools_cargo"],
     visibility = ["//visibility:public"],
 )

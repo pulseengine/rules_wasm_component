@@ -1,0 +1,3 @@
+# This directory contains only a Cargo.toml and Cargo.lock for dependency management
+# It doesn't produce any actual targets, just manages crate dependencies
+package(default_visibility = ["//visibility:public"])

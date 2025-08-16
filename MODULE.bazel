@@ -54,7 +54,7 @@ register_toolchains("@go_toolchains//:all")
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
-    strategy = "build",
+    strategy = "download",
     version = "1.235.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
@@ -180,7 +180,18 @@ crate.from_cargo(
         "x86_64-pc-windows-msvc",
     ],
 )
-use_repo(crate, "crates", "wizer_crates")
+crate.from_cargo(
+    name = "bazel_tools_crates",
+    cargo_lockfile = "//toolchains/bazel_tools_deps:Cargo.lock",
+    manifests = ["//toolchains/bazel_tools_deps:Cargo.toml"],
+    supported_platform_triples = [
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",  # BCR environment ARM64 Linux
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+    ],
+)
+use_repo(crate, "bazel_tools_crates", "crates", "wizer_crates")
 
 # Modernized WASM tool repositories using git_repository + rules_rust
 wasm_tool_repos = use_extension("//toolchains:extensions.bzl", "wasm_tool_repositories")
@@ -195,4 +206,4 @@ use_repo(
 # Hermetic WebAssembly tools via http_archive using checksum registry
 wasm_hermetic = use_extension("//toolchains:hermetic_extension.bzl", "wasm_hermetic")
 wasm_hermetic.register()
-use_repo(wasm_hermetic, "wasm_tools_hermetic", "wit_bindgen_hermetic", "wasmtime_hermetic", "wac_hermetic", "wkg_hermetic")
+use_repo(wasm_hermetic, "wac_hermetic", "wasm_tools_hermetic", "wasmtime_hermetic", "wit_bindgen_hermetic", "wkg_hermetic")
