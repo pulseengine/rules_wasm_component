@@ -291,8 +291,34 @@ def _js_component_optimization_test_impl(ctx):
     """Test JavaScript component optimization and compilation flags."""
     env = analysistest.begin(ctx)
 
+    # Test can handle single target or optimization comparison
+    if ctx.attr.target_under_test:
+        # Single target test
+        target_under_test = analysistest.target_under_test(env)
+        component_info = target_under_test[WasmComponentInfo]
+
+        # Validate basic component properties
+        asserts.true(
+            env,
+            component_info.component_type == "component",
+            "Target should be a component",
+        )
+
+        asserts.equals(
+            env,
+            component_info.metadata.get("language"),
+            "javascript",
+            "Component should be JavaScript language",
+        )
+
+        asserts.true(
+            env,
+            component_info.wasm_file.basename.endswith(".wasm"),
+            "Component should have .wasm file",
+        )
+
     # Test optimization comparison between targets
-    if ctx.attr.optimized_target and ctx.attr.unoptimized_target:
+    elif ctx.attr.optimized_target and ctx.attr.unoptimized_target:
         optimized_info = ctx.attr.optimized_target[WasmComponentInfo]
         unoptimized_info = ctx.attr.unoptimized_target[WasmComponentInfo]
 
@@ -340,6 +366,10 @@ def _js_component_optimization_test_impl(ctx):
 js_component_optimization_test = analysistest.make(
     _js_component_optimization_test_impl,
     attrs = {
+        "target_under_test": attr.label(
+            providers = [WasmComponentInfo],
+            doc = "Primary target for single-target tests",
+        ),
         "optimized_target": attr.label(
             providers = [WasmComponentInfo],
             doc = "Optimized component for comparison",

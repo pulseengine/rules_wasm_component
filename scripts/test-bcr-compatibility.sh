@@ -103,26 +103,26 @@ log_verbose() {
 # Check dependencies
 check_dependencies() {
     log_info "Checking dependencies..."
-    
+
     if ! command -v docker &> /dev/null; then
         log_error "Docker is required but not installed"
         echo "Please install Docker: https://docs.docker.com/get-docker/"
         exit 1
     fi
-    
+
     if ! docker info &> /dev/null; then
         log_error "Docker daemon is not running"
         echo "Please start Docker daemon"
         exit 1
     fi
-    
+
     log_verbose "Docker is available and running"
 }
 
 # Pull Docker image if needed
 pull_docker_image() {
     log_info "Ensuring BCR Docker image is available..."
-    
+
     if ! docker image inspect "$DOCKER_IMAGE" &> /dev/null; then
         log_info "Pulling BCR Docker image: $DOCKER_IMAGE"
         if ! docker pull "$DOCKER_IMAGE"; then
@@ -137,7 +137,7 @@ pull_docker_image() {
 # Main test function
 run_bcr_test() {
     local test_type="${1:-build}"
-    
+
     log_info "Starting BCR compatibility test..."
     log_info "Docker Image: $DOCKER_IMAGE"
     log_info "Target: $TARGET"
@@ -199,14 +199,14 @@ echo
 if [ \$BUILD_EXIT_CODE -eq 0 ]; then
     echo '✅ BCR TEST SUCCESSFUL!'
     echo
-    
+
     if [[ \"$bazel_command\" == \"build\" ]]; then
         echo '=== Build Verification ==='
-        
+
         # Look for outputs
         echo 'Checking for build outputs...'
         output_count=\$(find bazel-bin -name '*.wasm' -type f 2>/dev/null | wc -l)
-        
+
         if [ \$output_count -gt 0 ]; then
             echo \"✅ Found \$output_count WebAssembly component(s)\"
             find bazel-bin -name '*.wasm' -type f | head -3 | while read wasm_file; do
@@ -216,7 +216,7 @@ if [ \$BUILD_EXIT_CODE -eq 0 ]; then
             echo 'ℹ️  No .wasm files found (may be expected for this target)'
         fi
     fi
-    
+
 elif [ \$BUILD_EXIT_CODE -eq 124 ]; then
     echo '❌ BCR TEST TIMED OUT'
     echo \"Build exceeded ${TIMEOUT} second limit\"
@@ -225,7 +225,7 @@ elif [ \$BUILD_EXIT_CODE -eq 124 ]; then
     echo '  - Non-hermetic system tool dependencies'
     echo '  - Toolchain configuration problems'
     exit 1
-    
+
 else
     echo '❌ BCR TEST FAILED'
     echo \"Exit code: \$BUILD_EXIT_CODE\"
@@ -236,7 +236,7 @@ fi
 
     log_info "Running test in BCR Docker environment..."
     echo
-    
+
     if docker run --rm -v "$(pwd):/workspace" -w /workspace "$DOCKER_IMAGE" bash -c "$docker_script"; then
         echo
         log_success "BCR compatibility test PASSED"
@@ -263,11 +263,11 @@ main() {
     echo "🐳 BCR (Bazel Central Registry) Compatibility Test"
     echo "=================================================="
     echo
-    
+
     # Check prerequisites
     check_dependencies
     pull_docker_image
-    
+
     # Run the appropriate test
     if [[ "$QUICK_MODE" == "true" ]]; then
         log_info "Running quick mode (analyze only)..."

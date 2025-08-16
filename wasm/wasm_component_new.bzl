@@ -1,47 +1,26 @@
 """WASM component creation rule implementation"""
 
 load("//providers:providers.bzl", "WasmComponentInfo")
+load("//tools/bazel_helpers:wasm_tools_actions.bzl", "create_component_action")
 
 def _wasm_component_new_impl(ctx):
     """Implementation of wasm_component_new rule"""
-
-    # Get toolchain
-    toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    wasm_tools = toolchain.wasm_tools
 
     # Input and output files
     wasm_module = ctx.file.wasm_module
     component_wasm = ctx.actions.declare_file(ctx.label.name + ".wasm")
 
-    # Build command arguments
-    args = ctx.actions.args()
-    args.add("component", "new")
-    args.add(wasm_module)
-    args.add("-o", component_wasm)
-
-    # Add adapter if specified
-    inputs = [wasm_module]
-    if ctx.file.adapter:
-        args.add("--adapt", ctx.file.adapter)
-        inputs.append(ctx.file.adapter)
-
-    # Add additional options
-    if ctx.attr.options:
-        args.add_all(ctx.attr.options)
-
-    # Run wasm-tools component new
-    ctx.actions.run(
-        executable = wasm_tools,
-        arguments = [args],
-        inputs = inputs,
-        outputs = [component_wasm],
-        mnemonic = "WasmComponentNew",
-        progress_message = "Creating WASM component %s" % ctx.label,
+    # Use WASM Tools Integration Component for component creation
+    created_component = create_component_action(
+        ctx,
+        wasm_module = wasm_module,
+        adapter = ctx.file.adapter,
+        output_name = component_wasm.basename,
     )
 
     # Create component info provider
     component_info = WasmComponentInfo(
-        wasm_file = component_wasm,
+        wasm_file = created_component,
         wit_info = None,  # No WIT info for converted modules
         component_type = "component",
         imports = [],  # TODO: Extract from component
@@ -57,7 +36,7 @@ def _wasm_component_new_impl(ctx):
 
     return [
         component_info,
-        DefaultInfo(files = depset([component_wasm])),
+        DefaultInfo(files = depset([created_component])),
     ]
 
 wasm_component_new = rule(
@@ -76,7 +55,7 @@ wasm_component_new = rule(
             doc = "Additional options to pass to wasm-tools component new",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
+    toolchains = ["@rules_wasm_component//toolchains:wasm_tools_component_toolchain_type"],
     doc = """
     Converts a WebAssembly module to a component.
 

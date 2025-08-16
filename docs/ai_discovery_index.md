@@ -218,19 +218,19 @@ Key directories AI agents should be aware of:
 
 ### MCP Implementation Checklist
 
-#### For wit_library:
+#### For wit_library
 
 - [ ] Specify `package_name` for external dependencies
 - [ ] Use Bazel target labels in `deps`, not file paths
 - [ ] Validate with `wit_deps_check` if dependency issues
 
-#### For rust_wasm_component_bindgen:
+#### For rust_wasm_component_bindgen
 
 - [ ] Reference wit_library target in `wit` attribute
 - [ ] Import using `{target_name}_bindings` in Rust code
 - [ ] Test build before proceeding to composition
 
-#### For wac_compose:
+#### For wac_compose
 
 - [ ] Map components to unversioned package names
 - [ ] Use `{ ... }` syntax for WASI components

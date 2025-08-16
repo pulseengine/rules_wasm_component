@@ -45,15 +45,15 @@ jobs:
           echo "Test Target: $TEST_TARGET"
           echo "Timeout: ${TIMEOUT_MINUTES} minutes"
           echo "----------------------------------------"
-          
+
           # Calculate timeout in seconds
           TIMEOUT_SECONDS=$((TIMEOUT_MINUTES * 60))
-          
+
           # Run the hermetic build test
           docker run --rm -v "$(pwd):/workspace" -w /workspace \
             $DOCKER_IMAGE bash -c "
             set -euo pipefail
-            
+
             echo '=== BCR Environment Details ==='
             echo 'OS Information:'
             cat /etc/os-release
@@ -68,14 +68,14 @@ jobs:
             which npm || echo 'npm: not found (expected - should be hermetic)'
             which go || echo 'go: not found (expected - should be hermetic)'
             echo
-            
+
             echo '=== Bazel Setup ==='
             # Set up Bazel cache directory with proper permissions
             mkdir -p /tmp/bazel_cache
             chmod 755 /tmp/bazel_cache
             echo 'Cache directory created: /tmp/bazel_cache'
             echo
-            
+
             echo '=== Testing Hermetic Build ==='
             echo \"Building target: $TEST_TARGET\"
             echo \"Timeout: ${TIMEOUT_SECONDS} seconds\"
@@ -84,18 +84,18 @@ jobs:
             echo '  ✓ Downloads and builds are hermetic'
             echo '  ✓ Build succeeds in minimal Docker environment'
             echo
-            
+
             # Run the build with timeout
             timeout ${TIMEOUT_SECONDS} bazel --output_base=/tmp/bazel_cache build $TEST_TARGET
-            
+
             BUILD_EXIT_CODE=\$?
             echo
-            
+
             if [ \$BUILD_EXIT_CODE -eq 0 ]; then
               echo '✅ BCR HERMETIC BUILD SUCCESSFUL!'
               echo
               echo '=== Build Verification ==='
-              
+
               # Find and verify any WASM outputs
               echo 'Looking for WebAssembly component outputs...'
               find bazel-bin -name '*.wasm' -type f | head -5 | while read wasm_file; do
@@ -103,14 +103,14 @@ jobs:
                 echo \"  Size: \$(stat -c%s \"\$wasm_file\") bytes\"
                 echo \"  Type: \$(file \"\$wasm_file\" | cut -d: -f2)\"
               done
-              
+
               wasm_count=\$(find bazel-bin -name '*.wasm' -type f | wc -l)
               if [ \$wasm_count -gt 0 ]; then
                 echo \"✅ Successfully created \$wasm_count WebAssembly component(s)\"
               else
                 echo 'ℹ️  No .wasm files found (may be expected for some targets)'
               fi
-              
+
             elif [ \$BUILD_EXIT_CODE -eq 124 ]; then
               echo '❌ BCR BUILD TIMED OUT'
               echo \"Build exceeded ${TIMEOUT_MINUTES} minute limit\"
@@ -119,7 +119,7 @@ jobs:
               echo '  - Non-hermetic system tool dependencies'
               echo '  - Infinite loops in toolchain setup'
               exit 1
-              
+
             else
               echo '❌ BCR BUILD FAILED'
               echo \"Exit code: \$BUILD_EXIT_CODE\"
@@ -145,35 +145,35 @@ jobs:
           echo "This test validates that all toolchains can be configured"
           echo "without requiring system tools or non-hermetic dependencies"
           echo "----------------------------------------"
-          
+
           docker run --rm -v "$(pwd):/workspace" -w /workspace \
             $DOCKER_IMAGE bash -c "
             set -euo pipefail
-            
+
             echo '=== Toolchain Configuration Test ==='
             mkdir -p /tmp/bazel_cache
             chmod 755 /tmp/bazel_cache
-            
+
             # Test toolchain analysis (faster than full build)
             echo 'Testing toolchain resolution and configuration...'
             timeout 600 bazel --output_base=/tmp/bazel_cache query --output=label $DEFAULT_TARGET
-            
+
             ANALYZE_EXIT_CODE=\$?
-            
+
             if [ \$ANALYZE_EXIT_CODE -eq 0 ]; then
               echo '✅ All toolchains configured successfully in BCR environment'
               echo
               echo '=== Toolchain Information ==='
-              
+
               # Show configured toolchains
               echo 'Registered toolchains:'
               bazel --output_base=/tmp/bazel_cache query --output=label 'kind(toolchain, //...)' | head -10 || echo 'Query failed'
-              
+
             elif [ \$ANALYZE_EXIT_CODE -eq 124 ]; then
               echo '❌ Toolchain analysis timed out'
               echo 'This suggests toolchain setup is hanging or very slow'
               exit 1
-              
+
             else
               echo '❌ Toolchain analysis failed'
               echo \"Exit code: \$ANALYZE_EXIT_CODE\"
@@ -218,7 +218,7 @@ jobs:
           echo "Platform: ${{ matrix.os }}"
           echo "Bazel: ${{ matrix.bazel_version }}"
           echo "----------------------------------------"
-          
+
           # Use the targets from our presubmit.yml
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "Testing Windows-compatible targets only"
@@ -256,17 +256,17 @@ jobs:
           echo "🚩 BCR Incompatible Flags Test"
           echo "Testing against upcoming Bazel breaking changes"
           echo "----------------------------------------"
-          
+
           # Test with commonly problematic incompatible flags
           incompatible_flags=(
             "--incompatible_enable_cc_toolchain_resolution"
             "--incompatible_strict_action_env"
             "--incompatible_disable_starlark_host_transitions"
           )
-          
+
           for flag in "${incompatible_flags[@]}"; do
             echo "Testing with flag: $flag"
-            
+
             # Test basic build with the flag
             if bazel build --experimental_enable_bzlmod "$flag" //examples/basic:hello_component; then
               echo "✅ Compatible with $flag"
@@ -275,7 +275,7 @@ jobs:
               # Log the issue but don't fail (these are future-proofing tests)
             fi
           done
-          
+
           echo "Incompatible flags testing completed"
 
   bcr-metadata-validation:
@@ -294,17 +294,17 @@ jobs:
           echo "📋 BCR Metadata Validation"
           echo "Checking BCR-required files and structure"
           echo "----------------------------------------"
-          
+
           # Check for required BCR files
           echo "Checking for required BCR files..."
-          
+
           if [ -f ".bcr/presubmit.yml" ]; then
             echo "✅ presubmit.yml found"
           else
             echo "❌ presubmit.yml missing"
             exit 1
           fi
-          
+
           # Validate presubmit.yml structure
           echo "Validating presubmit.yml structure..."
           if grep -q "bcr_test_module" .bcr/presubmit.yml; then
@@ -313,14 +313,14 @@ jobs:
             echo "❌ presubmit.yml missing bcr_test_module"
             exit 1
           fi
-          
+
           if grep -q "matrix:" .bcr/presubmit.yml; then
             echo "✅ presubmit.yml has testing matrix"
           else
             echo "❌ presubmit.yml missing testing matrix"
             exit 1
           fi
-          
+
           # Validate test module exists
           echo "Checking test module structure..."
           if [ -d "test_examples/basic" ]; then
@@ -329,18 +329,18 @@ jobs:
             echo "❌ Test module directory missing"
             exit 1
           fi
-          
+
           if [ -f "test_examples/basic/BUILD.bazel" ]; then
             echo "✅ Test module has BUILD.bazel"
           else
             echo "❌ Test module missing BUILD.bazel"
             exit 1
           fi
-          
+
           echo "BCR metadata validation completed successfully"
 
   bcr-test-module-validation:
-    name: BCR Test Module Validation  
+    name: BCR Test Module Validation
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -361,27 +361,27 @@ jobs:
           echo "🧪 BCR Test Module Validation"
           echo "Testing the BCR test module functionality"
           echo "----------------------------------------"
-          
+
           # Test the specific module path from presubmit.yml
           echo "Testing BCR test module: test_examples/basic"
-          
+
           # Build the test module targets
           bazel build //test_examples/basic:hello_component
-          
+
           # Verify the test module can use the main module
           echo "Verifying test module can use rules_wasm_component..."
-          
+
           # Check that the test module BUILD file references the main module correctly
           if grep -q "rules_wasm_component" test_examples/basic/BUILD.bazel; then
             echo "✅ Test module properly references rules_wasm_component"
           else
             echo "ℹ️  Test module may be using local_path_override (normal for BCR)"
           fi
-          
+
           # Test example usage patterns
           echo "Testing example usage patterns..."
           bazel build //examples/basic:hello_component
-          
+
           echo "BCR test module validation completed"
 
   bcr-summary:
@@ -396,23 +396,23 @@ jobs:
           echo "📋 BCR Compatibility Test Summary"
           echo "=================================="
           echo
-          
+
           # Check individual job results
           if [ "${{ needs.bcr-hermetic-test.result }}" = "success" ]; then
             echo "✅ Hermetic Build Test: PASSED"
           else
             echo "❌ Hermetic Build Test: FAILED"
           fi
-          
+
           if [ "${{ needs.bcr-toolchain-validation.result }}" = "success" ]; then
             echo "✅ Toolchain Validation: PASSED"
           else
             echo "❌ Toolchain Validation: FAILED"
           fi
-          
+
           echo
           echo "BCR Compatibility Status:"
-          
+
           if [ "${{ needs.bcr-hermetic-test.result }}" = "success" ] && \
              [ "${{ needs.bcr-toolchain-validation.result }}" = "success" ]; then
             echo "🎉 ALL TESTS PASSED - Ready for BCR submission"

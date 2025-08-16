@@ -204,8 +204,33 @@ def _go_component_validation_test_impl(ctx):
     """Test Go component build profiles and validation."""
     env = analysistest.begin(ctx)
 
-    # Test can handle either single target or profile comparison
-    if ctx.attr.release_target and ctx.attr.debug_target:
+    # Test can handle single target, profile comparison, or multi-component validation
+    if ctx.attr.target_under_test:
+        # Single target test
+        target_under_test = analysistest.target_under_test(env)
+        component_info = target_under_test[WasmComponentInfo]
+
+        # Validate basic component properties
+        asserts.true(
+            env,
+            component_info.component_type == "component",
+            "Target should be a component",
+        )
+
+        asserts.equals(
+            env,
+            component_info.metadata.get("language"),
+            "go",
+            "Component should be Go language",
+        )
+
+        asserts.true(
+            env,
+            component_info.wasm_file.basename.endswith(".wasm"),
+            "Component should have .wasm file",
+        )
+
+    elif ctx.attr.release_target and ctx.attr.debug_target:
         # Profile comparison test
         release_target = ctx.attr.release_target[WasmComponentInfo]
         debug_target = ctx.attr.debug_target[WasmComponentInfo]
@@ -285,6 +310,10 @@ def _go_component_validation_test_impl(ctx):
 go_component_validation_test = analysistest.make(
     _go_component_validation_test_impl,
     attrs = {
+        "target_under_test": attr.label(
+            providers = [WasmComponentInfo],
+            doc = "Primary target for single-target tests",
+        ),
         "release_target": attr.label(
             providers = [WasmComponentInfo],
             doc = "Release profile component for comparison",

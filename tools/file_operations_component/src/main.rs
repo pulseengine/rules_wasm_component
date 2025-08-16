@@ -22,7 +22,7 @@ fn main() {
 
 fn run() -> AnyhowResult<()> {
     let args: Vec<String> = env::args().collect();
-    
+
     if args.len() < 2 {
         eprintln!("Usage: {} <operation> [args...]", args[0]);
         eprintln!("Operations:");
@@ -32,38 +32,38 @@ fn run() -> AnyhowResult<()> {
         eprintln!("  prepare_workspace --config <config_file>");
         process::exit(1);
     }
-    
+
     let operation = &args[1];
-    
+
     match operation.as_str() {
         "copy_file" => {
             let (src, dest) = parse_copy_args(&args[2..])?;
             lib::copy_file(&src, &dest)?;
-        },
+        }
         "copy_directory" => {
             let (src, dest) = parse_copy_args(&args[2..])?;
             lib::copy_directory(&src, &dest)?;
-        },
+        }
         "create_directory" => {
             let path = parse_path_arg(&args[2..])?;
             lib::create_directory(&path)?;
-        },
+        }
         "prepare_workspace" => {
             let config_file = parse_config_arg(&args[2..])?;
             prepare_workspace_from_file(&config_file)?;
-        },
+        }
         _ => {
             return Err(anyhow::anyhow!("Unknown operation: {}", operation));
         }
     }
-    
+
     Ok(())
 }
 
 fn parse_copy_args(args: &[String]) -> AnyhowResult<(String, String)> {
     let mut src = None;
     let mut dest = None;
-    
+
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
@@ -74,7 +74,7 @@ fn parse_copy_args(args: &[String]) -> AnyhowResult<(String, String)> {
                 } else {
                     return Err(anyhow::anyhow!("--src requires a value"));
                 }
-            },
+            }
             "--dest" => {
                 if i + 1 < args.len() {
                     dest = Some(args[i + 1].clone());
@@ -82,16 +82,16 @@ fn parse_copy_args(args: &[String]) -> AnyhowResult<(String, String)> {
                 } else {
                     return Err(anyhow::anyhow!("--dest requires a value"));
                 }
-            },
+            }
             _ => {
                 return Err(anyhow::anyhow!("Unknown argument: {}", args[i]));
             }
         }
     }
-    
+
     let src = src.ok_or_else(|| anyhow::anyhow!("--src is required"))?;
     let dest = dest.ok_or_else(|| anyhow::anyhow!("--dest is required"))?;
-    
+
     Ok((src, dest))
 }
 
@@ -113,18 +113,18 @@ fn prepare_workspace_from_file(config_file: &str) -> AnyhowResult<()> {
     // Read configuration file
     let config_content = fs::read_to_string(config_file)
         .with_context(|| format!("Failed to read config file: {}", config_file))?;
-    
+
     let config: lib::WorkspaceConfig = serde_json::from_str(&config_content)
         .with_context(|| format!("Failed to parse config file: {}", config_file))?;
-    
+
     // Call the library function
     let result = lib::prepare_workspace(&config)?;
-    
+
     println!("Workspace prepared successfully:");
     println!("  Path: {}", result.workspace_path);
     println!("  Files: {}", result.prepared_files.len());
     println!("  Time: {}ms", result.preparation_time_ms);
     println!("  Message: {}", result.message);
-    
+
     Ok(())
 }

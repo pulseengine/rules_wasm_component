@@ -131,7 +131,7 @@ info.world_name       # string: World name (optional)
 info.interface_names  # list: Interface names
 ```
 
-### Usage in custom rules:
+### Usage in custom rules
 
 ```starlark
 def _my_rule_impl(ctx):
@@ -222,11 +222,11 @@ graph TD
 
 ## Build Outputs
 
-### wit_library outputs:
+### wit_library outputs
 
 - `{name}_wit/` - Directory with WIT files and deps structure
 
-### rust_wasm_component_bindgen outputs:
+### rust_wasm_component_bindgen outputs
 
 - `{name}_{profile}.wasm` - WASM component file
 - `{name}_wit_bindgen_gen.rs` - Generated Rust bindings

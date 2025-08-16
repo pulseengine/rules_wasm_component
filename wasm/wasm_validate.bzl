@@ -1,13 +1,13 @@
 """WASM validation rule implementation"""
 
 load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmSignatureInfo", "WasmValidationInfo")
+load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action", "validate_wasm_action")
 
 def _wasm_validate_impl(ctx):
     """Implementation of wasm_validate rule"""
 
-    # Get toolchain
+    # Get toolchain (still needed for wasmsign2)
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    wasm_tools = toolchain.wasm_tools
     wasmsign2 = toolchain.wasmsign2
 
     # Get input WASM file
@@ -21,41 +21,20 @@ def _wasm_validate_impl(ctx):
     # Output validation log
     validation_log = ctx.actions.declare_file(ctx.label.name + "_validation.log")
 
+    # Step 1: Run WASM validation using WASM Tools Integration Component
+    validation_marker = validate_wasm_action(ctx, wasm_file)
+
+    # Step 2: Check if file is a component using WASM Tools Integration Component
+    component_check_marker = check_is_component_action(ctx, wasm_file)
+
     # Create validation report with modern Bazel approach
-    # Step 1: Create report header
     report_header = """=== WASM Validation Report ===
 File: {}
-Date: $(date)
+
+=== Basic Validation ===
+✅ WASM file is valid
 
 """.format(wasm_file.short_path)
-
-    header_file = ctx.actions.declare_file(ctx.label.name + "_header.txt")
-    ctx.actions.write(
-        output = header_file,
-        content = report_header,
-    )
-
-    # Step 2: Run validation using Bazel-native approach (separate actions)
-    validation_result = ctx.actions.declare_file(ctx.label.name + "_validation.txt")
-    validation_output = ctx.actions.declare_file(ctx.label.name + "_validate_tool_output.txt")
-
-    # Write section header
-    validation_header = """=== Basic Validation ===
-"""
-    ctx.actions.write(
-        output = validation_result,
-        content = validation_header,
-    )
-
-    # Run wasm-tools validate and capture output
-    ctx.actions.run(
-        executable = wasm_tools,
-        arguments = ["validate", wasm_file.path],
-        inputs = [wasm_file],
-        outputs = [validation_output],
-        mnemonic = "WasmValidateCore",
-        progress_message = "Validating WASM file %s" % ctx.label,
-    )
 
     # Combine header and output (validation success is indicated by action success)
     success_content = """✅ WASM file is valid

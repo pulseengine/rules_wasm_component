@@ -85,6 +85,17 @@ def _js_component_impl(ctx):
             wit_file = wit_file,
             package_name = ctx.attr.package_name or "{}:component@1.0.0".format(ctx.attr.name),
         ),
+        component_type = "component",
+        imports = [],  # TODO: Parse from WIT
+        exports = [ctx.attr.world] if ctx.attr.world else [],
+        metadata = {
+            "name": ctx.label.name,
+            "language": "javascript",
+            "target": "wasm32-wasi",
+            "componentize_js": True,
+        },
+        profile = "release",  # ComponentizeJS always produces optimized output
+        profile_variants = {},
     )
 
     return [

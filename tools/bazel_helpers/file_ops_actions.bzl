@@ -5,7 +5,7 @@ WebAssembly component calls for cross-platform file operations.
 
 Usage:
     load("//tools/bazel_helpers:file_ops_actions.bzl", "file_ops_action", "prepare_workspace_action")
-    
+
     # In your rule implementation:
     file_ops_action(ctx, "copy_file", src="input.txt", dest="output.txt")
     prepare_workspace_action(ctx, workspace_config)
