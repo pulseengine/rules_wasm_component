@@ -82,7 +82,6 @@ File: {}
         arguments = ["print", wasm_file.path, "--skeleton"],
         inputs = [wasm_file],
         outputs = [module_skeleton_output],
-        tools = [wasm_tools],
         mnemonic = "WasmModuleInfo",
         progress_message = "Extracting module info from %s" % ctx.label,
     )
