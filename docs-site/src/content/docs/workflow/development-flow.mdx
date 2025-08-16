@@ -16,7 +16,7 @@ Start by designing your component's public interface using the WebAssembly Inter
 Key considerations for interface design:
 
 - **Resource Management**: Define owned vs borrowed resources
-- **Error Handling**: Use `result<T, E>` types for fallible operations  
+- **Error Handling**: Use `result<T, E>` types for fallible operations
 - **Data Types**: Leverage rich WIT types (records, variants, lists)
 - **Versioning**: Plan for interface evolution with semantic versioning
 
@@ -62,7 +62,7 @@ sequenceDiagram
     participant WIT as wit-bindgen-rust
     participant Rust as Rust Compiler
     participant Tools as wasm-tools
-    
+
     Dev->>Bazel: bazel build :component
     Bazel->>WIT: Generate Rust bindings
     WIT-->>Bazel: Generated traits/types
@@ -82,7 +82,7 @@ sequenceDiagram
     participant WITG as go_wit_bindgen
     participant TinyGo as TinyGo Compiler
     participant Tools as wasm-tools
-    
+
     Dev->>Bazel: bazel build :component
     Bazel->>WITG: Generate Go bindings
     WITG-->>Bazel: Generated interfaces
@@ -145,7 +145,7 @@ rust_wasm_component(
     wit = ":interfaces",
     # Release optimizations
     compilation_mode = "opt",
-    # Link-time optimization  
+    # Link-time optimization
     rustc_flags = ["-C", "lto=fat"],
     # Size optimization
     wasm_opt = True,
@@ -166,23 +166,23 @@ graph TB
         UI[JavaScript UI Component]
         PROXY[Go HTTP Proxy]
     end
-    
+
     subgraph "Business Logic"
         CALC[Rust Calculator Service]
         VALID[C++ Validation Service]
     end
-    
+
     subgraph "Data Layer"
         STORE[Go Storage Service]
         CACHE[Rust Cache Component]
     end
-    
+
     UI --> PROXY
     PROXY --> CALC
     PROXY --> VALID
     CALC --> STORE
     VALID --> CACHE
-    
+
     style UI fill:#fff3e0
     style CALC fill:#e8f5e8
     style STORE fill:#e3f2fd

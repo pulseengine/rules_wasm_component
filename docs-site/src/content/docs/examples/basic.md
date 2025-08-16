@@ -8,6 +8,7 @@ Learn the fundamentals of WebAssembly components by building a simple "Hello Wor
 ## Overview
 
 This example demonstrates:
+
 - ✅ **WIT Interface Definition** - Defining component contracts
 - ✅ **Rust Implementation** - Building with `rust_wasm_component`
 - ✅ **Testing** - Validating component functionality
@@ -37,8 +38,9 @@ world hello {
 ```
 
 This interface defines:
+
 - **Package**: `hello:world@1.0.0` - A versioned package identifier
-- **World**: `hello` - The component's interface boundary  
+- **World**: `hello` - The component's interface boundary
 - **Export**: `hello` function that takes a string and returns a string
 
 ## Step 2: Configure the Build
@@ -51,7 +53,7 @@ load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
 
 # Define WIT library target
 wit_library(
-    name = "hello_interfaces", 
+    name = "hello_interfaces",
     srcs = ["wit/hello.wit"],
     package_name = "hello:world@1.0.0",
 )
@@ -95,6 +97,7 @@ basic_component_bindings::export!(Component with_types_in basic_component_bindin
 ```
 
 Key points:
+
 - **Generated bindings** - `basic_component_bindings` is auto-generated from WIT
 - **Guest trait** - Implement this trait to provide the component interface
 - **Export macro** - Makes the component available to the WebAssembly runtime
@@ -113,6 +116,7 @@ ls bazel-bin/examples/basic/
 ```
 
 The build process:
+
 1. **WIT processing** - Generates interface metadata
 2. **Binding generation** - Creates Rust bindings from WIT
 3. **Rust compilation** - Compiles to WebAssembly
@@ -254,6 +258,7 @@ impl Guest for Component {
 <div class="perf-indicator">🚀 <1ms startup time</div>
 
 This basic component demonstrates:
+
 - **Small binary size** - Minimal WebAssembly footprint
 - **Fast execution** - Direct function calls with no overhead
 - **Memory efficiency** - Stack-allocated strings for simple operations
@@ -270,6 +275,7 @@ Now that you have a working basic component:
 ## Troubleshooting
 
 **Build fails with "wit-bindgen not found":**
+
 ```bash
 # Check crate dependencies
 bazel query @crates//:wit-bindgen
@@ -279,12 +285,14 @@ cargo generate-lockfile
 ```
 
 **Component doesn't export functions:**
+
 ```rust
 // Ensure you have the export macro
 basic_component_bindings::export!(Component with_types_in basic_component_bindings);
 ```
 
 **wasmtime execution fails:**
+
 ```bash
 # Use WASI Preview 2
 wasmtime run --wasi preview2 component.wasm

@@ -202,20 +202,20 @@
   .demo-buttons {
     flex-direction: column;
   }
-  
+
   .language-tabs {
     overflow-x: auto;
     scrollbar-width: thin;
   }
-  
+
   .feature-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .mermaid {
     min-height: 300px !important;
   }
-  
+
   .diagram-modal .mermaid {
     max-width: 95vw;
     max-height: 85vh;

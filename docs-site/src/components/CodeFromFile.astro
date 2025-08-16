@@ -19,24 +19,24 @@ try {
   const fs = await import('fs');
   const path = await import('path');
   const { fileURLToPath } = await import('url');
-  
+
   // Get the repository root (go up from docs-site/src/components)
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const repoRoot = path.resolve(currentDir, '../../../');
   const filePath = path.resolve(repoRoot, file);
-  
+
   // Security check: ensure file is within repository
   if (!filePath.startsWith(repoRoot)) {
     throw new Error('File path outside repository');
   }
-  
+
   content = fs.readFileSync(filePath, 'utf8');
-  
+
   // Handle line selection if specified
   if (lines) {
     const allLines = content.split('\n');
     const selectedLines: string[] = [];
-    
+
     // Parse line specification (e.g., "1-10,15,20-25")
     const ranges = lines.split(',');
     for (const range of ranges) {
@@ -52,10 +52,10 @@ try {
         }
       }
     }
-    
+
     content = selectedLines.join('\n');
   }
-  
+
 } catch (e) {
   error = `Error reading file ${file}: ${e.message}`;
   content = error;
@@ -105,7 +105,7 @@ const displayTitle = title || file;
   .code-from-file {
     margin: 1rem 0;
   }
-  
+
   .error-message {
     background: #fee;
     border: 1px solid #fcc;
@@ -113,13 +113,13 @@ const displayTitle = title || file;
     padding: 1rem;
     color: #c00;
   }
-  
+
   .code-block {
     border-radius: 8px;
     overflow: hidden;
     background: var(--sl-color-gray-6);
   }
-  
+
   .code-header {
     display: flex;
     justify-content: space-between;
@@ -129,27 +129,27 @@ const displayTitle = title || file;
     border-bottom: 1px solid var(--sl-color-gray-4);
     font-size: 0.85rem;
   }
-  
+
   .file-path {
     font-family: var(--sl-font-mono);
     color: var(--sl-color-white);
     font-weight: 500;
   }
-  
+
   .file-lang {
     color: var(--sl-color-gray-2);
     text-transform: uppercase;
     font-size: 0.75rem;
     font-weight: 600;
   }
-  
+
   .code-block pre {
     margin: 0;
     padding: 1rem;
     background: transparent;
     overflow-x: auto;
   }
-  
+
   .code-block code {
     font-family: var(--sl-font-mono);
     font-size: 0.9rem;

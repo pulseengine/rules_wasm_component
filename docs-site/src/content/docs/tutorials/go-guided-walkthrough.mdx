@@ -30,7 +30,7 @@ graph TD
     F --> G[Core WebAssembly Module]
     G --> H[wasm-tools component new]
     H --> I[Final Component calculator_component.wasm]
-    
+
     style A fill:#e1f5fe
     style I fill:#f3e5f5
     style D fill:#fff3e0
@@ -43,8 +43,8 @@ graph TD
 
 ## Step 1: Advanced Interface Design (calculator.wit)
 
-**What:** Define a complex interface with real-world types  
-**Why:** Shows how WIT handles structured data and error conditions  
+**What:** Define a complex interface with real-world types
+**Why:** Shows how WIT handles structured data and error conditions
 **Pipeline Stage:** Interface specification with type safety
 
 ```wit title="examples/go_component/wit/calculator.wit"
@@ -145,8 +145,8 @@ supported-operations: list<string>,
 
 ## Step 2: Go Project Setup (go.mod)
 
-**What:** Configure Go module dependencies  
-**Why:** TinyGo needs specific WebAssembly tools  
+**What:** Configure Go module dependencies
+**Why:** TinyGo needs specific WebAssembly tools
 **Pipeline Stage:** Dependency management
 
 ```go title="examples/go_component/go.mod"
@@ -162,19 +162,19 @@ require github.com/bytecodealliance/wasm-tools-go v0.3.0
 ```go
 module github.com/example/calculator
 ```
-**What:** Go module identifier  
+**What:** Go module identifier
 **Why:** Required for TinyGo to understand package structure
 
 ```go
 go 1.21
 ```
-**What:** Go version requirement  
+**What:** Go version requirement
 **Why:** TinyGo has specific Go version compatibility requirements
 
 ```go
 require github.com/bytecodealliance/wasm-tools-go v0.3.0
 ```
-**What:** WebAssembly Component Model support for Go  
+**What:** WebAssembly Component Model support for Go
 **Why:** Provides the runtime support for component model features
 
 ### TinyGo vs Standard Go:
@@ -187,8 +187,8 @@ require github.com/bytecodealliance/wasm-tools-go v0.3.0
 
 ## Step 3: Build Configuration (BUILD.bazel)
 
-**What:** Configure the complete build pipeline  
-**Why:** Orchestrates WIT processing, code generation, and compilation  
+**What:** Configure the complete build pipeline
+**Why:** Orchestrates WIT processing, code generation, and compilation
 **Pipeline Stage:** Build system orchestration
 
 ```python title="examples/go_component/BUILD.bazel"
@@ -243,8 +243,8 @@ go_wit_bindgen(
     world = "calculator-world",
 )
 ```
-**What happens:** Generate Go code from WIT interface  
-**Generated files:** Go structs, types, and traits matching WIT  
+**What happens:** Generate Go code from WIT interface
+**Generated files:** Go structs, types, and traits matching WIT
 **Pipeline step:** WIT Interface → Go Types
 
 ```python
@@ -255,7 +255,7 @@ go_wasm_component(
     world = "calculator-world",
 )
 ```
-**What happens:** Complete TinyGo compilation pipeline  
+**What happens:** Complete TinyGo compilation pipeline
 **Pipeline steps:**
 1. Compile Go code with TinyGo
 2. Link with WebAssembly Component Model runtime
@@ -265,7 +265,7 @@ go_wasm_component(
 ```python
 adapter = "//wasm/adapters:wasi_snapshot_preview1"
 ```
-**What:** Compatibility adapter for WASI  
+**What:** Compatibility adapter for WASI
 **Why:** Bridges WASI Preview 1 and Preview 2 interfaces
 
 ### Build Features:
@@ -278,8 +278,8 @@ adapter = "//wasm/adapters:wasi_snapshot_preview1"
 
 ## Step 4: Implementation (calculator.go)
 
-**What:** Implement the business logic  
-**Why:** This is where the actual calculator functionality lives  
+**What:** Implement the business logic
+**Why:** This is where the actual calculator functionality lives
 **Pipeline Stage:** Component implementation with generated bindings
 
 ```go title="examples/go_component/calculator.go"
@@ -344,8 +344,8 @@ func (m *MathUtils) Power(a, b float64) float64 {
     return math.Pow(a, b)
 }
 ```
-**What:** Go's approach to object-oriented programming  
-**Why:** Groups related functionality together  
+**What:** Go's approach to object-oriented programming
+**Why:** Groups related functionality together
 **Component Model:** These become internal implementation details
 
 **Error Handling:**
@@ -357,7 +357,7 @@ func (m *MathUtils) SquareRoot(a float64) (float64, error) {
     return math.Sqrt(a), nil
 }
 ```
-**What:** Go's explicit error handling pattern  
+**What:** Go's explicit error handling pattern
 **Component Model:** Errors are handled through WIT result types
 
 **Validation Logic:**
@@ -369,15 +369,15 @@ func ValidateOperation(op string, a, b float64) error {
     // ...
 }
 ```
-**What:** Input validation and error checking  
+**What:** Input validation and error checking
 **Why:** Ensures component robustness and proper error reporting
 
 ---
 
 ## Step 5: Entry Point (main.go)
 
-**What:** Minimal entry point for TinyGo  
-**Why:** TinyGo requires a main function even for components  
+**What:** Minimal entry point for TinyGo
+**Why:** TinyGo requires a main function even for components
 **Pipeline Stage:** Component initialization
 
 ```go title="examples/go_component/main.go"
@@ -611,7 +611,7 @@ go func() { ... }() // ⚠️ Limited scheduler
 ## Step 10: Common Issues and Debugging
 
 ### Issue 1: "TinyGo build failed"
-**Symptom:** Build error during compilation  
+**Symptom:** Build error during compilation
 **Common causes:**
 - Using unsupported standard library packages
 - Reflection usage
@@ -624,17 +624,17 @@ tinygo build -target=wasip2 -o test.wasm simple_main.go
 ```
 
 ### Issue 2: "Component validation failed"
-**Symptom:** wasm-tools validation error  
-**Cause:** WIT interface mismatch with Go implementation  
+**Symptom:** wasm-tools validation error
+**Cause:** WIT interface mismatch with Go implementation
 **Fix:** Ensure generated bindings are used correctly
 
 ### Issue 3: "WASI interface not found"
-**Symptom:** Runtime error when calling component  
-**Cause:** WASI Preview 1 vs Preview 2 mismatch  
+**Symptom:** Runtime error when calling component
+**Cause:** WASI Preview 1 vs Preview 2 mismatch
 **Fix:** Use compatible runtimes (wasmtime 14+)
 
 ### Issue 4: "Import resolution failed"
-**Symptom:** Module not found during build  
+**Symptom:** Module not found during build
 **Debug:**
 ```bash
 # Check go.mod is correctly configured
@@ -659,7 +659,7 @@ func processLargeData(data []float64) []float64 {
     // Process in chunks to avoid large allocations
     const chunkSize = 1000
     result := make([]float64, 0, len(data))
-    
+
     for i := 0; i < len(data); i += chunkSize {
         end := i + chunkSize
         if end > len(data) {
@@ -668,7 +668,7 @@ func processLargeData(data []float64) []float64 {
         chunk := processChunk(data[i:end])
         result = append(result, chunk...)
     }
-    
+
     return result
 }
 ```
@@ -698,7 +698,7 @@ func Divide(a, b float64) CalculationResult {
             Value:   nil,
         }
     }
-    
+
     result := a / b
     return CalculationResult{
         Success: true,
@@ -734,15 +734,15 @@ func MultiplyMatrices(a, b Matrix) (Matrix, error) {
     if a.Cols != b.Rows {
         return Matrix{}, fmt.Errorf("incompatible matrix dimensions")
     }
-    
+
     result := Matrix{
         Rows: a.Rows,
         Cols: b.Cols,
         Data: make([]float64, a.Rows * b.Cols),
     }
-    
+
     // Matrix multiplication logic...
-    
+
     return result, nil
 }
 ```

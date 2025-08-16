@@ -16,28 +16,28 @@ The WebAssembly Component Model development process follows a structured pipelin
 ```mermaid
 graph TD
     A[WIT Interface Definition] --> B[Language-Specific Bindgen]
-    B --> C[Component Implementation] 
+    B --> C[Component Implementation]
     C --> D[WebAssembly Core Module]
     D --> E[WASI Adapter Integration]
     E --> F[Component Wrapping]
     F --> G[Validation & Optimization]
     G --> H[Component Registry/Deployment]
-    
+
     B1[wit-bindgen-rust] --> C1[Rust Implementation]
     B2[wit-bindgen-go] --> C2[Go Implementation]
     B3[wit-bindgen-c] --> C3[C++ Implementation]
     B4[jco] --> C4[JS Implementation]
-    
+
     B --> B1
     B --> B2
     B --> B3
     B --> B4
-    
+
     C1 --> D
     C2 --> D
     C3 --> D
     C4 --> D
-    
+
     style A fill:#e1f5fe
     style H fill:#f3e5f5
     style G fill:#fff3e0
@@ -53,49 +53,49 @@ graph LR
         WIT[WIT Files]
         WL[wit_library rule]
     end
-    
-    subgraph "Code Generation" 
+
+    subgraph "Code Generation"
         WBR[wit-bindgen-rust]
         WBG[wit-bindgen-go]
         WBC[wit-bindgen-c]
         JCO[jco/componentize-js]
     end
-    
+
     subgraph "Language Toolchains"
         RUST[Rust Compiler]
         TINYGO[TinyGo Compiler]
         WASISDK[WASI SDK]
         NODE[Node.js]
     end
-    
+
     subgraph "WebAssembly Tools"
         WT[wasm-tools]
         WZ[Wizer]
         VA[WASI Adapters]
     end
-    
+
     subgraph "Composition & Deployment"
         WAC[WAC Composer]
         WKG[WKG Registry]
         OCI[OCI Registries]
     end
-    
+
     WIT --> WL
     WL --> WBR
-    WL --> WBG  
+    WL --> WBG
     WL --> WBC
     WL --> JCO
-    
+
     WBR --> RUST
     WBG --> TINYGO
     WBC --> WASISDK
     JCO --> NODE
-    
+
     RUST --> WT
     TINYGO --> WT
     WASISDK --> WT
     NODE --> WT
-    
+
     WT --> WZ
     WT --> VA
     WZ --> WAC
@@ -136,41 +136,41 @@ flowchart TB
         WIT2[http-service.wit]
         WIT3[storage.wit]
     end
-    
+
     subgraph "Language Implementations"
         RUST1[Rust Calculator]
         GO1[Go HTTP Service]
         CPP1[C++ Storage]
         JS1[JS Frontend]
     end
-    
+
     subgraph "Component Layer"
         COMP1[Calculator Component]
         COMP2[HTTP Component]
         COMP3[Storage Component]
         COMP4[Frontend Component]
     end
-    
+
     subgraph "Composition Layer"
         WAC1[microservices.wac]
         SYS[Distributed System]
     end
-    
+
     WIT1 --> RUST1
     WIT2 --> GO1
     WIT3 --> CPP1
     WIT1 --> JS1
-    
+
     RUST1 --> COMP1
     GO1 --> COMP2
     CPP1 --> COMP3
     JS1 --> COMP4
-    
+
     COMP1 --> WAC1
     COMP2 --> WAC1
     COMP3 --> WAC1
     COMP4 --> WAC1
-    
+
     WAC1 --> SYS
 ```
 
@@ -185,7 +185,7 @@ sequenceDiagram
     participant Dev as Developer
     participant Wizer as Wizer Tool
     participant Runtime as Runtime Host
-    
+
     Dev->>Wizer: Core Module + Init Function
     Wizer->>Wizer: Execute Initialization
     Wizer->>Wizer: Snapshot Memory State
@@ -211,24 +211,24 @@ graph TB
         BUILD[bazel build]
         COMP[Component Binary]
     end
-    
+
     subgraph "Registry Publishing"
         PUSH[oci_push rule]
         REG[OCI Registry]
         META[Component Metadata]
     end
-    
+
     subgraph "Consumption"
         PULL[oci_pull rule]
         DEP[Dependency Resolution]
         COMPOSE[WAC Composition]
     end
-    
+
     BUILD --> COMP
     COMP --> PUSH
     PUSH --> REG
     PUSH --> META
-    
+
     REG --> PULL
     META --> DEP
     PULL --> COMPOSE

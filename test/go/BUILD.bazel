@@ -105,9 +105,9 @@ go_component_exports_test(
 
 go_component_validation_test(
     name = "test_release_vs_debug_profiles",
-    target_under_test = "//examples/go_component:calculator_component",
     debug_target = "//examples/go_component:calculator_component_debug",
     release_target = "//examples/go_component:calculator_component",
+    target_under_test = "//examples/go_component:calculator_component",
 )
 
 # Test Suite Definition

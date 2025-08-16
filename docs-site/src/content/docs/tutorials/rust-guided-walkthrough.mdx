@@ -31,7 +31,7 @@ graph TD
     F --> G[Core WebAssembly Module]
     G --> H[wasm-tools component new]
     H --> I[Final Component hello_component.wasm]
-    
+
     style A fill:#e1f5fe
     style I fill:#f3e5f5
     style D fill:#fff3e0
@@ -43,8 +43,8 @@ Now let's walk through each step:
 
 ## Step 1: Interface Design (hello.wit)
 
-**What:** Define the public interface your component will expose  
-**Why:** This is the "contract" - what functions your component provides and what types they use  
+**What:** Define the public interface your component will expose
+**Why:** This is the "contract" - what functions your component provides and what types they use
 **Pipeline Stage:** Starting point - everything else builds from this
 
 ```wit title="examples/basic/wit/hello.wit"
@@ -97,8 +97,8 @@ world hello-world {
 
 ## Step 2: Build Configuration (BUILD.bazel)
 
-**What:** Tell Bazel how to build our component  
-**Why:** Orchestrates the entire pipeline automatically  
+**What:** Tell Bazel how to build our component
+**Why:** Orchestrates the entire pipeline automatically
 **Pipeline Stage:** Build system coordination
 
 ```python title="examples/basic/BUILD.bazel"
@@ -138,7 +138,7 @@ rust_wasm_component_test(
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 ```
-**What happens:** Import the Bazel rules we need  
+**What happens:** Import the Bazel rules we need
 **Why:** These rules know how to handle WIT files and Rust components
 
 ```python
@@ -149,8 +149,8 @@ wit_library(
     world = "hello-world",
 )
 ```
-**What happens:** Process the WIT file and validate it  
-**Pipeline step:** WIT Interface Definition → Validated Interface  
+**What happens:** Process the WIT file and validate it
+**Pipeline step:** WIT Interface Definition → Validated Interface
 **Generated output:** Internal Bazel representation of the interface
 
 ```python
@@ -161,7 +161,7 @@ rust_wasm_component_bindgen(
     world = "hello-world",
 )
 ```
-**What happens:** Generate Rust bindings + compile to WebAssembly component  
+**What happens:** Generate Rust bindings + compile to WebAssembly component
 **Pipeline step:** Multiple stages in one rule:
 1. Generate Rust traits/types from WIT
 2. Compile your Rust code with these bindings
@@ -182,8 +182,8 @@ rust_wasm_component_bindgen(
 
 ## Step 3: Implementation (src/lib.rs)
 
-**What:** Write the actual business logic  
-**Why:** This is where your component's behavior is defined  
+**What:** Write the actual business logic
+**Why:** This is where your component's behavior is defined
 **Pipeline Stage:** Component Implementation
 
 ```rust title="examples/basic/src/lib.rs"
@@ -210,14 +210,14 @@ hello_component_bindings::export!(Component with_types_in hello_component_bindin
 ```rust
 use hello_component_bindings::exports::hello::interfaces::greeting::Guest;
 ```
-**What happens:** Import the generated bindings  
-**Where this comes from:** The `rust_wasm_component_bindgen` rule generated this  
+**What happens:** Import the generated bindings
+**Where this comes from:** The `rust_wasm_component_bindgen` rule generated this
 **Key insight:** You never write these bindings manually - they're generated from WIT
 
 ```rust
 struct Component;
 ```
-**What:** Your component implementation  
+**What:** Your component implementation
 **Pattern:** Empty struct that implements the generated trait
 
 ```rust
@@ -227,14 +227,14 @@ impl Guest for Component {
     }
 }
 ```
-**What happens:** Implement the interface defined in WIT  
-**Type safety:** Function signature must exactly match `hello.wit`  
+**What happens:** Implement the interface defined in WIT
+**Type safety:** Function signature must exactly match `hello.wit`
 **Business logic:** Your actual component behavior
 
 ```rust
 hello_component_bindings::export!(Component with_types_in hello_component_bindings);
 ```
-**What happens:** Export this implementation as the component's public interface  
+**What happens:** Export this implementation as the component's public interface
 **Generated macro:** Creates all the WebAssembly component model plumbing
 
 ### Key Insights:
@@ -357,16 +357,16 @@ import http:server@1.0.0 from registry.example.com/http-server:v1.0.0;
 ## Common Issues and Debugging
 
 ### Issue 1: Build Fails with "WIT validation error"
-**Symptom:** Error when running `bazel build`  
-**Cause:** Syntax error in `hello.wit`  
+**Symptom:** Error when running `bazel build`
+**Cause:** Syntax error in `hello.wit`
 **Fix:** Check WIT syntax - common issues:
 - Missing semicolons
 - Incorrect type names
 - Package name format
 
 ### Issue 2: "Function signature mismatch"
-**Symptom:** Rust compilation error  
-**Cause:** Your Rust function doesn't match the WIT interface  
+**Symptom:** Rust compilation error
+**Cause:** Your Rust function doesn't match the WIT interface
 **Fix:** Ensure exact type matching:
 ```rust
 // WIT: hello: func(name: string) -> string;
@@ -375,8 +375,8 @@ fn hello(name: String) -> String { ... }
 ```
 
 ### Issue 3: Component won't run
-**Symptom:** `wasmtime` fails to load component  
-**Cause:** Component model format issue  
+**Symptom:** `wasmtime` fails to load component
+**Cause:** Component model format issue
 **Debug:**
 ```bash
 # Check component structure
@@ -385,8 +385,8 @@ wasm-tools component wit bazel-bin/hello_component.wasm
 ```
 
 ### Issue 4: "Module not found" errors
-**Symptom:** Bazel can't find rules or dependencies  
-**Cause:** Missing dependencies in `MODULE.bazel`  
+**Symptom:** Bazel can't find rules or dependencies
+**Cause:** Missing dependencies in `MODULE.bazel`
 **Fix:** Ensure you have:
 ```python
 bazel_dep(name = "rules_wasm_component", version = "1.0.0")

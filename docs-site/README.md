@@ -7,12 +7,14 @@ This is the official documentation site for `rules_wasm_component`, built with A
 ## 🚀 Project Status: Ready for Deployment
 
 ✅ **Core Infrastructure Complete**
+
 - Astro Starlight configured and optimized
 - Responsive design with custom styling
 - Search functionality with Pagefind
 - GitHub Actions deployment pipeline
 
-✅ **Content Architecture**  
+✅ **Content Architecture**
+
 - Homepage with feature overview
 - Getting started guide
 - Installation instructions
@@ -21,6 +23,7 @@ This is the official documentation site for `rules_wasm_component`, built with A
 - Automated deployment setup
 
 ✅ **Performance Optimized**
+
 - Static site generation for fast loading
 - Optimized images and assets
 - CDN-ready configuration
@@ -29,6 +32,7 @@ This is the official documentation site for `rules_wasm_component`, built with A
 ## 🛠 Development
 
 ### Local Development
+
 ```bash
 # Install dependencies
 npm install
@@ -45,6 +49,7 @@ npm run preview
 ```
 
 ### Adding Content
+
 1. Create `.md` or `.mdx` files in `src/content/docs/`
 2. Update navigation in `astro.config.mjs` sidebar configuration
 3. Test locally with `npm run dev`
@@ -52,14 +57,17 @@ npm run preview
 ## 🚀 Deployment
 
 ### Automated Deployment (Recommended)
+
 The site automatically deploys to Netcup hosting when changes are pushed to the main branch.
 
 **Setup Requirements:**
+
 1. Configure GitHub secrets (see DEPLOYMENT.md)
 2. Set up FTP credentials for Netcup
 3. Optional: Configure Cloudflare for CDN
 
 **Deployment Process:**
+
 - Triggered on push to main branch with `docs-site/` changes
 - Builds static site with Astro
 - Deploys via FTP to Netcup hosting
@@ -75,6 +83,7 @@ The site automatically deploys to Netcup hosting when changes are pushed to the 
 ## 🎯 Content Status
 
 ### ✅ Completed Pages
+
 - **Homepage** (`/`) - Feature overview and quick start
 - **Getting Started** (`/getting-started/`) - Installation and first component
 - **Installation** (`/installation/`) - Complete setup guide
@@ -85,6 +94,7 @@ The site automatically deploys to Netcup hosting when changes are pushed to the 
 - **WAC Composition** (`/composition/wac/`) - Multi-component systems
 
 ### 🚧 Planned Content
+
 - C++ and JavaScript language guides
 - Calculator and HTTP service examples
 - OCI publishing and production guides

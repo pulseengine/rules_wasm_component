@@ -1,0 +1,48 @@
+"""Platform definitions for cross-compilation"""
+
+package(default_visibility = ["//visibility:public"])
+
+# Linux x86_64
+platform(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+)
+
+# Linux ARM64
+platform(
+    name = "linux_arm64", 
+    constraint_values = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:linux",
+    ],
+)
+
+# macOS x86_64
+platform(
+    name = "macos_x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64", 
+        "@platforms//os:macos",
+    ],
+)
+
+# macOS ARM64 (M1/M2)
+platform(
+    name = "macos_arm64",
+    constraint_values = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos", 
+    ],
+)
+
+# Windows x86_64
+platform(
+    name = "windows_x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)

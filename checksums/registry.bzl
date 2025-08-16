@@ -1,33 +1,33 @@
 """Centralized checksum registry API for WebAssembly toolchain
 
 This module provides a unified API for accessing tool checksums stored in JSON files.
-All checksum data is loaded from checksums/tools/*.json files, providing a single 
+All checksum data is loaded from checksums/tools/*.json files, providing a single
 source of truth for tool versions and platform-specific checksums.
 """
 
 def _load_tool_checksums(tool_name):
     """Load checksums for a tool from JSON file
-    
+
     Args:
         tool_name: Name of the tool (e.g., 'wasm-tools', 'wit-bindgen')
-        
+
     Returns:
         Dict: Tool data from JSON file, or empty dict if not found
     """
-    
+
     # For now, return fallback data until JSON loading is fully implemented
     # This maintains compatibility while we transition to JSON-only storage
     tool_data = _get_fallback_checksums(tool_name)
-    
+
     return tool_data
 
 def _get_fallback_checksums(tool_name):
     """Fallback checksums sourced from JSON files
-    
+
     This data is synchronized with checksums/tools/*.json files.
     Eventually this will be replaced with direct JSON loading.
     """
-    
+
     fallback_data = {
         "wasm-tools": {
             "tool_name": "wasm-tools",
@@ -60,7 +60,7 @@ def _get_fallback_checksums(tool_name):
                     },
                 },
                 "1.236.0": {
-                    "release_date": "2025-07-28", 
+                    "release_date": "2025-07-28",
                     "platforms": {
                         "darwin_amd64": {
                             "sha256": "d9356a9de047598d6c2b8ff4a5318c9305485152430e85ceec78052a9bd08828",
@@ -278,7 +278,7 @@ def _get_fallback_checksums(tool_name):
             },
         },
     }
-    
+
     return fallback_data.get(tool_name, {})
 
 def get_tool_checksum(tool_name, version, platform):
@@ -396,36 +396,36 @@ def validate_tool_exists(tool_name, version, platform):
 
 def get_tool_metadata(tool_name):
     """Get tool metadata including GitHub repo and latest version
-    
+
     Args:
         tool_name: Name of the tool
-        
+
     Returns:
         Dict: Tool metadata including github_repo, latest_version, etc.
     """
-    
+
     tool_data = _load_tool_checksums(tool_name)
     if not tool_data:
         return {}
-    
+
     return {
         "tool_name": tool_data.get("tool_name"),
-        "github_repo": tool_data.get("github_repo"), 
+        "github_repo": tool_data.get("github_repo"),
         "latest_version": tool_data.get("latest_version"),
         "build_type": tool_data.get("build_type", "binary"),
     }
 
 def list_available_tools():
     """List all available tools in the registry
-    
+
     Returns:
         List: List of available tool names
     """
-    
+
     # Return tools that have fallback data available
     return [
         "wasm-tools",
-        "wit-bindgen", 
+        "wit-bindgen",
         "wac",
         "wkg",
         "wasmtime",
@@ -435,16 +435,16 @@ def list_available_tools():
 
 def validate_tool_compatibility(tools_config):
     """Validate that tool versions are compatible with each other
-    
+
     Args:
         tools_config: Dict mapping tool names to versions
-        
+
     Returns:
         List: List of warning messages for compatibility issues
     """
-    
+
     warnings = []
-    
+
     # Define compatibility matrix (sourced from tool_versions.bzl)
     compatibility_matrix = {
         "1.235.0": {
@@ -454,12 +454,12 @@ def validate_tool_compatibility(tools_config):
             "wasmsign2": ["0.2.6"],
         },
     }
-    
+
     if "wasm-tools" in tools_config:
         wasm_tools_version = tools_config["wasm-tools"]
         if wasm_tools_version in compatibility_matrix:
             compat_info = compatibility_matrix[wasm_tools_version]
-            
+
             for tool, version in tools_config.items():
                 if tool != "wasm-tools" and tool in compat_info:
                     if version not in compat_info[tool]:
@@ -467,24 +467,24 @@ def validate_tool_compatibility(tools_config):
                             "Warning: {} version {} may not be compatible with wasm-tools {}. " +
                             "Recommended versions: {}".format(
                                 tool,
-                                version, 
+                                version,
                                 wasm_tools_version,
                                 ", ".join(compat_info[tool]),
                             ),
                         )
-    
+
     return warnings
 
 def get_recommended_versions(stability = "stable"):
     """Get recommended tool versions for a given stability level
-    
+
     Args:
         stability: Stability level ("stable" or "latest")
-        
+
     Returns:
         Dict: Mapping of tool names to recommended versions
     """
-    
+
     # Define default versions (sourced from tool_versions.bzl)
     default_versions = {
         "stable": {
@@ -495,18 +495,18 @@ def get_recommended_versions(stability = "stable"):
             "wasmsign2": "0.2.6",
         },
         "latest": {
-            "wasm-tools": "1.235.0", 
+            "wasm-tools": "1.235.0",
             "wac": "0.7.0",
             "wit-bindgen": "0.43.0",
             "wkg": "0.11.0",
             "wasmsign2": "0.2.6",
         },
     }
-    
+
     if stability not in default_versions:
         fail("Unknown stability level: {}. Available: {}".format(
             stability,
             ", ".join(default_versions.keys()),
         ))
-    
+
     return default_versions[stability]

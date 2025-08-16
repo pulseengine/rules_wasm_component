@@ -119,9 +119,9 @@ impl Guest for AdvancedCalculator {
         if base == 0.0 && exponent < 0.0 {
             return Err("Cannot raise zero to negative power".to_string());
         }
-        
+
         let result = base.powf(exponent);
-        
+
         if result.is_infinite() {
             Err("Result overflow".to_string())
         } else if result.is_nan() {
@@ -151,19 +151,19 @@ interface operations {
         x: f64,
         y: f64,
     }
-    
+
     variant calculation-result {
         success(f64),
         error(string),
     }
-    
+
     enum operation-type {
         add,
         subtract,
         multiply,
         divide,
     }
-    
+
     calculate-batch: func(operations: list<operation-type>, values: list<point>) -> list<calculation-result>;
 }
 ```
@@ -177,7 +177,7 @@ struct DataProcessor;
 
 impl Guest for DataProcessor {
     fn calculate_batch(
-        operations: Vec<OperationType>, 
+        operations: Vec<OperationType>,
         values: Vec<Point>
     ) -> Vec<CalculationResult> {
         operations.iter().zip(values.iter())
@@ -255,19 +255,19 @@ use wasmtime_wasi::{WasiCtx, WasiView};
 async fn test_calculator_component() -> wasmtime::Result<()> {
     let engine = Engine::default();
     let component = Component::from_file(&engine, "calculator_component.wasm")?;
-    
+
     let mut store = Store::new(&engine, WasiCtx::new());
     let mut linker = Linker::new(&engine);
-    
+
     // Add WASI bindings
     wasmtime_wasi::add_to_linker_async(&mut linker)?;
-    
+
     let instance = linker.instantiate_async(&mut store, &component).await?;
-    
+
     // Test the calculator functions
     let add_func = instance.get_typed_func::<(f64, f64), f64>(&mut store, "add")?;
     let result = add_func.call_async(&mut store, (5.0, 3.0)).await?;
-    
+
     assert_eq!(result, 8.0);
     Ok(())
 }
@@ -314,11 +314,11 @@ impl Guest for OptimizedCalculator {
     fn batch_calculate(operations: &[f64]) -> Vec<f64> {
         // Pre-allocate result vector
         let mut results = Vec::with_capacity(operations.len());
-        
+
         for &value in operations {
             results.push(value * 2.0);
         }
-        
+
         results
     }
 }
@@ -329,6 +329,7 @@ impl Guest for OptimizedCalculator {
 ### Common Issues
 
 **Module naming conflicts:**
+
 ```rust
 // ❌ Wrong - conflicts with generated bindings
 mod calculator;
@@ -338,6 +339,7 @@ mod calculator_impl;
 ```
 
 **Missing export macro:**
+
 ```rust
 // ❌ Wrong - component won't export functions
 impl Guest for Calculator { /* ... */ }
@@ -347,6 +349,7 @@ calculator_component_bindings::export!(Calculator with_types_in calculator_compo
 ```
 
 **Build profile not found:**
+
 ```bash
 # Check available profiles
 bazel query 'kind(rust_wasm_component, //...)'
@@ -368,6 +371,7 @@ bazel query 'kind(rust_wasm_component, //...)'
 <div class="perf-indicator">💾 Low memory footprint with wee_alloc</div>
 
 Rust components offer excellent performance characteristics:
+
 - **Minimal runtime overhead** - No garbage collection
 - **Small binary size** - Efficient dead code elimination
 - **Memory safety** - Zero-cost abstractions

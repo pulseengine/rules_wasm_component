@@ -1,0 +1,131 @@
+"""BUILD file for wasm-tools from source"""
+
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Main wasm-tools binary
+rust_binary(
+    name = "wasm-tools",
+    srcs = ["@wasm_tools_src//:src/main.rs"],
+    deps = [
+        "@wasm_tools_src//:anyhow",
+        "@wasm_tools_src//:clap", 
+        "@wasm_tools_src//:env_logger",
+        "@wasm_tools_src//:log",
+        "@wasm_tools_src//:wasm_encoder",
+        "@wasm_tools_src//:wasm_mutate",
+        "@wasm_tools_src//:wasmparser",
+        "@wasm_tools_src//:wat",
+        "@wasm_tools_src//:wit_component",
+        "@wasm_tools_src//:wit_parser",
+    ],
+    crate_name = "wasm_tools",
+    edition = "2021",
+)
+
+# Multi-platform builds
+rust_binary(
+    name = "wasm-tools-linux-x86_64",
+    srcs = ["@wasm_tools_src//:src/main.rs"],
+    deps = [
+        "@wasm_tools_src//:anyhow",
+        "@wasm_tools_src//:clap",
+        "@wasm_tools_src//:env_logger", 
+        "@wasm_tools_src//:log",
+        "@wasm_tools_src//:wasm_encoder",
+        "@wasm_tools_src//:wasm_mutate",
+        "@wasm_tools_src//:wasmparser",
+        "@wasm_tools_src//:wat",
+        "@wasm_tools_src//:wit_component",
+        "@wasm_tools_src//:wit_parser",
+    ],
+    crate_name = "wasm_tools",
+    edition = "2021",
+    platform = "//platforms:linux_x86_64",
+    target_compatible_with = ["//platforms:linux_x86_64"],
+)
+
+rust_binary(
+    name = "wasm-tools-linux-arm64",
+    srcs = ["@wasm_tools_src//:src/main.rs"],
+    deps = [
+        "@wasm_tools_src//:anyhow",
+        "@wasm_tools_src//:clap",
+        "@wasm_tools_src//:env_logger",
+        "@wasm_tools_src//:log", 
+        "@wasm_tools_src//:wasm_encoder",
+        "@wasm_tools_src//:wasm_mutate",
+        "@wasm_tools_src//:wasmparser",
+        "@wasm_tools_src//:wat",
+        "@wasm_tools_src//:wit_component",
+        "@wasm_tools_src//:wit_parser",
+    ],
+    crate_name = "wasm_tools",
+    edition = "2021",
+    platform = "//platforms:linux_arm64",
+    target_compatible_with = ["//platforms:linux_arm64"],
+)
+
+rust_binary(
+    name = "wasm-tools-macos-x86_64",
+    srcs = ["@wasm_tools_src//:src/main.rs"],
+    deps = [
+        "@wasm_tools_src//:anyhow",
+        "@wasm_tools_src//:clap",
+        "@wasm_tools_src//:env_logger",
+        "@wasm_tools_src//:log",
+        "@wasm_tools_src//:wasm_encoder", 
+        "@wasm_tools_src//:wasm_mutate",
+        "@wasm_tools_src//:wasmparser",
+        "@wasm_tools_src//:wat",
+        "@wasm_tools_src//:wit_component",
+        "@wasm_tools_src//:wit_parser",
+    ],
+    crate_name = "wasm_tools",
+    edition = "2021",
+    platform = "//platforms:macos_x86_64",
+    target_compatible_with = ["//platforms:macos_x86_64"],
+)
+
+rust_binary(
+    name = "wasm-tools-macos-arm64",
+    srcs = ["@wasm_tools_src//:src/main.rs"],
+    deps = [
+        "@wasm_tools_src//:anyhow",
+        "@wasm_tools_src//:clap",
+        "@wasm_tools_src//:env_logger",
+        "@wasm_tools_src//:log",
+        "@wasm_tools_src//:wasm_encoder",
+        "@wasm_tools_src//:wasm_mutate",
+        "@wasm_tools_src//:wasmparser",
+        "@wasm_tools_src//:wat",
+        "@wasm_tools_src//:wit_component",
+        "@wasm_tools_src//:wit_parser",
+    ],
+    crate_name = "wasm_tools",
+    edition = "2021",
+    platform = "//platforms:macos_arm64",
+    target_compatible_with = ["//platforms:macos_arm64"],
+)
+
+rust_binary(
+    name = "wasm-tools-windows-x86_64",
+    srcs = ["@wasm_tools_src//:src/main.rs"],
+    deps = [
+        "@wasm_tools_src//:anyhow",
+        "@wasm_tools_src//:clap",
+        "@wasm_tools_src//:env_logger",
+        "@wasm_tools_src//:log",
+        "@wasm_tools_src//:wasm_encoder",
+        "@wasm_tools_src//:wasm_mutate",
+        "@wasm_tools_src//:wasmparser",
+        "@wasm_tools_src//:wat", 
+        "@wasm_tools_src//:wit_component",
+        "@wasm_tools_src//:wit_parser",
+    ],
+    crate_name = "wasm_tools",
+    edition = "2021",
+    platform = "//platforms:windows_x86_64",
+    target_compatible_with = ["//platforms:windows_x86_64"],
+)

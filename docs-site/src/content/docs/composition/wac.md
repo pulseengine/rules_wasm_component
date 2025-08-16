@@ -8,6 +8,7 @@ Learn how to compose multiple WebAssembly components into sophisticated applicat
 ## Overview
 
 WAC (WebAssembly Composition) allows you to:
+
 - ✅ **Connect Components** - Link multiple components together
 - ✅ **Define Data Flow** - Specify how data moves between components
 - ✅ **Create Applications** - Build complete systems from component parts
@@ -38,7 +39,7 @@ rust_wasm_component(
     deps = ["@crates//:wit-bindgen"],
 )
 
-# Backend component  
+# Backend component
 wit_library(
     name = "backend_interfaces",
     srcs = ["wit/backend.wit"],
@@ -61,13 +62,13 @@ wac_compose(
     },
     composition = """
         package composed:app@1.0.0;
-        
+
         let frontend = new frontend:ui { ... };
         let backend = new backend:api { ... };
-        
+
         // Connect frontend requests to backend
         connect frontend.make-request -> backend.handle-request;
-        
+
         // Export the frontend as the main interface
         export frontend as main;
     """,
@@ -120,30 +121,30 @@ wac_compose(
     name = "microservices_app",
     components = {
         ":api_gateway": "gateway:service",
-        ":auth_service": "auth:service", 
+        ":auth_service": "auth:service",
         ":data_service": "data:service",
         ":user_service": "user:service",
     },
     composition = """
         package microservices:system@1.0.0;
-        
+
         // Instantiate all services
         let gateway = new gateway:service { ... };
         let auth = new auth:service { ... };
         let data = new data:service { ... };
         let users = new user:service { ... };
-        
+
         // Connect authentication flow
         connect gateway.authenticate -> auth.verify-token;
         connect auth.get-user-info -> users.get-user;
-        
+
         // Connect data operations
         connect gateway.fetch-data -> data.query;
         connect gateway.store-data -> data.save;
-        
+
         // Connect user operations
         connect gateway.user-action -> users.handle-action;
-        
+
         // Export gateway as main entry point
         export gateway as main;
     """,
@@ -165,24 +166,24 @@ wac_compose(
     },
     composition = """
         package production:app@1.0.0;
-        
+
         let ui = new app:ui { ... };
         let db = new db:postgres { ... };
         let cache = new cache:redis { ... };
         let auth = new auth:oauth { ... };
-        
+
         // Primary data flow through database
         connect ui.fetch-data -> db.query;
         connect ui.save-data -> db.store;
-        
+
         // Cache layer for performance
         connect db.check-cache -> cache.get;
         connect db.update-cache -> cache.set;
-        
+
         // Authentication flow
         connect ui.login -> auth.authenticate;
         connect auth.verify -> db.check-permissions;
-        
+
         export ui as main;
     """,
 )
@@ -203,14 +204,14 @@ wac_compose(
     },
     composition = """
         package dev:app@1.0.0;
-        
+
         let ui = new app:ui { ... };
         let api = new mock:api { ... };
         let auth = new dev:auth { ... };
-        
+
         connect ui.api-call -> api.handle;
         connect ui.authenticate -> auth.dev-login;
-        
+
         export ui as main;
     """,
 )
@@ -225,14 +226,14 @@ wac_compose(
     },
     composition = """
         package prod:app@1.0.0;
-        
+
         let ui = new app:ui { ... };
         let api = new prod:api { ... };
         let auth = new oauth:service { ... };
-        
+
         connect ui.api-call -> api.handle;
         connect ui.authenticate -> auth.oauth-flow;
-        
+
         export ui as main;
     """,
 )
@@ -392,22 +393,22 @@ wac_compose(
     },
     composition = """
         package extensible:system@1.0.0;
-        
+
         let core = new core:application { ... };
         let pluginA = new plugins:feature-a { ... };
         let pluginB = new plugins:feature-b { ... };
         let pluginC = new plugins:feature-c { ... };
-        
+
         // Register plugins with core
         connect core.register-plugin -> pluginA.initialize;
         connect core.register-plugin -> pluginB.initialize;
         connect core.register-plugin -> pluginC.initialize;
-        
+
         // Plugin event handling
         connect core.dispatch-event -> pluginA.handle-event;
         connect core.dispatch-event -> pluginB.handle-event;
         connect core.dispatch-event -> pluginC.handle-event;
-        
+
         export core as main;
     """,
 )
@@ -418,6 +419,7 @@ wac_compose(
 ### Common Issues
 
 **Interface mismatch between components:**
+
 ```bash
 # Check component interfaces
 wasm-tools component wit component1.wasm
@@ -427,15 +429,17 @@ wasm-tools component wit component2.wasm
 ```
 
 **Connection syntax errors:**
+
 ```shell
 // ❌ Wrong - missing package context
 connect frontend.request -> backend.handle;
 
-// ✅ Correct - full component instance reference  
+// ✅ Correct - full component instance reference
 connect frontend.make-request -> backend.handle-request;
 ```
 
 **WASI import satisfaction:**
+
 ```shell
 // ✅ Use ... syntax to pass through WASI imports
 let component = new my:component { ... };
@@ -457,6 +461,7 @@ let component = new my:component { ... };
 <div class="perf-indicator">📦 Modular loading and execution</div>
 
 WAC compositions provide:
+
 - **Efficient Inter-component Communication** - Direct function calls
 - **Lazy Loading** - Components loaded only when needed
 - **Memory Isolation** - Components can't access each other's memory

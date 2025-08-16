@@ -1,5 +1,5 @@
 ---
-title: Go Components  
+title: Go Components
 description: Build WebAssembly components with Go using TinyGo and WASI Preview 2
 ---
 
@@ -8,7 +8,7 @@ Build efficient WebAssembly components with Go using TinyGo v0.38.0 and native W
 ## Features
 
 - **TinyGo v0.38.0** - Latest WebAssembly support with Component Model
-- **WASI Preview 2** - Native support for latest WASI specification  
+- **WASI Preview 2** - Native support for latest WASI specification
 - **Component Model** - Full WebAssembly Component Model compatibility
 - **Official Go Modules** - BytecodeAlliance go.bytecodealliance.org packages
 - **Automatic Toolchain** - TinyGo downloaded and managed by Bazel
@@ -58,13 +58,13 @@ interface handler {
         headers: list<tuple<string, string>>,
         body: list<u8>,
     }
-    
+
     record response {
         status: u16,
         headers: list<tuple<string, string>>,
         body: list<u8>,
     }
-    
+
     handle-request: func(req: request) -> response;
 }
 
@@ -229,7 +229,7 @@ func safeDivide(a, b int32) gen.Result[int32, string] {
         }
         return gen.ResultErr[int32, string](err.Error())
     }
-    
+
     return gen.ResultOk[int32, string](a / b)
 }
 
@@ -237,14 +237,14 @@ func safeRoot(n int32) gen.Result[float64, string] {
     if n < 0 {
         return gen.ResultErr[float64, string]("cannot calculate square root of negative number")
     }
-    
+
     // Note: This is a simplified square root calculation
     // In practice, you'd use a more sophisticated algorithm
     result := float64(n)
     for i := 0; i < 10; i++ {
         result = 0.5 * (result + float64(n)/result)
     }
-    
+
     return gen.ResultOk[float64, string](result)
 }
 ```
@@ -277,7 +277,7 @@ type Calculator struct {
 
 func (c *Calculator) CachedCalculate(operation string, a, b int32) int32 {
     key := fmt.Sprintf("%s:%d:%d", operation, a, b)
-    
+
     // Try to get from cache first
     c.mu.RLock()
     if result, exists := c.cache[key]; exists {
@@ -315,7 +315,7 @@ func putCalculator(c *Calculator) {
         delete(c.cache, k)
     }
     c.mu.Unlock()
-    
+
     calculatorPool.Put(c)
 }
 ```
@@ -361,10 +361,10 @@ func (c Calculator) FastAdd(numbers []int32) int32 {
 func (c Calculator) BatchCalculate(operations []string, operands [][2]int32) []gen.Result[int32, string] {
     // Pre-allocate result slice to avoid multiple allocations
     results := make([]gen.Result[int32, string], len(operations))
-    
+
     for i, op := range operations {
         a, b := operands[i][0], operands[i][1]
-        
+
         switch op {
         case "add":
             results[i] = gen.ResultOk[int32, string](a + b)
@@ -382,10 +382,10 @@ func (c Calculator) BatchCalculate(operations []string, operands [][2]int32) []g
             results[i] = gen.ResultErr[int32, string]("unknown operation")
         }
     }
-    
+
     // Force garbage collection to keep memory usage low
     runtime.GC()
-    
+
     return results
 }
 ```
@@ -420,36 +420,36 @@ import (
 func TestCalculatorComponent(t *testing.T) {
     engine := wasmtime.NewEngine()
     store := wasmtime.NewStore(engine)
-    
+
     // Load the component
     component, err := wasmtime.NewComponentFromFile(engine, "calculator_component.wasm")
     if err != nil {
         t.Fatalf("Failed to load component: %v", err)
     }
-    
+
     linker := wasmtime.NewLinker(engine)
-    
+
     // Add WASI support
     if err := linker.DefineWasi(); err != nil {
         t.Fatalf("Failed to define WASI: %v", err)
     }
-    
+
     instance, err := linker.Instantiate(store, component)
     if err != nil {
         t.Fatalf("Failed to instantiate: %v", err)
     }
-    
+
     // Test the add function
     addFunc := instance.GetFunc(store, "add")
     if addFunc == nil {
         t.Fatal("add function not found")
     }
-    
+
     result, err := addFunc.Call(store, 5, 3)
     if err != nil {
         t.Fatalf("add function call failed: %v", err)
     }
-    
+
     if result.(int32) != 8 {
         t.Errorf("Expected 8, got %v", result)
     }

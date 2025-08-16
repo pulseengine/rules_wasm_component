@@ -36,6 +36,7 @@ Add the following secrets to your GitHub repository:
 3. Find FTP access details under "FTP-Zugänge"
 
 Example values:
+
 ```
 NETCUP_URI: wp123.netcup-webspace.de
 NETCUP_USER: wp123-username
@@ -47,6 +48,7 @@ NETCUP_PASSWORD: your-ftp-password
 ### DNS Setup
 
 Point your domain to Netcup:
+
 1. Log into your domain registrar
 2. Update DNS A record:
    - Name: `rules_wasm_component` (or `@` for root domain)
@@ -64,6 +66,7 @@ Point your domain to Netcup:
 ### Manual Test
 
 1. Build the site locally:
+
    ```bash
    cd docs-site
    npm install
@@ -93,7 +96,7 @@ For better global performance, add Cloudflare:
 ### Configure Cloudflare
 
 1. **SSL/TLS**: Set to "Full (strict)"
-2. **Caching**: 
+2. **Caching**:
    - Browser TTL: 4 hours
    - Edge TTL: 2 hours
 3. **Page Rules**:
@@ -120,7 +123,7 @@ The deployment is configured via `.github/workflows/deploy.yml`:
 1. Checkout code
 2. Setup Node.js 20
 3. Install dependencies (npm ci)
-4. Build site (npm run build) 
+4. Build site (npm run build)
 5. Deploy via FTP to Netcup
 6. Optional: Purge Cloudflare cache
 ```
@@ -136,7 +139,8 @@ The deployment is configured via `.github/workflows/deploy.yml`:
 ### Verify Site
 
 After deployment, check:
-- https://rules_wasm_component.pulseengine.eu loads correctly
+
+- <https://rules_wasm_component.pulseengine.eu> loads correctly
 - All pages and assets work
 - Search functionality works
 - Mobile responsiveness
@@ -164,21 +168,25 @@ docs-site/
 ### Common Issues
 
 **FTP connection fails:**
+
 - Verify FTP credentials in GitHub secrets
 - Check if Netcup FTP service is running
 - Try connecting manually with an FTP client
 
 **Build fails:**
+
 - Check Node.js version compatibility
 - Verify package.json dependencies
 - Look at GitHub Actions logs for specific errors
 
 **Site loads but styles missing:**
+
 - Check if CSS files are being uploaded
 - Verify file permissions on Netcup
 - Clear browser cache
 
 **Search doesn't work:**
+
 - Ensure search index files are generated
 - Check if JavaScript files are uploaded correctly
 - Verify MIME types on server
@@ -203,6 +211,7 @@ ftp wp123.netcup-webspace.de
 
 **Enable Compression:**
 Add to `.htaccess` in webhosting root:
+
 ```apache
 # Enable compression
 <IfModule mod_deflate.c>
@@ -233,6 +242,7 @@ Add to `.htaccess` in webhosting root:
 ## Security
 
 **Protect sensitive paths:**
+
 ```apache
 # Block access to source files
 <Files "*.md">
