@@ -41,7 +41,7 @@ jobs:
 
       - name: Deploy to Netcup hosting
         # Only deploy if secrets are available
-        if: ${{ secrets.NETCUP_URI && secrets.NETCUP_USER && secrets.NETCUP_PASSWORD }}
+        if: env.NETCUP_URI != '' && env.NETCUP_USER != '' && env.NETCUP_PASSWORD != ''
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.NETCUP_URI }}
@@ -55,14 +55,23 @@ jobs:
             **/node_modules/**
             **/.DS_Store
             **/Thumbs.db
+        env:
+          NETCUP_URI: ${{ secrets.NETCUP_URI }}
+          NETCUP_USER: ${{ secrets.NETCUP_USER }}
+          NETCUP_PASSWORD: ${{ secrets.NETCUP_PASSWORD }}
       
       - name: Skip deployment (secrets not configured)
-        if: ${{ !secrets.NETCUP_URI || !secrets.NETCUP_USER || !secrets.NETCUP_PASSWORD }}
+        if: env.NETCUP_URI == '' || env.NETCUP_USER == '' || env.NETCUP_PASSWORD == ''
         run: echo "Skipping deployment - Netcup secrets not configured"
+        env:
+          NETCUP_URI: ${{ secrets.NETCUP_URI }}
+          NETCUP_USER: ${{ secrets.NETCUP_USER }}
+          NETCUP_PASSWORD: ${{ secrets.NETCUP_PASSWORD }}
 
       - name: Purge Cloudflare cache (optional)
-        if: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        if: env.CLOUDFLARE_ZONE_ID != ''
         uses: jakejarvis/cloudflare-purge-action@master
         env:
           CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
