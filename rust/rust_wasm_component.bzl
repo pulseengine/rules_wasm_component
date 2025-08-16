@@ -24,13 +24,13 @@ def _rust_wasm_component_impl(ctx):
         # We can skip conversion by directly using the input
         component_wasm = wasm_module
 
-    # Extract metadata if wit_bindgen was used
+    # Extract metadata if wit was used
     wit_info = None
     imports = []
     exports = []
 
-    if ctx.attr.wit_bindgen:
-        wit_info = ctx.attr.wit_bindgen[WitInfo]
+    if ctx.attr.wit:
+        wit_info = ctx.attr.wit[WitInfo]
         # TODO: Parse WIT to extract imports/exports
         # Future: Use wit-parser or wasm-tools to extract interface definitions
         # imports = parse_wit_imports(wit_info.wit_files)
@@ -66,7 +66,7 @@ _rust_wasm_component_rule = rule(
             cfg = wasm_transition,
             doc = "Compiled WASM module from rust_library",
         ),
-        "wit_bindgen": attr.label(
+        "wit": attr.label(
             providers = [WitInfo],
             doc = "WIT library for binding generation",
         ),
@@ -87,7 +87,7 @@ def rust_wasm_component(
         name,
         srcs,
         deps = [],
-        wit_bindgen = None,
+        wit = None,
         adapter = None,
         crate_features = [],
         rustc_flags = [],
@@ -105,7 +105,7 @@ def rust_wasm_component(
         name: Target name
         srcs: Rust source files
         deps: Rust dependencies
-        wit_bindgen: WIT library for binding generation
+        wit: WIT library for binding generation
         adapter: Optional WASI adapter
         crate_features: Rust crate features to enable
         rustc_flags: Additional rustc flags
@@ -118,7 +118,7 @@ def rust_wasm_component(
         rust_wasm_component(
             name = "my_component",
             srcs = ["src/lib.rs"],
-            wit_bindgen = "//wit:my_interfaces",
+            wit = "//wit:my_interfaces",
             profiles = ["debug", "release"],  # Build both variants
             deps = [
                 "@crates//:serde",
@@ -163,7 +163,7 @@ def rust_wasm_component(
         all_deps = list(deps)
 
         # Generate WIT bindings before building the rust library
-        if wit_bindgen:
+        if wit:
             # Import wit_bindgen rule at the top of the file
             # This is done via load() at the file level
             pass
@@ -192,7 +192,7 @@ def rust_wasm_component(
         _rust_wasm_component_rule(
             name = component_name,
             wasm_module = ":" + rust_library_name,
-            wit_bindgen = wit_bindgen,
+            wit = wit,
             adapter = adapter,
             component_type = "component",
             visibility = ["//visibility:private"],

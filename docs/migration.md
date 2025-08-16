@@ -37,7 +37,7 @@ wit_library(
 rust_wasm_component(
     name = "my_component",
     srcs = ["src/lib.rs"],
-    wit_bindgen = ":interfaces",
+    wit = ":interfaces",
 )
 
 wac_compose(

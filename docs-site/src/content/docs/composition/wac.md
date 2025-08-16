@@ -34,7 +34,7 @@ wit_library(
 rust_wasm_component(
     name = "frontend_component",
     srcs = ["src/frontend.rs"],
-    wit_bindgen = ":frontend_interfaces",
+    wit = ":frontend_interfaces",
     deps = ["@crates//:wit-bindgen"],
 )
 
@@ -48,7 +48,7 @@ wit_library(
 rust_wasm_component(
     name = "backend_component",
     srcs = ["src/backend.rs"],
-    wit_bindgen = ":backend_interfaces",
+    wit = ":backend_interfaces",
     deps = ["@crates//:wit-bindgen"],
 )
 

@@ -285,8 +285,8 @@ wac_compose_with_oci(
     """,
     local_components = {
         "frontend": ":frontend_component",
-        "mock_auth": "//test:mock_auth_component",
-        "mock_data": "//test:mock_data_component",
+        "mock_auth": "//test/integration:service_a_component",
+        "mock_data": "//test/integration:service_b_component",
     },
     oci_components = {},  # No external dependencies for development
 )

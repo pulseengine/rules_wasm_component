@@ -10,7 +10,7 @@ cpp_wit_bindgen(
 cpp_component(
     name = "auth_service_cpp",
     srcs = ["test/simple_auth.cpp"],
-    wit_bindgen = ":auth_service_bindings_cpp",
+    wit = "wit/auth_service.wit",
     target_compatible_with = ["@platforms//cpu:wasm32"],
 )
 

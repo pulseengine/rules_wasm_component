@@ -23,7 +23,7 @@ package(default_visibility = ["//visibility:public"])
 # Import all language-specific test suites
 alias(
     name = "rust_tests",
-    actual = "//test/unit:all_tests",  # Rust tests already exist
+    actual = "//test/unit:unit_tests",  # Rust tests already exist
     visibility = ["//visibility:public"],
 )
 
@@ -49,10 +49,10 @@ alias(
 test_suite(
     name = "all_language_support_tests",
     tests = [
-        ":cpp_tests",
-        ":go_tests",
-        ":javascript_tests",
-        ":rust_tests",
+        "//test/cpp:all_cpp_tests",
+        "//test/go:all_go_tests",
+        "//test/js:all_js_tests",
+        "//test/unit:unit_tests",
     ],
     visibility = ["//visibility:public"],
 )
@@ -64,7 +64,7 @@ test_suite(
         "//test/cpp:cpp_component_tests",
         "//test/go:go_component_tests",
         "//test/js:js_component_tests",
-        "//test/unit:all_tests",  # Rust analysis tests
+        "//test/unit:unit_tests",  # Rust analysis tests
     ],
     visibility = ["//visibility:public"],
 )

@@ -47,7 +47,7 @@ wit_library(
 rust_wasm_component(
     name = "calculator_component",
     srcs = ["src/lib.rs"],
-    wit_bindgen = ":calculator_interfaces",
+    wit = ":calculator_interfaces",
     deps = [
         "@crates//:wit-bindgen",
         "@crates//:anyhow",  # For error handling
@@ -222,7 +222,7 @@ bazel build //:calculator_component_release
 rust_wasm_component(
     name = "calculator_optimized",
     srcs = ["src/lib.rs"],
-    wit_bindgen = ":calculator_interfaces",
+    wit = ":calculator_interfaces",
     rustc_flags = [
         "-C", "opt-level=3",
         "-C", "lto=fat",

@@ -8,7 +8,7 @@ def rust_wasm_component_wizer(
         name,
         srcs,
         deps = [],
-        wit_bindgen = None,
+        wit = None,
         adapter = None,
         crate_features = [],
         rustc_flags = [],
@@ -28,7 +28,7 @@ def rust_wasm_component_wizer(
         name: Target name
         srcs: Rust source files
         deps: Rust dependencies
-        wit_bindgen: WIT library for binding generation
+        wit: WIT library for binding generation
         adapter: Optional WASI adapter
         crate_features: Rust crate features to enable
         rustc_flags: Additional rustc flags
@@ -43,7 +43,7 @@ def rust_wasm_component_wizer(
         rust_wasm_component_wizer(
             name = "my_optimized_component",
             srcs = ["src/lib.rs"],
-            wit_bindgen = "//wit:my_interfaces",
+            wit = "//wit:my_interfaces",
             init_function_name = "wizer.initialize",
             deps = [
                 "@crates//:serde",
@@ -89,7 +89,7 @@ def rust_wasm_component_wizer(
         all_deps = list(deps)
 
         # Generate WIT bindings before building the rust library
-        if wit_bindgen:
+        if wit:
             # Import wit_bindgen rule at the top of the file
             # This is done via load() at the file level
             pass
@@ -108,7 +108,7 @@ def rust_wasm_component_wizer(
             edition = edition,
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags,
-            wit_bindgen = wit_bindgen,
+            wit = wit,
             adapter = adapter,
             visibility = ["//visibility:private"],
             tags = ["wasm_component"],

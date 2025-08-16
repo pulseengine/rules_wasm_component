@@ -157,7 +157,7 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "hello_component",
     srcs = ["src/lib.rs"],
-    wit_bindgen = ":hello_interfaces",
+    wit = ":hello_interfaces",
     world = "hello-world",
 )
 ```

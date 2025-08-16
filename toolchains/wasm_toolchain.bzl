@@ -1,7 +1,7 @@
 """WebAssembly toolchain definitions with enhanced tool management"""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//toolchains:tool_versions.bzl", "get_recommended_versions", "validate_tool_compatibility")
+load("//checksums:registry.bzl", "get_recommended_versions", "validate_tool_compatibility")
 load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error", "log_diagnostic_info", "validate_system_tool")
 load("//toolchains:tool_cache.bzl", "cache_tool", "clean_expired_cache", "retrieve_cached_tool", "validate_tool_functionality")
 load("//toolchains:monitoring.bzl", "add_build_telemetry", "create_health_check", "log_build_metrics")
