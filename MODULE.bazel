@@ -206,6 +206,7 @@ use_repo(
     "wac_src",
     "wasm_tools_src",
     "wit_bindgen_src",
+    "wizer_src",
     "wrpc_src",
 )
 
