@@ -10,6 +10,7 @@ genrule(
     srcs = glob(["**/*"]),  # All source files
     outs = ["wit-bindgen"],
     cmd = """cd $$(dirname $(location Cargo.toml)) && \
+             export CARGO_HOME="$$PWD/.cargo" && \
              cargo build --release --bin wit-bindgen && \
              cp target/release/wit-bindgen $(location wit-bindgen)""",
     visibility = ["//visibility:public"],

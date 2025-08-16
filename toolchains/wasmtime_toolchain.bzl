@@ -1,7 +1,6 @@
 """Wasmtime toolchain definitions for WebAssembly component runtime"""
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//checksums:registry.bzl", "get_latest_version", "get_tool_info")
+load("//checksums:registry.bzl", "get_tool_info")
 
 def _wasmtime_toolchain_impl(ctx):
     """Implementation of wasmtime_toolchain rule"""

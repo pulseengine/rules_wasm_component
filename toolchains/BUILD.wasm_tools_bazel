@@ -19,7 +19,7 @@ rust_binary(
 
 # Supporting library crate
 rust_library(
-    name = "wasm_tools_lib", 
+    name = "wasm_tools_lib",
     srcs = glob([
         "src/**/*.rs",
     ], exclude = [
@@ -30,7 +30,7 @@ rust_library(
     deps = [
         # Core dependencies from bazel_tools_crates
         "@bazel_tools_crates//:anyhow",
-        "@bazel_tools_crates//:clap", 
+        "@bazel_tools_crates//:clap",
         "@bazel_tools_crates//:env_logger",
         "@bazel_tools_crates//:log",
         "@bazel_tools_crates//:serde",

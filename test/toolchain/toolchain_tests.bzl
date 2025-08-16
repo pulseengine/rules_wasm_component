@@ -1,6 +1,6 @@
 """Unit tests for WASM toolchain functionality"""
 
-load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
+load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
 
 def _platform_suffix_test_impl(ctx):
     """Test platform suffix generation"""

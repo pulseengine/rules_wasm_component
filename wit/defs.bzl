@@ -1,12 +1,12 @@
 """Public API for WIT rules"""
 
 load(
-    "//wit:wit_library.bzl",
-    _wit_library = "wit_library",
-)
-load(
     "//wit:wit_bindgen.bzl",
     _wit_bindgen = "wit_bindgen",
+)
+load(
+    "//wit:wit_library.bzl",
+    _wit_library = "wit_library",
 )
 load(
     "//wit:wit_markdown.bzl",

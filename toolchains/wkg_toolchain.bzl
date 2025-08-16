@@ -1,8 +1,5 @@
 """WebAssembly Package Tools (wkg) toolchain definitions"""
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-
 # Platform-specific wkg binary information
 WKG_PLATFORMS = {
     "darwin_amd64": struct(

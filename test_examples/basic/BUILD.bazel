@@ -1,5 +1,5 @@
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 wit_library(
     name = "hello_interfaces",

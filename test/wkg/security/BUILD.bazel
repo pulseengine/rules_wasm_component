@@ -2,12 +2,12 @@
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//test/wkg:wkg_test_utils.bzl", "wkg_component_test")
+load("//wasm:defs.bzl", "wasm_keygen", "wasm_sign", "wasm_validate", "wasm_verify")
 load(
     "//wkg:defs.bzl",
     "wasm_component_secure_publish",
     "wasm_security_policy",
 )
-load("//wasm:defs.bzl", "wasm_keygen", "wasm_sign", "wasm_validate", "wasm_verify")
 
 package(default_visibility = ["//test/wkg:__subpackages__"])
 

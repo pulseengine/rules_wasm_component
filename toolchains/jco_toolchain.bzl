@@ -1,6 +1,5 @@
 """jco (JavaScript Component Tools) toolchain definitions"""
 
-load("//checksums:registry.bzl", "get_tool_info")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
 load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
 

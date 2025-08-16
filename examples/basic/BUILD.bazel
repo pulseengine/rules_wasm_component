@@ -1,7 +1,7 @@
 """Basic example of building a WASM component"""
 
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen", "rust_wasm_component_test")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen", "rust_wasm_component_clippy", "rust_wasm_component_test")
 
 package(default_visibility = ["//visibility:public"])
 

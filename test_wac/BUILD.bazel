@@ -1,8 +1,8 @@
 """Test WAC composition with simple components"""
 
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 # Simple WIT interface for testing
 wit_library(

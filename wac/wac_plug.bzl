@@ -1,7 +1,5 @@
 """WAC plug rule for automatic component connection"""
 
-load("@bazel_skylib//lib:dicts.bzl", "dicts")
-
 def _wac_plug_impl(ctx):
     """Implementation of wac_plug rule"""
 

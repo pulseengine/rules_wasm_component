@@ -5,9 +5,9 @@ This demonstrates TinyGo + WASI Preview 2 networking capabilities
 for downloading GitHub releases in a real-world WebAssembly component.
 """
 
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//go:defs.bzl", "go_wasm_component")
 load("//go:go_wasm_component_test.bzl", "go_wasm_component_test")
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 package(default_visibility = ["//visibility:public"])
 

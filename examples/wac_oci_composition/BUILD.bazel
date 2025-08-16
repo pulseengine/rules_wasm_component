@@ -1,15 +1,14 @@
 """Example demonstrating WAC composition with OCI registry components"""
 
 load("//rust:defs.bzl", "rust_wasm_component_bindgen")
-load("//wit:defs.bzl", "wit_library")
 load("//wasm:defs.bzl", "wasm_keygen")
+load("//wit:defs.bzl", "wit_library")
 load(
     "//wkg:defs.bzl",
     "wac_compose_with_oci",
     "wac_distributed_system",
     "wac_microservices_app",
     "wasm_component_from_oci",
-    "wasm_component_oci_publish",
     "wkg_registry_config",
 )
 

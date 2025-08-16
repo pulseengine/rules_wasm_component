@@ -1,6 +1,5 @@
 """Rust WebAssembly component with Wizer pre-initialization"""
 
-load("@rules_rust//rust:defs.bzl", "rust_shared_library")
 load("//rust:rust_wasm_component.bzl", "rust_wasm_component")
 load("//wasm:wasm_component_wizer.bzl", "wizer_chain")
 

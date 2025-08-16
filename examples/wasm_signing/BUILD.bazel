@@ -6,9 +6,9 @@ wasmsign2 integration, including key generation, component signing, and
 signature verification.
 """
 
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen", "wasm_sign", "wasm_validate", "wasm_verify")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 package(default_visibility = ["//visibility:public"])
 

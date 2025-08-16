@@ -8,7 +8,7 @@ This module provides comprehensive testing for TinyGo + WASI Preview 2 integrati
 """
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
-load("@rules_wasm_component//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
+load("@rules_wasm_component//providers:providers.bzl", "WasmComponentInfo")
 
 def _go_component_analysis_test_impl(ctx):
     """Test that go_wasm_component provides correct WasmComponentInfo."""

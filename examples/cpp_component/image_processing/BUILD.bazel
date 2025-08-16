@@ -1,4 +1,4 @@
-load("//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen")
+load("//cpp:defs.bzl", "cc_component_library", "cpp_wit_bindgen")
 
 # WIT bindings generation
 cpp_wit_bindgen(

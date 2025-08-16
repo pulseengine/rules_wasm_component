@@ -10,8 +10,8 @@ Architecture:
 - Composition: Orchestrated workflow for complete checksum management
 """
 
-load("//wasm:multi_language_wasm_component.bzl", "multi_language_wasm_component")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//wasm:multi_language_wasm_component.bzl", "multi_language_wasm_component")
 
 package(default_visibility = ["//visibility:public"])
 

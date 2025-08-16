@@ -1,8 +1,8 @@
 """Public API for WASM utility rules"""
 
 load(
-    "//wasm:wasm_validate.bzl",
-    _wasm_validate = "wasm_validate",
+    "//wasm:multi_language_wasm_component.bzl",
+    _multi_language_wasm_component = "multi_language_wasm_component",
 )
 load(
     "//wasm:wasm_component_new.bzl",
@@ -14,14 +14,14 @@ load(
     _wizer_chain = "wizer_chain",
 )
 load(
-    "//wasm:multi_language_wasm_component.bzl",
-    _multi_language_wasm_component = "multi_language_wasm_component",
-)
-load(
     "//wasm:wasm_signing.bzl",
     _wasm_keygen = "wasm_keygen",
     _wasm_sign = "wasm_sign",
     _wasm_verify = "wasm_verify",
+)
+load(
+    "//wasm:wasm_validate.bzl",
+    _wasm_validate = "wasm_validate",
 )
 
 # Re-export public rules

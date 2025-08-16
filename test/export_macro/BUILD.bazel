@@ -1,5 +1,11 @@
 """Test that export! macro is accessible from user code"""
 
+# Test that we can build it successfully - replaces test.sh
+# The test passes if the component builds without errors (export! macro accessible)
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+# Simple test to verify export macro is accessible
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
@@ -17,17 +23,10 @@ rust_wasm_component_bindgen(
     wit = ":test_interface",
 )
 
-# Test that we can build it successfully - replaces test.sh
-# The test passes if the component builds without errors (export! macro accessible)
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
-
 build_test(
     name = "export_macro_test",
     targets = [":test_component"],
 )
-
-# Simple test to verify export macro is accessible
-load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 rust_binary(
     name = "macro_accessibility_test",

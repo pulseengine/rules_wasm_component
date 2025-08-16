@@ -1,9 +1,8 @@
 """Unit tests for rules_wasm_component rule implementations."""
 
-load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load(
     ":unit_tests.bzl",
     "provider_test",

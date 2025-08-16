@@ -1,6 +1,6 @@
 """WASM validation rule implementation"""
 
-load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmSignatureInfo", "WasmValidationInfo")
+load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmValidationInfo")
 load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action", "validate_wasm_action")
 
 def _wasm_validate_impl(ctx):

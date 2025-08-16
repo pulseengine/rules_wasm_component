@@ -1,9 +1,7 @@
 """Example demonstrating Wizer pre-initialization for startup optimization"""
 
-load("@rules_rust//rust:defs.bzl", "rust_library")
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
-load("@rules_wasm_component//rust:rust_wasm_component.bzl", "rust_wasm_component")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:rust_wasm_module.bzl", "rust_wasm_module")
 load("@rules_wasm_component//wasm:wasm_component_wizer.bzl", "wasm_component_wizer")
 load("@rules_wasm_component//wasm:wasm_component_wizer_library.bzl", "wasm_component_wizer_library")

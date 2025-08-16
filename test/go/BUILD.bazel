@@ -12,7 +12,6 @@ Test Coverage:
 - Build verification for multiple Go component patterns
 """
 
-load("@bazel_skylib//lib:unittest.bzl", "unittest")
 load(
     "//test/go:go_component_tests.bzl",
     "go_component_analysis_test",

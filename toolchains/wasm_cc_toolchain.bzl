@@ -8,7 +8,6 @@ load(
     "flag_group",
     "flag_set",
     "tool_path",
-    "with_feature_set",
 )
 
 def _wasm_cc_toolchain_config_impl(ctx):

@@ -1,49 +1,22 @@
 """WebAssembly Tools Builder
 
-This BUILD file orchestrates building all WebAssembly tools for multiple platforms.
+Simple proof-of-concept for building tools with Bazel (host platform only).
 """
 
-load("//platforms:defs.bzl", "ALL_PLATFORMS")
-load("//toolchains:builder_macros.bzl", "wasm_tool_suite")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-# Build all WebAssembly tools for all supported platforms
-wasm_tool_suite(
+# Simple host-only tool build (no cross-compilation)
+rust_binary(
+    name = "simple_tool",
+    srcs = ["simple_tool.rs"],
+    edition = "2021",
+    deps = ["@crates//:anyhow"],
+)
+
+# Alias for compatibility
+alias(
     name = "all_tools",
-    platforms = ALL_PLATFORMS,
-    tools = [
-        "wasm-tools",
-        "wit-bindgen", 
-        "wizer",
-        "wac",
-        "wasmtime",
-    ],
-)
-
-# Individual tool targets for selective building
-wasm_tool_suite(
-    name = "core_tools",
-    platforms = ALL_PLATFORMS,
-    tools = [
-        "wasm-tools",
-        "wit-bindgen",
-        "wasmtime",
-    ],
-)
-
-# Extended tools (including those without upstream releases)
-wasm_tool_suite(
-    name = "extended_tools", 
-    platforms = ALL_PLATFORMS,
-    tools = [
-        "wizer",  # No upstream releases - we build it!
-        "wac",
-    ],
-)
-
-# Release packaging
-filegroup(
-    name = "release_artifacts",
-    srcs = [":all_tools"],
+    actual = ":simple_tool",
 )

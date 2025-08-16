@@ -16,8 +16,6 @@ This addresses the CRITICAL PRIORITY gap identified in coverage analysis:
 "Language Support Test Coverage" - from 25% to 100% coverage
 """
 
-load("@bazel_skylib//lib:unittest.bzl", "unittest")
-
 package(default_visibility = ["//visibility:public"])
 
 # Import all language-specific test suites

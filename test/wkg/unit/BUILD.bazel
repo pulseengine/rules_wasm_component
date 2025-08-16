@@ -1,6 +1,5 @@
 """Unit tests for core WKG rules using olareg_wasm"""
 
-load("@bazel_skylib//lib:unittest.bzl", "unittest")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//test/wkg:wkg_test_utils.bzl", "olareg_mock_data", "wkg_component_test")
 load("//wkg:defs.bzl", "wkg_fetch", "wkg_lock", "wkg_publish", "wkg_registry_config")
