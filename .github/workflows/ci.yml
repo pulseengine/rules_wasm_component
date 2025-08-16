@@ -77,10 +77,6 @@ jobs:
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
-      - name: Install WASM tools
-        run: |
-          cargo install wasm-tools wac-cli wit-bindgen-cli
-
       - name: Verify Bazel Installation
         run: bazel version
 
@@ -235,7 +231,6 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source ~/.cargo/env
           rustup target add wasm32-wasip2 wasm32-wasip1
-          cargo install wasm-tools wac-cli wit-bindgen-cli
 
       - name: Test Core Component Build
         run: |
