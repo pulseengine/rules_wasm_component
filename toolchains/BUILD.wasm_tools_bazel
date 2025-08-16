@@ -1,0 +1,47 @@
+"""BUILD file for wasm-tools using Bazel-native rust_binary"""
+
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Main wasm-tools binary built with Bazel instead of cargo
+rust_binary(
+    name = "wasm_tools_bazel",
+    srcs = [
+        "src/bin/wasm-tools/main.rs",
+    ],
+    crate_name = "wasm_tools",
+    edition = "2021",
+    deps = [
+        ":wasm_tools_lib",
+    ],
+)
+
+# Supporting library crate
+rust_library(
+    name = "wasm_tools_lib", 
+    srcs = glob([
+        "src/**/*.rs",
+    ], exclude = [
+        "src/bin/**/*.rs",
+    ]),
+    crate_name = "wasm_tools",
+    edition = "2021",
+    deps = [
+        # Core dependencies from bazel_tools_crates
+        "@bazel_tools_crates//:anyhow",
+        "@bazel_tools_crates//:clap", 
+        "@bazel_tools_crates//:env_logger",
+        "@bazel_tools_crates//:log",
+        "@bazel_tools_crates//:serde",
+        "@bazel_tools_crates//:serde_json",
+        "@bazel_tools_crates//:wat",
+        "@bazel_tools_crates//:wasm-encoder",
+        "@bazel_tools_crates//:wasmparser",
+        "@bazel_tools_crates//:wasm-mutate",
+        "@bazel_tools_crates//:wasm-shrink",
+        "@bazel_tools_crates//:wasm-smith",
+        "@bazel_tools_crates//:wit-parser",
+        "@bazel_tools_crates//:wit-component",
+    ],
+)
