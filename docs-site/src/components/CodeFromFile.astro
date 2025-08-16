@@ -1,0 +1,158 @@
+---
+// Astro component to embed code from actual repository files
+// This reads files at build time and includes them in the documentation
+
+interface Props {
+  file: string;
+  lang?: string;
+  title?: string;
+  lines?: string; // e.g., "1-10" or "5,10-15"
+}
+
+const { file, lang, title, lines } = Astro.props;
+
+let content = '';
+let error = '';
+
+try {
+  // Read the file relative to the repository root
+  const fs = await import('fs');
+  const path = await import('path');
+  const { fileURLToPath } = await import('url');
+  
+  // Get the repository root (go up from docs-site/src/components)
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const repoRoot = path.resolve(currentDir, '../../../');
+  const filePath = path.resolve(repoRoot, file);
+  
+  // Security check: ensure file is within repository
+  if (!filePath.startsWith(repoRoot)) {
+    throw new Error('File path outside repository');
+  }
+  
+  content = fs.readFileSync(filePath, 'utf8');
+  
+  // Handle line selection if specified
+  if (lines) {
+    const allLines = content.split('\n');
+    const selectedLines: string[] = [];
+    
+    // Parse line specification (e.g., "1-10,15,20-25")
+    const ranges = lines.split(',');
+    for (const range of ranges) {
+      if (range.includes('-')) {
+        const [start, end] = range.split('-').map(n => parseInt(n.trim()));
+        for (let i = Math.max(0, start - 1); i < Math.min(allLines.length, end); i++) {
+          selectedLines.push(allLines[i]);
+        }
+      } else {
+        const lineNum = parseInt(range.trim()) - 1;
+        if (lineNum >= 0 && lineNum < allLines.length) {
+          selectedLines.push(allLines[lineNum]);
+        }
+      }
+    }
+    
+    content = selectedLines.join('\n');
+  }
+  
+} catch (e) {
+  error = `Error reading file ${file}: ${e.message}`;
+  content = error;
+}
+
+// Auto-detect language from file extension if not provided
+const autoLang = lang || (() => {
+  const ext = file.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'rs': return 'rust';
+    case 'go': return 'go';
+    case 'cpp':
+    case 'cc':
+    case 'cxx': return 'cpp';
+    case 'js': return 'javascript';
+    case 'ts': return 'typescript';
+    case 'wit': return 'wit';
+    case 'bzl': return 'starlark';
+    case 'toml': return 'toml';
+    case 'yaml':
+    case 'yml': return 'yaml';
+    case 'json': return 'json';
+    default: return 'text';
+  }
+})();
+
+const displayTitle = title || file;
+---
+
+<div class="code-from-file">
+  {error ? (
+    <div class="error-message">
+      <pre>{error}</pre>
+    </div>
+  ) : (
+    <div class="code-block">
+      <div class="code-header">
+        <span class="file-path">{displayTitle}</span>
+        <span class="file-lang">{autoLang}</span>
+      </div>
+      <pre class={`language-${autoLang}`}><code set:html={content} /></pre>
+    </div>
+  )}
+</div>
+
+<style>
+  .code-from-file {
+    margin: 1rem 0;
+  }
+  
+  .error-message {
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 4px;
+    padding: 1rem;
+    color: #c00;
+  }
+  
+  .code-block {
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--sl-color-gray-6);
+  }
+  
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: var(--sl-color-gray-5);
+    border-bottom: 1px solid var(--sl-color-gray-4);
+    font-size: 0.85rem;
+  }
+  
+  .file-path {
+    font-family: var(--sl-font-mono);
+    color: var(--sl-color-white);
+    font-weight: 500;
+  }
+  
+  .file-lang {
+    color: var(--sl-color-gray-2);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .code-block pre {
+    margin: 0;
+    padding: 1rem;
+    background: transparent;
+    overflow-x: auto;
+  }
+  
+  .code-block code {
+    font-family: var(--sl-font-mono);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+</style>
