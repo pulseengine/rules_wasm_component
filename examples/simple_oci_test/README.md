@@ -36,6 +36,7 @@ This example provides minimal, working components to test the OCI publishing and
    ```
 
 5. **Verify published components**:
+
    ```bash
    curl http://localhost:5001/v2/_catalog
    curl http://localhost:5001/v2/test/simple/greeting/tags/list

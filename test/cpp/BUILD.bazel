@@ -107,6 +107,7 @@ cpp_component_language_test(
     name = "test_c_vs_cpp_language_variants",
     c_target = "//examples/cpp_component/calculator:calculator_c_component",
     cpp_target = "//examples/cpp_component/calculator:calculator_cpp_component",
+    target_under_test = "//examples/cpp_component/calculator:calculator_cpp_component",
 )
 
 # Optimization and Standards Tests
@@ -175,6 +176,7 @@ cpp_component_validation_test(
         "//examples/cpp_component/calculator:calculator_c_component",
         "//examples/cpp_component/http_service:http_service_component",
     ],
+    target_under_test = "//examples/cpp_component/calculator:calculator_cpp_component",
 )
 
 test_suite(

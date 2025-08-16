@@ -5,7 +5,7 @@ with the WASM Tools Integration Component for consistent, cross-platform operati
 
 Usage:
     load("//tools/bazel_helpers:wasm_tools_actions.bzl", "wasm_tools_action", "validate_wasm_action")
-    
+
     # In your rule implementation:
     wasm_tools_action(ctx, "validate", wasm_file=input_wasm, features=["component-model"])
     component_file = wasm_tools_action(ctx, "component-embed", wit_file=wit, wasm_module=module)
@@ -24,8 +24,9 @@ def wasm_tools_action(ctx, operation, **kwargs):
     """
 
     # Get the WASM tools component from toolchain
-    wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    wasm_tools_component = wasm_tools_toolchain.wasm_tools_component
+    wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_component_toolchain_type"]
+    wasm_tools_info = wasm_tools_toolchain.wasm_tools_info
+    wasm_tools_component = wasm_tools_info.wasm_tools_component
 
     if not wasm_tools_component:
         fail("WASM Tools Integration Component not available in toolchain")

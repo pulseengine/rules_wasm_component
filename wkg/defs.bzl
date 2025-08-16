@@ -2974,6 +2974,8 @@ def _wasm_component_from_oci_impl(ctx):
             "name": ctx.attr.component_name or ctx.attr.name,
             "tag": ctx.attr.tag,
         },
+        profile = "unknown",  # OCI components don't specify build profile
+        profile_variants = {},
     )
 
     return [

@@ -1,7 +1,7 @@
 package build:wasm-tools@1.0.0;
 
 /// Universal WASM Tools Integration Component
-/// 
+///
 /// This component provides unified access to wasm-tools operations across
 /// different build systems and platforms, replacing direct tool invocations
 /// with a consistent interface.
@@ -69,7 +69,7 @@ interface component-operations {
     component-wit: func(component-path: string, output-path: string) -> result<string, string>;
 }
 
-/// Composition and linking interface  
+/// Composition and linking interface
 interface composition-operations {
     /// Composition configuration
     record compose-config {

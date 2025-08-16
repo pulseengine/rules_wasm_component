@@ -81,6 +81,7 @@ component_validation_test(
 js_component_optimization_test(
     name = "test_js_component_optimization_flags",
     optimized_target = "//examples/js_component:calc_js_component",  # optimize=True, minify=True
+    target_under_test = "//examples/js_component:calc_js_component",
     unoptimized_target = "//examples/js_component:hello_js_component",  # optimize=True, minify=False
 )
 
@@ -108,6 +109,7 @@ js_component_validation_test(
     name = "test_transpiled_bindings_structure",
     expected_instantiation = "async",
     expected_world = "hello-world",
+    target_under_test = "//examples/js_component:hello_js_component",
     transpile_target = "//examples/js_component:hello_js_bindings",
 )
 
@@ -149,6 +151,7 @@ js_component_validation_test(
         "//examples/js_component:hello_js_component",
         "//examples/js_component:calc_js_component",
     ],
+    target_under_test = "//examples/js_component:hello_js_component",
 )
 
 test_suite(

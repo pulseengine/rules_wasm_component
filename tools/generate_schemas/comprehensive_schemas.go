@@ -95,12 +95,12 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 			Description: "Builds a Rust WebAssembly component. Compiles Rust source code into a WASM component using the Rust toolchain.",
 			LoadFrom:    "@rules_wasm_component//rust:defs.bzl",
 			Attributes: map[string]Attribute{
-				"name":          {"string", true, nil, "A unique name for this target", nil},
-				"srcs":          {"label_list", true, nil, "Rust source files", nil},
-				"deps":          {"label_list", false, nil, "Rust dependencies (crates)", nil},
-				"adapter":       {"label", false, nil, "Optional WASI adapter", nil},
+				"name":           {"string", true, nil, "A unique name for this target", nil},
+				"srcs":           {"label_list", true, nil, "Rust source files", nil},
+				"deps":           {"label_list", false, nil, "Rust dependencies (crates)", nil},
+				"adapter":        {"label", false, nil, "Optional WASI adapter", nil},
 				"crate_features": {"string_list", false, nil, "Rust crate features", nil},
-				"rustc_flags":   {"string_list", false, nil, "Additional rustc flags", nil},
+				"rustc_flags":    {"string_list", false, nil, "Additional rustc flags", nil},
 			},
 			Examples: []Example{
 				{"Basic Rust component", "Simple Rust WASM component", `rust_wasm_component(
@@ -204,11 +204,11 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 			Description: "Builds a JavaScript WebAssembly component using ComponentizeJS. Transpiles JavaScript/TypeScript source code into a WASM component.",
 			LoadFrom:    "@rules_wasm_component//js:defs.bzl",
 			Attributes: map[string]Attribute{
-				"name":       {"string", true, nil, "A unique name for this target", nil},
-				"srcs":       {"label_list", true, nil, "JavaScript/TypeScript source files", nil},
-				"wit":        {"label", true, nil, "WIT library for the component interfaces", nil},
-				"entry":      {"string", false, nil, "Entry point for the component", nil},
-				"package":    {"label", false, nil, "package.json file", nil},
+				"name":    {"string", true, nil, "A unique name for this target", nil},
+				"srcs":    {"label_list", true, nil, "JavaScript/TypeScript source files", nil},
+				"wit":     {"label", true, nil, "WIT library for the component interfaces", nil},
+				"entry":   {"string", false, nil, "Entry point for the component", nil},
+				"package": {"label", false, nil, "package.json file", nil},
 			},
 			Examples: []Example{
 				{"JS component", "JavaScript WebAssembly component", `js_component(
@@ -237,7 +237,7 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 		},
 
 		// ======================
-		// C++ Component Rules  
+		// C++ Component Rules
 		// ======================
 		"cpp_component": {
 			Name:        "cpp_component",
@@ -292,15 +292,15 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 		},
 		"wac_remote_compose": {
 			Name:        "wac_remote_compose",
-			Type:        "rule", 
+			Type:        "rule",
 			Description: "Composes WebAssembly components including remote components from OCI registries. Enables distributed component architecture.",
 			LoadFrom:    "@rules_wasm_component//wac:defs.bzl",
 			Attributes: map[string]Attribute{
-				"name":                {"string", true, nil, "A unique name for this target", nil},
-				"local_components":    {"string_dict", false, nil, "Local component targets", nil},
-				"remote_components":   {"string_dict", false, nil, "Remote OCI component references", nil},
-				"composition_file":    {"label", false, nil, "WAC composition file", nil},
-				"registry_config":     {"label", false, nil, "Registry configuration for OCI access", nil},
+				"name":              {"string", true, nil, "A unique name for this target", nil},
+				"local_components":  {"string_dict", false, nil, "Local component targets", nil},
+				"remote_components": {"string_dict", false, nil, "Remote OCI component references", nil},
+				"composition_file":  {"label", false, nil, "WAC composition file", nil},
+				"registry_config":   {"label", false, nil, "Registry configuration for OCI access", nil},
 			},
 			Examples: []Example{
 				{"Remote composition", "Compose local and remote components", `wac_remote_compose(
@@ -325,9 +325,9 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 			Description: "Creates a WebAssembly component from a core WASM module using wasm-tools component new. Wraps core modules into the component model.",
 			LoadFrom:    "@rules_wasm_component//wasm:defs.bzl",
 			Attributes: map[string]Attribute{
-				"name":       {"string", true, nil, "A unique name for this target", nil},
-				"module":     {"label", true, nil, "Core WASM module to wrap", nil},
-				"adapter":    {"label", false, nil, "WASI adapter to use", nil},
+				"name":    {"string", true, nil, "A unique name for this target", nil},
+				"module":  {"label", true, nil, "Core WASM module to wrap", nil},
+				"adapter": {"label", false, nil, "WASI adapter to use", nil},
 			},
 			Examples: []Example{
 				{"Wrap module", "Convert core WASM module to component", `wasm_component_new(
@@ -343,8 +343,8 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 			Description: "Validates WebAssembly components and modules using wasm-tools validate. Ensures WASM files are well-formed.",
 			LoadFrom:    "@rules_wasm_component//wasm:defs.bzl",
 			Attributes: map[string]Attribute{
-				"name":   {"string", true, nil, "A unique name for this target", nil},
-				"wasm":   {"label", true, nil, "WASM file to validate", nil},
+				"name": {"string", true, nil, "A unique name for this target", nil},
+				"wasm": {"label", true, nil, "WASM file to validate", nil},
 			},
 			Examples: []Example{
 				{"Validate component", "Validate a WASM component", `wasm_validate(
@@ -398,9 +398,9 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 			Description: "Configures WebAssembly component registries for OCI distribution. Sets up authentication and registry endpoints for component publishing and retrieval.",
 			LoadFrom:    "@rules_wasm_component//wkg:defs.bzl",
 			Attributes: map[string]Attribute{
-				"name":                    {"string", true, nil, "A unique name for this target", nil},
-				"registries":              {"string_list", true, nil, "List of registry configurations", nil},
-				"default_registry":        {"string", false, nil, "Default registry to use", nil},
+				"name":                   {"string", true, nil, "A unique name for this target", nil},
+				"registries":             {"string_list", true, nil, "List of registry configurations", nil},
+				"default_registry":       {"string", false, nil, "Default registry to use", nil},
 				"cache_dir":              {"string", false, nil, "Directory for caching components", nil},
 				"enable_mirror_fallback": {"bool", false, nil, "Enable fallback to mirror registries", nil},
 			},
@@ -425,7 +425,7 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 				"registry":        {"string", true, nil, "Registry hostname", nil},
 				"namespace":       {"string", true, nil, "Registry namespace", nil},
 				"component_name":  {"string", true, nil, "Component name", nil},
-				"tag":            {"string", false, stringPtr("'latest'"), "Component tag or version", nil},
+				"tag":             {"string", false, stringPtr("'latest'"), "Component tag or version", nil},
 				"registry_config": {"label", false, nil, "Registry configuration", nil},
 			},
 			Examples: []Example{
@@ -447,10 +447,10 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 			Type:        "provider",
 			Description: "Provider that contains information about WIT interfaces and their dependencies.",
 			Fields: map[string]ProviderField{
-				"wit_files":      {"depset", "Depset of WIT source files for this library"},
-				"wit_deps":       {"depset", "Depset of transitive WIT dependencies"},
-				"package_name":   {"string", "WIT package name (e.g., 'my:package@1.0.0')"},
-				"world_name":     {"string", "World name exported by this library (optional)"},
+				"wit_files":       {"depset", "Depset of WIT source files for this library"},
+				"wit_deps":        {"depset", "Depset of transitive WIT dependencies"},
+				"package_name":    {"string", "WIT package name (e.g., 'my:package@1.0.0')"},
+				"world_name":      {"string", "World name exported by this library (optional)"},
 				"interface_names": {"string_list", "List of interface names defined in this library"},
 			},
 			Examples: []Example{
@@ -482,7 +482,7 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 			},
 		},
 		"WacCompositionInfo": {
-			Name:        "WacCompositionInfo", 
+			Name:        "WacCompositionInfo",
 			Type:        "provider",
 			Description: "Provider that contains information about a WAC composition of multiple components.",
 			Fields: map[string]ProviderField{

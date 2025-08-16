@@ -154,6 +154,9 @@ register_toolchains("@jco_toolchain//:jco_toolchain")
 # File Operations Component toolchain for universal file handling
 register_toolchains("//toolchains:file_ops_toolchain_local")
 
+# WASM Tools Component toolchain for universal wasm-tools operations
+register_toolchains("//toolchains:wasm_tools_component_toolchain_local")
+
 # Rust crates for tools
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(

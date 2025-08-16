@@ -4,10 +4,10 @@
 //! different build systems and platforms, replacing direct tool invocations
 //! with a consistent, cross-platform interface.
 
+use anyhow::{Context, Result as AnyhowResult};
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
-use anyhow::{Context, Result as AnyhowResult};
 
 /// Information about a WASM file
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -20,7 +20,7 @@ pub struct WasmInfo {
 }
 
 /// Validation status of a WASM file
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq)]
 pub enum ValidationStatus {
     Valid,
     Invalid,
@@ -67,47 +67,49 @@ pub struct BatchValidationConfig {
 /// Validate a WASM file using wasm-tools
 pub fn validate_wasm(wasm_path: &str, features: &[String]) -> AnyhowResult<WasmInfo> {
     let path = Path::new(wasm_path);
-    
+
     if !path.exists() {
         return Err(anyhow::anyhow!("WASM file does not exist: {}", wasm_path));
     }
-    
+
     let metadata = fs::metadata(path)?;
     let size = metadata.len();
-    
+
     // Run wasm-tools validate
     let mut cmd = Command::new("wasm-tools");
     cmd.arg("validate").arg(wasm_path);
-    
+
     // Add features if specified
     for feature in features {
         cmd.arg("--features").arg(feature);
     }
-    
-    let output = cmd.output()
+
+    let output = cmd
+        .output()
         .with_context(|| "Failed to execute wasm-tools validate")?;
-    
+
     let validation_status = if output.status.success() {
         ValidationStatus::Valid
     } else {
         ValidationStatus::Invalid
     };
-    
+
     // Check if it's a component by trying component-model validation
-    let is_component = if validation_status == ValidationStatus::Valid as ValidationStatus {
+    let is_component = if validation_status == ValidationStatus::Valid {
         check_is_component(wasm_path)?
     } else {
         false
     };
-    
+
     Ok(WasmInfo {
         path: wasm_path.to_string(),
         size,
         is_component,
         validation_status,
-        metadata: vec![
-            ("format".to_string(), if is_component { "component" } else { "module" }.to_string()),
-        ],
+        metadata: vec![(
+            "format".to_string(),
+            if is_component { "component" } else { "module" }.to_string(),
+        )],
     })
 }
 
@@ -122,7 +124,7 @@ pub fn check_is_component(wasm_path: &str) -> AnyhowResult<bool> {
         .stderr(Stdio::null())
         .output()
         .with_context(|| "Failed to execute wasm-tools validate for component check")?;
-    
+
     Ok(output.status.success())
 }
 
@@ -139,25 +141,29 @@ pub fn component_new(config: &ComponentConfig) -> AnyhowResult<String> {
         .arg(&config.input_module)
         .arg("-o")
         .arg(&config.output_path);
-    
+
     // Add adapter if specified
     if let Some(adapter) = &config.adapter {
         cmd.arg("--adapt").arg(adapter);
     }
-    
+
     // Add additional options
     for option in &config.options {
         cmd.arg(option);
     }
-    
-    let output = cmd.output()
+
+    let output = cmd
+        .output()
         .with_context(|| "Failed to execute wasm-tools component new")?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(anyhow::anyhow!("wasm-tools component new failed: {}", stderr));
+        return Err(anyhow::anyhow!(
+            "wasm-tools component new failed: {}",
+            stderr
+        ));
     }
-    
+
     Ok(config.output_path.clone())
 }
 
@@ -170,25 +176,29 @@ pub fn component_embed(config: &EmbedConfig) -> AnyhowResult<String> {
         .arg(&config.wasm_module)
         .arg("--output")
         .arg(&config.output_path);
-    
+
     // Add world if specified
     if let Some(world) = &config.world {
         cmd.arg("--world").arg(world);
     }
-    
+
     // Add additional options
     for option in &config.options {
         cmd.arg(option);
     }
-    
-    let output = cmd.output()
+
+    let output = cmd
+        .output()
         .with_context(|| "Failed to execute wasm-tools component embed")?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(anyhow::anyhow!("wasm-tools component embed failed: {}", stderr));
+        return Err(anyhow::anyhow!(
+            "wasm-tools component embed failed: {}",
+            stderr
+        ));
     }
-    
+
     Ok(config.output_path.clone())
 }
 
@@ -202,12 +212,15 @@ pub fn component_wit(component_path: &str, output_path: &str) -> AnyhowResult<St
         .arg(output_path)
         .output()
         .with_context(|| "Failed to execute wasm-tools component wit")?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(anyhow::anyhow!("wasm-tools component wit failed: {}", stderr));
+        return Err(anyhow::anyhow!(
+            "wasm-tools component wit failed: {}",
+            stderr
+        ));
     }
-    
+
     Ok(output_path.to_string())
 }
 
@@ -219,25 +232,26 @@ pub fn compose_components(config: &ComposeConfig) -> AnyhowResult<String> {
         .arg(&config.composition_file)
         .arg("-o")
         .arg(&config.output_path);
-    
+
     // Add component files
     for component in &config.components {
         cmd.arg(component);
     }
-    
+
     // Add additional options
     for option in &config.options {
         cmd.arg(option);
     }
-    
-    let output = cmd.output()
+
+    let output = cmd
+        .output()
         .with_context(|| "Failed to execute wasm-tools compose")?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(anyhow::anyhow!("wasm-tools compose failed: {}", stderr));
     }
-    
+
     Ok(config.output_path.clone())
 }
 
@@ -250,20 +264,21 @@ pub fn to_js(component_path: &str, output_dir: &str, options: &[String]) -> Anyh
         .arg(component_path)
         .arg("--out-dir")
         .arg(output_dir);
-    
+
     // Add additional options
     for option in options {
         cmd.arg(option);
     }
-    
-    let output = cmd.output()
+
+    let output = cmd
+        .output()
         .with_context(|| "Failed to execute wasm-tools component targets js")?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(anyhow::anyhow!("wasm-tools to-js failed: {}", stderr));
     }
-    
+
     Ok(output_dir.to_string())
 }
 
@@ -276,19 +291,19 @@ pub fn strip_component(input_path: &str, output_path: &str) -> AnyhowResult<Stri
         .arg(output_path)
         .output()
         .with_context(|| "Failed to execute wasm-tools strip")?;
-    
+
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(anyhow::anyhow!("wasm-tools strip failed: {}", stderr));
     }
-    
+
     Ok(output_path.to_string())
 }
 
 /// Validate multiple WASM files in batch
 pub fn validate_batch(config: &BatchValidationConfig) -> AnyhowResult<Vec<WasmInfo>> {
     let mut results = Vec::new();
-    
+
     for input_file in &config.input_files {
         match validate_wasm(input_file, &config.features) {
             Ok(info) => results.push(info),
@@ -304,31 +319,36 @@ pub fn validate_batch(config: &BatchValidationConfig) -> AnyhowResult<Vec<WasmIn
             }
         }
     }
-    
+
     Ok(results)
 }
 
 /// Convert multiple modules to components in batch
-pub fn batch_component_new(input_modules: &[String], output_dir: &str, adapter: Option<&str>) -> AnyhowResult<Vec<String>> {
+pub fn batch_component_new(
+    input_modules: &[String],
+    output_dir: &str,
+    adapter: Option<&str>,
+) -> AnyhowResult<Vec<String>> {
     let mut results = Vec::new();
-    
+
     // Ensure output directory exists
     fs::create_dir_all(output_dir)?;
-    
+
     for input_module in input_modules {
         let input_path = Path::new(input_module);
-        let filename = input_path.file_stem()
+        let filename = input_path
+            .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("component");
         let output_path = Path::new(output_dir).join(format!("{}.wasm", filename));
-        
+
         let config = ComponentConfig {
             input_module: input_module.clone(),
             output_path: output_path.to_string_lossy().to_string(),
             adapter: adapter.map(|s| s.to_string()),
             options: vec![],
         };
-        
+
         match component_new(&config) {
             Ok(output) => results.push(output),
             Err(e) => {
@@ -338,6 +358,6 @@ pub fn batch_component_new(input_modules: &[String], output_dir: &str, adapter: 
             }
         }
     }
-    
+
     Ok(results)
 }

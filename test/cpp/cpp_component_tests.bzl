@@ -179,8 +179,34 @@ def _cpp_component_language_test_impl(ctx):
     """Test C vs C++ language variant differences."""
     env = analysistest.begin(ctx)
 
+    # Test can handle single target or C vs C++ comparison
+    if ctx.attr.target_under_test:
+        # Single target test
+        target_under_test = analysistest.target_under_test(env)
+        component_info = target_under_test[WasmComponentInfo]
+
+        # Validate basic component properties
+        asserts.true(
+            env,
+            component_info.component_type == "component",
+            "Target should be a component",
+        )
+
+        language = component_info.metadata.get("language")
+        asserts.true(
+            env,
+            language in ["c", "cpp"],
+            "Component should be C or C++ language",
+        )
+
+        asserts.true(
+            env,
+            component_info.wasm_file.basename.endswith(".wasm"),
+            "Component should have .wasm file",
+        )
+
     # Test language variant comparison between C and C++ targets
-    if ctx.attr.c_target and ctx.attr.cpp_target:
+    elif ctx.attr.c_target and ctx.attr.cpp_target:
         c_info = ctx.attr.c_target[WasmComponentInfo]
         cpp_info = ctx.attr.cpp_target[WasmComponentInfo]
 
@@ -244,6 +270,10 @@ def _cpp_component_language_test_impl(ctx):
 cpp_component_language_test = analysistest.make(
     _cpp_component_language_test_impl,
     attrs = {
+        "target_under_test": attr.label(
+            providers = [WasmComponentInfo],
+            doc = "Primary target for single-target tests",
+        ),
         "c_target": attr.label(
             providers = [WasmComponentInfo],
             doc = "C component for comparison",

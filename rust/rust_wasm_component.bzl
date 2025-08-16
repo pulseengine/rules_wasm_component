@@ -4,16 +4,10 @@ load("@rules_rust//rust:defs.bzl", "rust_shared_library")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//common:common.bzl", "WASM_TARGET_TRIPLE")
 load(":transitions.bzl", "wasm_transition")
+load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action", "create_component_action")
 
 def _rust_wasm_component_impl(ctx):
     """Implementation of rust_wasm_component rule"""
-
-    # Get toolchain
-    toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    wasm_tools = toolchain.wasm_tools
-
-    # First compile as cdylib using rules_rust
-    # This is handled by the macro below
 
     # Get the compiled WASM module
     wasm_module = ctx.file.wasm_module
@@ -23,28 +17,8 @@ def _rust_wasm_component_impl(ctx):
         # Already a module, no conversion needed
         component_wasm = wasm_module
     else:
-        # Detect if the WASM module is already a component using wasm-tools
-        detect_output = ctx.actions.declare_file(ctx.label.name + ".detect.txt")
-
-        args = ctx.actions.args()
-        args.add("validate")
-        args.add(wasm_module)
-        args.add("--features", "component-model")
-
-        ctx.actions.run_shell(
-            command = """
-            if "$1" validate "$2" --features component-model >/dev/null 2>&1; then
-                echo "component" > "$3"
-            else
-                echo "module" > "$3"
-            fi
-            """,
-            arguments = [wasm_tools.path, wasm_module.path, detect_output.path],
-            inputs = [wasm_module, wasm_tools],
-            outputs = [detect_output],
-            mnemonic = "WasmDetect",
-            progress_message = "Detecting WASM type for %s" % ctx.label,
-        )
+        # Detect if the WASM module is already a component using WASM Tools Integration Component
+        component_check_result = check_is_component_action(ctx, wasm_module)
 
         # For wasm32-wasip2 targets, the output is already a component
         # We can skip conversion by directly using the input
@@ -71,8 +45,11 @@ def _rust_wasm_component_impl(ctx):
         exports = exports,
         metadata = {
             "name": ctx.label.name,
+            "language": "rust",
             "target": WASM_TARGET_TRIPLE,
         },
+        profile = "release",  # Default Rust profile
+        profile_variants = {},
     )
 
     return [
@@ -103,7 +80,7 @@ _rust_wasm_component_rule = rule(
             doc = "Output type (module or component)",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
+    toolchains = ["@rules_wasm_component//toolchains:wasm_tools_component_toolchain_type"],
 )
 
 def rust_wasm_component(

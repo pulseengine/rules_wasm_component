@@ -52,7 +52,7 @@ toolchain(
     name = "file_ops_toolchain",
     exec_compatible_with = [
         "@platforms//os:linux",
-        "@platforms//os:macos", 
+        "@platforms//os:macos",
         "@platforms//os:windows",
     ],
     target_compatible_with = [
@@ -66,7 +66,7 @@ toolchain(
 # Universal toolchain (works on all platforms)
 toolchain(
     name = "file_ops_toolchain_universal",
-    toolchain = ":file_ops_toolchain_impl", 
+    toolchain = ":file_ops_toolchain_impl",
     toolchain_type = "@rules_wasm_component//toolchains:file_ops_toolchain_type",
     visibility = ["//visibility:public"],
 )

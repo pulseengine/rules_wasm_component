@@ -166,6 +166,17 @@ def _cpp_component_impl(ctx):
             wit_file = wit_file,
             package_name = ctx.attr.package_name or "{}:component@1.0.0".format(ctx.attr.name),
         ),
+        component_type = "component",
+        imports = [],  # TODO: Parse from WIT
+        exports = [ctx.attr.world] if ctx.attr.world else [],
+        metadata = {
+            "name": ctx.label.name,
+            "language": "cpp",
+            "target": "wasm32-wasi",
+            "wasi_sdk": True,
+        },
+        profile = ctx.attr.optimization if hasattr(ctx.attr, "optimization") else "release",
+        profile_variants = {},
     )
 
     return [
