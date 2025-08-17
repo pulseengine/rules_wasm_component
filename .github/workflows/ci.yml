@@ -94,6 +94,7 @@ jobs:
             -//examples/wkg_integration/... \
             -//examples/wizer_example/... \
             -//test_wac/... \
+            -//test/wkg/... \
             -//test/production/... \
             -//tools-builder/... \
             -//examples/basic:hello_component_wasm_lib_release \
