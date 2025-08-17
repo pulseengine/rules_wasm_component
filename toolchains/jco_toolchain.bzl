@@ -170,14 +170,24 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
     print("Installing jco {} using hermetic npm...".format(jco_version))
 
     # Create a local node_modules for jco
-    npm_install_result = repository_ctx.execute([
-        npm_binary,
-        "install",
-        "--prefix",
-        "jco_workspace",
-        "@bytecodealliance/jco@{}".format(jco_version),
-        "@bytecodealliance/componentize-js",  # Required dependency
-    ])
+    # Set up environment so npm can find node binary
+    node_dir = str(node_binary.dirname)
+    npm_env = {
+        "PATH": node_dir + ":" + repository_ctx.os.environ.get("PATH", ""),
+        "NODE_PATH": "",  # Clear any existing NODE_PATH
+    }
+    
+    npm_install_result = repository_ctx.execute(
+        [
+            npm_binary,
+            "install",
+            "--prefix",
+            "jco_workspace",
+            "@bytecodealliance/jco@{}".format(jco_version),
+            "@bytecodealliance/componentize-js",  # Required dependency
+        ],
+        environment = npm_env,
+    )
 
     if npm_install_result.return_code != 0:
         fail(format_diagnostic_error(
