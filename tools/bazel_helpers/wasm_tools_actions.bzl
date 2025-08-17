@@ -24,8 +24,9 @@ def wasm_tools_action(ctx, operation, **kwargs):
     """
 
     # Get the WASM tools component from toolchain
-    wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    wasm_tools_component_target = wasm_tools_toolchain.wasm_tools
+    wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_component_toolchain_type"]
+    wasm_tools_info = wasm_tools_toolchain.wasm_tools_info
+    wasm_tools_component_target = wasm_tools_info.wasm_tools_component
 
     if not wasm_tools_component_target:
         fail("WASM Tools Integration Component not available in toolchain")

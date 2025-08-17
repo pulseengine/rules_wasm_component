@@ -233,7 +233,10 @@ wasm_validate = rule(
             doc = "GitHub account to retrieve public keys from",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
+    toolchains = [
+        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
+        "@rules_wasm_component//toolchains:wasm_tools_component_toolchain_type",
+    ],
     doc = """
     Validates a WebAssembly file or component with optional signature verification.
 
