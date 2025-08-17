@@ -104,24 +104,13 @@ def _wasi_sdk_repository_impl(repository_ctx):
 
     strategy = repository_ctx.attr.strategy
 
-    if strategy == "system":
-        _setup_system_wasi_sdk(repository_ctx)
-    elif strategy == "download":
+    if strategy == "download":
         _setup_downloaded_wasi_sdk(repository_ctx)
     else:
-        fail("Unknown strategy: {}. Must be 'system' or 'download'".format(strategy))
+        fail("Unknown strategy: {}. Must be 'download'".format(strategy))
 
     # Create BUILD file
     _create_wasi_sdk_build_file(repository_ctx)
-
-def _setup_system_wasi_sdk(repository_ctx):
-    """Use system-installed WASI SDK"""
-
-    # Default to /usr/local/wasi-sdk
-    wasi_sdk_root = repository_ctx.attr.wasi_sdk_root or "/usr/local/wasi-sdk"
-
-    # Create symlinks to system tools
-    repository_ctx.symlink(wasi_sdk_root, "wasi-sdk")
 
 def _setup_downloaded_wasi_sdk(repository_ctx):
     """Download WASI SDK from GitHub releases"""
@@ -420,9 +409,9 @@ wasi_sdk_repository = repository_rule(
     implementation = _wasi_sdk_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Strategy: 'system' or 'download'",
-            default = "system",
-            values = ["system", "download"],
+            doc = "Strategy: 'download'",
+            default = "download",
+            values = ["download"],
         ),
         "version": attr.string(
             doc = "WASI SDK version",
@@ -430,9 +419,6 @@ wasi_sdk_repository = repository_rule(
         ),
         "url": attr.string(
             doc = "Custom download URL (optional)",
-        ),
-        "wasi_sdk_root": attr.string(
-            doc = "Path to system WASI SDK (for 'system' strategy)",
         ),
     },
 )

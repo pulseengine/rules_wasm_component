@@ -53,6 +53,62 @@ def _detect_host_platform(repository_ctx):
     else:
         fail("Unsupported operating system: {}".format(os_name))
 
+def _get_wizer_download_info(platform, version):
+    """Get download information for wizer prebuilt binaries"""
+
+    # Platform mapping to GitHub release asset names
+    platform_map = {
+        "darwin_amd64": {
+            "asset": "wizer-v{}-x86_64-macos.tar.xz",
+            "type": "tar.xz",
+            "strip_prefix": "wizer-v{}-x86_64-macos",
+            "sha256": "5d5e457abf3fd6e307dee9fe9f7423185a88d90f0c96677b9a5418c448ced52e",  # v9.0.0
+        },
+        "darwin_arm64": {
+            "asset": "wizer-v{}-aarch64-macos.tar.xz",
+            "type": "tar.xz",
+            "strip_prefix": "wizer-v{}-aarch64-macos",
+            "sha256": "3372ee8215abc39b15a51b4aed27f8ae5a42e84261a29e7491ec82bf806bc491",  # v9.0.0
+        },
+        "linux_amd64": {
+            "asset": "wizer-v{}-x86_64-linux.tar.xz",
+            "type": "tar.xz",
+            "strip_prefix": "wizer-v{}-x86_64-linux",
+            "sha256": "d1d85703bc40f18535e673992bef723dc3f84e074bcd1e05b57f24d5adb4f058",  # v9.0.0
+        },
+        "linux_arm64": {
+            "asset": "wizer-v{}-aarch64-linux.tar.xz",
+            "type": "tar.xz",
+            "strip_prefix": "wizer-v{}-aarch64-linux",
+            "sha256": "f560a675d686d42c18de8bd4014a34a0e8b95dafbd696bf8d54817311ae87a4d",  # v9.0.0
+        },
+        "windows_amd64": {
+            "asset": "wizer-v{}-x86_64-windows.zip",
+            "type": "zip",
+            "strip_prefix": "wizer-v{}-x86_64-windows",
+            "sha256": "d9cc5ed028ca873f40adcac513812970d34dd08cec4397ffc5a47d4acee8e782",  # v9.0.0
+        },
+    }
+
+    if platform not in platform_map:
+        fail("Unsupported platform for Wizer download: {}. Supported: {}".format(
+            platform,
+            list(platform_map.keys()),
+        ))
+
+    if version != "9.0.0":
+        fail("Only Wizer version 9.0.0 is supported for download strategy. Requested: {}".format(version))
+
+    info = platform_map[platform]
+    asset_name = info["asset"].format(version)
+
+    return {
+        "url": "https://github.com/bytecodealliance/wizer/releases/download/v{}/{}".format(version, asset_name),
+        "sha256": info["sha256"],
+        "type": info["type"],
+        "strip_prefix": info["strip_prefix"].format(version),
+    }
+
 def _wizer_toolchain_repository_impl(ctx):
     """Implementation of wizer_toolchain_repository repository rule"""
 
@@ -136,23 +192,23 @@ exit 1
 
         wizer_path = "bin/wizer"
 
-    elif strategy == "system":
-        # Check for system-installed Wizer using Bazel-native function
-        wizer_path = ctx.which("wizer")
-        if not wizer_path:
-            fail("Wizer not found in system PATH. Install with 'cargo install wizer --all-features'")
+    elif strategy == "download":
+        # Download prebuilt binary from GitHub releases
+        platform_info = _get_wizer_download_info(platform, version)
 
-        # Verify version if possible
-        version_result = ctx.execute([wizer_path, "--version"])
-        if version_result.return_code == 0:
-            print("Found system Wizer: {}".format(version_result.stdout.strip()))
+        # Download and extract the binary
+        ctx.download_and_extract(
+            url = platform_info["url"],
+            sha256 = platform_info["sha256"],
+            stripPrefix = platform_info["strip_prefix"],
+            type = platform_info["type"],
+        )
 
-        # Create symlink for consistent access
-        ctx.symlink(wizer_path, "bin/wizer")
-        wizer_path = "bin/wizer"
+        # The binary is now extracted directly to the root with the correct name
+        wizer_path = "wizer.exe" if "windows" in platform else "wizer"
 
     else:
-        fail("Unsupported Wizer installation strategy: {}. Use 'build', 'cargo' or 'system'".format(strategy))
+        fail("Unsupported Wizer installation strategy: {}. Use 'build', 'cargo', or 'download'".format(strategy))
 
     # Create BUILD file for the toolchain
     if strategy == "build":
@@ -163,13 +219,28 @@ load("@rules_wasm_component//toolchains:wizer_toolchain.bzl", "wizer_toolchain")
 
 package(default_visibility = ["//visibility:public"])
 
-# Wizer executable from git repository
+# Wizer executable from git repository (Bazel-native build)
 alias(
     name = "wizer_bin",
-    actual = "@wizer_src//:wizer_binary",
+    actual = "@wizer_src//:wizer_bazel",
     visibility = ["//visibility:public"],
 )
 '''
+    elif strategy == "download":
+        # For download strategy, use native file that's already executable
+        build_content = '''"""Wizer WebAssembly pre-initialization toolchain"""
+
+load("@rules_wasm_component//toolchains:wizer_toolchain.bzl", "wizer_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+# Wizer executable (downloaded binary)
+sh_binary(
+    name = "wizer_bin",
+    srcs = ["{wizer_path}"],
+    visibility = ["//visibility:public"],
+)
+'''.format(wizer_path = wizer_path)
     else:
         # For other strategies, use local file
         build_content = '''"""Wizer WebAssembly pre-initialization toolchain"""
@@ -220,8 +291,8 @@ wizer_toolchain_repository = repository_rule(
         ),
         "strategy": attr.string(
             default = "cargo",
-            values = ["build", "cargo", "system"],
-            doc = "Installation strategy: 'build' (build from source), 'cargo' (install via cargo) or 'system' (use system install)",
+            values = ["build", "cargo", "download"],
+            doc = "Installation strategy: 'build' (build from source), 'cargo' (install via cargo), or 'download' (download prebuilt binary)",
         ),
     },
     doc = "Repository rule for setting up Wizer toolchain",
