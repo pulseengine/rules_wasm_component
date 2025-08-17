@@ -132,7 +132,8 @@ jobs:
             -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:check_deps \
-            -//test/integration:validate_consumer_deps
+            -//test/integration:validate_consumer_deps \
+            -//test/integration:dependency_resolution_build_test
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
@@ -233,7 +234,8 @@ jobs:
             -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:check_deps \
-            -//test/integration:validate_consumer_deps
+            -//test/integration:validate_consumer_deps \
+            -//test/integration:dependency_resolution_build_test
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
