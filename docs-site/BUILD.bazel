@@ -233,21 +233,23 @@ genrule(
     message = "Creating fallback documentation deployment",
 )
 
-# Extract built site for inspection (creates directory output)
-genrule(
-    name = "extract_site",
-    srcs = [":docs_site"],
-    outs = ["site_extracted"],
-    cmd = """
-    mkdir -p $@
-    tar -xzf $(location :docs_site) -C $@
-    """,
-)
+# Extract built site for inspection
+# Note: This target is not built by default due to genrule directory output limitations
+# Use 'bazel build //docs-site:docs_site' to get the tar.gz instead
+# genrule(
+#     name = "extract_site",
+#     srcs = [":docs_site"],
+#     outs = ["site_extracted"],
+#     cmd = """
+#     mkdir -p $@
+#     tar -xzf $(location :docs_site) -C $@
+#     """,
+# )
 
 # Aliases for easier access to built documentation
 alias(
     name = "site",
-    actual = ":extract_site",
+    actual = ":docs_site",
 )
 
 alias(
