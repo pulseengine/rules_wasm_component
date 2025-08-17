@@ -56,6 +56,11 @@ use_repo(go_sdk, "go_toolchains")
 
 register_toolchains("@go_toolchains//:all")
 
+# WASI WIT interface definitions
+wasi_wit_ext = use_extension("//wasm:extensions.bzl", "wasi_wit")
+wasi_wit_ext.init()
+use_repo(wasi_wit_ext, "wasi_io")  # Add your external repos here: , "my_external_wit"
+
 # WebAssembly toolchains
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(

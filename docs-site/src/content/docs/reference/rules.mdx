@@ -175,6 +175,25 @@ wit_library(
 )
 ```
 
+#### WIT library with external dependencies
+
+WIT library using external WASI and third-party dependencies
+
+```python
+wit_library(
+    name = "my_component_wit",
+    package_name = "example:my-component@1.0.0",
+    srcs = ["my-component.wit"],
+    deps = [
+        "@wasi_io//:streams",           # WASI IO interfaces
+        "@external_wit//:api",          # External third-party interfaces
+    ],
+)
+```
+
+> **Note:** External WIT dependencies must be configured via `http_archive` rules.
+> See the [External WIT Dependencies Guide](/guides/external-wit-dependencies/) for setup instructions.
+
 ### wit_markdown
 
 Generates markdown documentation from WIT files. Creates human-readable documentation from WebAssembly Interface Types.

@@ -1,0 +1,412 @@
+---
+title: External WIT Dependencies
+description: Guide to managing external WebAssembly Interface Type (WIT) dependencies in your component projects
+---
+
+# External WIT Dependencies
+
+Learn how to add and manage external WebAssembly Interface Type (WIT) dependencies in your component projects using Bazel-native dependency management.
+
+## Overview
+
+When building WebAssembly components, you often need to import external WIT interfaces such as:
+
+- **WASI interfaces** (io, filesystem, http, etc.)
+- **Third-party component APIs** 
+- **Shared interface definitions** across projects
+- **Standardized protocols** and schemas
+
+This guide shows how to manage these dependencies using Bazel's hermetic, reproducible approach instead of external package managers.
+
+## Quick Start
+
+### 1. Built-in WASI Dependencies
+
+The most common external dependencies are WASI interfaces. These are pre-configured and ready to use:
+
+```python title="MODULE.bazel"
+# Enable WASI WIT interfaces
+wasi_wit_ext = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasi_wit")
+wasi_wit_ext.init()
+use_repo(wasi_wit_ext, "wasi_io")
+```
+
+```starlark title="BUILD.bazel"
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "my_component_wit",
+    srcs = ["my-component.wit"],
+    deps = ["@wasi_io//:streams"],  # Use WASI IO streams
+)
+```
+
+```wit title="my-component.wit"
+package example:my-component@1.0.0;
+
+world my-world {
+    import wasi:io/streams@0.2.6;  // Import external interface
+    export my-api;
+}
+```
+
+### 2. Adding Custom External Dependencies
+
+For your own external WIT packages:
+
+```python title="your-project-deps.bzl"
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+def load_my_wit_deps():
+    http_archive(
+        name = "my_external_wit",
+        urls = ["https://github.com/myorg/wit-interfaces/archive/v1.0.0.tar.gz"],
+        sha256 = "abcd1234...",  # Calculate with: curl -L url | sha256sum
+        strip_prefix = "wit-interfaces-1.0.0",
+        build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "api",
+    srcs = glob(["**/*.wit"]),
+    package_name = "myorg:api@1.0.0",
+    visibility = ["//visibility:public"],
+)
+''',
+    )
+```
+
+## Available WASI Interfaces
+
+The following WASI interfaces are pre-configured and available:
+
+| Package | Repository | Description |
+|---------|------------|-------------|
+| `@wasi_io//:streams` | `wasi:io@0.2.6` | I/O streams, error handling, polling |
+
+More WASI packages can be added to `wit/wasi_deps.bzl` as needed.
+
+## Adding External Dependencies
+
+### Method 1: Project-Specific Dependencies
+
+For dependencies specific to your project, create a dependency file:
+
+```python title="external-wit-deps.bzl"
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+def my_project_wit_dependencies():
+    """Load external WIT dependencies for this project"""
+    
+    # Third-party HTTP client interfaces
+    http_archive(
+        name = "http_client_wit",
+        urls = ["https://github.com/wasm-http/interfaces/archive/v2.1.0.tar.gz"],
+        sha256 = "ef123456...",
+        strip_prefix = "interfaces-2.1.0",
+        build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "client",
+    srcs = ["wit/http-client.wit"],
+    package_name = "wasm:http-client@2.1.0",
+    deps = ["@wasi_io//:streams"],
+    visibility = ["//visibility:public"],
+)
+''',
+    )
+    
+    # Database interfaces from another organization
+    http_archive(
+        name = "database_wit",
+        urls = ["https://github.com/db-wasm/wit-specs/archive/refs/tags/stable.tar.gz"],
+        sha256 = "gh789012...",
+        strip_prefix = "wit-specs-stable",
+        build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "sql",
+    srcs = glob(["sql/**/*.wit"]),
+    package_name = "db:sql@1.0.0",
+    visibility = ["//visibility:public"],
+)
+
+wit_library(
+    name = "nosql", 
+    srcs = glob(["nosql/**/*.wit"]),
+    package_name = "db:nosql@1.0.0",
+    deps = [":sql"],
+    visibility = ["//visibility:public"],
+)
+''',
+    )
+```
+
+Load in your `WORKSPACE` or `MODULE.bazel`:
+
+```python title="WORKSPACE"
+load("//:external-wit-deps.bzl", "my_project_wit_dependencies")
+my_project_wit_dependencies()
+```
+
+### Method 2: Organization-Wide Dependencies
+
+For dependencies shared across multiple projects, add to the central configuration:
+
+```python title="wit/wasi_deps.bzl"
+def wasi_wit_dependencies():
+    # ... existing WASI dependencies ...
+    
+    # Add your organization's shared interfaces
+    http_archive(
+        name = "company_shared_wit",
+        urls = ["https://internal-git.company.com/wit/shared-interfaces/archive/v3.0.0.tar.gz"],
+        sha256 = "company123...",
+        strip_prefix = "shared-interfaces-3.0.0",
+        build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "common",
+    srcs = glob(["common/**/*.wit"]),
+    package_name = "company:common@3.0.0",
+    visibility = ["//visibility:public"],
+)
+''',
+    )
+```
+
+Update `MODULE.bazel`:
+
+```python title="MODULE.bazel"
+use_repo(wasi_wit_ext, "wasi_io", "company_shared_wit")
+```
+
+## Calculating SHA256 Checksums
+
+For reproducible builds, all external dependencies require SHA256 checksums:
+
+```bash
+# Method 1: Direct download
+curl -L https://github.com/myorg/wit-interfaces/archive/v1.0.0.tar.gz | sha256sum
+
+# Method 2: Use Bazel to calculate (get wrong checksum first, then copy correct one from error)
+bazel build //your:target  # Will show actual checksum in error message
+```
+
+## Using External Dependencies
+
+### In WIT Files
+
+Import external interfaces in your WIT definitions:
+
+```wit title="my-component.wit"
+package example:my-app@1.0.0;
+
+// Import external interfaces
+import wasi:io/streams@0.2.6;
+import wasm:http-client@2.1.0;
+import db:sql@1.0.0;
+import company:common@3.0.0;
+
+interface my-service {
+    // Use imported types
+    process-request: func(
+        input: wasi:io/streams.input-stream,
+        request: wasm:http-client.request
+    ) -> result<company:common.response>;
+    
+    query-data: func(sql: string) -> db:sql.result-set;
+}
+
+world my-service-world {
+    import wasi:io/streams@0.2.6;
+    import wasm:http-client@2.1.0; 
+    import db:sql@1.0.0;
+    import company:common@3.0.0;
+    
+    export my-service;
+}
+```
+
+### In BUILD Files
+
+Reference external dependencies in your build targets:
+
+```starlark title="BUILD.bazel"
+load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+
+# WIT library with external dependencies
+wit_library(
+    name = "my_service_wit",
+    srcs = ["my-component.wit"],
+    world = "my-service-world",
+    deps = [
+        "@wasi_io//:streams",           # WASI streams
+        "@http_client_wit//:client",    # HTTP client interfaces
+        "@database_wit//:sql",          # Database interfaces
+        "@company_shared_wit//:common", # Company shared types
+    ],
+)
+
+# Generate documentation including all dependencies
+wit_markdown(
+    name = "docs",
+    wit = ":my_service_wit",
+)
+
+# Build component with all dependencies resolved
+rust_wasm_component(
+    name = "my_service",
+    srcs = ["src/lib.rs"],
+    world = "my-service-world", 
+    wit = ":my_service_wit",
+)
+```
+
+## Best Practices
+
+### Version Management
+
+- **Pin specific versions** in URLs: `v1.2.3` not `main` or `latest`
+- **Use semantic versioning** in package names: `@1.2.3`
+- **Update dependencies systematically** across all consuming projects
+- **Test compatibility** when upgrading dependency versions
+
+### Security & Reproducibility
+
+- **Always specify SHA256 checksums** for external archives
+- **Use HTTPS URLs** for all external dependencies
+- **Pin exact commits** for git dependencies when possible
+- **Vendor critical dependencies** for air-gapped environments
+
+### Organization
+
+- **Group related interfaces** in single repositories
+- **Use consistent naming** across package and target names
+- **Document breaking changes** when updating interface versions
+- **Provide migration guides** for major version updates
+
+### Performance
+
+- **Minimize dependency depth** to reduce build complexity
+- **Use glob patterns efficiently** in `srcs` attributes
+- **Cache frequently-used dependencies** in CI/CD systems
+- **Consider dependency size** impact on build times
+
+## Troubleshooting
+
+### Common Issues
+
+**Package version mismatch:**
+```
+Error: package 'myorg:api@1.0.0' not found. known packages: myorg:api@1.1.0
+```
+Solution: Update version in WIT import or dependency definition.
+
+**Missing dependency:**
+```
+Error: failed to resolve directory while parsing WIT
+```
+Solution: Add missing dependency to `deps` attribute in `wit_library`.
+
+**Checksum validation failed:**
+```
+Error: Checksum was abc123... but wanted def456...
+```
+Solution: Recalculate SHA256 checksum and update in `http_archive`.
+
+### Debugging Steps
+
+1. **Verify package names** match between WIT imports and `package_name` in `wit_library`
+2. **Check dependency graph** with `bazel query 'deps(//your:target)'`
+3. **Inspect WIT structure** in generated directories under `bazel-bin/`
+4. **Use `--sandbox_debug`** to examine failed build details
+
+## Migration from wit-deps
+
+If migrating from the `wit-deps` tool:
+
+1. **Convert `deps.toml`** entries to `http_archive` rules
+2. **Move WIT files** from `wit/deps/` to Bazel external repositories  
+3. **Update imports** to use new package names/versions
+4. **Remove `wit-deps` tooling** and use Bazel dependency management
+
+## Advanced Usage
+
+### Custom Build Scripts
+
+For WIT packages that need preprocessing:
+
+```starlark
+http_archive(
+    name = "generated_wit",
+    urls = ["https://example.com/wit-schemas.tar.gz"],
+    sha256 = "...",
+    build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+genrule(
+    name = "process_schemas",
+    srcs = glob(["schemas/**/*.proto"]),
+    outs = ["generated/api.wit"],
+    cmd = "$(location //tools:proto-to-wit) $(SRCS) > $@",
+    tools = ["//tools:proto-to-wit"],
+)
+
+wit_library(
+    name = "generated_api",
+    srcs = [":process_schemas"],
+    package_name = "generated:api@1.0.0",
+    visibility = ["//visibility:public"],
+)
+''',
+)
+```
+
+### Multi-Package Repositories
+
+For repositories containing multiple WIT packages:
+
+```starlark
+http_archive(
+    name = "multi_wit_repo",
+    urls = ["https://github.com/org/multi-wit/archive/v2.0.0.tar.gz"],
+    sha256 = "...",
+    strip_prefix = "multi-wit-2.0.0",
+    build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+# Core types package
+wit_library(
+    name = "core",
+    srcs = glob(["core/wit/*.wit"]),
+    package_name = "org:core@2.0.0",
+    visibility = ["//visibility:public"],
+)
+
+# HTTP package depending on core
+wit_library(
+    name = "http",
+    srcs = glob(["http/wit/*.wit"]),
+    package_name = "org:http@2.0.0",
+    deps = [":core", "@wasi_io//:streams"],
+    visibility = ["//visibility:public"],
+)
+
+# Database package depending on core
+wit_library(
+    name = "database",
+    srcs = glob(["database/wit/*.wit"]),
+    package_name = "org:database@2.0.0",
+    deps = [":core"],
+    visibility = ["//visibility:public"],
+)
+''',
+)
+```
+
+This approach provides a Bazel-native, reproducible way to manage external WIT dependencies without relying on external package managers or shell scripts.

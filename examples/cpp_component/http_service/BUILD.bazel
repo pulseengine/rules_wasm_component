@@ -3,9 +3,9 @@ load("//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen
 # WIT bindings generation
 cpp_wit_bindgen(
     name = "http_service_bindings",
+    visibility = ["//visibility:public"],
     wit = "wit/http_service.wit",
     world = "http-service-world",
-    visibility = ["//visibility:public"],
 )
 
 # Combined HTTP service library (all in one to avoid include path issues)

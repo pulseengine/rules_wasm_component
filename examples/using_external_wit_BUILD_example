@@ -1,0 +1,31 @@
+# Example BUILD file showing how to use external WIT dependencies
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
+
+# Your component's WIT library with external dependencies
+wit_library(
+    name = "my_component_wit",
+    srcs = ["using_external_wit_example.wit"],
+    world = "my-component-world",
+    deps = [
+        "@wasi_io//:streams",           # WASI IO dependency
+        "@wasi_filesystem//:filesystem", # WASI filesystem dependency  
+        "@my_external_wit//:api",       # Your external WIT dependency
+    ],
+)
+
+# Generate documentation (will include all dependencies)
+wit_markdown(
+    name = "my_component_docs",
+    wit = ":my_component_wit",
+)
+
+# Use in your actual component build
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+
+rust_wasm_component(
+    name = "my_component",
+    srcs = ["src/lib.rs"],
+    world = "my-component-world",
+    wit = ":my_component_wit",  # All dependencies automatically included
+)
