@@ -118,12 +118,17 @@ jobs:
             -//examples/basic:hello_component_wasm_lib_release_host \
             -//test/export_macro:test_component_wasm_lib_release \
             -//test/integration:basic_component_wasm_lib_debug \
+            -//test/integration:basic_component_wasm_lib_debug_host \
             -//test/integration:basic_component_wasm_lib_release \
+            -//test/integration:basic_component_wasm_lib_release_host \
             -//test/integration:consumer_component_wasm_lib_release \
+            -//test/integration:consumer_component_wasm_lib_release_host \
             -//test/integration:service_a_component_wasm_lib_release \
             -//test/integration:service_a_component_wasm_lib_release_host \
             -//test/integration:service_b_component_wasm_lib_release \
+            -//test/integration:service_b_component_wasm_lib_release_host \
             -//test/integration:wasi_component_wasm_lib_release \
+            -//test/integration:wasi_component_wasm_lib_release_host \
             -//test/integration:multi_service_system \
             -//test/integration:wasi_system \
             -//test/integration:composition_build_test \
@@ -226,12 +231,17 @@ jobs:
             -//examples/basic:hello_component_wasm_lib_release_host \
             -//test/export_macro:test_component_wasm_lib_release \
             -//test/integration:basic_component_wasm_lib_debug \
+            -//test/integration:basic_component_wasm_lib_debug_host \
             -//test/integration:basic_component_wasm_lib_release \
+            -//test/integration:basic_component_wasm_lib_release_host \
             -//test/integration:consumer_component_wasm_lib_release \
+            -//test/integration:consumer_component_wasm_lib_release_host \
             -//test/integration:service_a_component_wasm_lib_release \
             -//test/integration:service_a_component_wasm_lib_release_host \
             -//test/integration:service_b_component_wasm_lib_release \
+            -//test/integration:service_b_component_wasm_lib_release_host \
             -//test/integration:wasi_component_wasm_lib_release \
+            -//test/integration:wasi_component_wasm_lib_release_host \
             -//test/integration:multi_service_system \
             -//test/integration:wasi_system \
             -//test/integration:composition_build_test \
