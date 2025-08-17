@@ -62,7 +62,7 @@ wasm_keygen = rule(
         ),
         "openssh_format": attr.bool(
             default = False,
-            doc = "Generate keys in OpenSSH format (Ed25519)",
+            doc = "Metadata flag for OpenSSH format preference. Note: wasmsign2 keygen always generates keys in its own compact format, not OpenSSH format. This flag is kept for metadata tracking only.",
         ),
     },
     toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
@@ -104,6 +104,8 @@ def _wasm_sign_impl(ctx):
         key_info = ctx.attr.keys[WasmKeyInfo]
         secret_key = key_info.secret_key
         public_key = key_info.public_key
+        # Use the actual key format from the key info
+        # ssh_keygen produces "openssh" format, wasm_keygen produces "compact" format
         openssh_format = key_info.key_format == "openssh"
     else:
         secret_key = ctx.file.secret_key
