@@ -48,3 +48,15 @@ js_component(
     wit = "wit/calculator.wit",
     world = "calculator",
 )
+
+# Simple JavaScript component without imports to test basic jco functionality
+js_component(
+    name = "simple_js_component",
+    package_name = "example:simple@1.0.0",
+    srcs = [
+        "src/simple.js",
+    ],
+    entry_point = "simple.js",
+    wit = "wit/simple.wit",
+    world = "simple",
+)

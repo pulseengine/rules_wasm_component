@@ -3,7 +3,6 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
-load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_js_workspace_action")
 
 def _js_component_impl(ctx):
     """Implementation of js_component rule"""
@@ -37,63 +36,96 @@ def _js_component_impl(ctx):
             content = json.encode(package_content),
         )
 
-    # Prepare JavaScript workspace using File Operations Component
-    work_dir = setup_js_workspace_action(
-        ctx,
-        sources = source_files,
-        package_json = package_json,
-        npm_deps = None,
-    )
-
-    # Copy WIT file to workspace (needed for jco componentize)
-    wit_dest = ctx.actions.declare_file(ctx.attr.name + "_component.wit")
-    ctx.actions.symlink(
-        output = wit_dest,
-        target_file = wit_file,
-    )
-
-    # Run jco to build component
-    jco_args = ctx.actions.args()
-    jco_args.add("componentize")
-    jco_args.add(paths.join(work_dir.path, ctx.attr.entry_point))
-    jco_args.add("--wit", wit_dest.path)
-    jco_args.add("--out", component_wasm.path)
-
+    # Find the entry point file
+    entry_point_file = None
+    for src in source_files:
+        if src.basename == ctx.attr.entry_point:
+            entry_point_file = src
+            break
+    
+    if not entry_point_file:
+        fail("Entry point '{}' not found in sources: {}".format(
+            ctx.attr.entry_point, [src.basename for src in source_files]
+        ))
+    
+    # Create a build script that sets up a workspace and runs jco with proper working directory
+    build_script = ctx.actions.declare_file(ctx.attr.name + "_build.sh")
+    
+    script_lines = [
+        "#!/bin/bash",
+        "set -euo pipefail",
+        "",
+        "# Create temporary workspace",
+        "WORK_DIR=$(mktemp -d)",
+        "echo \"Working in: $WORK_DIR\"",
+        "",
+        "# Copy all source files to workspace (flattened)",
+    ]
+    
+    for src in source_files:
+        script_lines.append("cp \"{}\" \"$WORK_DIR/{}\"".format(src.path, src.basename))
+    
+    if package_json:
+        script_lines.append("cp \"{}\" \"$WORK_DIR/package.json\"".format(package_json.path))
+    
+    # Build jco command - change to workspace and use relative paths for module resolution
+    script_lines.extend([
+        "",
+        "# Save original directory for absolute paths",
+        "ORIGINAL_DIR=\"$(pwd)\"",
+        "",
+        "# Change to workspace directory so jco resolves modules correctly",
+        "cd \"$WORK_DIR\"",
+        "",
+        "# Debug: show current directory and files",
+        "echo \"Current directory: $(pwd)\"",
+        "echo \"Original directory: $ORIGINAL_DIR\"",
+        "echo \"Files in workspace:\"",
+        "ls -la",
+        "echo \"JCO binary path: $ORIGINAL_DIR/{}\"".format(jco.path),
+        "echo \"About to run jco...\"",
+        "",
+        "# Run jco componentize from workspace with correct module resolution",
+    ])
+    
+    # Build jco command - use absolute path for entry point for proper module resolution
+    jco_cmd_parts = [
+        "\"$ORIGINAL_DIR/{}\"".format(jco.path),  # jco binary path
+        "componentize",
+        "\"$WORK_DIR/{}\"".format(ctx.attr.entry_point),  # Absolute path to entry point in workspace
+        "--wit \"$ORIGINAL_DIR/{}\"".format(wit_file.path),  # Absolute path to WIT file
+        "--out \"$ORIGINAL_DIR/{}\"".format(component_wasm.path),  # Absolute path to output
+    ]
+    
     if ctx.attr.world:
-        jco_args.add("--world-name", ctx.attr.world)
-
-    # Add jco-specific flags
+        jco_cmd_parts.append("--world-name {}".format(ctx.attr.world))
+    
     if ctx.attr.disable_feature_detection:
-        jco_args.add("--disable-feature-detection")
-
+        jco_cmd_parts.append("--disable-feature-detection")
+    
     if ctx.attr.compat:
-        jco_args.add("--compat")
-
-    # Debug the issue by adding debugging
-    debug_script = ctx.actions.declare_file(ctx.attr.name + "_debug.sh")
+        jco_cmd_parts.append("--compat")
+    
+    script_lines.extend([
+        " ".join(jco_cmd_parts),
+        "",
+        "echo \"Component build complete\"",
+    ])
+    
     ctx.actions.write(
-        output = debug_script,
-        content = """#!/bin/bash
-echo "=== JCO DEBUG INFO ==="
-echo "Entry point file: {}"
-echo "File exists check:"
-ls -la "{}"
-echo "Working directory contents:"
-ls -la "{}"
-echo "Running jco with: $@"
-exec "$@"
-""".format(
-            paths.join(work_dir.path, ctx.attr.entry_point),
-            paths.join(work_dir.path, ctx.attr.entry_point),
-            work_dir.path
-        ),
+        output = build_script,
+        content = "\n".join(script_lines),
         is_executable = True,
     )
-
+    
+    # All input files
+    all_inputs = list(source_files) + [wit_file]
+    if package_json:
+        all_inputs.append(package_json)
+    
     ctx.actions.run(
-        executable = debug_script,
-        arguments = [jco.path] + [jco_args],
-        inputs = [work_dir, wit_dest],
+        executable = build_script,
+        inputs = all_inputs,
         outputs = [component_wasm],
         tools = [jco],
         mnemonic = "JCOBuild",
