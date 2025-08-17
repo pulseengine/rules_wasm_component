@@ -90,6 +90,7 @@ jobs:
             -//examples/js_component/... \
             -//examples/go_component/... \
             -//examples/wac_remote_compose/... \
+            -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \
             -//examples/wizer_example/... \
             -//test_wac/... \
