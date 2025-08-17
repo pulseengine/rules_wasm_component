@@ -138,6 +138,7 @@ WasmComponentMetadataInfo = provider(
         "metadata_file": "JSON file containing extracted metadata",
         "component_file": "Source WebAssembly component file",
         "extraction_script": "Script used for metadata extraction",
+        "file_size_output": "File containing component size information",
     },
 )
 
