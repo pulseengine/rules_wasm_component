@@ -132,7 +132,10 @@ jobs:
             -//test/unit:test_component_simple_wasm_lib_release_host \
             -//test/unit:test_component_with_deps_wasm_lib_release_host \
             -//examples/basic:hello_component_wasm_lib_release_host \
-            -//tools/checksum_updater_wasm:checksum_updater_wasm_wizer_component_release_wasm_lib_release_host
+            -//tools/checksum_updater_wasm:checksum_updater_wasm_wizer_component_release_wasm_lib_release_host \
+            -//examples/js_component:hello_js_component \
+            -//examples/js_component:calc_js_component \
+            -//examples/js_component:hello_js_bindings
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
