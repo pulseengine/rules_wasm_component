@@ -1,50 +1,10 @@
 """BUILD file for wizer repository
 
-This file creates wizer binary using both cargo (legacy) and Bazel-native rust_binary.
-The rust_binary approach eliminates cargo sandbox issues.
+This file creates wizer binary using cargo build with download strategy.
+The download strategy provides hermetic builds without complex workspace dependencies.
 """
 
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
-
-# Bazel-native rust_binary build (NEW: eliminates cargo sandbox issues)
-rust_binary(
-    name = "wizer_bazel",
-    srcs = [
-        "src/bin/wizer.rs",
-    ],
-    crate_name = "wizer",
-    edition = "2021",
-    deps = [
-        ":wizer_lib",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-# Supporting library crate for Bazel-native build
-rust_library(
-    name = "wizer_lib",
-    srcs = glob([
-        "src/**/*.rs",
-    ], exclude = [
-        "src/bin/**/*.rs",
-    ]),
-    crate_name = "wizer",
-    edition = "2021",
-    deps = [
-        # Use dependencies from bazel_tools_crates
-        "@bazel_tools_crates//:anyhow",
-        "@bazel_tools_crates//:clap",
-        "@bazel_tools_crates//:env_logger",
-        "@bazel_tools_crates//:log",
-        "@bazel_tools_crates//:wasmtime",
-        "@bazel_tools_crates//:wasmtime-wasi",
-        "@bazel_tools_crates//:wasm-encoder",
-        "@bazel_tools_crates//:wasmparser",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-# Legacy cargo build (for backward compatibility)
+# Cargo build for wizer
 genrule(
     name = "wizer",
     srcs = glob(["**/*"]),  # All source files

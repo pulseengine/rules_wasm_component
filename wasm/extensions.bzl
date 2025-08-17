@@ -40,7 +40,7 @@ def _wasm_toolchain_extension_impl(module_ctx):
     if not registrations:
         wasm_toolchain_repository(
             name = "wasm_tools_toolchains",
-            strategy = "system",
+            strategy = "hybrid",
             version = "1.235.0",
             git_commit = "main",
             wasm_tools_commit = "",
@@ -64,9 +64,9 @@ wasm_toolchain = module_extension(
                     default = "wasm_tools",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'system', 'download', 'build', 'bazel', or 'hybrid'",
-                    default = "system",
-                    values = ["system", "download", "build", "bazel", "hybrid"],
+                    doc = "Tool acquisition strategy: 'download', 'build', 'bazel', or 'hybrid'",
+                    default = "hybrid",
+                    values = ["download", "build", "bazel", "hybrid"],
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download/build strategies)",
@@ -122,14 +122,13 @@ def _wasi_sdk_extension_impl(module_ctx):
             strategy = registration.strategy,
             version = registration.version,
             url = registration.url,
-            wasi_sdk_root = registration.wasi_sdk_root,
         )
 
     # If no registrations, create default system SDK
     if not registrations:
         wasi_sdk_repository(
             name = "wasi_sdk",
-            strategy = "system",
+            strategy = "download",
             version = "25",
         )
 
@@ -144,9 +143,9 @@ wasi_sdk = module_extension(
                     default = "wasi",
                 ),
                 "strategy": attr.string(
-                    doc = "SDK acquisition strategy: 'system' or 'download'",
-                    default = "system",
-                    values = ["system", "download"],
+                    doc = "SDK acquisition strategy: 'download'",
+                    default = "download",
+                    values = ["download"],
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download strategy)",
@@ -188,7 +187,7 @@ def _wkg_extension_impl(module_ctx):
     if not registrations:
         wkg_toolchain_repository(
             name = "wkg_toolchain",
-            strategy = "system",
+            strategy = "download",
             version = "0.11.0",
         )
 
@@ -203,9 +202,9 @@ wkg = module_extension(
                     default = "wkg",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'system', 'download', or 'build'",
-                    default = "system",
-                    values = ["system", "download", "build"],
+                    doc = "Tool acquisition strategy: 'download' or 'build'",
+                    default = "download",
+                    values = ["download", "build"],
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download/build strategies)",
@@ -247,7 +246,7 @@ def _jco_extension_impl(module_ctx):
     if not registrations:
         jco_toolchain_repository(
             name = "jco_toolchain",
-            strategy = "system",
+            strategy = "npm",
             version = "1.4.0",
         )
 
@@ -262,9 +261,9 @@ jco = module_extension(
                     default = "jco",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'system', 'download', or 'npm'",
-                    default = "system",
-                    values = ["system", "download", "npm"],
+                    doc = "Tool acquisition strategy: 'download' or 'npm'",
+                    default = "npm",
+                    values = ["download", "npm"],
                 ),
                 "version": attr.string(
                     doc = "jco version to use",
@@ -297,7 +296,7 @@ def _cpp_component_extension_impl(module_ctx):
     if not registrations:
         cpp_component_toolchain_repository(
             name = "cpp_component_toolchain",
-            strategy = "system",
+            strategy = "download",
             wasi_sdk_version = "24",
         )
 
@@ -312,9 +311,9 @@ cpp_component = module_extension(
                     default = "cpp_component",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'system', 'download', or 'build'",
-                    default = "system",
-                    values = ["system", "download", "build"],
+                    doc = "Tool acquisition strategy: 'download' or 'build'",
+                    default = "download",
+                    values = ["download", "build"],
                 ),
                 "wasi_sdk_version": attr.string(
                     doc = "WASI SDK version to use",
@@ -409,9 +408,9 @@ wizer = module_extension(
                     default = "9.0.0",
                 ),
                 "strategy": attr.string(
-                    doc = "Installation strategy: 'build' (build from source), 'cargo' (install via cargo) or 'system' (use system install)",
+                    doc = "Installation strategy: 'build' (build from source), 'cargo' (install via cargo), or 'download' (download prebuilt binary)",
                     default = "cargo",
-                    values = ["build", "cargo", "system"],
+                    values = ["build", "cargo", "download"],
                 ),
             },
         ),
@@ -459,9 +458,9 @@ wasmtime = module_extension(
                     default = "35.0.0",
                 ),
                 "strategy": attr.string(
-                    doc = "Installation strategy: 'download' (download binary) or 'system' (use system install)",
+                    doc = "Installation strategy: 'download' (download binary)",
                     default = "download",
-                    values = ["download", "system"],
+                    values = ["download"],
                 ),
             },
         ),

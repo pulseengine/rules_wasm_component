@@ -91,9 +91,7 @@ def _cpp_component_toolchain_repository_impl(repository_ctx):
     platform = _detect_host_platform(repository_ctx)
     wasi_sdk_version = repository_ctx.attr.wasi_sdk_version
 
-    if strategy == "system":
-        _setup_system_cpp_tools(repository_ctx)
-    elif strategy == "download":
+    if strategy == "download":
         _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version)
     elif strategy == "build":
         _setup_built_cpp_tools(repository_ctx)
@@ -101,57 +99,11 @@ def _cpp_component_toolchain_repository_impl(repository_ctx):
         fail(format_diagnostic_error(
             "E001",
             "Unknown C/C++ strategy: {}".format(strategy),
-            "Must be 'system', 'download', or 'build'",
+            "Must be 'download' or 'build'",
         ))
 
     # Create BUILD files
     _create_cpp_build_files(repository_ctx)
-
-def _setup_system_cpp_tools(repository_ctx):
-    """Set up system-installed C/C++ tools"""
-
-    # Validate system tools
-    tools = [
-        ("clang", "clang"),
-        ("clang++", "clang++"),
-        ("llvm-ar", "llvm-ar"),
-        ("wit-bindgen", "wit-bindgen"),
-        ("wasm-tools", "wasm-tools"),
-    ]
-
-    for tool_name, binary_name in tools:
-        validation_result = validate_system_tool(repository_ctx, binary_name)
-
-        if not validation_result["valid"]:
-            if tool_name in ["clang", "clang++"]:
-                fail(format_diagnostic_error(
-                    "E006",
-                    "{} not found in system PATH".format(binary_name),
-                    "Install WASI SDK or LLVM with WebAssembly support",
-                ))
-            else:
-                fail(validation_result["error"])
-
-        if "warning" in validation_result:
-            print(validation_result["warning"])
-
-        # Create symlink to system tool (Bazel-native approach)
-        output_name = "clang_cpp" if tool_name == "clang++" else tool_name.replace("-", "_")
-        tool_path = validation_result.get("path", repository_ctx.which(binary_name))
-        if tool_path:
-            repository_ctx.symlink(tool_path, output_name)
-        else:
-            # Fallback: use PATH resolution
-            repository_ctx.file(output_name, binary_name, executable = True)
-
-        print("Using system {}: {} at {}".format(
-            tool_name,
-            binary_name,
-            validation_result.get("path", "system PATH"),
-        ))
-
-    # Set up sysroot (assume system WASI SDK)
-    _setup_system_sysroot(repository_ctx)
 
 def _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version):
     """Download WASI SDK and related tools"""
@@ -203,9 +155,10 @@ def _setup_built_cpp_tools(repository_ctx):
     """Build C/C++ tools from source"""
 
     # This would involve building LLVM/Clang with WebAssembly support
-    # For now, fall back to system strategy
-    print("Build strategy not yet implemented for C/C++ toolchain, using system tools")
-    _setup_system_cpp_tools(repository_ctx)
+    # For now, fall back to download strategy
+    print("Build strategy not yet implemented for C/C++ toolchain, using download strategy")
+    platform = _detect_host_platform(repository_ctx)
+    _setup_downloaded_cpp_tools(repository_ctx, platform, "25")
 
 def _get_wasi_sdk_url(platform, version):
     """Get WASI SDK download URL for platform and version"""
@@ -302,31 +255,6 @@ def _setup_downloaded_sysroot(repository_ctx):
         repository_ctx.file("sysroot/include/.gitkeep", "")
         repository_ctx.file("sysroot/lib/.gitkeep", "")
 
-def _setup_system_sysroot(repository_ctx):
-    """Set up system sysroot directory"""
-
-    # Try to find WASI SDK sysroot
-    possible_locations = [
-        "/opt/wasi-sdk/share/wasi-sysroot",
-        "/usr/local/share/wasi-sysroot",
-        "/usr/share/wasi-sysroot",
-    ]
-
-    for location in possible_locations:
-        # Use Bazel-native path existence check instead of shell test
-        if repository_ctx.path(location).exists:
-            # Create symlink to sysroot
-            repository_ctx.symlink(location, "sysroot")
-            print("Using WASI sysroot at: {}".format(location))
-            return
-
-    # If not found, create minimal sysroot structure
-    print("Warning: WASI sysroot not found, creating minimal structure")
-
-    # Note: Create minimal directories using Bazel-native file operations
-    repository_ctx.file("sysroot/include/.gitkeep", "")  # Creates directory
-    repository_ctx.file("sysroot/lib/.gitkeep", "")  # Creates directory
-
 def _create_cpp_build_files(repository_ctx):
     """Create BUILD files for C/C++ toolchain"""
 
@@ -406,9 +334,9 @@ cpp_component_toolchain_repository = repository_rule(
     implementation = _cpp_component_toolchain_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Tool acquisition strategy: 'system', 'download', or 'build'",
-            default = "system",
-            values = ["system", "download", "build"],
+            doc = "Tool acquisition strategy: 'download' or 'build'",
+            default = "download",
+            values = ["download", "build"],
         ),
         "wasi_sdk_version": attr.string(
             doc = "WASI SDK version to use",
