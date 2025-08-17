@@ -94,6 +94,7 @@ jobs:
             -//examples/wizer_example/... \
             -//test_wac/... \
             -//test/production/... \
+            -//tools-builder/... \
             -//examples/basic:hello_component_wasm_lib_release \
             -//test/export_macro:test_component_wasm_lib_release \
             -//test/integration:basic_component_wasm_lib_debug \
