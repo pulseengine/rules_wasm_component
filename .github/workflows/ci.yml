@@ -114,6 +114,7 @@ jobs:
             -//test/production/... \
             -//tools-builder/... \
             -//examples/basic:hello_component_wasm_lib_release \
+            -//examples/basic:hello_component_wasm_lib_release_host \
             -//test/export_macro:test_component_wasm_lib_release \
             -//test/integration:basic_component_wasm_lib_debug \
             -//test/integration:basic_component_wasm_lib_release \
@@ -134,7 +135,8 @@ jobs:
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release_host \
             -//test_wit_deps/consumer:check_deps \
             -//test/integration:validate_consumer_deps \
-            -//test/integration:dependency_resolution_build_test
+            -//test/integration:dependency_resolution_build_test \
+            -//examples/wasm_signing:example_component_wasm_lib_release_host
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
@@ -217,6 +219,7 @@ jobs:
             -//tools-builder/... \
             $EXTRA_EXCLUDES \
             -//examples/basic:hello_component_wasm_lib_release \
+            -//examples/basic:hello_component_wasm_lib_release_host \
             -//test/export_macro:test_component_wasm_lib_release \
             -//test/integration:basic_component_wasm_lib_debug \
             -//test/integration:basic_component_wasm_lib_release \
@@ -237,7 +240,8 @@ jobs:
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release_host \
             -//test_wit_deps/consumer:check_deps \
             -//test/integration:validate_consumer_deps \
-            -//test/integration:dependency_resolution_build_test
+            -//test/integration:dependency_resolution_build_test \
+            -//examples/wasm_signing:example_component_wasm_lib_release_host
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
