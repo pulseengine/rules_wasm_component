@@ -5,16 +5,33 @@ description: Complete guide to deploying WebAssembly components securely in prod
 
 # Production Deployment Guide
 
+## From Development to Production
+
+**Moving from "it works on my machine" to "it works reliably for thousands of users"** requires careful planning and robust processes. This guide shows you how to deploy WebAssembly components with enterprise-grade reliability and security.
+
+**What makes production deployment different:**
+- **Scale and reliability** - Your components need to handle real user load without failing
+- **Security requirements** - Production systems need cryptographic verification and access controls
+- **Compliance needs** - Many organizations require audit trails and signed code
+- **Team coordination** - Multiple teams need to deploy and update components safely
+- **Zero-downtime updates** - Changes must happen without interrupting users
+
+**The production challenge:** In development, you can rebuild and restart quickly when something breaks. In production, failures affect real users and cost money. This guide shows you how to build deployment processes that are both secure and reliable.
+
+## The Complete Production Pipeline
+
+**Think of production deployment as an assembly line** where each stage adds reliability and security. No shortcuts - each step protects your users and your business.
+
 Learn how to deploy WebAssembly components securely in production environments using the complete pipeline: building, signing, registry publishing, composition, and runtime deployment.
 
-## Overview
+## Core Production Requirements
 
 Production deployment involves:
-- **🏗️ Component Building** - Optimized builds with Bazel
-- **🔐 Component Signing** - Cryptographic integrity protection
-- **📦 Registry Publishing** - Secure distribution via OCI registries
-- **🔄 WAC Composition** - Multi-component system assembly
-- **🚀 Runtime Deployment** - Production environment orchestration
+- **Component Building** - Optimized builds with Bazel
+- **Component Signing** - Cryptographic integrity protection
+- **Registry Publishing** - Secure distribution via OCI registries
+- **WAC Composition** - Multi-component system assembly
+- **Runtime Deployment** - Production environment orchestration
 
 ## Complete Production Pipeline
 
@@ -42,9 +59,9 @@ graph TD
 
 **Production-Ready:** This pipeline ensures security, reliability, and scalability for enterprise WebAssembly deployments.
 
----
-
 ## Phase 1: Secure Component Building
+
+**Production builds are different from development builds.** They prioritize performance, security, and reliability over quick iteration. Think of it like the difference between a prototype car and one that rolls off the production line - same basic function, but built to much higher standards.
 
 ### Optimized Production Builds
 
@@ -108,6 +125,8 @@ rust_wasm_component_bindgen(
 ---
 
 ## Phase 2: Component Signing Strategy
+
+**Signing is like putting a tamper-proof seal on your components.** In production, you can't trust that components haven't been modified between build and deployment. Signing provides mathematical proof that your components are authentic and unmodified.
 
 ### Production Key Management
 
@@ -193,6 +212,8 @@ wasm_sign(
 
 ## Phase 3: OCI Registry Publishing
 
+**Registries are like app stores for your components.** They provide secure, versioned storage and distribution. Just as you wouldn't download apps from random websites, production systems need trusted sources for components.
+
 ### Registry Configuration
 
 ```python title="registry/BUILD.bazel"
@@ -274,6 +295,8 @@ genrule(
 ---
 
 ## Phase 4: WAC Composition for Production
+
+**Composition is where individual components become a complete application.** Like assembling a car from parts, you need to connect all your components together correctly and ensure they work as a system, not just individually.
 
 ### Production System Composition
 
@@ -438,6 +461,8 @@ export {
 ---
 
 ## Phase 5: Production Deployment Orchestration
+
+**Orchestration is about running your application reliably at scale.** It's not enough for your components to work - they need to handle failures, scale under load, and update without downtime. This is where container orchestration platforms like Kubernetes come in.
 
 ### Kubernetes Deployment
 

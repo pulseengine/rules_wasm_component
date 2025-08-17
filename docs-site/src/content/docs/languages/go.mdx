@@ -3,7 +3,23 @@ title: Go Components
 description: Build WebAssembly components with Go using TinyGo and WASI Preview 2
 ---
 
-Build efficient WebAssembly components with Go using TinyGo v0.38.0 and native WASI Preview 2 support.
+## Why Go for WebAssembly Components?
+
+Go components let you use **familiar Go syntax** to build portable, efficient WebAssembly services. With TinyGo, you get the developer experience of Go with the performance and portability of WebAssembly.
+
+**Perfect for Go developers who want:**
+- **Familiar tooling** - Use standard Go patterns, just compile to WebAssembly instead of native binaries
+- **Microservices without containers** - Deploy lightweight services that start in milliseconds
+- **Cross-platform compatibility** - Write once, run on any platform that supports WebAssembly
+- **Easy HTTP services** - Build web APIs with the same patterns you already know
+
+**TinyGo advantages:**
+- **Small binaries** - Typical components are 1-2MB vs 50MB+ for containerized Go apps
+- **Fast startup** - Sub-10ms startup times vs seconds for traditional containers
+- **Low memory usage** - Optimized garbage collector for WebAssembly environments
+- **WASI Preview 2** - Access to modern system capabilities like networking and filesystems
+
+**How it works:** You write normal Go code, TinyGo compiles it to WebAssembly, and the component model handles all the interface binding. The result is a portable service that can be composed with components written in other languages.
 
 ## Features
 
@@ -15,7 +31,15 @@ Build efficient WebAssembly components with Go using TinyGo v0.38.0 and native W
 
 ## Quick Start
 
+Let's build a simple calculator component to see how Go components work in practice.
+
+**What we're building:** A calculator service that performs basic math operations. This demonstrates the complete Go → TinyGo → WebAssembly component pipeline.
+
+**The process:** We'll define interfaces in WIT (the "contract"), implement the logic in Go, and let Bazel handle compiling it to a portable WebAssembly component.
+
 ### WIT Interface Definition
+
+**This defines our component's API** - what functions it exports and what types they use. Any language can call these functions once the component is built:
 
 import CodeFromFile from '@components/CodeFromFile.astro';
 
@@ -23,9 +47,13 @@ import CodeFromFile from '@components/CodeFromFile.astro';
 
 ### Build Configuration
 
+**This tells Bazel how to build your Go code into a WebAssembly component.** The `go_wasm_component` rule automatically handles TinyGo compilation, WIT binding generation, and component packaging:
+
 <CodeFromFile file="examples/go_component/BUILD.bazel" title="examples/go_component/BUILD.bazel" lines="40-60" />
 
 ### Go Module Setup
+
+**Standard Go module configuration** with the official BytecodeAlliance packages. These provide the necessary bindings between Go code and the WebAssembly Component Model:
 
 ```go title="go.mod"
 module calculator
@@ -40,13 +68,21 @@ require (
 
 ### Go Implementation
 
+**Pure Go code that implements the WIT interface.** The generated bindings (from the WIT file) automatically connect your Go functions to the component interface:
+
 <CodeFromFile file="examples/go_component/main.go" title="examples/go_component/main.go" />
 
-This minimal example demonstrates the complete TinyGo + Component Model pipeline working. For more complex implementations, check the other Go component examples in the repository.
+This minimal example demonstrates the complete TinyGo + Component Model pipeline working. The key insight: you write normal Go code, and the toolchain handles all the WebAssembly complexity.
 
 ## HTTP Service Example
 
+Now let's build something more practical - a **web service component** that handles HTTP requests. This shows how Go components can replace traditional containerized microservices.
+
+**Why this matters:** Instead of deploying a Docker container with Go runtime overhead, you get a 1-2MB component that starts in milliseconds and uses minimal memory.
+
 ### WIT Interface for HTTP
+
+**This interface defines a proper HTTP service component.** Notice how it uses WASI Preview 2 imports to access system capabilities like networking:
 
 ```wit title="wit/http-service.wit"
 package http:service@1.0.0;
@@ -76,6 +112,8 @@ world http-service {
 ```
 
 ### HTTP Service Implementation
+
+**A complete HTTP service implemented in Go.** This handles routing, JSON parsing, and error responses - just like a traditional Go web service, but compiled to a portable WebAssembly component:
 
 ```go title="service.go"
 package main
@@ -201,7 +239,11 @@ func (s HTTPService) errorResponse(status uint16, message string) gen.HttpServic
 
 ## Advanced Features
 
+These examples show how to implement production-ready patterns in Go components.
+
 ### Error Handling Patterns
+
+**WebAssembly components use Result types for error handling** - similar to Rust's Result or Go's error pattern. This ensures errors are explicit and type-safe across language boundaries:
 
 ```go title="errors.go"
 package main
@@ -250,6 +292,8 @@ func safeRoot(n int32) gen.Result[float64, string] {
 ```
 
 ### Resource Management
+
+**Efficient memory management is crucial for WebAssembly components.** This example shows how to use object pooling and caching to minimize allocations in a sandboxed environment:
 
 ```go title="resources.go"
 package main
@@ -322,7 +366,11 @@ func putCalculator(c *Calculator) {
 
 ## Performance Optimization
 
+**TinyGo offers several optimization strategies** for WebAssembly components. These settings can dramatically improve performance and reduce binary size.
+
 ### Build Optimization
+
+**TinyGo-specific optimizations** for maximum performance. The `leaking` GC and `none` scheduler eliminate runtime overhead for stateless components:
 
 ```python title="BUILD.bazel"
 go_wasm_component(
@@ -339,6 +387,8 @@ go_wasm_component(
 ```
 
 ### Memory Management
+
+**Minimize allocations and manage memory carefully** in WebAssembly environments. These patterns help keep components fast and memory-efficient:
 
 ```go title="memory.go"
 package main

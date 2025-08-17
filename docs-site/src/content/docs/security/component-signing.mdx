@@ -5,15 +5,35 @@ description: Secure your WebAssembly components with cryptographic signatures fo
 
 # Component Signing & Verification
 
+## Why Sign Your Components?
+
+**Component signing is like a digital seal of authenticity** for your WebAssembly components. Just as you might verify a package delivery by checking the sender's signature, component signing lets you verify that a component came from a trusted source and hasn't been tampered with.
+
+**Real-world scenarios where this matters:**
+- **Public component distribution** - Users need to verify your components are authentic
+- **Enterprise environments** - IT policies require cryptographic verification of all deployed code  
+- **Supply chain security** - Prevent malicious components from entering your system
+- **Regulatory compliance** - Some industries require signed code for audit trails
+- **Multi-team organizations** - Verify components come from approved development teams
+
+**The problem without signing:** Anyone could distribute a malicious component claiming to be yours. With signing, recipients can mathematically verify the component's authenticity and integrity.
+
+## How Component Signing Works
+
+**Think of it like notarizing a document:**
+1. **You create a signature** using your private key (like signing with a unique pen only you have)
+2. **Others verify the signature** using your public key (like having a reference signature to compare against)
+3. **The component is protected** - any changes break the signature, revealing tampering
+
 Learn how to cryptographically sign and verify WebAssembly components for secure production deployment using integrated wasmsign2 support.
 
-## Overview
+## Key Benefits
 
 Component signing provides:
-- **🔐 Authenticity Verification** - Prove components come from trusted sources
-- **🛡️ Integrity Protection** - Detect any tampering or corruption
-- **📋 Non-repudiation** - Cryptographic proof of component origin
-- **🚀 Production Ready** - Enterprise-grade security for deployment
+- **Authenticity Verification** - Prove components come from trusted sources
+- **Integrity Protection** - Detect any tampering or corruption  
+- **Non-repudiation** - Cryptographic proof of component origin
+- **Production Ready** - Enterprise-grade security for deployment
 
 ## Pipeline Overview - Signing Workflow
 
@@ -32,13 +52,15 @@ graph TD
     style H fill:#fff3e0
 ```
 
-**Key Insight:** Signing integrates seamlessly into your Bazel build pipeline, providing security without complexity.
-
----
+**Key Insight:** Signing integrates seamlessly into your Bazel build pipeline, providing security without complexity. The entire process happens automatically during your build - no manual steps required.
 
 ## Quick Start
 
+**Let's walk through the complete signing workflow.** This example shows how to set up signing for a production component with just a few Bazel rules.
+
 ### Step 1: Generate Signing Keys
+
+**First, create cryptographic keys for signing.** You have two options: OpenSSH format (compatible with GitHub and SSH) or compact format (optimized for WebAssembly):
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
@@ -59,6 +81,8 @@ wasm_keygen(
 ```
 
 ### Step 2: Sign Your Component
+
+**Now sign your component using the keys.** You can choose between embedded signatures (signature baked into the component) or detached signatures (separate signature file):
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_sign")
@@ -82,6 +106,8 @@ wasm_sign(
 
 ### Step 3: Verify Signatures
 
+**Finally, verify that signatures are valid.** This ensures your signing process is working correctly and that components can be verified by others:
+
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_verify", "wasm_validate")
 
@@ -103,6 +129,8 @@ wasm_validate(
 
 ### Step 4: Build and Test
 
+**Test the complete signing workflow** with these commands. Each step builds on the previous one, creating a complete chain of trust:
+
 ```bash
 # Generate keys
 bazel build //:production_keys
@@ -121,9 +149,11 @@ bazel build //:validate_signed_component
 
 ## Key Management
 
+**Choosing the right key format** affects compatibility, performance, and integration with existing systems. Understanding the differences helps you pick the best approach for your use case.
+
 ### Key Generation Methods
 
-There are two distinct approaches to generating signing keys:
+**Two distinct approaches** with different trade-offs:
 
 **Method 1: Actual OpenSSH Keys (Recommended)**
 - Uses real `ssh-keygen` from the openssh Bazel module

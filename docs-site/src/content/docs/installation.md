@@ -3,6 +3,31 @@ title: Installation
 description: Complete installation guide for rules_wasm_component
 ---
 
+## Why Choose WebAssembly Components?
+
+Before diving into installation, let's understand what makes WebAssembly components compelling for modern software development.
+
+**Real-world use cases:**
+- **Microservices without containers** - Deploy lightweight, fast-starting services
+- **Plugin architectures** - Safely run third-party code in your applications
+- **Edge computing** - Run the same code on CDN edges, servers, and IoT devices
+- **Multi-language projects** - Use the best language for each problem domain
+- **Legacy modernization** - Gradually migrate existing systems with component wrappers
+
+**Benefits over traditional approaches:**
+- **Faster than containers** - Sub-millisecond startup times vs seconds for containers
+- **Smaller than binaries** - Typical components are 1-5MB vs 50-500MB container images
+- **More secure than shared libraries** - Complete isolation with explicit interfaces
+- **More portable than native code** - Write once, run on any architecture
+
+**Perfect for teams that want:**
+- Language diversity without operational complexity
+- High performance without sacrificing security
+- True portability across environments
+- Easy testing and composition of services
+
+## Installation Guide
+
 Set up WebAssembly Component Model rules in your Bazel project.
 
 ## Prerequisites
@@ -37,10 +62,10 @@ go install github.com/bazelbuild/bazelisk@latest
 
 **Why Bazelisk is Better:**
 
-- ✅ **Automatic version management** - No manual Bazel updates needed
-- ✅ **Project-specific versions** - Each project can use its required Bazel version
-- ✅ **Team consistency** - Everyone uses the same Bazel version automatically
-- ✅ **CI/CD friendly** - Consistent builds across environments
+- **Automatic version management** - No manual Bazel updates needed
+- **Project-specific versions** - Each project can use its required Bazel version
+- **Team consistency** - Everyone uses the same Bazel version automatically
+- **CI/CD friendly** - Consistent builds across environments
 
 **Setting up .bazelversion:**
 Create a `.bazelversion` file in your project root:
