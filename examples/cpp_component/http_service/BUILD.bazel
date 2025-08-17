@@ -25,6 +25,7 @@ cc_component_library(
         "c",
     ],  # Force compilation as C, not C++
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    visibility = ["//visibility:public"],
 )
 
 # Main HTTP service component (C implementation) - all sources combined
