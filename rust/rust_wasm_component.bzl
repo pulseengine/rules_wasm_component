@@ -6,6 +6,32 @@ load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action")
 load(":transitions.bzl", "wasm_transition")
 
+def _wasm_rust_shared_library_impl(ctx):
+    """Implementation that forwards a rust_shared_library with WASM transition applied"""
+    target_info = ctx.attr.target[0]
+
+    # Forward DefaultInfo and RustInfo
+    providers = [target_info[DefaultInfo]]
+    
+    # Forward RustInfo if available
+    if hasattr(target_info, "rust_info"):
+        providers.append(target_info.rust_info)
+    
+    return providers
+
+_wasm_rust_shared_library = rule(
+    implementation = _wasm_rust_shared_library_impl,
+    attrs = {
+        "target": attr.label(
+            cfg = wasm_transition,
+            doc = "rust_shared_library target to build for WASM",
+        ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
+    },
+)
+
 def _rust_wasm_component_impl(ctx):
     """Implementation of rust_wasm_component rule"""
 
@@ -174,8 +200,10 @@ def rust_wasm_component(
         # Filter out conflicting kwargs to avoid multiple values for parameters
         filtered_kwargs = {k: v for k, v in kwargs.items() if k not in ["tags", "visibility"]}
 
+        # Create the host-platform rust_shared_library first
+        host_library_name = rust_library_name + "_host"
         rust_shared_library(
-            name = rust_library_name,
+            name = host_library_name,
             srcs = all_srcs,
             crate_root = crate_root,
             deps = all_deps,
@@ -185,6 +213,12 @@ def rust_wasm_component(
             visibility = ["//visibility:private"],
             tags = ["wasm_component"],  # Tag to identify WASM components
             **filtered_kwargs
+        )
+
+        # Apply WASM transition to get actual WASM module
+        _wasm_rust_shared_library(
+            name = rust_library_name,
+            target = ":" + host_library_name,
         )
 
         # Convert to component for this profile
