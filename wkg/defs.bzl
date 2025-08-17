@@ -2692,12 +2692,32 @@ def _wasm_component_metadata_extract_impl(ctx):
     # Extract metadata using separate Bazel-native actions (no shell scripts)
     metadata_output = ctx.actions.declare_file(ctx.attr.name + "_extracted_metadata.json")
 
-    # Step 1: Get file size using stat (single tool call)
+    # Step 1: Get file size using cross-platform approach
     file_size_output = ctx.actions.declare_file(ctx.attr.name + "_file_size.txt")
+    
+    # Create cross-platform script to get file size
+    get_size_script = ctx.actions.declare_file(ctx.attr.name + "_get_size.sh")
+    ctx.actions.write(
+        output = get_size_script,
+        content = """#!/bin/bash
+set -euo pipefail
+
+# Cross-platform file size detection
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS/BSD stat
+    stat -f %z "$1" > "$2"
+else
+    # Linux/GNU stat  
+    stat -c %s "$1" > "$2"
+fi
+""",
+        is_executable = True,
+    )
+    
     ctx.actions.run(
-        executable = "stat",
-        arguments = ["-c", "%s", component_info.path],  # Linux format
-        inputs = [component_info],
+        executable = get_size_script,
+        arguments = [component_info.path, file_size_output.path],
+        inputs = [component_info, get_size_script],
         outputs = [file_size_output],
         mnemonic = "WasmFileSize",
         progress_message = "Getting component file size",
