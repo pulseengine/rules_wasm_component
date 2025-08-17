@@ -103,6 +103,7 @@ jobs:
             -//examples/cpp_component/... \
             -//examples/js_component/... \
             -//examples/go_component/... \
+            -//examples/go_component:calculator_docs \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \
@@ -131,6 +132,7 @@ jobs:
             -//test/unit:test_component_with_deps_wasm_lib_release \
             -//test/unit:test_composition \
             -//test_examples/basic:hello_component_wasm_lib_release \
+            -//test_examples/basic:hello_component_wasm_lib_release_host \
             -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release_host \
@@ -210,6 +212,7 @@ jobs:
             -//examples/cpp_component/... \
             -//examples/js_component/... \
             -//examples/go_component/... \
+            -//examples/go_component:calculator_docs \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \
@@ -237,6 +240,7 @@ jobs:
             -//test/unit:test_component_with_deps_wasm_lib_release \
             -//test/unit:test_composition \
             -//test_examples/basic:hello_component_wasm_lib_release \
+            -//test_examples/basic:hello_component_wasm_lib_release_host \
             -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release_host \
