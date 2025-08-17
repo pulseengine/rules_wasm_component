@@ -27,7 +27,7 @@ This workspace builds all required WebAssembly tools from source and publishes t
 
 1. **Build Phase**: This workspace cross-compiles tools for all platforms using rules_rust
 2. **Publish Phase**: CI uploads built binaries to GitHub releases with verified checksums
-3. **Consume Phase**: Main workspace downloads pre-built binaries via hermetic_extension.bzl
+3. **Consume Phase**: Main workspace downloads pre-built binaries via toolchain download strategies
 
 ## Supported Tools
 
@@ -94,13 +94,13 @@ gh release create v1.0.0 bazel-bin/release_artifacts/*
 
 ## Integration with Main Workspace
 
-The main workspace consumes these tools via `toolchains/hermetic_extension.bzl`:
+The main workspace consumes these tools via toolchain download strategies:
 
 ```starlark
-http_archive(
-    name = "wizer_hermetic",
-    urls = ["https://github.com/rules-wasm-component/tools/releases/download/v1.0.0/wizer-1.0.0-x86_64-linux.tar.gz"],
-    sha256 = "...",  # Verified checksum
+wizer = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wizer")
+wizer.register(
+    strategy = "download",
+    version = "9.0.0",  # Verified version with checksum
 )
 ```
 

@@ -86,15 +86,12 @@ wasm_toolchain = use_extension(
 )
 wasm_toolchain.register(
     name = "wasm_tools",
-    version = "1.0.60",  # Optional, defaults to latest stable
-)
-
-# Configure wit-bindgen version
-wasm_toolchain.register(
-    name = "wit_bindgen",
-    version = "0.30.0",  # Optional, defaults to latest stable
+    strategy = "download",  # Default: hermetic builds
+    version = "1.235.0",    # Pin specific version
 )
 ```
+
+> **💡 Need advanced configuration?** See the [Toolchain Configuration Guide](/guides/toolchain-configuration/) for strategies, version management, CI/CD setup, and corporate environments.
 
 ## Language-Specific Setup
 
@@ -167,7 +164,7 @@ For JavaScript/TypeScript components:
 # Configure jco (JavaScript Component Tools)
 jco = use_extension("@rules_wasm_component//wasm:extensions.bzl", "jco")
 jco.register(
-    strategy = "npm",  # or "system" or "download"
+    strategy = "npm",  # or "download"
     version = "1.4.0",  # Optional for npm/download strategies
 )
 ```

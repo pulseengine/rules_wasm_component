@@ -55,4 +55,12 @@ def register_wasm_tool_repositories():
         build_file = "//toolchains:BUILD.wizer",
     )
 
+    # wasmsign2: WebAssembly component signing tool
+    git_repository(
+        name = "wasmsign2_src",
+        remote = "https://github.com/wasm-signatures/wasmsign2.git",
+        tag = "0.2.6",
+        build_file = "//toolchains:BUILD.wasmsign2",
+    )
+
     print("✅ Modernized WASM tool repositories registered - replaced all git clone operations")

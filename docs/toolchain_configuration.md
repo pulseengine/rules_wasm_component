@@ -1,13 +1,13 @@
 # Toolchain Configuration
 
-The rules_wasm_component supports flexible toolchain configuration with three acquisition strategies: system tools, downloaded binaries, and building from source.
+The rules_wasm_component supports flexible toolchain configuration with multiple acquisition strategies: downloaded binaries, building from source, and hybrid approaches.
 
 ## Quick Reference
 
-### Use System Tools (Default)
+### Use Downloaded Tools (Default)
 
 ```starlark
-# MODULE.bazel - Uses tools from PATH (CI-friendly)
+# MODULE.bazel - Downloads prebuilt binaries for hermetic builds
 bazel_dep(name = "rules_wasm_component", version = "0.1.0")
 ```
 
@@ -39,26 +39,28 @@ wasm_toolchain.register(
 
 ## Configuration Options
 
-### Strategy: `"system"` (Default)
+### Strategy: `"download"` (Default)
 
-Uses tools installed on the system PATH. Perfect for:
+Downloads prebuilt binaries from GitHub releases for hermetic builds. Perfect for:
 
-- CI environments where tools are pre-installed
-- Developer machines with `cargo install wasm-tools wac-cli wit-bindgen-cli`
-- Consistent with existing CI setup
+- Reproducible builds with pinned versions
+- Corporate environments without system tool dependencies
+- CI environments requiring hermeticity
 
 ```starlark
 wasm_toolchain.register(
-    strategy = "system",
+    strategy = "download",
+    version = "1.235.0",
 )
 ```
 
-**Requirements:**
+**Benefits:**
 
-- `wasm-tools`, `wac`, and `wit-bindgen` must be in PATH
-- No version control - uses whatever is installed
+- Hermetic builds - no system dependencies
+- Version control with pinned releases
+- Works across all supported platforms
 
-### Strategy: `"download"`
+### Strategy: `"download"` (Explicit)
 
 Downloads prebuilt binaries from GitHub releases:
 
@@ -128,10 +130,11 @@ You can register multiple toolchains for different purposes:
 # MODULE.bazel
 wasm_toolchain = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasm_toolchain")
 
-# System tools for CI/development
+# Download tools for CI/development
 wasm_toolchain.register(
-    name = "system_tools",
-    strategy = "system",
+    name = "ci_tools",
+    strategy = "download",
+    version = "1.235.0",
 )
 
 # Pinned version for production
@@ -163,16 +166,12 @@ bazel build --extra_toolchains=@dev_tools_toolchains//:wasm_tools_toolchain //..
 
 ### GitHub Actions (Recommended)
 
-Uses system strategy with pre-installed tools:
+Uses download strategy for hermetic builds:
 
 ```yaml
 # .github/workflows/ci.yml
-- name: Install WASM tools
-  run: |
-    cargo install wasm-tools wac-cli wit-bindgen-cli
-
 - name: Build with Bazel
-  run: bazel build //... # Uses system tools automatically
+  run: bazel build //... # Downloads tools automatically for hermetic builds
 ```
 
 ### Docker Builds
@@ -211,7 +210,7 @@ wasm_toolchain.register(
 
 ## Migration Examples
 
-### From CI Script to System Strategy
+### From CI Script to Hermetic Downloads
 
 **Before:**
 
@@ -225,8 +224,7 @@ cargo install wasm-tools wac-cli wit-bindgen-cli
 
 ```yaml
 # .github/workflows/ci.yml
-- run: cargo install wasm-tools wac-cli wit-bindgen-cli
-- run: bazel build //... # Automatically uses system tools
+- run: bazel build //... # Automatically downloads tools for hermetic builds
 ```
 
 ### From Fixed Version to Flexible Strategy
@@ -245,14 +243,9 @@ wasm_toolchain.register(strategy = "download", version = "1.235.0")
 
 ## Troubleshooting
 
-### "Tool not found" with system strategy
+### "Tool not found" errors
 
-```bash
-# Install missing tools
-cargo install wasm-tools wac-cli wit-bindgen-cli
-
-# Or switch to download strategy
-```
+All tools are now downloaded automatically for hermetic builds. If you encounter issues, verify network connectivity and consider using custom URLs for corporate environments.
 
 ### "Download failed" with download strategy
 

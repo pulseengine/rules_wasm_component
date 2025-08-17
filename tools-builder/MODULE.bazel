@@ -46,3 +46,19 @@ use_repo(
     "wit_bindgen_src",
     "wizer_src",
 )
+
+# Rust crates for dependency management
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//toolchains:Cargo.lock",
+    manifests = ["//toolchains:Cargo.toml"],
+    supported_platform_triples = [
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+    ],
+)
+use_repo(crate, "crates")
