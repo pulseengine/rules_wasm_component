@@ -30,6 +30,15 @@ bazel_dep(name = "stardoc", version = "0.7.1", dev_dependency = True)
 # OpenSSH for proper SSH key generation
 bazel_dep(name = "openssh", version = "9.9p1.bcr.1")
 
+# Override rules_coreutils to fix busybox package 404 issue
+# openssh depends on outdated rules_coreutils 1.0.0-beta.6 which tries to download
+# busybox-static_1.35.0-4+b3_amd64.deb (404). Upgrade to 1.0.1 which should have
+# the correct package version (b4).
+single_version_override(
+    module_name = "rules_coreutils",
+    version = "1.0.1",
+)
+
 # Rust toolchain setup
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
