@@ -13,7 +13,7 @@ interface auth {
     record auth-request {
         method: string,  // Bearer, API-Key, OAuth
         credentials: string,
-        resource: string,
+        target-resource: string,
     }
 
     record auth-response {
@@ -64,7 +64,7 @@ interface routing {
     register-service: func(endpoint: service-endpoint);
 
     // Request routing
-    route-request: func(request: route-request, rules: list<route-rule>) -> route-response;
+    route: func(request: route-request, rules: list<route-rule>) -> route-response;
 }
 
 // Load balancing and circuit breaking

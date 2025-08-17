@@ -190,7 +190,7 @@ jobs:
           # Additional exclusions for macOS where Docker services aren't available
           # and where some tools have configuration issues
           if [[ "$RUNNER_OS" == "macOS" ]]; then
-            EXTRA_EXCLUDES="-//examples/simple_oci_test/... -//test/integration:validate_consumer_deps -//test_wit_deps/consumer:check_deps"
+            EXTRA_EXCLUDES="-//examples/simple_oci_test/... -//examples/microservices_architecture/... -//test/integration:validate_consumer_deps -//test_wit_deps/consumer:check_deps"
           else
             EXTRA_EXCLUDES=""
           fi

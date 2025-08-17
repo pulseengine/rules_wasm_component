@@ -1,0 +1,25 @@
+[package]
+name = "tools-builder-deps"
+version = "0.1.0"
+edition = "2021"
+
+# This is a placeholder package to manage dependencies for tool building
+# Individual tools will reference these dependencies via @crates//:name
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+env_logger = "0.11"
+log = "0.4"
+
+# WebAssembly parsing and manipulation
+wasmparser = "0.221"
+wasm-encoder = "0.221"
+wat = "1.221"
+
+# Component model support
+wit-parser = "0.221"
+wit-component = "0.221"
