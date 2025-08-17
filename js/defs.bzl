@@ -69,11 +69,33 @@ def _js_component_impl(ctx):
     if ctx.attr.compat:
         jco_args.add("--compat")
 
+    # Debug the issue by adding debugging
+    debug_script = ctx.actions.declare_file(ctx.attr.name + "_debug.sh")
+    ctx.actions.write(
+        output = debug_script,
+        content = """#!/bin/bash
+echo "=== JCO DEBUG INFO ==="
+echo "Entry point file: {}"
+echo "File exists check:"
+ls -la "{}"
+echo "Working directory contents:"
+ls -la "{}"
+echo "Running jco with: $@"
+exec "$@"
+""".format(
+            paths.join(work_dir.path, ctx.attr.entry_point),
+            paths.join(work_dir.path, ctx.attr.entry_point),
+            work_dir.path
+        ),
+        is_executable = True,
+    )
+
     ctx.actions.run(
-        executable = jco,
-        arguments = [jco_args],
+        executable = debug_script,
+        arguments = [jco.path] + [jco_args],
         inputs = [work_dir, wit_dest],
         outputs = [component_wasm],
+        tools = [jco],
         mnemonic = "JCOBuild",
         progress_message = "Building JavaScript component %s with jco" % ctx.label,
     )
