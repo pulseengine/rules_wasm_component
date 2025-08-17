@@ -100,7 +100,6 @@ jobs:
           bazel build -- //... \
             -//examples/world_export/... \
             -//examples/multi_profile/... \
-            -//examples/cpp_component/... \
             -//examples/js_component/... \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
@@ -199,7 +198,6 @@ jobs:
           bazel build -- //... \
             -//examples/world_export/... \
             -//examples/multi_profile/... \
-            -//examples/cpp_component/... \
             -//examples/js_component/... \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
