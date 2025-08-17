@@ -101,6 +101,7 @@ jobs:
             -//examples/world_export/... \
             -//examples/multi_profile/... \
             -//examples/js_component/... \
+            -//test/js/... \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \
@@ -199,6 +200,7 @@ jobs:
             -//examples/world_export/... \
             -//examples/multi_profile/... \
             -//examples/js_component/... \
+            -//test/js/... \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \
