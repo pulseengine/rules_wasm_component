@@ -71,7 +71,7 @@ register_toolchains("@go_toolchains//:all")
 # WASI WIT interface definitions
 wasi_wit_ext = use_extension("//wasm:extensions.bzl", "wasi_wit")
 wasi_wit_ext.init()
-use_repo(wasi_wit_ext, "wasi_io")  # Add your external repos here: , "my_external_wit"
+use_repo(wasi_wit_ext, "wasi_io", "wasi_cli", "wasi_clocks", "wasi_filesystem", "wasi_sockets", "wasi_random", "wasi_http", "wasi_io_v020", "wasi_cli_v020", "wasi_clocks_v020")  # Complete WASI ecosystem (0.2.3 + 0.2.0)
 
 # WebAssembly toolchains
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
@@ -165,8 +165,8 @@ use_repo(node, "nodejs_toolchains")
 jco = use_extension("//wasm:extensions.bzl", "jco")
 jco.register(
     name = "jco",
-    strategy = "npm",
     version = "1.4.0",
+    node_version = "18.19.0",
 )
 use_repo(jco, "jco_toolchain")
 

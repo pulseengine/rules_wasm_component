@@ -24,10 +24,11 @@ def register_wasm_tool_repositories():
     )
 
     # wac: WebAssembly component composition tool
+    # Using fork with interface resolution fix for issue #20
     git_repository(
         name = "wac_src",
-        remote = "https://github.com/bytecodealliance/wac.git",
-        tag = "v0.7.0",  # Use stable release
+        remote = "https://github.com/avrabe/wac.git",
+        branch = "interface-resolution-fix",  # Fix for interface instance exports
         build_file = "//toolchains:BUILD.wac",
     )
 
