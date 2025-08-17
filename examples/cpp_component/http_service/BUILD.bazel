@@ -5,6 +5,7 @@ cpp_wit_bindgen(
     name = "http_service_bindings",
     wit = "wit/http_service.wit",
     world = "http-service-world",
+    visibility = ["//visibility:public"],
 )
 
 # Combined HTTP service library (all in one to avoid include path issues)
