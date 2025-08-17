@@ -1,6 +1,7 @@
 """Example demonstrating WebAssembly component OCI publishing with signing"""
 
 load("//wasm:defs.bzl", "wasm_keygen", "wasm_sign")
+load("//wasm:ssh_keygen.bzl", "ssh_keygen")
 load("//wkg:defs.bzl", "enhanced_oci_annotations", "wasm_component_metadata_extract", "wasm_component_multi_arch_package", "wasm_component_multi_arch_publish", "wasm_component_oci_image", "wasm_component_oci_metadata_mapper", "wasm_component_oci_publish", "wasm_component_publish", "wasm_component_secure_publish", "wasm_security_policy", "wkg_multi_registry_publish", "wkg_registry_config")
 
 # Use existing component from basic example
@@ -16,10 +17,11 @@ wasm_keygen(
     visibility = ["//visibility:public"],
 )
 
-# Generate OpenSSH format keys for comparison
-wasm_keygen(
+# Generate actual OpenSSH format keys using real ssh-keygen
+ssh_keygen(
     name = "oci_openssh_keys",
-    openssh_format = True,
+    key_type = "ed25519",
+    comment = "WebAssembly component signing key for OCI examples",
     visibility = ["//visibility:public"],
 )
 
@@ -281,24 +283,25 @@ wasm_security_policy(
     signature_type = "embedded",
 )
 
-# Example 13: Enterprise security policy with OpenSSH keys
-wasm_security_policy(
-    name = "enterprise_security_policy",
-    component_policies = [
-        "*|required|oci_openssh_keys",  # All components must be signed
-    ],
-    default_signing_required = True,
-    key_source = "file",
-    openssh_format = True,
-    registry_policies = [
-        "github|required|oci_openssh_keys",
-        "docker|required|oci_openssh_keys",
-        "aws|required|oci_openssh_keys",
-        "azure|required|oci_openssh_keys",
-        "local|optional",
-    ],
-    signature_type = "detached",
-)
+# Example 13: Enterprise security policy with OpenSSH keys - DISABLED
+# TODO: Re-enable when proper OpenSSH key support is implemented
+# wasm_security_policy(
+#     name = "enterprise_security_policy",
+#     component_policies = [
+#         "*|required|oci_openssh_keys",  # All components must be signed
+#     ],
+#     default_signing_required = True,
+#     key_source = "file",
+#     openssh_format = True,
+#     registry_policies = [
+#         "github|required|oci_openssh_keys",
+#         "docker|required|oci_openssh_keys",
+#         "aws|required|oci_openssh_keys",
+#         "azure|required|oci_openssh_keys",
+#         "local|optional",
+#     ],
+#     signature_type = "detached",
+# )
 
 # Secure Publishing Examples
 
