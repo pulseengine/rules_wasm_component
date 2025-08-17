@@ -10,6 +10,7 @@ Think of **WAC (WebAssembly Composition)** as "wiring" for your WebAssembly comp
 **The magic of composition:** You can take a Rust authentication service, a Go database connector, a JavaScript frontend, and a C++ data processor - all built as separate WebAssembly components - and wire them together into a single application.
 
 **Why this matters:**
+
 - **Team independence** - Different teams can work on different components in their preferred languages
 - **Component reuse** - Build once, compose into multiple applications
 - **Easy testing** - Test components in isolation, then test the composition

@@ -8,6 +8,7 @@ description: Build your first WebAssembly component with a simple hello world ex
 **This example shows how easy it is** to turn regular Rust code into a portable WebAssembly component. You'll build a simple greeting service that can be called from any language and deployed anywhere.
 
 **What makes this powerful:**
+
 - **Universal compatibility** - Once built, your component runs on any platform that supports WebAssembly
 - **Language agnostic** - Other components written in Go, C++, or JavaScript can call your Rust functions
 - **Secure by default** - Your component runs in complete isolation with explicit interfaces
@@ -88,6 +89,7 @@ rust_wasm_component_test(
 ```
 
 **What each target does:**
+
 - **`wit_library`** - Processes your WIT file and validates the interface
 - **`rust_wasm_component`** - Compiles your Rust code into a WebAssembly component
 - **`rust_wasm_component_test`** - Creates tests for your component

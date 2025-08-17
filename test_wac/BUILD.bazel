@@ -26,7 +26,7 @@ wit_library(
     srcs = ["simple_no_wasi.wit"],
     deps = [
         "@wasi_cli//:cli",
-        "@wasi_io//:streams", 
+        "@wasi_io//:streams",
         "@wasi_clocks//:clocks",
         # Temporarily exclude problematic WASI packages with bitflags issues
         # "@wasi_filesystem//:filesystem",
@@ -43,8 +43,8 @@ wit_library(
     srcs = ["simple_no_wasi_v020.wit"],
     deps = [
         "@wasi_cli_v020//:cli",
-        "@wasi_io_v020//:streams", 
         "@wasi_clocks_v020//:clocks",
+        "@wasi_io_v020//:streams",
     ],
 )
 
@@ -81,7 +81,7 @@ wac_compose(
 
 # Test composition with WASI dependencies (even "no-wasi" components need WASI)
 wac_compose(
-    name = "nowasi_system", 
+    name = "nowasi_system",
     components = {
         ":nowasi_component": "test:nowasi",
     },
@@ -96,7 +96,7 @@ wac_compose(
 
 # Test composition with WASI 0.2.0 (potentially better compatibility)
 wac_compose(
-    name = "nowasi_system_v020", 
+    name = "nowasi_system_v020",
     components = {
         ":nowasi_component_v020": "test:nowasi020",
     },

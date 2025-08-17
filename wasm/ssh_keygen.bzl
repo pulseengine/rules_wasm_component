@@ -88,10 +88,10 @@ ssh_keygen = rule(
     },
     doc = """
     Generates an SSH key pair using real ssh-keygen from OpenSSH.
-    
+
     This rule produces actual OpenSSH format keys that can be used with
     wasmsign2's -Z flag for signing WebAssembly components.
-    
+
     Example:
         ssh_keygen(
             name = "my_ssh_keys",

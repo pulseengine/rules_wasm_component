@@ -20,8 +20,8 @@ wasm_keygen(
 # Generate actual OpenSSH format keys using real ssh-keygen
 ssh_keygen(
     name = "oci_openssh_keys",
-    key_type = "ed25519",
     comment = "WebAssembly component signing key for OCI examples",
+    key_type = "ed25519",
     visibility = ["//visibility:public"],
 )
 

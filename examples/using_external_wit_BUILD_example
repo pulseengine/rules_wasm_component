@@ -9,7 +9,7 @@ wit_library(
     world = "my-component-world",
     deps = [
         "@wasi_io//:streams",           # WASI IO dependency
-        "@wasi_filesystem//:filesystem", # WASI filesystem dependency  
+        "@wasi_filesystem//:filesystem", # WASI filesystem dependency
         "@my_external_wit//:api",       # Your external WIT dependency
     ],
 )

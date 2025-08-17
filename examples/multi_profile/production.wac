@@ -3,19 +3,8 @@ package prod:composition@1.0.0;
 // Production WAC composition
 // Optimized configuration for deployment
 
-let camera = new adas:camera {
-    frame-rate: 60,
-    resolution: "4K",
-};
-
-let ai = new adas:detector {
-    model: "yolov8x",
-    confidence: 0.8,
-    batch-size: 4,
-};
-
-// High-performance pipeline
-connect camera.frame-output -> ai.frame-input;
+let camera = new adas:camera { ... };
+let ai = new adas:detector { ... };
 
 // Export both for monitoring
 export camera as camera-monitor;

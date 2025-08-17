@@ -277,6 +277,68 @@ def _get_fallback_checksums(tool_name):
                 },
             },
         },
+        "nodejs": {
+            "tool_name": "nodejs",
+            "github_repo": "nodejs/node",
+            "latest_version": "18.19.0",
+            "build_type": "download",
+            "versions": {
+                "18.19.0": {
+                    "release_date": "2024-01-09",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "0a749fcdf5d6bf46e1c17b3ea01e050b4d1ec3f3073b14aa745527b45a759c74",
+                            "url_suffix": "darwin-x64.tar.gz",
+                            "binary_path": "node-v{}-darwin-x64/bin/node",
+                            "npm_path": "node-v{}-darwin-x64/bin/npm",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "8907c42a968765b77730fb319458d63ec4ed009265f8012097c3a052407aa99b",
+                            "url_suffix": "darwin-arm64.tar.gz",
+                            "binary_path": "node-v{}-darwin-arm64/bin/node",
+                            "npm_path": "node-v{}-darwin-arm64/bin/npm",
+                        },
+                        "linux_amd64": {
+                            "sha256": "61632bb78ee828d6e8f42adc0bc2238a6b8200007093988d3927176a372281e8",
+                            "url_suffix": "linux-x64.tar.xz",
+                            "binary_path": "node-v{}-linux-x64/bin/node",
+                            "npm_path": "node-v{}-linux-x64/bin/npm",
+                        },
+                        "linux_arm64": {
+                            "sha256": "cf94ab72e45b855257545fec1c017bdf30a9e23611561382eaf64576b999e72d",
+                            "url_suffix": "linux-arm64.tar.xz",
+                            "binary_path": "node-v{}-linux-arm64/bin/node",
+                            "npm_path": "node-v{}-linux-arm64/bin/npm",
+                        },
+                        "windows_amd64": {
+                            "sha256": "5311913d45e1fcc3643c58d1e3926eb85437b180f025fe5857413c9f02403645",
+                            "url_suffix": "win-x64.zip",
+                            "binary_path": "node-v{}-win-x64/node.exe",
+                            "npm_path": "node-v{}-win-x64/npm.cmd",
+                        },
+                    },
+                },
+            },
+        },
+        "jco": {
+            "tool_name": "jco",
+            "github_repo": "bytecodealliance/jco",
+            "latest_version": "1.4.0",
+            "build_type": "npm_with_nodejs",
+            "requires": ["nodejs"],
+            "versions": {
+                "1.4.0": {
+                    "release_date": "2024-11-25",
+                    "platforms": {
+                        "universal": {
+                            "npm_package": "@bytecodealliance/jco",
+                            "npm_version": "1.4.0",
+                            "dependencies": ["@bytecodealliance/componentize-js"],
+                        },
+                    },
+                },
+            },
+        },
     }
 
     return fallback_data.get(tool_name, {})
@@ -431,6 +493,8 @@ def list_available_tools():
         "wasmtime",
         "wasi-sdk",
         "wasmsign2",
+        "nodejs",
+        "jco",
     ]
 
 def validate_tool_compatibility(tools_config):
@@ -493,6 +557,8 @@ def get_recommended_versions(stability = "stable"):
             "wit-bindgen": "0.43.0",
             "wkg": "0.11.0",
             "wasmsign2": "0.2.6",
+            "nodejs": "18.19.0",
+            "jco": "1.4.0",
         },
         "latest": {
             "wasm-tools": "1.235.0",
@@ -500,6 +566,8 @@ def get_recommended_versions(stability = "stable"):
             "wit-bindgen": "0.43.0",
             "wkg": "0.11.0",
             "wasmsign2": "0.2.6",
+            "nodejs": "18.19.0",
+            "jco": "1.4.0",
         },
     }
 

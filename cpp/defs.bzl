@@ -9,6 +9,7 @@ def _cpp_component_impl(ctx):
 
     # Get C/C++ toolchain
     cpp_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:cpp_component_toolchain_type"]
+
     # Use clang for both C and C++ compilation to avoid clang++ preprocessor issues
     clang = cpp_toolchain.clang  # if ctx.attr.language == "c" else cpp_toolchain.clang_cpp
     wit_bindgen = cpp_toolchain.wit_bindgen

@@ -18,6 +18,6 @@ world simple-no-wasi {
     // Exclude problematic interfaces for now:
     // import wasi:filesystem/types@0.2.3;
     // import wasi:filesystem/preopens@0.2.3;
-    
+
     export math;
 }
