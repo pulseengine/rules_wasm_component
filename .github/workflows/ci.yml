@@ -112,40 +112,10 @@ jobs:
             -//test/wkg/... \
             -//test/production/... \
             -//tools-builder/... \
-            -//examples/basic:hello_component_wasm_lib_release \
-            -//examples/basic:hello_component_wasm_lib_release_host \
-            -//test/export_macro:test_component_wasm_lib_release \
-            -//test/integration:basic_component_wasm_lib_debug \
-            -//test/integration:basic_component_wasm_lib_debug_host \
-            -//test/integration:basic_component_wasm_lib_release \
-            -//test/integration:basic_component_wasm_lib_release_host \
-            -//test/integration:consumer_component_wasm_lib_release \
-            -//test/integration:consumer_component_wasm_lib_release_host \
-            -//test/integration:service_a_component_wasm_lib_release \
-            -//test/integration:service_a_component_wasm_lib_release_host \
-            -//test/integration:service_b_component_wasm_lib_release \
-            -//test/integration:service_b_component_wasm_lib_release_host \
-            -//test/integration:wasi_component_wasm_lib_release \
-            -//test/integration:wasi_component_wasm_lib_release_host \
-            -//test/integration:multi_service_system \
-            -//test/integration:wasi_system \
-            -//test/integration:composition_build_test \
-            -//test/integration:integration_tests \
-            -//test/unit:test_component_simple_wasm_lib_release \
-            -//test/unit:test_component_simple_wasm_lib_release_host \
-            -//test/unit:test_component_with_deps_wasm_lib_release \
-            -//test/unit:test_component_with_deps_wasm_lib_release_host \
-            -//test/unit:test_composition \
-            -//test_examples/basic:hello_component_wasm_lib_release \
-            -//test_examples/basic:hello_component_wasm_lib_release_host \
-            -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
-            -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release_host \
-            -//test_wit_deps/consumer:consumer_component_wasm_lib_release \
-            -//test_wit_deps/consumer:consumer_component_wasm_lib_release_host \
-            -//test_wit_deps/consumer:check_deps \
-            -//test/integration:validate_consumer_deps \
-            -//test/integration:dependency_resolution_build_test \
-            -//examples/wasm_signing:example_component_wasm_lib_release_host
+            -//examples/wasm_signing/... \
+            -//test_examples/... \
+            -//test_wit_deps/... \
+            -//...:*_host
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
@@ -226,40 +196,10 @@ jobs:
             -//test/production/... \
             -//tools-builder/... \
             $EXTRA_EXCLUDES \
-            -//examples/basic:hello_component_wasm_lib_release \
-            -//examples/basic:hello_component_wasm_lib_release_host \
-            -//test/export_macro:test_component_wasm_lib_release \
-            -//test/integration:basic_component_wasm_lib_debug \
-            -//test/integration:basic_component_wasm_lib_debug_host \
-            -//test/integration:basic_component_wasm_lib_release \
-            -//test/integration:basic_component_wasm_lib_release_host \
-            -//test/integration:consumer_component_wasm_lib_release \
-            -//test/integration:consumer_component_wasm_lib_release_host \
-            -//test/integration:service_a_component_wasm_lib_release \
-            -//test/integration:service_a_component_wasm_lib_release_host \
-            -//test/integration:service_b_component_wasm_lib_release \
-            -//test/integration:service_b_component_wasm_lib_release_host \
-            -//test/integration:wasi_component_wasm_lib_release \
-            -//test/integration:wasi_component_wasm_lib_release_host \
-            -//test/integration:multi_service_system \
-            -//test/integration:wasi_system \
-            -//test/integration:composition_build_test \
-            -//test/integration:integration_tests \
-            -//test/unit:test_component_simple_wasm_lib_release \
-            -//test/unit:test_component_simple_wasm_lib_release_host \
-            -//test/unit:test_component_with_deps_wasm_lib_release \
-            -//test/unit:test_component_with_deps_wasm_lib_release_host \
-            -//test/unit:test_composition \
-            -//test_examples/basic:hello_component_wasm_lib_release \
-            -//test_examples/basic:hello_component_wasm_lib_release_host \
-            -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
-            -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release_host \
-            -//test_wit_deps/consumer:consumer_component_wasm_lib_release \
-            -//test_wit_deps/consumer:consumer_component_wasm_lib_release_host \
-            -//test_wit_deps/consumer:check_deps \
-            -//test/integration:validate_consumer_deps \
-            -//test/integration:dependency_resolution_build_test \
-            -//examples/wasm_signing:example_component_wasm_lib_release_host
+            -//examples/wasm_signing/... \
+            -//test_examples/... \
+            -//test_wit_deps/... \
+            -//...:*_host
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
