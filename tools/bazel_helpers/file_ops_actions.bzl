@@ -305,26 +305,39 @@ def setup_js_workspace_action(ctx, sources, package_json = None, npm_deps = None
         Prepared JavaScript workspace directory
     """
 
-    config = {
-        "work_dir": ctx.label.name + "_jswork",
-        "workspace_type": "javascript",
-        "sources": [{"source": src, "destination": None, "preserve_permissions": False} for src in sources],
-        "headers": [],
-        "dependencies": [],
-    }
-
+    # Create workspace directory
+    workspace_dir = ctx.actions.declare_directory(ctx.label.name + "_jswork")
+    
+    # Prepare inputs
+    all_inputs = list(sources)
     if package_json:
-        config["dependencies"].append({
-            "source": package_json,
-            "destination": "package.json",
-            "preserve_permissions": False,
-        })
-
+        all_inputs.append(package_json)
     if npm_deps:
-        config["dependencies"].append({
-            "source": npm_deps,
-            "destination": "node_modules",
-            "preserve_permissions": False,
-        })
-
-    return prepare_workspace_action(ctx, config)
+        all_inputs.append(npm_deps)
+    
+    # Use a simpler direct shell approach
+    cp_commands = ["mkdir -p {}".format(workspace_dir.path)]
+    
+    # Copy source files to workspace root (flatten structure)
+    for src in sources:
+        cp_commands.append("cp {} {}/{}".format(src.path, workspace_dir.path, src.basename))
+    
+    if package_json:
+        cp_commands.append("cp {} {}/package.json".format(package_json.path, workspace_dir.path))
+    
+    if npm_deps:
+        cp_commands.append("cp -r {} {}/node_modules".format(npm_deps.path, workspace_dir.path))
+    
+    # Add debugging
+    cp_commands.append("echo 'JavaScript workspace files:'") 
+    cp_commands.append("ls -la {}".format(workspace_dir.path))
+    
+    ctx.actions.run_shell(
+        command = " && ".join(cp_commands),
+        inputs = all_inputs,
+        outputs = [workspace_dir],
+        mnemonic = "SetupJSWorkspace",
+        progress_message = "Setting up JavaScript workspace for %s" % ctx.label,
+    )
+    
+    return workspace_dir
