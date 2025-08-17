@@ -108,6 +108,7 @@ jobs:
             -//examples/wkg_integration/... \
             -//examples/wizer_example/... \
             -//examples/simple_oci_test/... \
+            -//examples/microservices_architecture/... \
             -//test_wac/... \
             -//test/wkg/... \
             -//test/production/... \
