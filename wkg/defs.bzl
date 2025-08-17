@@ -999,6 +999,9 @@ def _wasm_component_oci_image_impl(ctx):
             outputs = sign_outputs,
             mnemonic = "WasmSignForOCI",
             progress_message = "Signing component for OCI image {}".format(ctx.label),
+            execution_requirements = {
+                "local": "1",  # SSH keys generated locally need local signing access
+            },
         )
 
         # Create signature info
