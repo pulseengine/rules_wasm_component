@@ -344,32 +344,46 @@ def _npm_install_impl(ctx):
     # Output node_modules directory
     node_modules = ctx.actions.declare_directory("node_modules")
 
-    # Prepare JavaScript workspace using File Operations Component
-    work_dir = setup_js_workspace_action(
-        ctx,
-        sources = [],  # No source files needed for npm install
-        package_json = package_json,
-        npm_deps = None,  # Will be generated
+    # Create a simple workspace for npm install
+    build_script = ctx.actions.declare_file(ctx.attr.name + "_npm_install.sh")
+    
+    script_lines = [
+        "#!/bin/bash",
+        "set -euo pipefail",
+        "",
+        "# Create temporary workspace",
+        "WORK_DIR=$(mktemp -d)",
+        "echo \"NPM install workspace: $WORK_DIR\"",
+        "",
+        "# Copy package.json to workspace",
+        "cp \"{}\" \"$WORK_DIR/package.json\"".format(package_json.path),
+        "",
+        "# Change to workspace and run npm install",
+        "cd \"$WORK_DIR\"",
+        "\"$PWD/{}\" install".format(npm.path),
+        "",
+        "# Copy node_modules to output",
+        "cp -r node_modules \"{}\"".format(node_modules.path),
+        "",
+        "echo \"NPM install complete\"",
+    ]
+    
+    ctx.actions.write(
+        output = build_script,
+        content = "\n".join(script_lines),
+        is_executable = True,
     )
 
-    # Run npm install in the prepared workspace
-    npm_args = ctx.actions.args()
-    npm_args.add("install")
-
     ctx.actions.run(
-        executable = npm,
-        arguments = [npm_args],
-        inputs = [work_dir],
+        executable = build_script,
+        inputs = [package_json],
         outputs = [node_modules],
+        tools = [npm],
         mnemonic = "NPMInstall",
         progress_message = "Installing NPM dependencies for %s" % ctx.label,
-        env = {
-            "npm_config_cache": "/tmp/npm-cache-" + ctx.attr.name,
-        },
         execution_requirements = {
             "local": "1",  # NPM install requires network access
         },
-        use_default_shell_env = True,
     )
 
     return [
@@ -390,7 +404,6 @@ npm_install = rule(
     },
     toolchains = [
         "@rules_wasm_component//toolchains:jco_toolchain_type",
-        "@rules_wasm_component//toolchains:file_ops_toolchain_type",
     ],
     doc = """
     Installs NPM dependencies for JavaScript components.
