@@ -116,6 +116,7 @@ jobs:
             -//test_examples/... \
             -//test_wit_deps/... \
             -//examples/oci_publishing:secure_publish_enterprise \
+            -//test/integration:multi_service_system \
             -//test/export_macro:test_component_wasm_lib_release_host \
             -//test/integration:basic_component_wasm_lib_debug_host \
             -//test/integration:basic_component_wasm_lib_release_host \
@@ -210,6 +211,7 @@ jobs:
             -//test_examples/... \
             -//test_wit_deps/... \
             -//examples/oci_publishing:secure_publish_enterprise \
+            -//test/integration:multi_service_system \
             -//test/export_macro:test_component_wasm_lib_release_host \
             -//test/integration:basic_component_wasm_lib_debug_host \
             -//test/integration:basic_component_wasm_lib_release_host \

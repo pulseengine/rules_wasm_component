@@ -28,9 +28,13 @@ WAC (WebAssembly Composition) allows you to:
 
 ## Basic Composition
 
+Let's start with a simple example to understand the fundamentals of component composition.
+
 ### Simple Two-Component System
 
-Let's compose a frontend and backend component:
+**What we're building:** A web application where a frontend component talks to a backend component. The frontend handles user interaction while the backend processes requests.
+
+**The composition process:** We'll define interfaces for both components, implement them separately, then use WAC to wire them together. The beauty is that you could swap either component for a different implementation without changing the other.
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
@@ -459,18 +463,20 @@ let component = new my:component { ... };
 
 <div class="demo-buttons">
   <a href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/wac_oci_composition" class="demo-button">
-    🚀 Try WAC Composition
+    Try WAC Composition
   </a>
   <a href="/examples/multi-language/" class="demo-button">
-    🌐 Multi-Language Example
+    Multi-Language Example
   </a>
 </div>
 
 ## Performance Considerations
 
-<div class="perf-indicator">⚡ Near-native component communication</div>
-<div class="perf-indicator">🔄 Zero-copy data sharing where possible</div>
-<div class="perf-indicator">📦 Modular loading and execution</div>
+**Composition performance characteristics:**
+
+<div class="perf-indicator">Near-native component communication</div>
+<div class="perf-indicator">Zero-copy data sharing where possible</div>
+<div class="perf-indicator">Modular loading and execution</div>
 
 WAC compositions provide:
 

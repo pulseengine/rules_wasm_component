@@ -5,13 +5,29 @@ description: Complete WebAssembly component development workflow and toolchain a
 
 # WebAssembly Component Architecture
 
+## The Big Picture
+
+Think of WebAssembly components as **intelligent LEGO blocks for software**. Each block has clear interfaces (the "studs" and "holes"), can be built in any language, and connects perfectly with blocks built in other languages.
+
+**What makes this architecture special:**
+- **Language Freedom** - Write each component in the best language for the job
+- **True Portability** - Same component runs everywhere WebAssembly is supported
+- **Safe Composition** - Components can't interfere with each other
+- **Easy Distribution** - Components are just files that can be stored anywhere
+
+**Real-world analogy:** Imagine building a house where the foundation is written in Rust (for performance), the plumbing in Go (for simplicity), the electrical system in C++ (for hardware access), and the smart home controls in JavaScript (for web integration). All these parts work together perfectly because they follow the same "building code" (WebAssembly Component Model).
+
+## How It All Works Together
+
 Understanding the complete development workflow from WIT interfaces to deployed components, including multi-language support and advanced composition patterns.
 
 ## Development Workflow Overview
 
-The WebAssembly Component Model development process follows a structured pipeline that transforms high-level interface definitions into optimized, deployable components.
+**The journey from code to component** follows a predictable path, regardless of which language you use. Here's what happens behind the scenes when you build a component.
 
 ### Core Development Pipeline
+
+**This diagram shows the transformation process** - from your interface definition to a deployed component. Notice how different languages all converge to the same WebAssembly format:
 
 ```mermaid
 graph TD
@@ -45,7 +61,14 @@ graph TD
 
 ### Tool Ecosystem
 
-The build system orchestrates multiple specialized tools, each handling specific aspects of the component lifecycle:
+**Behind every component build is an orchestra of specialized tools.** Each tool has one job and does it well - the build system coordinates them all so you don't have to think about it:
+
+**How the tools work together:**
+- **Interface tools** parse your WIT files and validate the API contracts
+- **Code generators** create language-specific bindings so your code can implement the interfaces
+- **Language compilers** turn your implementation into WebAssembly modules
+- **WebAssembly tools** package modules into components and optimize them
+- **Composition tools** connect components together into applications
 
 ```mermaid
 graph LR
@@ -106,9 +129,11 @@ graph LR
 
 ## Language-Specific Implementation Flows
 
+**Each language has its own path to WebAssembly,** but they all end up at the same destination. Understanding these flows helps you pick the right language for your components and debug issues when they arise.
+
 ### Rust Component Development
 
-The Rust workflow follows this pattern from the `examples/basic/BUILD.bazel` file:
+**Rust has the most mature WebAssembly toolchain** and produces the smallest, fastest components. The process follows this pattern:
 
 1. **WIT Interface Processing**: The `wit_library` rule processes WIT files and validates interface definitions
 2. **Binding Generation**: `rust_wasm_component_bindgen` generates Rust traits and types
@@ -119,7 +144,7 @@ The Rust workflow follows this pattern from the `examples/basic/BUILD.bazel` fil
 
 ### Go Component Development
 
-The Go workflow leverages TinyGo's WebAssembly support from the `examples/go_component/BUILD.bazel` file:
+**Go components use TinyGo instead of the standard Go compiler** because TinyGo is specifically designed for WebAssembly and embedded systems. The workflow is similar to Rust but with Go-specific tooling:
 
 1. **WIT Processing**: Same `wit_library` rule as other languages
 2. **Go Binding Generation**: `go_wit_bindgen` creates Go interfaces and types
@@ -128,6 +153,8 @@ The Go workflow leverages TinyGo's WebAssembly support from the `examples/go_com
 5. **Component Assembly**: Same component wrapping process as Rust
 
 ### Multi-Language Architecture
+
+**This is where the magic happens** - different languages implementing the same interfaces, creating components that can work together seamlessly. Each language brings its strengths to the table:
 
 ```mermaid
 flowchart TB
@@ -176,9 +203,13 @@ flowchart TB
 
 ## Advanced Features Integration
 
+**Beyond basic components,** the architecture supports sophisticated patterns for production systems.
+
 ### Wizer Pre-initialization
 
-The Wizer integration optimizes component startup by pre-initializing runtime state:
+**Think of Wizer as "instant coffee" for WebAssembly components.** Instead of going through the startup process every time, Wizer "pre-brews" your component so it starts instantly:
+
+**How it works:** Wizer runs your component's initialization code once during the build, takes a snapshot of the initialized state, and bakes that into the final component. When the component starts in production, it skips all the initialization and jumps straight to the ready state.
 
 ```mermaid
 sequenceDiagram
@@ -196,7 +227,7 @@ sequenceDiagram
 
 ### Component Composition with WAC
 
-The WebAssembly Composition (WAC) format enables building complex systems, as demonstrated in `examples/multi_profile/production.wac`:
+**WAC (WebAssembly Composition) is like a blueprint for connecting components.** Just as an architect draws plans showing how rooms connect in a building, WAC files describe how components connect in an application:
 
 1. **Component Registry**: Components stored in OCI registries or local builds
 2. **Composition Definition**: WAC files describe component relationships
@@ -204,6 +235,8 @@ The WebAssembly Composition (WAC) format enables building complex systems, as de
 4. **Runtime Assembly**: Dynamic component linking and instantiation
 
 ### OCI Registry Integration
+
+**Components can be stored and shared just like Docker images,** but without the container overhead. This enables easy distribution and version management:
 
 ```mermaid
 graph TB
@@ -237,9 +270,11 @@ graph TB
 
 ## Key Architectural Principles
 
+**These principles make the architecture reliable and predictable** for teams building production systems.
+
 ### Hermetic Builds
 
-All toolchains are automatically downloaded and cached by Bazel:
+**"Hermetic" means completely self-contained - no surprises from different environments.** Your builds work the same way on your laptop, in CI, and on your teammate's machine:
 
 - **Language Toolchains**: Rust, TinyGo, WASI SDK managed as Bazel toolchains
 - **WebAssembly Tools**: wasm-tools, wizer, wit-bindgen downloaded from releases
@@ -248,7 +283,7 @@ All toolchains are automatically downloaded and cached by Bazel:
 
 ### Component Model Compliance
 
-Every component produced follows WebAssembly Component Model specifications:
+**Standards compliance ensures your components work everywhere.** Following the WebAssembly Component Model spec means your components can interoperate with any other compliant component, regardless of language or toolchain:
 
 - **Interface Types**: Rich type system with records, variants, and resources
 - **World Isolation**: Clear component boundaries and capabilities
@@ -257,7 +292,7 @@ Every component produced follows WebAssembly Component Model specifications:
 
 ### Performance Optimization
 
-Multiple optimization strategies are available:
+**The architecture is designed for performance at every level** - from build time to runtime. These optimizations happen automatically or can be configured based on your needs:
 
 - **Build-time**: Release optimizations, dead code elimination
 - **Runtime**: Wizer pre-initialization, efficient memory layouts
