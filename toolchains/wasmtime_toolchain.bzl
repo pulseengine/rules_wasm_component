@@ -53,12 +53,10 @@ def _wasmtime_repository_impl(repository_ctx):
         strategy,
     ))
 
-    if strategy == "system":
-        _setup_system_wasmtime(repository_ctx)
-    elif strategy == "download":
+    if strategy == "download":
         _setup_downloaded_wasmtime(repository_ctx, platform, version)
     else:
-        fail("Unknown strategy: {}. Must be 'system' or 'download'".format(strategy))
+        fail("Unknown strategy: {}. Must be 'download'".format(strategy))
 
     # Create BUILD file
     repository_ctx.file("BUILD.bazel", '''"""Wasmtime toolchain repository"""
@@ -80,22 +78,6 @@ toolchain(
     toolchain_type = "@rules_wasm_component//toolchains:wasmtime_toolchain_type",
 )
 ''')
-
-def _setup_system_wasmtime(repository_ctx):
-    """Set up system-installed wasmtime from PATH"""
-
-    # Check if wasmtime is available
-    result = repository_ctx.execute(["which", "wasmtime"])
-    if result.return_code != 0:
-        fail("wasmtime not found in PATH. Install wasmtime or use download strategy.")
-
-    wasmtime_path = result.stdout.strip()
-    print("Using system wasmtime at: {}".format(wasmtime_path))
-
-    # Create wrapper executable
-    repository_ctx.file("wasmtime", """#!/bin/bash
-exec {} "$@"
-""".format(wasmtime_path), executable = True)
 
 def _setup_downloaded_wasmtime(repository_ctx, platform, version):
     """Download prebuilt wasmtime binary"""
@@ -167,7 +149,7 @@ wasmtime_repository = repository_rule(
     implementation = _wasmtime_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Installation strategy: 'system' or 'download'",
+            doc = "Installation strategy: 'download'",
             default = "download",
         ),
         "version": attr.string(

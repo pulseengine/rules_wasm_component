@@ -75,7 +75,7 @@ The jco toolchain can be configured using different strategies:
 ```starlark
 # MODULE.bazel
 jco = use_extension("@rules_wasm_component//wasm:extensions.bzl", "jco")
-jco.register(strategy = "system")
+jco.register(strategy = "npm")
 ```
 
 ### NPM Installation

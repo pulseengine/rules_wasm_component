@@ -68,34 +68,7 @@ def _wkg_toolchain_repository_impl(ctx):
     strategy = ctx.attr.strategy
     version = ctx.attr.version
 
-    if strategy == "system":
-        # Try to find wkg in system PATH
-        wkg_path = ctx.which("wkg")
-        if not wkg_path:
-            fail("wkg not found in system PATH. Install it with 'cargo install wkg' or use strategy='download'")
-
-        # Create a BUILD file that references the system binary
-        ctx.file("BUILD.bazel", """
-load("@rules_wasm_component//toolchains:wkg_toolchain.bzl", "wkg_toolchain")
-
-wkg_toolchain(
-    name = "wkg_toolchain",
-    wkg = "wkg_binary",
-    visibility = ["//visibility:public"],
-)
-
-toolchain(
-    name = "wkg_toolchain_def",
-    toolchain = ":wkg_toolchain",
-    toolchain_type = "@rules_wasm_component//toolchains:wkg_toolchain_type",
-    visibility = ["//visibility:public"],
-)
-""")
-
-        # Create a symlink to the system binary
-        ctx.symlink(wkg_path, "wkg_binary")
-
-    elif strategy == "download":
+    if strategy == "download":
         platform = _detect_platform(ctx)
         platform_info = WKG_PLATFORMS[platform]
 
@@ -196,18 +169,18 @@ toolchain(
 """)
 
     else:
-        fail("Unknown strategy: {}. Supported: system, download, build".format(strategy))
+        fail("Unknown strategy: {}. Supported: download, build".format(strategy))
 
 wkg_toolchain_repository = repository_rule(
     implementation = _wkg_toolchain_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Tool acquisition strategy: 'system', 'download', or 'build'",
-            default = "system",
-            values = ["system", "download", "build"],
+            doc = "Tool acquisition strategy: 'download' or 'build'",
+            default = "download",
+            values = ["download", "build"],
         ),
         "version": attr.string(
-            doc = "Version to download/build (ignored for system strategy)",
+            doc = "Version to download/build",
             default = "0.11.0",
         ),
         "url": attr.string(

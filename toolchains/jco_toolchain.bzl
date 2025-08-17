@@ -106,9 +106,7 @@ def _jco_toolchain_repository_impl(repository_ctx):
     platform = _detect_host_platform(repository_ctx)
     version = repository_ctx.attr.version
 
-    if strategy == "system":
-        _setup_system_jco_tools(repository_ctx)
-    elif strategy == "download":
+    if strategy == "download":
         _setup_downloaded_jco_tools(repository_ctx, platform, version)
     elif strategy == "npm":
         _setup_npm_jco_tools(repository_ctx)
@@ -116,40 +114,11 @@ def _jco_toolchain_repository_impl(repository_ctx):
         fail(format_diagnostic_error(
             "E001",
             "Unknown jco strategy: {}".format(strategy),
-            "Must be 'system', 'download', or 'npm'",
+            "Must be 'download' or 'npm'",
         ))
 
     # Create BUILD files
     _create_jco_build_files(repository_ctx)
-
-def _setup_system_jco_tools(repository_ctx):
-    """Set up system-installed jco tools"""
-
-    # Validate system tools
-    tools = [("jco", "jco"), ("node", "node"), ("npm", "npm")]
-
-    for tool_name, binary_name in tools:
-        validation_result = validate_system_tool(repository_ctx, binary_name)
-
-        if not validation_result["valid"]:
-            fail(validation_result["error"])
-
-        if "warning" in validation_result:
-            print(validation_result["warning"])
-
-        # Create symlink to system tool (Bazel-native approach)
-        tool_path = validation_result.get("path", repository_ctx.which(binary_name))
-        if tool_path:
-            repository_ctx.symlink(tool_path, tool_name)
-        else:
-            # Fallback: use PATH resolution
-            repository_ctx.file(tool_name, binary_name, executable = True)
-
-        print("Using system {}: {} at {}".format(
-            tool_name,
-            binary_name,
-            validation_result.get("path", "system PATH"),
-        ))
 
 def _setup_downloaded_jco_tools(repository_ctx, platform, version):
     """Download prebuilt jco tools"""
@@ -371,9 +340,9 @@ jco_toolchain_repository = repository_rule(
     implementation = _jco_toolchain_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Tool acquisition strategy: 'system', 'download', or 'npm'",
-            default = "system",
-            values = ["system", "download", "npm"],
+            doc = "Tool acquisition strategy: 'download' or 'npm'",
+            default = "npm",
+            values = ["download", "npm"],
         ),
         "version": attr.string(
             doc = "jco version to use",

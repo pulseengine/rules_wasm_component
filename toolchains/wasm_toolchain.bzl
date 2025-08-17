@@ -134,9 +134,7 @@ def _wasm_toolchain_repository_impl(repository_ctx):
     for warning in compatibility_warnings:
         print("Warning: {}".format(warning))
 
-    if strategy == "system":
-        _setup_system_tools_enhanced(repository_ctx)
-    elif strategy == "download":
+    if strategy == "download":
         _setup_downloaded_tools(repository_ctx)  # Use simple method for stability
     elif strategy == "build":
         _setup_built_tools_enhanced(repository_ctx)
@@ -148,40 +146,11 @@ def _wasm_toolchain_repository_impl(repository_ctx):
         fail(format_diagnostic_error(
             "E001",
             "Unknown strategy: {}".format(strategy),
-            "Must be 'system', 'download', 'build', 'bazel', or 'hybrid'",
+            "Must be 'download', 'build', 'bazel', or 'hybrid'",
         ))
 
     # Create BUILD files for all strategies
     _create_build_files(repository_ctx)
-
-def _setup_system_tools_enhanced(repository_ctx):
-    """Set up system-installed tools from PATH with validation"""
-
-    tools = ["wasm-tools", "wac", "wit-bindgen", "wrpc", "wasmsign2"]
-
-    for tool_name in tools:
-        # Validate system tool
-        validation_result = validate_system_tool(repository_ctx, tool_name)
-
-        if not validation_result["valid"]:
-            fail(validation_result["error"])
-
-        if "warning" in validation_result:
-            print(validation_result["warning"])
-
-        # Create wrapper executable
-        repository_ctx.file(tool_name, """#!/bin/bash
-exec {} "$@"
-""".format(tool_name), executable = True)
-
-        print("Using system tool: {} at {}".format(
-            tool_name,
-            validation_result.get("path", "system PATH"),
-        ))
-
-def _setup_system_tools(repository_ctx):
-    """Set up system-installed tools from PATH (legacy)"""
-    _setup_system_tools_enhanced(repository_ctx)
 
 def _setup_downloaded_tools_enhanced(repository_ctx):
     """Download prebuilt tools with enhanced error handling and caching"""
@@ -817,8 +786,10 @@ def _setup_bazel_native_tools(repository_ctx):
 
     # Create placeholder wac (will be updated to rust_binary later)
     repository_ctx.file("wac", """#!/bin/bash
-echo "wac: using fallback to hermetic binary"
-exec @wac_hermetic//:wac "$@"
+echo "wac: Bazel-native rust_binary not yet implemented"
+echo "Using placeholder - switch to 'download' strategy in MODULE.bazel for full functionality"
+echo "To use wac, switch to 'download' strategy in MODULE.bazel"
+exit 1
 """, executable = True)
 
     # Create placeholder wit-bindgen (will be updated to rust_binary later)
@@ -1054,9 +1025,9 @@ wasm_toolchain_repository = repository_rule(
     implementation = _wasm_toolchain_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Tool acquisition strategy: 'system', 'download', 'build', 'bazel', or 'hybrid'",
-            default = "system",
-            values = ["system", "download", "build", "bazel", "hybrid"],
+            doc = "Tool acquisition strategy: 'download', 'build', 'bazel', or 'hybrid'",
+            default = "hybrid",
+            values = ["download", "build", "bazel", "hybrid"],
         ),
         "version": attr.string(
             doc = "Version to use (for download/build strategies)",

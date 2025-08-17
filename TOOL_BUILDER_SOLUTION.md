@@ -13,9 +13,9 @@ The main issue was **cargo filesystem sandbox restrictions** in Bazel Central Re
 
 ### Dual-Track Approach
 
-1. **Immediate Solution: Hermetic Pre-built Binaries**
-   - ✅ Added wac and wkg to `toolchains/hermetic_extension.bzl`
-   - ✅ Using `http_file` for single binary downloads with verified checksums
+1. **Immediate Solution: Hermetic Download Strategies**
+   - ✅ All tools use download strategy with verified checksums
+   - ✅ Cross-platform support for all major platforms
    - ✅ All 5 core tools (wasm-tools, wit-bindgen, wasmtime, wac, wkg) working
 
 2. **Long-term Solution: Self-Hosted Tool Builder Workspace**
@@ -71,13 +71,10 @@ tools-builder/
 **Implementation**:
 
 ```starlark
-# toolchains/hermetic_extension.bzl
-http_file(
-    name = "wac_hermetic",
-    urls = ["https://github.com/bytecodealliance/wac/releases/download/v0.7.0/wac-cli-x86_64-unknown-linux-musl"],
-    sha256 = "dd734c4b049287b599a3f8c553325307687a17d070290907e3d5bbe481b89cc6",
-    executable = True,
-    downloaded_file_path = "wac",
+# wasm/extensions.bzl
+wasm_toolchain.register(
+    strategy = "download",
+    version = "1.235.0",  # wasm-tools, wit-bindgen, wac all downloaded with verified checksums
 )
 ```
 
@@ -153,9 +150,9 @@ tools-builder/ ──build──▶ GitHub Releases ──publish──▶ Main 
 
 ### Modified Files
 
-- `MODULE.bazel`: Added wac_hermetic and wkg_hermetic to use_repo
-- `toolchains/hermetic_extension.bzl`: Added http_file downloads for wac/wkg
-- `toolchains/BUILD.bazel`: Added filegroups for new hermetic tools
+- `wasm/extensions.bzl`: Updated toolchain defaults to use download strategy
+- `toolchains/*.bzl`: Enhanced download strategies with cross-platform support
+- `MODULE.bazel`: Uses standard toolchain download strategies
 
 ### New Files (Tool Builder Workspace)
 
