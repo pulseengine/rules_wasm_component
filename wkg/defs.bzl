@@ -2697,7 +2697,7 @@ def _wasm_component_metadata_extract_impl(ctx):
 
     # Step 1: Get file size using cross-platform approach
     file_size_output = ctx.actions.declare_file(ctx.attr.name + "_file_size.txt")
-    
+
     # Create cross-platform script to get file size
     get_size_script = ctx.actions.declare_file(ctx.attr.name + "_get_size.sh")
     ctx.actions.write(
@@ -2710,13 +2710,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS/BSD stat
     stat -f %z "$1" > "$2"
 else
-    # Linux/GNU stat  
+    # Linux/GNU stat
     stat -c %s "$1" > "$2"
 fi
 """,
         is_executable = True,
     )
-    
+
     ctx.actions.run(
         executable = get_size_script,
         arguments = [component_info.path, file_size_output.path],

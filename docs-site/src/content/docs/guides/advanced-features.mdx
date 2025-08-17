@@ -74,7 +74,7 @@ wasm_security_policy(
     signature_type = "embedded",
     registry_policies = [
         "production|required|production_keys",
-        "staging|required|staging_keys", 
+        "staging|required|staging_keys",
         "local|optional",
     ],
     component_policies = [
@@ -116,7 +116,7 @@ wasm_component_multi_arch(
     name = "cross_platform_component",
     components = {
         "wasm32-wasi": ":component_wasi",
-        "wasm32-wasip2": ":component_wasip2", 
+        "wasm32-wasip2": ":component_wasip2",
         "wasm32-unknown-unknown": ":component_core",
     },
     default_architecture = "wasm32-wasip2",
@@ -151,7 +151,7 @@ Extract comprehensive metadata from components:
 load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_metadata_extract")
 
 wasm_component_metadata_extract(
-    name = "component_analysis", 
+    name = "component_analysis",
     component = ":my_component",
     include_dependencies = True,
     include_exports = True,
@@ -192,7 +192,7 @@ wac_microservices_app(
     frontend_component = ":web_ui",
     services = {
         "auth": ":auth_service",
-        "catalog": ":product_catalog", 
+        "catalog": ":product_catalog",
         "payments": ":payment_processor",
         "notifications": ":notification_service",
     },
@@ -215,7 +215,7 @@ wac_distributed_system(
         # Local components
         "frontend": ":web_frontend",
         "api_gateway": ":gateway_component",
-        
+
         # Remote components from different registries
         "auth": "ghcr.io/company/auth-service:v2.1.0",
         "database": "docker.io/company/db-proxy:latest",
@@ -227,12 +227,12 @@ wac_distributed_system(
         let db = new database {};
         let analytics = new analytics {};
         let frontend = new frontend {};
-        
+
         connect gateway.auth to auth.validate;
         connect gateway.data to db.query;
         connect gateway.events to analytics.track;
         connect frontend.api to gateway.handle;
-        
+
         export gateway.public;
     ''',
     registry_config = ":multi_registry_config",
@@ -281,7 +281,7 @@ wkg_multi_registry_publish(
         },
         "docker": {
             "registry": "docker.io",
-            "namespace": "mycompany", 
+            "namespace": "mycompany",
             "tag": "latest",
         },
         "aws": {
@@ -356,7 +356,7 @@ component_integration_test(
     component = ":my_component",
     test_scenarios = [
         "smoke_test.yaml",
-        "load_test.yaml", 
+        "load_test.yaml",
         "security_test.yaml",
     ],
     timeout = "300s",
@@ -394,7 +394,7 @@ wasm_component_multi_arch(
 # Enhanced metadata
 enhanced_oci_annotations(
     name = "service_metadata",
-    component = ":universal_service", 
+    component = ":universal_service",
     build_info = {"version": "v2.1.0"},
     security_info = {"signed": "true"},
 )
@@ -412,7 +412,7 @@ wkg_multi_registry_publish(
             "tag": "v2.1.0",
         },
         "backup": {
-            "registry": "docker.io", 
+            "registry": "docker.io",
             "namespace": "company-backup",
             "tag": "v2.1.0",
         },

@@ -12,7 +12,7 @@ Learn how to add and manage external WebAssembly Interface Type (WIT) dependenci
 When building WebAssembly components, you often need to import external WIT interfaces such as:
 
 - **WASI interfaces** (io, filesystem, http, etc.)
-- **Third-party component APIs** 
+- **Third-party component APIs**
 - **Shared interface definitions** across projects
 - **Standardized protocols** and schemas
 
@@ -68,7 +68,7 @@ wkg_wit_deps(
     name = "registry_interfaces",
     packages = [
         "wasi:io@0.2.6",
-        "wasi:http@0.2.1", 
+        "wasi:http@0.2.1",
         "bytecodealliance:preview2-adapter@0.1.0",
     ],
     registry = "registry.wasm.org",  # Default WKG registry
@@ -149,7 +149,7 @@ graph TB
             EXT3["@company_apis"]
             EXT4["@single_interface"]
         end
-        
+
         subgraph "Your Project"
             BUILD["BUILD.bazel"]
             WIT["your-component.wit"]
@@ -198,7 +198,7 @@ graph TB
 
 **Key Insights:**
 - **Multiple sources** can feed into the same project
-- **External repositories** (@name) isolate dependencies 
+- **External repositories** (@name) isolate dependencies
 - **BUILD files** wire everything together with `wit_library` rules
 - **Import statements** in WIT files reference the external interfaces
 - **Build process** resolves all dependencies automatically
@@ -310,7 +310,7 @@ wit_library(
 ```starlark
 wit_library(
     name = "cli_app",
-    srcs = ["cli.wit"], 
+    srcs = ["cli.wit"],
     deps = [
         "@wasi_cli//:cli",         # CLI environment
         "@wasi_io//:streams",      # Standard I/O
@@ -335,7 +335,7 @@ wit_library(
 **Maximum compatibility:**
 ```starlark
 wit_library(
-    name = "compat_component", 
+    name = "compat_component",
     srcs = ["compat.wit"],
     deps = [
         "@wasi_cli_v020//:cli",
@@ -372,7 +372,7 @@ wkg_wit_deps(
         "wasi:io@0.2.6",
         "wasi:http@0.2.1",
         "wasi:filesystem@0.2.1",
-        "wasi:cli@0.2.1", 
+        "wasi:cli@0.2.1",
     ],
 )
 
@@ -412,7 +412,7 @@ For organization-specific registries:
 
 ```python title="MODULE.bazel"
 # Configure private WKG registry
-wkg_ext = use_extension("@rules_wasm_component//wkg:extensions.bzl", "wkg_registry") 
+wkg_ext = use_extension("@rules_wasm_component//wkg:extensions.bzl", "wkg_registry")
 wkg_ext.configure(
     registry_url = "https://wkg.company.com",
     auth_token_env = "COMPANY_WKG_TOKEN",  # Environment variable with auth token
@@ -513,7 +513,7 @@ wit_library(
 )
 
 wit_library(
-    name = "data", 
+    name = "data",
     srcs = ["data/interfaces.wit"],
     package_name = "company:data@dev",
     deps = [":auth"],
@@ -557,12 +557,12 @@ def production_wit_dependencies():
         name = "production_wasi",
         packages = [
             "wasi:io@0.2.6",           # Stable release
-            "wasi:http@0.2.1",         # Stable release  
+            "wasi:http@0.2.1",         # Stable release
             "wasi:filesystem@0.2.1",   # Stable release
         ],
         registry = "registry.wasm.org",
     )
-    
+
     # Vendor-specific interfaces from HTTP archive (pinned version)
     http_archive(
         name = "vendor_interfaces",
@@ -579,7 +579,7 @@ wit_library(
 )
 ''',
     )
-    
+
     # Internal company interfaces (specific stable commit)
     git_repository(
         name = "company_stable_apis",
@@ -609,7 +609,7 @@ wit_library(
 
 # Test against external implementation
 wkg_component(
-    name = "reference_implementation", 
+    name = "reference_implementation",
     package = "reference:implementation@1.0.0",
     registry = "registry.wasm.org",
 )
@@ -635,7 +635,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def my_project_wit_dependencies():
     """Load external WIT dependencies for this project"""
-    
+
     # Third-party HTTP client interfaces
     http_archive(
         name = "http_client_wit",
@@ -654,7 +654,7 @@ wit_library(
 )
 ''',
     )
-    
+
     # Database interfaces from another organization
     http_archive(
         name = "database_wit",
@@ -672,7 +672,7 @@ wit_library(
 )
 
 wit_library(
-    name = "nosql", 
+    name = "nosql",
     srcs = glob(["nosql/**/*.wit"]),
     package_name = "db:nosql@1.0.0",
     deps = [":sql"],
@@ -696,7 +696,7 @@ For dependencies shared across multiple projects, add to the central configurati
 ```python title="wit/wasi_deps.bzl"
 def wasi_wit_dependencies():
     # ... existing WASI dependencies ...
-    
+
     # Add your organization's shared interfaces
     http_archive(
         name = "company_shared_wit",
@@ -755,16 +755,16 @@ interface my-service {
         input: wasi:io/streams.input-stream,
         request: wasm:http-client.request
     ) -> result<company:common.response>;
-    
+
     query-data: func(sql: string) -> db:sql.result-set;
 }
 
 world my-service-world {
     import wasi:io/streams@0.2.6;
-    import wasm:http-client@2.1.0; 
+    import wasm:http-client@2.1.0;
     import db:sql@1.0.0;
     import company:common@3.0.0;
-    
+
     export my-service;
 }
 ```
@@ -800,7 +800,7 @@ wit_markdown(
 rust_wasm_component(
     name = "my_service",
     srcs = ["src/lib.rs"],
-    world = "my-service-world", 
+    world = "my-service-world",
     wit = ":my_service_wit",
 )
 ```
@@ -869,7 +869,7 @@ Solution: Recalculate SHA256 checksum and update in `http_archive`.
 If migrating from the `wit-deps` tool:
 
 1. **Convert `deps.toml`** entries to `http_archive` rules
-2. **Move WIT files** from `wit/deps/` to Bazel external repositories  
+2. **Move WIT files** from `wit/deps/` to Bazel external repositories
 3. **Update imports** to use new package names/versions
 4. **Remove `wit-deps` tooling** and use Bazel dependency management
 

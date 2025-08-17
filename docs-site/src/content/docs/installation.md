@@ -8,6 +8,7 @@ description: Complete installation guide for rules_wasm_component
 Before diving into installation, let's understand what makes WebAssembly components compelling for modern software development.
 
 **Real-world use cases:**
+
 - **Microservices without containers** - Deploy lightweight, fast-starting services
 - **Plugin architectures** - Safely run third-party code in your applications
 - **Edge computing** - Run the same code on CDN edges, servers, and IoT devices
@@ -15,12 +16,14 @@ Before diving into installation, let's understand what makes WebAssembly compone
 - **Legacy modernization** - Gradually migrate existing systems with component wrappers
 
 **Benefits over traditional approaches:**
+
 - **Faster than containers** - Sub-millisecond startup times vs seconds for containers
 - **Smaller than binaries** - Typical components are 1-5MB vs 50-500MB container images
 - **More secure than shared libraries** - Complete isolation with explicit interfaces
 - **More portable than native code** - Write once, run on any architecture
 
 **Perfect for teams that want:**
+
 - Language diversity without operational complexity
 - High performance without sacrificing security
 - True portability across environments
@@ -215,7 +218,7 @@ module(
 bazel_dep(name = "rules_wasm_component", version = "1.0.0")
 bazel_dep(name = "rules_rust", version = "0.62.0")
 
-# Git override for WASI Preview 2 support  
+# Git override for WASI Preview 2 support
 git_override(
     module_name = "rules_rust",
     commit = "7d7d3ac00ad013c94e7a9d0db0732c20ffe8eab7",

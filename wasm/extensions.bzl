@@ -239,16 +239,16 @@ def _jco_extension_impl(module_ctx):
     for name, registration in registrations.items():
         jco_toolchain_repository(
             name = name + "_toolchain",
-            strategy = registration.strategy,
             version = registration.version,
+            node_version = getattr(registration, "node_version", "18.19.0"),
         )
 
-    # If no registrations, create default system toolchain
+    # If no registrations, create default toolchain
     if not registrations:
         jco_toolchain_repository(
             name = "jco_toolchain",
-            strategy = "npm",
             version = "1.4.0",
+            node_version = "18.19.0",
         )
 
 # Module extension for jco (JavaScript Component Tools)
@@ -261,14 +261,13 @@ jco = module_extension(
                     doc = "Name for this jco registration",
                     default = "jco",
                 ),
-                "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'download' or 'npm'",
-                    default = "npm",
-                    values = ["download", "npm"],
-                ),
                 "version": attr.string(
                     doc = "jco version to use",
                     default = "1.4.0",
+                ),
+                "node_version": attr.string(
+                    doc = "Node.js version for hermetic strategy",
+                    default = "18.19.0",
                 ),
             },
         ),

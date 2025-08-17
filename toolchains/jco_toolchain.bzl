@@ -91,7 +91,7 @@ def _jco_toolchain_repository_impl(repository_ctx):
 
 def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_version):
     """Download hermetic Node.js and install jco via npm"""
-    
+
     # Get Node.js info from registry
     node_info = get_tool_info("nodejs", node_version, platform)
     if not node_info:
@@ -100,16 +100,19 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
             "Unsupported platform {} for Node.js {}".format(platform, node_version),
             "Check //checksums/tools/nodejs.json for supported platforms",
         ))
-    
+
     print("Setting up hermetic Node.js {} + jco {} for platform {}".format(
-        node_version, jco_version, platform))
-    
+        node_version,
+        jco_version,
+        platform,
+    ))
+
     # Download Node.js
     archive_name = "node-v{}-{}".format(node_version, node_info["url_suffix"])
     node_url = "https://nodejs.org/dist/v{}/{}".format(node_version, archive_name)
-    
+
     print("Downloading Node.js from: {}".format(node_url))
-    
+
     # Download and extract Node.js with SHA256 verification
     if archive_name.endswith(".tar.xz"):
         # For .tar.xz files (Linux)
@@ -134,60 +137,61 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
         )
     else:
         fail("Unsupported Node.js archive format: {}".format(archive_name))
-    
+
     if not result or (hasattr(result, "return_code") and result.return_code != 0):
         fail(format_diagnostic_error(
             "E003",
             "Failed to download Node.js {}".format(node_version),
             "Check network connectivity and Node.js version availability",
         ))
-    
+
     # Get paths to Node.js binaries
     node_binary_path = node_info["binary_path"].format(node_version)
     npm_binary_path = node_info["npm_path"].format(node_version)
-    
+
     # Verify Node.js installation
     node_binary = repository_ctx.path(node_binary_path)
     npm_binary = repository_ctx.path(npm_binary_path)
-    
+
     if not node_binary.exists:
         fail("Node.js binary not found at: {}".format(node_binary_path))
-    
+
     if not npm_binary.exists:
         fail("npm binary not found at: {}".format(npm_binary_path))
-    
+
     # Test Node.js installation
     node_test = repository_ctx.execute([node_binary, "--version"])
     if node_test.return_code != 0:
         fail("Node.js installation test failed: {}".format(node_test.stderr))
-    
+
     print("Successfully installed hermetic Node.js: {}".format(node_test.stdout.strip()))
-    
+
     # Install jco using the hermetic npm
     print("Installing jco {} using hermetic npm...".format(jco_version))
-    
+
     # Create a local node_modules for jco
     npm_install_result = repository_ctx.execute([
         npm_binary,
         "install",
-        "--prefix", "jco_workspace",
+        "--prefix",
+        "jco_workspace",
         "@bytecodealliance/jco@{}".format(jco_version),
         "@bytecodealliance/componentize-js",  # Required dependency
     ])
-    
+
     if npm_install_result.return_code != 0:
         fail(format_diagnostic_error(
             "E003",
             "Failed to install jco via hermetic npm: {}".format(npm_install_result.stderr),
             "Check jco version availability and network connectivity",
         ))
-    
+
     print("Successfully installed jco via hermetic npm")
-    
+
     # Create robust wrapper script for jco that always uses hermetic Node.js
     # Use npx with the jco package to ensure proper module resolution
     workspace_path = repository_ctx.path("jco_workspace").realpath
-    
+
     # Verify jco was installed
     jco_package_path = repository_ctx.path("jco_workspace/node_modules/@bytecodealliance/jco/package.json")
     if not jco_package_path.exists:
@@ -196,9 +200,9 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
             "jco installation failed - package.json not found",
             "Check npm install output above for errors",
         ))
-    
+
     print("jco installation verified, creating hermetic wrapper...")
-    
+
     if platform.startswith("windows"):
         wrapper_content = """@echo off
 cd /d "{workspace}"
@@ -206,7 +210,7 @@ set NODE_PATH={workspace}/node_modules
 "{node}" "{workspace}/node_modules/@bytecodealliance/jco/src/jco.js" %*
 """.format(
             node = node_binary.realpath,
-            workspace = workspace_path
+            workspace = workspace_path,
         )
         repository_ctx.file("jco.cmd", wrapper_content, executable = True)
         repository_ctx.symlink("jco.cmd", "jco")
@@ -217,14 +221,14 @@ export NODE_PATH="{workspace}/node_modules"
 exec "{node}" "{workspace}/node_modules/@bytecodealliance/jco/src/jco.js" "$@"
 """.format(
             node = node_binary.realpath,
-            workspace = workspace_path
+            workspace = workspace_path,
         )
         repository_ctx.file("jco", wrapper_content, executable = True)
-    
+
     # Create symlinks for Node.js and npm binaries for the toolchain
     repository_ctx.symlink(node_binary, "node")
-    repository_ctx.symlink(npm_binary, "npm") 
-    
+    repository_ctx.symlink(npm_binary, "npm")
+
     print("Hermetic jco toolchain setup complete")
 
 def _create_jco_build_files(repository_ctx):

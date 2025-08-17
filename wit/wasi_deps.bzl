@@ -14,7 +14,7 @@ def wasi_wit_dependencies():
 
     This follows the Bazel-native approach by using http_archive rules
     instead of shell scripts or external dependency management tools.
-    
+
     Provides both WASI 0.2.0 and 0.2.3 versions for maximum compatibility.
     """
 
@@ -146,7 +146,7 @@ wit_library(
     http_archive(
         name = "wasi_filesystem",
         urls = ["https://github.com/WebAssembly/wasi-filesystem/archive/refs/tags/v0.2.3.tar.gz"],
-        sha256 = "e31161ee490a1a9b1eb850ad65c53efa004fcb8a5d3ed43f1a296ccb6c2f24bd",  
+        sha256 = "e31161ee490a1a9b1eb850ad65c53efa004fcb8a5d3ed43f1a296ccb6c2f24bd",
         strip_prefix = "wasi-filesystem-0.2.3",
         build_file_content = """
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
@@ -162,7 +162,7 @@ wit_library(
 """,
     )
 
-    # WASI Sockets interfaces  
+    # WASI Sockets interfaces
     http_archive(
         name = "wasi_sockets",
         urls = ["https://github.com/WebAssembly/wasi-sockets/archive/refs/tags/v0.2.3.tar.gz"],
@@ -241,7 +241,6 @@ wit_library(
     # )
     # """,
     # )
-
 
 def wasi_wit_library(name, wasi_version = "0.2.0"):
     """Helper macro to create a wit_library that includes WASI dependencies.

@@ -8,6 +8,7 @@ description: Build WebAssembly components with Rust using rules_rust integration
 Rust is the **ideal language** for WebAssembly components. Its zero-cost abstractions, memory safety, and lack of runtime overhead make it perfect for creating fast, secure, portable components.
 
 **The Rust advantage:**
+
 - **Memory safety without garbage collection** - Perfect for sandboxed environments
 - **Zero-cost abstractions** - High-level code compiles to efficient WebAssembly
 - **Excellent tooling** - wit-bindgen automatically generates all the glue code
@@ -27,6 +28,7 @@ Rust is the **ideal language** for WebAssembly components. Its zero-cost abstrac
 ## Basic Component
 
 Let's build a calculator component to demonstrate the core concepts. This example shows how to:
+
 - Define a clear interface with WIT
 - Implement business logic in pure Rust
 - Handle errors properly with WebAssembly-safe types

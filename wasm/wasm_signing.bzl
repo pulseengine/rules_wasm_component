@@ -104,6 +104,7 @@ def _wasm_sign_impl(ctx):
         key_info = ctx.attr.keys[WasmKeyInfo]
         secret_key = key_info.secret_key
         public_key = key_info.public_key
+
         # Use the actual key format from the key info
         # ssh_keygen produces "openssh" format, wasm_keygen produces "compact" format
         openssh_format = key_info.key_format == "openssh"

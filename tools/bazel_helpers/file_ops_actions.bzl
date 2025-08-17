@@ -186,28 +186,28 @@ def prepare_workspace_action(ctx, config):
     # Collect all input files
     all_inputs = []
     commands = ["mkdir -p {}".format(workspace_dir.path)]
-    
+
     # Add sources
     for source_info in config.get("sources", []):
         src_file = source_info["source"]
         dest_name = source_info.get("destination") or src_file.basename
         all_inputs.append(src_file)
         commands.append("cp {} {}/{}".format(src_file.path, workspace_dir.path, dest_name))
-    
+
     # Add headers
     for header_info in config.get("headers", []):
         hdr_file = header_info["source"]
         dest_name = header_info.get("destination") or hdr_file.basename
         all_inputs.append(hdr_file)
         commands.append("cp {} {}/{}".format(hdr_file.path, workspace_dir.path, dest_name))
-    
+
     # Add dependencies
     for dep_info in config.get("dependencies", []):
         dep_file = dep_info["source"]
         dest_name = dep_info.get("destination") or dep_file.basename
         all_inputs.append(dep_file)
         commands.append("cp {} {}/{}".format(dep_file.path, workspace_dir.path, dest_name))
-    
+
     # Execute workspace preparation in single action
     ctx.actions.run_shell(
         command = " && ".join(commands),
