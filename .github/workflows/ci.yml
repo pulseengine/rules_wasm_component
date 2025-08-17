@@ -134,11 +134,14 @@ jobs:
             -//test/integration:composition_build_test \
             -//test/integration:integration_tests \
             -//test/unit:test_component_simple_wasm_lib_release \
+            -//test/unit:test_component_simple_wasm_lib_release_host \
             -//test/unit:test_component_with_deps_wasm_lib_release \
+            -//test/unit:test_component_with_deps_wasm_lib_release_host \
             -//test/unit:test_composition \
             -//test_examples/basic:hello_component_wasm_lib_release \
             -//test_examples/basic:hello_component_wasm_lib_release_host \
             -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
+            -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release_host \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release_host \
             -//test_wit_deps/consumer:check_deps \
@@ -247,11 +250,14 @@ jobs:
             -//test/integration:composition_build_test \
             -//test/integration:integration_tests \
             -//test/unit:test_component_simple_wasm_lib_release \
+            -//test/unit:test_component_simple_wasm_lib_release_host \
             -//test/unit:test_component_with_deps_wasm_lib_release \
+            -//test/unit:test_component_with_deps_wasm_lib_release_host \
             -//test/unit:test_composition \
             -//test_examples/basic:hello_component_wasm_lib_release \
             -//test_examples/basic:hello_component_wasm_lib_release_host \
             -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release \
+            -//test_examples/dependencies/consumer:consumer_component_wasm_lib_release_host \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release \
             -//test_wit_deps/consumer:consumer_component_wasm_lib_release_host \
             -//test_wit_deps/consumer:check_deps \
