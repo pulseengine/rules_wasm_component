@@ -66,6 +66,14 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Guides',
+					items: [
+						{ label: 'Advanced Features', slug: 'guides/advanced-features' },
+						{ label: 'Toolchain Configuration', slug: 'guides/toolchain-configuration' },
+						{ label: 'External WIT Dependencies', slug: 'guides/external-wit-dependencies' },
+					],
+				},
+				{
 					label: 'Examples',
 					items: [
 						{ label: 'Basic Component', slug: 'examples/basic' },

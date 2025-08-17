@@ -3,16 +3,28 @@ title: WAC Composition
 description: Build complex multi-component systems using WebAssembly Composition (WAC)
 ---
 
-Learn how to compose multiple WebAssembly components into sophisticated applications using WAC (WebAssembly Composition).
+## Building Applications from Components
 
-## Overview
+Think of **WAC (WebAssembly Composition)** as "wiring" for your WebAssembly components. Just like connecting electronic components on a circuit board, you can connect software components to create complete applications.
+
+**The magic of composition:** You can take a Rust authentication service, a Go database connector, a JavaScript frontend, and a C++ data processor - all built as separate WebAssembly components - and wire them together into a single application.
+
+**Why this matters:**
+- **Team independence** - Different teams can work on different components in their preferred languages
+- **Component reuse** - Build once, compose into multiple applications
+- **Easy testing** - Test components in isolation, then test the composition
+- **Flexible deployment** - Swap components without rebuilding everything
+
+**How it works:** You write a simple "composition script" that describes which components to instantiate and how to connect their interfaces. WAC handles all the complexity of making them work together.
+
+## Key Concepts
 
 WAC (WebAssembly Composition) allows you to:
 
-- ✅ **Connect Components** - Link multiple components together
-- ✅ **Define Data Flow** - Specify how data moves between components
-- ✅ **Create Applications** - Build complete systems from component parts
-- ✅ **Maintain Isolation** - Components remain independent and secure
+- **Connect Components** - Link multiple components together through their interfaces
+- **Define Data Flow** - Specify how data moves between components
+- **Create Applications** - Build complete systems from component parts
+- **Maintain Isolation** - Components remain independent and secure
 
 ## Basic Composition
 

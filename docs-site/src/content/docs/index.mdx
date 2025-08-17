@@ -21,6 +21,41 @@ hero:
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
+## What is the WebAssembly Component Model?
+
+The **WebAssembly Component Model** is a revolutionary approach to building portable, secure, and composable software. Think of it as "microservices for WebAssembly" - you can build small, focused components in any language and connect them together like LEGO blocks.
+
+### Why Should You Care?
+
+**🔗 Language Freedom**: Write your auth service in Rust, your API in Go, your frontend in JavaScript, and your ML pipeline in Python - all running together seamlessly.
+
+**🚀 Performance**: Near-native speed with WebAssembly's efficiency, but with the safety and portability of sandboxed execution.
+
+**📦 True Portability**: Build once, run anywhere - from edge devices to cloud servers, from browsers to embedded systems.
+
+**🔒 Security by Default**: Each component runs in its own sandbox with explicit interfaces - no hidden dependencies or side effects.
+
+### Real-World Use Cases
+
+- **Microservices**: Replace Docker containers with lightweight WASM components
+- **Plugin Systems**: Add extensibility to your apps with secure, fast plugins
+- **Edge Computing**: Deploy the same code to CDN edges, IoT devices, and cloud
+- **Multi-language Projects**: Combine the best tools from different ecosystems
+
+## Why rules_wasm_component?
+
+Building WebAssembly components traditionally involves complex toolchains and manual configuration. **rules_wasm_component** makes it as easy as:
+
+```python
+rust_wasm_component(
+    name = "my_service",
+    srcs = ["src/lib.rs"],
+    wit = ":my_interfaces",
+)
+```
+
+That's it! Bazel handles the complexity while you focus on building great software.
+
 ## Features
 
 <CardGrid stagger>
