@@ -82,6 +82,18 @@ jobs:
       - name: Verify Bazel Installation
         run: bazel version
 
+      - name: Setup OCI Registry with Test Components
+        run: |
+          # Build and publish test components to local registry for OCI tests
+          echo "Publishing test components to localhost:5001 registry..."
+          bazel run //examples/simple_oci_test:publish_greeting
+          bazel run //examples/simple_oci_test:publish_calculator
+          
+          # Verify components are available
+          echo "Verifying registry contents..."
+          curl -s http://localhost:5001/v2/_catalog || echo "Registry catalog request failed"
+          curl -s http://localhost:5001/v2/test/simple/greeting/tags/list || echo "Greeting tags request failed"
+
       - name: Build All Targets
         run: |
           # Build core working targets, exclude incomplete/problematic examples
