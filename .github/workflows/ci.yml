@@ -120,6 +120,7 @@ jobs:
             -//test/integration:basic_component_wasm_lib_release \
             -//test/integration:consumer_component_wasm_lib_release \
             -//test/integration:service_a_component_wasm_lib_release \
+            -//test/integration:service_a_component_wasm_lib_release_host \
             -//test/integration:service_b_component_wasm_lib_release \
             -//test/integration:wasi_component_wasm_lib_release \
             -//test/integration:multi_service_system \
@@ -225,6 +226,7 @@ jobs:
             -//test/integration:basic_component_wasm_lib_release \
             -//test/integration:consumer_component_wasm_lib_release \
             -//test/integration:service_a_component_wasm_lib_release \
+            -//test/integration:service_a_component_wasm_lib_release_host \
             -//test/integration:service_b_component_wasm_lib_release \
             -//test/integration:wasi_component_wasm_lib_release \
             -//test/integration:multi_service_system \
