@@ -251,7 +251,6 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
 
     if platform.startswith("windows"):
         wrapper_content = """@echo off
-cd /d "{workspace}"
 set NODE_PATH={workspace}/node_modules
 "{node}" "{workspace}/node_modules/@bytecodealliance/jco/src/jco.js" %*
 """.format(
@@ -262,7 +261,6 @@ set NODE_PATH={workspace}/node_modules
         repository_ctx.symlink("jco.cmd", "jco")
     else:
         wrapper_content = """#!/bin/bash
-cd "{workspace}"
 export NODE_PATH="{workspace}/node_modules"
 exec "{node}" "{workspace}/node_modules/@bytecodealliance/jco/src/jco.js" "$@"
 """.format(
