@@ -25,10 +25,9 @@ def _wit_deps_check_impl(ctx):
     # Run dependency analysis using Bazel-native approach
     ctx.actions.run(
         executable = ctx.executable._wit_dependency_analyzer,
-        arguments = [config_file.path],
+        arguments = [config_file.path, output_file.path],
         inputs = [config_file, ctx.file.wit_file],
         outputs = [output_file],
-        stdout = output_file,
         mnemonic = "CheckWitDependencies",
         progress_message = "Checking WIT dependencies in %s" % ctx.file.wit_file.short_path,
     )
