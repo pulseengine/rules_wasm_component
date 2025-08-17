@@ -22,7 +22,7 @@ wasm_toolchain.register(
 
 ### Latest Development
 
-```python title="MODULE.bazel" 
+```python title="MODULE.bazel"
 # Builds from source for bleeding-edge features
 wasm_toolchain.register(
     strategy = "build",
@@ -45,7 +45,7 @@ wasm_toolchain.register(
 ```python title="MODULE.bazel"
 # Custom mirrors for restricted networks
 wasm_toolchain.register(
-    strategy = "download", 
+    strategy = "download",
     version = "1.235.0",
     wasm_tools_url = "https://internal-mirror.corp.com/wasm-tools-1.235.0.tar.gz",
     wac_url = "https://internal-mirror.corp.com/wac-0.7.0.tar.gz",
@@ -70,6 +70,7 @@ wasm_toolchain.register(
 ### When to Use Each Strategy
 
 #### `"download"` (Default) - Hermetic & Fast
+
 **Best for:** Production builds, CI/CD, team consistency
 
 ```python title="MODULE.bazel"
@@ -80,16 +81,19 @@ wasm_toolchain.register(
 ```
 
 **Pros:**
+
 - ⚡ **Fast builds** - No compilation required
-- ✅ **Reproducible** - Same binaries across all environments  
+- ✅ **Reproducible** - Same binaries across all environments
 - 🔒 **Hermetic** - No system dependencies
 - 🌍 **Cross-platform** - Works on all supported platforms
 
 **Cons:**
+
 - 📦 **Limited versions** - Only published releases available
 - 🌐 **Network dependency** - Initial download required
 
 #### `"build"` - Latest Features
+
 **Best for:** Development, unreleased features, custom patches
 
 ```python title="MODULE.bazel"
@@ -102,19 +106,22 @@ wasm_toolchain.register(
 ```
 
 **Pros:**
+
 - 🚀 **Latest features** - Access to unreleased functionality
 - 🔧 **Customizable** - Can apply patches or modifications
 - 📈 **Up-to-date** - Always current with upstream
 
 **Cons:**
+
 - 🐌 **Slow builds** - Requires Rust compilation
 - ⚠️ **Less stable** - Development versions may have issues
 - 🛠️ **Build dependencies** - Requires Rust toolchain
 
 #### `"hybrid"` - Best of Both Worlds
+
 **Best for:** Projects wanting fast builds with Bazel-native approach
 
-```python title="MODULE.bazel" 
+```python title="MODULE.bazel"
 wasm_toolchain.register(
     strategy = "hybrid",
     version = "1.235.0",
@@ -122,15 +129,18 @@ wasm_toolchain.register(
 ```
 
 **Pros:**
+
 - 🚀 **Fast** - Combines git repositories with genrules
 - ✅ **Bazel-native** - Uses repository rules properly
 - 🎯 **Balanced** - Good performance and flexibility
 
 **Cons:**
+
 - 🔄 **Complex** - More sophisticated build process
 - 📊 **Limited toolchains** - Only available for wasm_toolchain
 
 #### `"npm"` - JavaScript Ecosystem
+
 **Best for:** Projects already using Node.js/npm
 
 ```python title="MODULE.bazel"
@@ -142,15 +152,18 @@ jco.register(
 ```
 
 **Pros:**
+
 - 🟢 **Node.js integration** - Natural for JS projects
 - 📦 **npm ecosystem** - Standard package management
 - 🔄 **Version control** - npm's semantic versioning
 
 **Cons:**
+
 - 🟢 **Node.js required** - System dependency
 - 📁 **JCO only** - Limited to JavaScript Component Tools
 
 #### `"cargo"` - Rust Ecosystem
+
 **Best for:** Rust-heavy projects, when you need Wizer
 
 ```python title="MODULE.bazel"
@@ -162,11 +175,13 @@ wizer.register(
 ```
 
 **Pros:**
+
 - 🦀 **Rust native** - Uses cargo install
 - 🔧 **Flexible** - Can install with specific features
 - 📦 **Version pinning** - Exact version control
 
 **Cons:**
+
 - 🦀 **Rust required** - System dependency
 - 🐌 **Compilation time** - Builds from source
 - 🎯 **Wizer only** - Limited to Wizer toolchain
@@ -208,9 +223,9 @@ wasm_toolchain.register(
     git_commit = "main",
 )
 
-# Production: stable releases  
+# Production: stable releases
 wasm_toolchain.register(
-    name = "prod_tools", 
+    name = "prod_tools",
     strategy = "download",
     version = "1.235.0",
 )
@@ -329,7 +344,7 @@ wasm_toolchain.register(
     strategy = "download",
     version = "1.235.0",
     wasm_tools_url = "https://artifacts.corp.com/wasm-tools/1.235.0/wasm-tools.tar.gz",
-    wac_url = "https://artifacts.corp.com/wac/0.7.0/wac.tar.gz", 
+    wac_url = "https://artifacts.corp.com/wac/0.7.0/wac.tar.gz",
     wit_bindgen_url = "https://artifacts.corp.com/wit-bindgen/0.43.0/wit-bindgen.tar.gz",
 )
 ```
@@ -355,12 +370,12 @@ wasm_toolchain.register(
 )
 
 tinygo.register(
-    name = "tinygo", 
+    name = "tinygo",
     tinygo_version = "0.38.0",
 )
 ```
 
-### Windows Development  
+### Windows Development
 
 ```python title="MODULE.bazel - Windows"
 # Windows-specific configuration
@@ -384,7 +399,7 @@ wasm_toolchain = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wa
 # Use latest wasm-tools but older wit-bindgen for compatibility
 wasm_toolchain.register(
     name = "custom_tools",
-    strategy = "download", 
+    strategy = "download",
     version = "1.235.0",           # Latest wasm-tools
     wit_bindgen_commit = "v0.40.0", # Older wit-bindgen
 )
@@ -402,7 +417,7 @@ bazel build //... --remote_cache=grpc://build-cache.company.com:9092
 #### Parallel Downloads
 
 ```bash
-# Increase parallelism for faster tool downloads  
+# Increase parallelism for faster tool downloads
 bazel build //... --jobs=auto --local_ram_resources=8192
 ```
 
@@ -412,7 +427,7 @@ For faster component startup:
 
 ```python title="MODULE.bazel - Performance"
 # Enable Wizer for startup optimization
-wizer = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wizer")  
+wizer = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wizer")
 wizer.register(
     strategy = "download",  # Fast, reliable
     version = "9.0.0",
@@ -428,13 +443,16 @@ wizer.register(
 **Problem:** Tool downloads failing due to network issues
 
 **Solutions:**
+
 1. **Check connectivity:**
+
    ```bash
    # Test download manually
    curl -I https://github.com/bytecodealliance/wasm-tools/releases/download/v1.235.0/wasm-tools-1.235.0-x86_64-linux.tar.gz
    ```
 
 2. **Use custom URLs:**
+
    ```python title="MODULE.bazel"
    wasm_toolchain.register(
        strategy = "download",
@@ -443,6 +461,7 @@ wizer.register(
    ```
 
 3. **Switch to build strategy:**
+
    ```python title="MODULE.bazel"
    wasm_toolchain.register(strategy = "build", git_commit = "v1.235.0")
    ```
@@ -452,12 +471,15 @@ wizer.register(
 **Problem:** Tool not available for your platform
 
 **Solutions:**
+
 1. **Check supported platforms:**
+
    ```bash
    bazel query '@wasm_tools_toolchains//...' --output=build
    ```
 
 2. **Use build strategy:**
+
    ```python title="MODULE.bazel"
    # Build from source works on all platforms
    wasm_toolchain.register(strategy = "build", git_commit = "main")
@@ -468,8 +490,10 @@ wizer.register(
 **Problem:** Tool versions incompatible with each other
 
 **Solutions:**
+
 1. **Check compatibility matrix** (see above)
 2. **Pin compatible versions:**
+
    ```python title="MODULE.bazel"
    # Known working combination
    wasm_toolchain.register(strategy = "download", version = "1.235.0")
@@ -481,18 +505,22 @@ wizer.register(
 **Problem:** Build from source failing
 
 **Solutions:**
+
 1. **Check Rust installation:**
+
    ```bash
    rustc --version  # Should be 1.70+
    cargo --version
    ```
 
 2. **Increase build resources:**
+
    ```bash
    bazel build //... --local_ram_resources=8192 --jobs=4
    ```
 
 3. **Switch to download strategy:**
+
    ```python title="MODULE.bazel"
    wasm_toolchain.register(strategy = "download", version = "1.235.0")
    ```
@@ -521,12 +549,14 @@ bazel build //...
 ### From System Tools to Hermetic
 
 **Before:**
+
 ```bash
 # Manual tool installation
 cargo install wasm-tools wac-cli wit-bindgen-cli
 ```
 
 **After:**
+
 ```python title="MODULE.bazel"
 # Automatic tool management
 wasm_toolchain.register(strategy = "download", version = "1.235.0")
@@ -536,15 +566,19 @@ wasm_toolchain.register(strategy = "download", version = "1.235.0")
 
 1. **Check changelog** for breaking changes
 2. **Update gradually:**
+
    ```python title="MODULE.bazel"
    # Test new version
    wasm_toolchain.register(name = "test_tools", strategy = "download", version = "1.240.0")
    wasm_toolchain.register(name = "stable_tools", strategy = "download", version = "1.235.0")
    ```
+
 3. **Validate with tests:**
+
    ```bash
    bazel test //... --extra_toolchains=@test_tools_toolchains//:wasm_tools_toolchain
    ```
+
 4. **Update default** once validated
 
 ## Best Practices
@@ -552,7 +586,7 @@ wasm_toolchain.register(strategy = "download", version = "1.235.0")
 ### General Guidelines
 
 1. **Always pin versions** in production
-2. **Use download strategy** for CI/CD 
+2. **Use download strategy** for CI/CD
 3. **Test before upgrading** tool versions
 4. **Document your configuration** for team members
 5. **Keep toolchains updated** regularly but carefully
@@ -561,7 +595,7 @@ wasm_toolchain.register(strategy = "download", version = "1.235.0")
 
 ```python title="MODULE.bazel - Team Standard"
 # Team-wide standard configuration
-# Last updated: 2024-01-15 
+# Last updated: 2024-01-15
 # Compatible with rules_wasm_component 1.0.x
 
 wasm_toolchain.register(strategy = "download", version = "1.235.0")  # Stable
@@ -576,5 +610,47 @@ jco.register(strategy = "npm", version = "1.4.0")                   # Latest sta
 - **Quarterly:** Update to latest stable versions after testing
 - **As needed:** Update for security fixes or critical bugs
 - **Major versions:** Plan migration with full regression testing
+
+## WIT Dependencies Configuration
+
+For projects using external WIT (WebAssembly Interface Types) dependencies:
+
+### Quick Setup
+
+```python title="MODULE.bazel"
+# Enable WASI WIT interfaces
+wasi_wit_ext = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasi_wit")
+wasi_wit_ext.init()
+use_repo(wasi_wit_ext, "wasi_io")  # Add more as needed
+```
+
+### Available WASI Packages
+
+| Package | Repository | Usage |
+|---------|------------|-------|
+| `@wasi_io//:streams` | `wasi:io@0.2.6` | I/O streams, error handling |
+
+### Using in WIT Files
+
+```wit title="component.wit"
+package example:my-component@1.0.0;
+
+world my-world {
+    import wasi:io/streams@0.2.6;  // Use external interface
+    export my-api;
+}
+```
+
+### Using in BUILD Files
+
+```starlark title="BUILD.bazel"
+wit_library(
+    name = "my_component_wit",
+    srcs = ["component.wit"],
+    deps = ["@wasi_io//:streams"],  # Reference external dependency
+)
+```
+
+> **📖 Complete Guide:** See [External WIT Dependencies](/guides/external-wit-dependencies/) for detailed setup instructions including custom external dependencies.
 
 This configuration ensures your WebAssembly component builds are fast, reliable, and maintainable across different environments and team setups.

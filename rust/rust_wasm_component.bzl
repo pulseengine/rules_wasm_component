@@ -12,11 +12,11 @@ def _wasm_rust_shared_library_impl(ctx):
 
     # Forward DefaultInfo and RustInfo
     providers = [target_info[DefaultInfo]]
-    
+
     # Forward RustInfo if available
     if hasattr(target_info, "rust_info"):
         providers.append(target_info.rust_info)
-    
+
     return providers
 
 _wasm_rust_shared_library = rule(

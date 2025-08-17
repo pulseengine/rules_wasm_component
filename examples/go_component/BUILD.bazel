@@ -15,14 +15,15 @@ package(default_visibility = ["//visibility:public"])
 wit_library(
     name = "calculator_wit",
     srcs = ["wit/calculator.wit"],
-    world = "wasi:cli/command",
+    world = "calculator-world",
+    deps = ["@wasi_io//:streams"],  # Add WASI IO dependency for stream imports
 )
 
 # WIT library definitions for HTTP service interface
 wit_library(
     name = "http_service_wit",
     srcs = ["wit/http-service.wit"],
-    world = "wasi:cli/command",
+    world = "http-service-world",
 )
 
 # Generate markdown documentation for calculator interface

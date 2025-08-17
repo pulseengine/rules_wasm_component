@@ -88,7 +88,7 @@ jobs:
           echo "Publishing test components to localhost:5001 registry..."
           bazel run //examples/simple_oci_test:publish_greeting
           bazel run //examples/simple_oci_test:publish_calculator
-          
+
           # Verify components are available
           echo "Verifying registry contents..."
           curl -s http://localhost:5001/v2/_catalog || echo "Registry catalog request failed"
@@ -102,8 +102,6 @@ jobs:
             -//examples/multi_profile/... \
             -//examples/cpp_component/... \
             -//examples/js_component/... \
-            -//examples/go_component/... \
-            -//examples/go_component:calculator_docs \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \
@@ -213,14 +211,12 @@ jobs:
           else
             EXTRA_EXCLUDES=""
           fi
-          
+
           bazel build -- //... \
             -//examples/world_export/... \
             -//examples/multi_profile/... \
             -//examples/cpp_component/... \
             -//examples/js_component/... \
-            -//examples/go_component/... \
-            -//examples/go_component:calculator_docs \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \

@@ -8,6 +8,7 @@ load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
 load("//toolchains:wasmtime_toolchain.bzl", "wasmtime_repository")
 load("//toolchains:wizer_toolchain.bzl", "wizer_toolchain_repository")
 load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
+load("//wit:wasi_deps.bzl", "wasi_wit_dependencies")
 
 def _wasm_toolchain_extension_impl(module_ctx):
     """Implementation of wasm_toolchain module extension"""
@@ -463,6 +464,30 @@ wasmtime = module_extension(
                     values = ["download"],
                 ),
             },
+        ),
+    },
+)
+
+def _wasi_wit_extension_impl(module_ctx):
+    """Implementation of WASI WIT dependencies module extension"""
+
+    # Load WASI WIT interface definitions for all modules that request them
+    load_wasi = False
+    for mod in module_ctx.modules:
+        if mod.tags.init:
+            load_wasi = True
+            break
+
+    if load_wasi:
+        wasi_wit_dependencies()
+
+# Module extension for WASI WIT interface definitions
+wasi_wit = module_extension(
+    implementation = _wasi_wit_extension_impl,
+    tag_classes = {
+        "init": tag_class(
+            attrs = {},
+            doc = "Initialize WASI WIT interface definitions",
         ),
     },
 )
