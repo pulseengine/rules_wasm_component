@@ -315,25 +315,58 @@ def setup_js_workspace_action(ctx, sources, package_json = None, npm_deps = None
     if npm_deps:
         all_inputs.append(npm_deps)
     
-    # Use a simpler direct shell approach
-    cp_commands = ["mkdir -p {}".format(workspace_dir.path)]
+    # Create a shell script that properly copies files (not symlinks)
+    setup_script = ctx.actions.declare_file(ctx.label.name + "_setup_workspace.sh")
+    
+    script_lines = [
+        "#!/bin/bash",
+        "set -euo pipefail",
+        "",
+        "WORKSPACE_DIR=\"$1\"",
+        "shift",
+        "",
+        "# Create workspace directory",
+        "mkdir -p \"$WORKSPACE_DIR\"",
+        "echo \"Setting up JavaScript workspace: $WORKSPACE_DIR\"",
+        "",
+    ]
     
     # Copy source files to workspace root (flatten structure)
     for src in sources:
-        cp_commands.append("cp {} {}/{}".format(src.path, workspace_dir.path, src.basename))
+        script_lines.extend([
+            "echo \"Copying {} to $WORKSPACE_DIR/{}\"".format(src.path, src.basename),
+            "cp \"{}\" \"$WORKSPACE_DIR/{}\"".format(src.path, src.basename),
+        ])
     
     if package_json:
-        cp_commands.append("cp {} {}/package.json".format(package_json.path, workspace_dir.path))
+        script_lines.extend([
+            "echo \"Copying package.json\"",
+            "cp \"{}\" \"$WORKSPACE_DIR/package.json\"".format(package_json.path),
+        ])
     
     if npm_deps:
-        cp_commands.append("cp -r {} {}/node_modules".format(npm_deps.path, workspace_dir.path))
+        script_lines.extend([
+            "echo \"Copying npm dependencies\"",
+            "cp -r \"{}\" \"$WORKSPACE_DIR/node_modules\"".format(npm_deps.path),
+        ])
     
-    # Add debugging
-    cp_commands.append("echo 'JavaScript workspace files:'") 
-    cp_commands.append("ls -la {}".format(workspace_dir.path))
+    script_lines.extend([
+        "",
+        "echo \"JavaScript workspace setup complete\"",
+        "echo \"Files in workspace:\"",
+        "ls -la \"$WORKSPACE_DIR\"",
+    ])
     
-    ctx.actions.run_shell(
-        command = " && ".join(cp_commands),
+    ctx.actions.write(
+        output = setup_script,
+        content = "\n".join(script_lines),
+        is_executable = True,
+    )
+    
+    # Run the setup script
+    ctx.actions.run(
+        executable = setup_script,
+        arguments = [workspace_dir.path],
         inputs = all_inputs,
         outputs = [workspace_dir],
         mnemonic = "SetupJSWorkspace",

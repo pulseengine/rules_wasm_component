@@ -269,9 +269,28 @@ exec "{node}" "{workspace}/node_modules/@bytecodealliance/jco/src/jco.js" "$@"
         )
         repository_ctx.file("jco", wrapper_content, executable = True)
 
-    # Create symlinks for Node.js and npm binaries for the toolchain
+    # Create wrapper script for npm (similar to jco) because npm is a node script
+    if platform.startswith("windows"):
+        npm_wrapper_content = """@echo off
+"{node}" "{npm}" %*
+""".format(
+            node = node_binary.realpath,
+            npm = npm_binary.realpath,
+        )
+        repository_ctx.file("npm_wrapper.cmd", npm_wrapper_content, executable = True)
+        repository_ctx.symlink("npm_wrapper.cmd", "npm_wrapper")
+    else:
+        npm_wrapper_content = """#!/bin/bash
+exec "{node}" "{npm}" "$@"
+""".format(
+            node = node_binary.realpath,
+            npm = npm_binary.realpath,
+        )
+        repository_ctx.file("npm_wrapper", npm_wrapper_content, executable = True)
+
+    # Create symlinks for Node.js binary and use wrapper for npm
     repository_ctx.symlink(node_binary, "node")
-    repository_ctx.symlink(npm_binary, "npm")
+    repository_ctx.symlink("npm_wrapper", "npm")
 
     print("Hermetic jco toolchain setup complete")
 
