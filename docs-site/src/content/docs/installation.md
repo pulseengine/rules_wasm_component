@@ -100,7 +100,14 @@ wasm_toolchain.register(
 For Rust WebAssembly components, add rules_rust and configure dependencies:
 
 ```python title="MODULE.bazel"
-bazel_dep(name = "rules_rust", version = "0.48.0")
+bazel_dep(name = "rules_rust", version = "0.62.0")
+
+# Git override for WASI Preview 2 support
+git_override(
+    module_name = "rules_rust",
+    commit = "7d7d3ac00ad013c94e7a9d0db0732c20ffe8eab7",
+    remote = "https://github.com/bazelbuild/rules_rust.git",
+)
 
 # Configure Rust crate dependencies
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
@@ -181,7 +188,14 @@ module(
 
 # Core dependencies
 bazel_dep(name = "rules_wasm_component", version = "1.0.0")
-bazel_dep(name = "rules_rust", version = "0.48.0")
+bazel_dep(name = "rules_rust", version = "0.62.0")
+
+# Git override for WASI Preview 2 support  
+git_override(
+    module_name = "rules_rust",
+    commit = "7d7d3ac00ad013c94e7a9d0db0732c20ffe8eab7",
+    remote = "https://github.com/bazelbuild/rules_rust.git",
+)
 
 # WebAssembly toolchain configuration
 wasm_toolchain = use_extension(
@@ -328,8 +342,8 @@ bazel build //... --local_ram_resources=8192
 If you encounter issues:
 
 1. **Check logs**: Use `--verbose_failures` for detailed error messages
-2. **Search issues**: Look at [GitHub Issues](https://github.com/your-repo/rules_wasm_component/issues)
-3. **Ask questions**: Use [GitHub Discussions](https://github.com/your-repo/rules_wasm_component/discussions)
+2. **Search issues**: Look at [GitHub Issues](https://github.com/pulseengine/rules_wasm_component/issues)
+3. **Ask questions**: Use [GitHub Discussions](https://github.com/pulseengine/rules_wasm_component/discussions)
 4. **Update rules**: Ensure you're using the latest version
 
 ## Next Steps

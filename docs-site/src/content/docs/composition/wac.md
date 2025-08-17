@@ -446,7 +446,7 @@ let component = new my:component { ... };
 ```
 
 <div class="demo-buttons">
-  <a href="https://stackblitz.com/github/your-repo/rules_wasm_component/tree/main/examples/wac_oci_composition" class="demo-button">
+  <a href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/wac_oci_composition" class="demo-button">
     🚀 Try WAC Composition
   </a>
   <a href="/examples/multi-language/" class="demo-button">
