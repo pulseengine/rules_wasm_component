@@ -115,6 +115,8 @@ jobs:
             -//examples/wasm_signing/... \
             -//test_examples/... \
             -//test_wit_deps/... \
+            -//examples/oci_publishing:secure_publish_enterprise \
+            -//examples/oci_publishing:hello_oci_openssh_signed_image \
             -//...:*_host
 
       - name: Run Tests
@@ -199,6 +201,8 @@ jobs:
             -//examples/wasm_signing/... \
             -//test_examples/... \
             -//test_wit_deps/... \
+            -//examples/oci_publishing:secure_publish_enterprise \
+            -//examples/oci_publishing:hello_oci_openssh_signed_image \
             -//...:*_host
 
       - name: Run Tests

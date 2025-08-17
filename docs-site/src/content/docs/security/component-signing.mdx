@@ -42,11 +42,13 @@ graph TD
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
+load("@rules_wasm_component//wasm:ssh_keygen.bzl", "ssh_keygen")
 
-# Generate OpenSSH format keys (compatible with GitHub)
-wasm_keygen(
+# Generate actual OpenSSH Ed25519 keys (compatible with GitHub)
+ssh_keygen(
     name = "production_keys",
-    openssh_format = True,
+    key_type = "ed25519",
+    comment = "Production WebAssembly component signing key",
 )
 
 # Generate compact format keys (optimal performance)
@@ -119,13 +121,31 @@ bazel build //:validate_signed_component
 
 ## Key Management
 
+### Key Generation Methods
+
+There are two distinct approaches to generating signing keys:
+
+**Method 1: Actual OpenSSH Keys (Recommended)**
+- Uses real `ssh-keygen` from the openssh Bazel module
+- Generates authentic OpenSSH Ed25519 keys
+- Compatible with GitHub SSH keys and existing infrastructure
+- Required for wasmsign2's `-Z` flag (OpenSSH signing mode)
+- Requires `bazel_dep(name = "openssh", version = "9.9p1.bcr.1")` in MODULE.bazel
+
+**Method 2: wasmsign2 Compact Keys**
+- Uses wasmsign2's built-in key generation
+- Generates compact format keys optimized for WebAssembly signing
+- Smaller key size and faster verification
+- Native wasmsign2 format
+
 ### Key Generation Options
 
 **OpenSSH Format (Recommended for CI/CD):**
 ```python
-wasm_keygen(
+ssh_keygen(
     name = "github_compatible_keys",
-    openssh_format = True,  # Ed25519 format
+    key_type = "ed25519",  # Actual OpenSSH Ed25519 format
+    comment = "GitHub compatible signing key",
     # Compatible with GitHub SSH keys
     # Easy integration with existing infrastructure
 )
@@ -141,13 +161,49 @@ wasm_keygen(
 )
 ```
 
+**Complete Example - Both Key Types:**
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen", "wasm_sign")
+load("@rules_wasm_component//wasm:ssh_keygen.bzl", "ssh_keygen")
+
+# OpenSSH keys for production/GitHub integration
+ssh_keygen(
+    name = "production_openssh_keys",
+    key_type = "ed25519",
+    comment = "Production WebAssembly signing key",
+)
+
+# Compact keys for performance-optimized scenarios
+wasm_keygen(
+    name = "development_compact_keys",
+    openssh_format = False,
+)
+
+# Sign with OpenSSH keys (uses -Z flag internally)
+wasm_sign(
+    name = "openssh_signed_component",
+    component = ":my_component",
+    keys = ":production_openssh_keys",
+    detached = True,
+)
+
+# Sign with compact keys (standard wasmsign2)
+wasm_sign(
+    name = "compact_signed_component",
+    component = ":my_component",
+    keys = ":development_compact_keys",
+    detached = False,
+)
+```
+
 ### Key Storage Best Practices
 
 **Development Environment:**
 ```python
-wasm_keygen(
+ssh_keygen(
     name = "dev_keys",
-    openssh_format = True,
+    key_type = "ed25519",
+    comment = "Development signing key",
     # Keys generated in bazel-bin/
     # Safe for development use
 )
@@ -169,14 +225,20 @@ wasm_sign(
 
 ### GitHub Integration
 
-**Using GitHub SSH Keys:**
+**Using OpenSSH Keys for Signing:**
 ```python
-# Verify using your GitHub account's SSH keys
-wasm_verify(
-    name = "verify_with_github",
-    signed_component = ":signed_component",
-    github_account = "your-username",
-    # Automatically fetches public keys from GitHub
+# Generate OpenSSH keys and use for signing
+ssh_keygen(
+    name = "github_style_keys",
+    key_type = "ed25519",
+    comment = "your-username@github",
+)
+
+wasm_sign(
+    name = "github_signed_component",
+    component = ":my_component",
+    keys = ":github_style_keys",
+    detached = True,
 )
 ```
 
@@ -236,7 +298,7 @@ wasm_sign(
 
 **Development, Staging, Production:**
 ```python
-# Development signing
+# Development signing (compact keys)
 wasm_sign(
     name = "dev_signed",
     component = ":component",
@@ -244,19 +306,19 @@ wasm_sign(
     detached = False,
 )
 
-# Staging signing
+# Staging signing (OpenSSH keys)
 wasm_sign(
     name = "staging_signed",
     component = ":component",
-    keys = ":staging_keys",
+    keys = ":staging_openssh_keys",
     detached = True,
 )
 
-# Production signing
+# Production signing (OpenSSH keys)
 wasm_sign(
     name = "prod_signed",
     component = ":component",
-    keys = ":production_keys",
+    keys = ":production_openssh_keys",
     detached = True,
     # Additional security for production
 )
@@ -464,15 +526,17 @@ wac_compose_with_oci(
 **Planned Key Rotation:**
 ```python
 # Current production keys
-wasm_keygen(
+ssh_keygen(
     name = "prod_keys_v1",
-    openssh_format = True,
+    key_type = "ed25519",
+    comment = "Production keys v1",
 )
 
 # Next generation keys
-wasm_keygen(
+ssh_keygen(
     name = "prod_keys_v2",
-    openssh_format = True,
+    key_type = "ed25519", 
+    comment = "Production keys v2",
 )
 
 # Support both during rotation period
@@ -514,8 +578,20 @@ genrule(
 **Issue 1: Key format mismatch**
 ```bash
 # Error: Unsupported key format
-# Solution: Check openssh_format setting
+# Solution: Check if using ssh_keygen vs wasm_keygen correctly
 bazel build //keys:signing_keys --verbose_failures
+
+# For OpenSSH keys, use ssh_keygen:
+ssh_keygen(
+    name = "openssh_keys",
+    key_type = "ed25519",
+)
+
+# For compact keys, use wasm_keygen:
+wasm_keygen(
+    name = "compact_keys",
+    openssh_format = False,
+)
 ```
 
 **Issue 2: Permission denied on key files**
