@@ -15,65 +15,59 @@ def _docs_build_impl(ctx):
     source_files = ctx.files.srcs
     package_json = ctx.file.package_json
 
-    # Create a comprehensive build script that handles everything
-    build_script = ctx.actions.declare_file(ctx.attr.name + "_build_docs.sh")
-    ctx.actions.write(
-        output = build_script,
-        content = """
-#!/bin/bash
-set -euo pipefail
 
-NODE="$1"
-NPM="$2"
-OUTPUT_TAR="$3"
-PACKAGE_JSON="$4"
-shift 4
-
-# Create temporary workspace
-WORK_DIR="$(mktemp -d)"
-echo "Working in: $WORK_DIR"
-
-# Copy package.json
-cp "$PACKAGE_JSON" "$WORK_DIR/package.json"
-
-# Copy all source files, maintaining docs-site structure
-for src_file in "$@"; do
-    if [[ "$src_file" == docs-site/* ]]; then
-        # Remove docs-site/ prefix to get relative path  
-        rel_path="${src_file#docs-site/}"
-        dest_file="$WORK_DIR/$rel_path"
-        dest_dir="$(dirname "$dest_file")"
-        mkdir -p "$dest_dir"
-        cp "$src_file" "$dest_file"
-    fi
-done
-
-# Change to workspace
-cd "$WORK_DIR"
-
-# Install dependencies using hermetic npm
-"$NPM" install --no-audit --no-fund
-
-# Build documentation site
-"$NPM" run build
-
-# Package the built site
-tar -czf "$OUTPUT_TAR" -C dist .
-
-echo "Documentation build complete: $OUTPUT_TAR"
-        """,
-        is_executable = True,
-    )
-
-    # Run the comprehensive build script
-    build_args = [node.path, npm.path, docs_archive.path, package_json.path]
+    # Prepare input files list
+    input_file_args = []
     for src in source_files:
         if src.path.startswith("docs-site/"):
-            build_args.append(src.path)
+            input_file_args.append(src.path)
 
-    ctx.actions.run(
-        executable = build_script,
-        arguments = build_args,
+    ctx.actions.run_shell(
+        command = """
+        set -euo pipefail
+        
+        # Store execution root and output path
+        EXEC_ROOT="$(pwd)"
+        OUTPUT_TAR="$1"
+        PACKAGE_JSON="$2"
+        shift 2
+
+        # Create temporary workspace
+        WORK_DIR="$(mktemp -d)"
+        echo "Working in: $WORK_DIR"
+
+        # Copy package.json
+        cp "$PACKAGE_JSON" "$WORK_DIR/package.json"
+
+        # Copy all source files, maintaining docs-site structure
+        for src_file in "$@"; do
+            if [[ "$src_file" == docs-site/* ]]; then
+                # Remove docs-site/ prefix to get relative path  
+                rel_path="${src_file#docs-site/}"
+                dest_file="$WORK_DIR/$rel_path"
+                dest_dir="$(dirname "$dest_file")"
+                mkdir -p "$dest_dir"
+                cp "$src_file" "$dest_file"
+            fi
+        done
+
+        # Change to workspace for npm operations
+        cd "$WORK_DIR"
+
+        # Install dependencies using hermetic npm (from PATH via tools)
+        npm install --no-audit --no-fund
+
+        # Build documentation site
+        npm run build
+
+        # Return to execution root and create output file there
+        cd "$EXEC_ROOT"
+        mkdir -p "$(dirname "$OUTPUT_TAR")"
+        tar -czf "$OUTPUT_TAR" -C "$WORK_DIR/dist" .
+
+        echo "Documentation build complete: $OUTPUT_TAR"
+        """,
+        arguments = [docs_archive.path, package_json.path] + input_file_args,
         inputs = source_files + [package_json],
         outputs = [docs_archive],
         tools = [node, npm],
