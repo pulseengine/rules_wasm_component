@@ -2,6 +2,7 @@
 
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
 load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
+load("//checksums:registry.bzl", "get_tool_info")
 
 def _get_nodejs_toolchain_info(repository_ctx):
     """Get Node.js toolchain info from the registered hermetic toolchain"""
@@ -21,30 +22,6 @@ def _get_nodejs_toolchain_info(repository_ctx):
         )
 
     return None
-
-# jco platform mapping
-JCO_PLATFORMS = {
-    "darwin_amd64": {
-        "binary_name": "jco-x86_64-apple-darwin",
-        "sha256": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
-    },
-    "darwin_arm64": {
-        "binary_name": "jco-aarch64-apple-darwin",
-        "sha256": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
-    },
-    "linux_amd64": {
-        "binary_name": "jco-x86_64-unknown-linux-musl",
-        "sha256": "e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
-    },
-    "linux_arm64": {
-        "binary_name": "jco-aarch64-unknown-linux-musl",
-        "sha256": "a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8",
-    },
-    "windows_amd64": {
-        "binary_name": "jco-x86_64-pc-windows-gnu.exe",
-        "sha256": "c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0",
-    },
-}
 
 def _jco_toolchain_impl(ctx):
     """Implementation of jco_toolchain rule"""
@@ -102,187 +79,153 @@ def _detect_host_platform(repository_ctx):
 def _jco_toolchain_repository_impl(repository_ctx):
     """Create jco toolchain repository"""
 
-    strategy = repository_ctx.attr.strategy
     platform = _detect_host_platform(repository_ctx)
-    version = repository_ctx.attr.version
+    jco_version = repository_ctx.attr.version
+    node_version = repository_ctx.attr.node_version
 
-    if strategy == "download":
-        _setup_downloaded_jco_tools(repository_ctx, platform, version)
-    elif strategy == "npm":
-        _setup_npm_jco_tools(repository_ctx)
-    else:
-        fail(format_diagnostic_error(
-            "E001",
-            "Unknown jco strategy: {}".format(strategy),
-            "Must be 'download' or 'npm'",
-        ))
+    # Always use download strategy with hermetic Node.js + jco
+    _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_version)
 
     # Create BUILD files
     _create_jco_build_files(repository_ctx)
 
-def _setup_downloaded_jco_tools(repository_ctx, platform, version):
-    """Download prebuilt jco tools"""
-
-    # Try to retrieve from cache first
-    cached_jco = retrieve_cached_tool(repository_ctx, "jco", version, platform, "download")
-    if not cached_jco:
-        # Download jco binary
-        if platform not in JCO_PLATFORMS:
-            fail(format_diagnostic_error(
-                "E001",
-                "Unsupported platform {} for jco".format(platform),
-                "Use 'npm' or 'system' strategy instead",
-            ))
-
-        platform_info = JCO_PLATFORMS[platform]
-        binary_name = platform_info["binary_name"]
-
-        # jco releases are available from GitHub
-        jco_url = "https://github.com/bytecodealliance/jco/releases/download/v{}/{}".format(
-            version,
-            binary_name,
-        )
-
-        result = repository_ctx.download(
-            url = jco_url,
-            output = "jco",
-            sha256 = platform_info["sha256"],
-            executable = True,
-        )
-        if not result or (hasattr(result, "return_code") and result.return_code != 0):
-            fail(format_diagnostic_error(
-                "E003",
-                "Failed to download jco",
-                "Try 'npm' strategy: npm install -g @bytecodealliance/jco",
-            ))
-
-        # Validate downloaded tool
-        validation_result = validate_tool_functionality(repository_ctx, "jco", "jco")
-        if not validation_result["valid"]:
-            fail(format_diagnostic_error(
-                "E007",
-                "Downloaded jco failed validation: {}".format(validation_result["error"]),
-                "Try npm strategy or check platform compatibility",
-            ))
-
-        # Cache the tool
-        tool_binary = repository_ctx.path("jco")
-        cache_tool(repository_ctx, "jco", tool_binary, version, platform, "download", platform_info["sha256"])
-
-    # Set up Node.js and npm (assume system installation)
-    _setup_node_tools_system(repository_ctx)
-
-def _setup_npm_jco_tools(repository_ctx):
-    """Set up jco via hermetic npm installation"""
-
-    # Use the Node.js toolchain from rules_nodejs
-    # The hermetic npm should be available through the nodejs_toolchains
-
-    # Try to find the hermetic npm binary
-    # In MODULE.bazel mode, we need to reference the registered toolchain
-    node_info = _get_nodejs_toolchain_info(repository_ctx)
+def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_version):
+    """Download hermetic Node.js and install jco via npm"""
+    
+    # Get Node.js info from registry
+    node_info = get_tool_info("nodejs", node_version, platform)
     if not node_info:
-        # In repository rules, the Node.js toolchain may not be available during execution
-        # This is a known limitation of rules_nodejs + MODULE.bazel + repository rules
-        # Create a placeholder that indicates the issue
-        print("Warning: Node.js toolchain not available during repository rule execution")
-        print("This is expected in some BCR testing environments")
-        print("jco functionality will be limited but basic WebAssembly builds will work")
-
-        # Create a placeholder jco binary that explains the situation
-        repository_ctx.file("jco", """#!/bin/bash
-echo "jco not available - Node.js toolchain not accessible during repository rule execution"
-echo "This is a known limitation with rules_nodejs + MODULE.bazel + repository rules"
-echo "JavaScript/TypeScript WebAssembly component builds are not available"
-echo "Use download strategy or system jco as an alternative"
-exit 1
-""", executable = True)
-        return
-
-    npm_binary = node_info.npm
-    node_binary = node_info.node
-    print("Using hermetic npm from Node.js toolchain: {}".format(npm_binary))
-
-    # Install jco and componentize-js globally via npm
-    result = repository_ctx.execute([
+        fail(format_diagnostic_error(
+            "E001",
+            "Unsupported platform {} for Node.js {}".format(platform, node_version),
+            "Check //checksums/tools/nodejs.json for supported platforms",
+        ))
+    
+    print("Setting up hermetic Node.js {} + jco {} for platform {}".format(
+        node_version, jco_version, platform))
+    
+    # Download Node.js
+    archive_name = "node-v{}-{}".format(node_version, node_info["url_suffix"])
+    node_url = "https://nodejs.org/dist/v{}/{}".format(node_version, archive_name)
+    
+    print("Downloading Node.js from: {}".format(node_url))
+    
+    # Download and extract Node.js with SHA256 verification
+    if archive_name.endswith(".tar.xz"):
+        # For .tar.xz files (Linux)
+        result = repository_ctx.download_and_extract(
+            url = node_url,
+            sha256 = node_info["sha256"],
+            type = "tar.xz",
+        )
+    elif archive_name.endswith(".tar.gz"):
+        # For .tar.gz files (macOS)
+        result = repository_ctx.download_and_extract(
+            url = node_url,
+            sha256 = node_info["sha256"],
+            type = "tar.gz",
+        )
+    elif archive_name.endswith(".zip"):
+        # For .zip files (Windows)
+        result = repository_ctx.download_and_extract(
+            url = node_url,
+            sha256 = node_info["sha256"],
+            type = "zip",
+        )
+    else:
+        fail("Unsupported Node.js archive format: {}".format(archive_name))
+    
+    if not result or (hasattr(result, "return_code") and result.return_code != 0):
+        fail(format_diagnostic_error(
+            "E003",
+            "Failed to download Node.js {}".format(node_version),
+            "Check network connectivity and Node.js version availability",
+        ))
+    
+    # Get paths to Node.js binaries
+    node_binary_path = node_info["binary_path"].format(node_version)
+    npm_binary_path = node_info["npm_path"].format(node_version)
+    
+    # Verify Node.js installation
+    node_binary = repository_ctx.path(node_binary_path)
+    npm_binary = repository_ctx.path(npm_binary_path)
+    
+    if not node_binary.exists:
+        fail("Node.js binary not found at: {}".format(node_binary_path))
+    
+    if not npm_binary.exists:
+        fail("npm binary not found at: {}".format(npm_binary_path))
+    
+    # Test Node.js installation
+    node_test = repository_ctx.execute([node_binary, "--version"])
+    if node_test.return_code != 0:
+        fail("Node.js installation test failed: {}".format(node_test.stderr))
+    
+    print("Successfully installed hermetic Node.js: {}".format(node_test.stdout.strip()))
+    
+    # Install jco using the hermetic npm
+    print("Installing jco {} using hermetic npm...".format(jco_version))
+    
+    # Create a local node_modules for jco
+    npm_install_result = repository_ctx.execute([
         npm_binary,
         "install",
-        "-g",
-        "@bytecodealliance/jco@{}".format(repository_ctx.attr.version),
-        "@bytecodealliance/componentize-js",
+        "--prefix", "jco_workspace",
+        "@bytecodealliance/jco@{}".format(jco_version),
+        "@bytecodealliance/componentize-js",  # Required dependency
     ])
-
-    if result.return_code != 0:
+    
+    if npm_install_result.return_code != 0:
         fail(format_diagnostic_error(
             "E003",
-            "Failed to install jco via npm: {}".format(result.stderr),
-            "Check npm configuration and network connectivity",
+            "Failed to install jco via hermetic npm: {}".format(npm_install_result.stderr),
+            "Check jco version availability and network connectivity",
         ))
-
-    # Find the installed jco binary path
-    jco_result = repository_ctx.execute(["which", "jco"])
-    if jco_result.return_code != 0:
+    
+    print("Successfully installed jco via hermetic npm")
+    
+    # Create robust wrapper script for jco that always uses hermetic Node.js
+    # Use npx with the jco package to ensure proper module resolution
+    workspace_path = repository_ctx.path("jco_workspace").realpath
+    
+    # Verify jco was installed
+    jco_package_path = repository_ctx.path("jco_workspace/node_modules/@bytecodealliance/jco/package.json")
+    if not jco_package_path.exists:
         fail(format_diagnostic_error(
-            "E003",
-            "jco binary not found after installation",
-            "Check npm global installation path",
+            "E004",
+            "jco installation failed - package.json not found",
+            "Check npm install output above for errors",
         ))
-
-    jco_path = jco_result.stdout.strip()
-
-    # Set up Node.js and npm first to get paths
-    _setup_node_tools_system(repository_ctx)
-
-    # Get Node.js path for JCO wrapper
-    node_validation = validate_system_tool(repository_ctx, "node")
-    node_path = node_validation.get("path", "node")
-
-    # Create symlink to jco binary (Bazel-native approach)
-    if repository_ctx.path(jco_path).exists:
-        repository_ctx.symlink(jco_path, "jco")
+    
+    print("jco installation verified, creating hermetic wrapper...")
+    
+    if platform.startswith("windows"):
+        wrapper_content = """@echo off
+cd /d "{workspace}"
+set NODE_PATH={workspace}/node_modules
+"{node}" "{workspace}/node_modules/@bytecodealliance/jco/src/jco.js" %*
+""".format(
+            node = node_binary.realpath,
+            workspace = workspace_path
+        )
+        repository_ctx.file("jco.cmd", wrapper_content, executable = True)
+        repository_ctx.symlink("jco.cmd", "jco")
     else:
-        fail("jco binary not found after installation at {}".format(jco_path))
-
-    print("Installed jco via npm globally")
-
-def _setup_node_tools_system(repository_ctx):
-    """Set up system Node.js and npm tools"""
-
-    # Validate Node.js
-    node_validation = validate_system_tool(repository_ctx, "node")
-    if not node_validation["valid"]:
-        fail(format_diagnostic_error(
-            "E006",
-            "Node.js not found",
-            "Install Node.js to use JavaScript component features",
-        ))
-
-    # Validate npm
-    npm_validation = validate_system_tool(repository_ctx, "npm")
-    if not npm_validation["valid"]:
-        fail(format_diagnostic_error(
-            "E006",
-            "npm not found",
-            "Install npm (usually comes with Node.js)",
-        ))
-
-    # Get absolute paths to tools
-    node_path = node_validation.get("path", "node")
-    npm_path = npm_validation.get("path", "npm")
-
-    # Create symlink to Node.js binary (Bazel-native approach)
-    if node_path and repository_ctx.path(node_path).exists:
-        repository_ctx.symlink(node_path, "node")
-    else:
-        # Fallback: use PATH resolution
-        repository_ctx.file("node", "node", executable = True)
-
-    # Create symlink to npm binary (Bazel-native approach)
-    if npm_path and repository_ctx.path(npm_path).exists:
-        repository_ctx.symlink(npm_path, "npm")
-    else:
-        # Fallback: use PATH resolution
-        repository_ctx.file("npm", "npm", executable = True)
+        wrapper_content = """#!/bin/bash
+cd "{workspace}"
+export NODE_PATH="{workspace}/node_modules"
+exec "{node}" "{workspace}/node_modules/@bytecodealliance/jco/src/jco.js" "$@"
+""".format(
+            node = node_binary.realpath,
+            workspace = workspace_path
+        )
+        repository_ctx.file("jco", wrapper_content, executable = True)
+    
+    # Create symlinks for Node.js and npm binaries for the toolchain
+    repository_ctx.symlink(node_binary, "node")
+    repository_ctx.symlink(npm_binary, "npm") 
+    
+    print("Hermetic jco toolchain setup complete")
 
 def _create_jco_build_files(repository_ctx):
     """Create BUILD files for jco toolchain"""
@@ -339,14 +282,13 @@ alias(
 jco_toolchain_repository = repository_rule(
     implementation = _jco_toolchain_repository_impl,
     attrs = {
-        "strategy": attr.string(
-            doc = "Tool acquisition strategy: 'download' or 'npm'",
-            default = "npm",
-            values = ["download", "npm"],
-        ),
         "version": attr.string(
             doc = "jco version to use",
             default = "1.4.0",
+        ),
+        "node_version": attr.string(
+            doc = "Node.js version to use for download strategy",
+            default = "18.19.0",
         ),
     },
 )
