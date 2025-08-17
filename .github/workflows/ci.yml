@@ -44,6 +44,17 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
 
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5001:5000
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:5000/v2/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,6 +94,13 @@ jobs:
       - name: Build All Targets
         run: |
           # Build core working targets, exclude incomplete/problematic examples
+          # Additional exclusions for macOS where Docker services aren't available
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            EXTRA_EXCLUDES="-//examples/simple_oci_test/..."
+          else
+            EXTRA_EXCLUDES=""
+          fi
+          
           bazel build -- //... \
             -//examples/world_export/... \
             -//examples/multi_profile/... \
@@ -92,12 +110,12 @@ jobs:
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \
-            -//examples/simple_oci_test/... \
             -//examples/wizer_example/... \
             -//test_wac/... \
             -//test/wkg/... \
             -//test/production/... \
             -//tools-builder/... \
+            $EXTRA_EXCLUDES \
             -//examples/basic:hello_component_wasm_lib_release \
             -//test/export_macro:test_component_wasm_lib_release \
             -//test/integration:basic_component_wasm_lib_debug \
