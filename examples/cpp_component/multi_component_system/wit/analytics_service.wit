@@ -1,6 +1,8 @@
 // Analytics Service WIT Interface
 // Defines the Go analytics and event processing service API
 
+package example:analytics-service@1.0.0;
+
 world analytics-service {
   export analytics-service: interface {
 

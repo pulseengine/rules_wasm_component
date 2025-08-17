@@ -1,6 +1,8 @@
 // User Service WIT Interface
 // Defines the Rust user management service API
 
+package example:user-service@1.0.0;
+
 world user-service {
   export user-service: interface {
 
