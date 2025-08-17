@@ -3,7 +3,17 @@ title: Getting Started
 description: Quick start guide for building WebAssembly components with Bazel
 ---
 
-Get up and running with WebAssembly Component Model in minutes using Bazel.
+## Welcome to the Future of Software Components
+
+Ready to build software that's **portable**, **secure**, and **fast**? WebAssembly components let you write code once and run it anywhere - from web browsers to servers, IoT devices to desktop apps.
+
+Think of WebAssembly components as **smart LEGO blocks** for software:
+- **Plug-and-play**: Components from different languages work together seamlessly
+- **Secure by design**: Each component runs in its own sandbox
+- **Near-native speed**: Performance similar to compiled C/C++
+- **Universal deployment**: Same component runs on any platform
+
+**rules_wasm_component** makes building these components as easy as traditional software - no complex WebAssembly knowledge required!
 
 ## Prerequisites
 
@@ -76,31 +86,55 @@ wit-bindgen = { version = "0.30.0", default-features = false, features = ["reall
 
 ## Your First Component
 
-Let's create a simple "Hello World" WebAssembly component:
+Let's create a simple "Hello World" WebAssembly component to see how easy it is.
+
+**What we're building**: A self-contained WebAssembly component that exports a "greet" function. Unlike traditional libraries, this component can be called from any language and runs in complete isolation.
+
+**The process**: We'll define an interface (what functions the component provides), implement the logic in Rust, and let Bazel handle all the WebAssembly compilation magic.
 
 ### 1. Define the WIT Interface
+
+**WIT (WebAssembly Interface Types)** is like a contract - it describes what functions your component provides and what types they use. This lets other components (in any language) know how to call your code.
 
 import CodeFromFile from '@components/CodeFromFile.astro';
 
 <CodeFromFile file="examples/basic/wit/hello.wit" title="examples/basic/wit/hello.wit" />
 
+This defines a "world" (think of it as an API) with one function: `greet` that takes a string and returns a string.
+
 ### 2. Create the Build File
+
+**Bazel BUILD files** tell the build system how to compile your code. Here we're saying "take this WIT interface and this Rust code, and build me a WebAssembly component":
 
 <CodeFromFile file="examples/basic/BUILD.bazel" title="examples/basic/BUILD.bazel" />
 
+The `wit_library` creates the interface definitions, and `rust_wasm_component` compiles your Rust code into a WebAssembly component that implements that interface.
+
 ### 3. Implement the Component
+
+**The Rust implementation** is just normal Rust code. The `wit-bindgen` macro automatically generates the glue code that connects your Rust functions to the WebAssembly component interface:
 
 <CodeFromFile file="examples/basic/src/lib.rs" title="examples/basic/src/lib.rs" />
 
 ### 4. Build the Component
 
+**That's it!** Bazel handles downloading the WebAssembly toolchain, compiling your Rust code, and packaging everything into a component:
+
 ```bash
 # Build the component
 bazel build //:hello_component
 
-# Test with wasmtime
+# Test with wasmtime (WebAssembly runtime)
 wasmtime run --wasi preview2 bazel-bin/hello_component.wasm
 ```
+
+**What just happened?** Bazel automatically:
+- Downloaded the Rust toolchain and WebAssembly tools
+- Compiled your Rust code to WebAssembly
+- Generated bindings from your WIT interface
+- Packaged everything into a `.wasm` component file
+
+Your component is now ready to run on any platform that supports WebAssembly!
 
 <div class="demo-buttons">
   <a href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/basic" class="demo-button">

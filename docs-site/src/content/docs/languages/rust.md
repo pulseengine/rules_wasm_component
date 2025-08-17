@@ -3,17 +3,34 @@ title: Rust Components
 description: Build WebAssembly components with Rust using rules_rust integration
 ---
 
-Build high-performance WebAssembly components with Rust, featuring seamless rules_rust integration and wit-bindgen support.
+## Why Rust for WebAssembly Components?
+
+Rust is the **ideal language** for WebAssembly components. Its zero-cost abstractions, memory safety, and lack of runtime overhead make it perfect for creating fast, secure, portable components.
+
+**The Rust advantage:**
+- **Memory safety without garbage collection** - Perfect for sandboxed environments
+- **Zero-cost abstractions** - High-level code compiles to efficient WebAssembly
+- **Excellent tooling** - wit-bindgen automatically generates all the glue code
+- **Small binaries** - Dead code elimination keeps components lightweight
+- **Mature ecosystem** - Leverage existing Rust crates in your components
+
+**How it works:** You write normal Rust code, define interfaces in WIT (WebAssembly Interface Types), and the toolchain handles all the WebAssembly compilation magic. The result is a portable component that can be called from any language.
 
 ## Features
 
-- ✅ **Full Component Model Support** - WASI Preview 2 and Component Model
-- ✅ **wit-bindgen Integration** - Automatic binding generation from WIT interfaces
-- ✅ **Multiple Build Profiles** - Debug, release, and custom configurations
-- ✅ **rules_rust Integration** - Leverages existing Bazel Rust ecosystem
-- ✅ **Incremental Builds** - Fast iteration with Bazel caching
+- **Full Component Model Support** - WASI Preview 2 and Component Model
+- **wit-bindgen Integration** - Automatic binding generation from WIT interfaces
+- **Multiple Build Profiles** - Debug, release, and custom configurations
+- **rules_rust Integration** - Leverages existing Bazel Rust ecosystem
+- **Incremental Builds** - Fast iteration with Bazel caching
 
 ## Basic Component
+
+Let's build a calculator component to demonstrate the core concepts. This example shows how to:
+- Define a clear interface with WIT
+- Implement business logic in pure Rust
+- Handle errors properly with WebAssembly-safe types
+- Build and test the component
 
 ### WIT Interface Definition
 
@@ -357,18 +374,20 @@ bazel query 'kind(rust_wasm_component, //...)'
 
 <div class="demo-buttons">
   <a href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/basic" class="demo-button">
-    🚀 Try Rust Example
+    Try Rust Example
   </a>
   <a href="/examples/basic/" class="demo-button">
-    📖 Full Example
+    Full Example
   </a>
 </div>
 
 ## Performance Characteristics
 
-<div class="perf-indicator">⚡ 1.35-6x faster startup with Wizer</div>
-<div class="perf-indicator">🚀 ~2MB typical component size</div>
-<div class="perf-indicator">💾 Low memory footprint with wee_alloc</div>
+**Production-ready performance** out of the box:
+
+<div class="perf-indicator">1.35-6x faster startup with Wizer</div>
+<div class="perf-indicator">~2MB typical component size</div>
+<div class="perf-indicator">Low memory footprint with wee_alloc</div>
 
 Rust components offer excellent performance characteristics:
 

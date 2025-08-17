@@ -22,12 +22,13 @@ def _wit_deps_check_impl(ctx):
     # Run dependency analysis
     output_file = ctx.actions.declare_file(ctx.label.name + "_analysis.json")
 
-    # Run dependency analysis using Bazel-native approach
-    ctx.actions.run(
-        executable = ctx.executable._wit_dependency_analyzer,
-        arguments = [config_file.path, output_file.path],
+    # Run dependency analysis using ctx.actions.run_shell for output redirection
+    ctx.actions.run_shell(
+        command = "$1 $2 > $3",
+        arguments = [ctx.executable._wit_dependency_analyzer.path, config_file.path, output_file.path],
         inputs = [config_file, ctx.file.wit_file],
         outputs = [output_file],
+        tools = [ctx.executable._wit_dependency_analyzer],
         mnemonic = "CheckWitDependencies",
         progress_message = "Checking WIT dependencies in %s" % ctx.file.wit_file.short_path,
     )
