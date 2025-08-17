@@ -147,10 +147,10 @@ wasm-tools component wit bazel-bin/examples/basic/basic_component.wasm
 ```
 
 <div class="demo-buttons">
-  <a href="https://stackblitz.com/github/your-repo/rules_wasm_component/tree/main/examples/basic" class="demo-button">
+  <a href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/basic" class="demo-button">
     🚀 Try in StackBlitz
   </a>
-  <a href="https://github.com/your-repo/rules_wasm_component/tree/main/examples/basic" class="demo-button">
+  <a href="https://github.com/pulseengine/rules_wasm_component/tree/main/examples/basic" class="demo-button">
     📖 View Source
   </a>
 </div>

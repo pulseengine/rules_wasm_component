@@ -1,0 +1,423 @@
+---
+title: Advanced Features
+description: Comprehensive guide to advanced WebAssembly component features including WRPC, security policies, multi-arch components, and enterprise patterns
+---
+
+# Advanced Features
+
+Explore the cutting-edge features of rules_wasm_component for enterprise and advanced use cases.
+
+## WRPC Integration
+
+WebAssembly Component RPC (WRPC) enables remote procedure calls between WebAssembly components, allowing for distributed component architectures.
+
+### wrpc_bindgen
+
+Generate RPC bindings from WIT interfaces for remote component communication:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wrpc:defs.bzl", "wrpc_bindgen")
+
+wrpc_bindgen(
+    name = "calculator_rpc_bindings",
+    wit = ":calculator_interfaces",
+    world = "calculator",
+    language = "rust",  # Also supports go, js
+)
+```
+
+### wrpc_serve
+
+Create an RPC server component:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wrpc:defs.bzl", "wrpc_serve")
+
+wrpc_serve(
+    name = "calculator_server",
+    component = ":calculator_component",
+    bind_address = "0.0.0.0:8080",
+    auth_required = True,
+)
+```
+
+### wrpc_invoke
+
+Call remote component methods:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wrpc:defs.bzl", "wrpc_invoke")
+
+wrpc_invoke(
+    name = "calculator_client",
+    method = "calculate",
+    server_url = "http://calculator-server:8080",
+    input_data = "input.json",
+)
+```
+
+## Security Policies
+
+Enterprise-grade security controls for component distribution and signing.
+
+### wasm_security_policy
+
+Define organization-wide security policies:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_security_policy")
+
+wasm_security_policy(
+    name = "enterprise_security",
+    default_signing_required = True,
+    openssh_format = True,
+    signature_type = "embedded",
+    registry_policies = [
+        "production|required|production_keys",
+        "staging|required|staging_keys", 
+        "local|optional",
+    ],
+    component_policies = [
+        "*/production/*|required|production_keys",
+        "*/internal/*|required|internal_keys",
+        "*/test/*|optional",
+    ],
+)
+```
+
+### wasm_component_secure_publish
+
+Publish components with security policy enforcement:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_secure_publish")
+
+wasm_component_secure_publish(
+    name = "secure_deployment",
+    component = ":my_component",
+    security_policy = ":enterprise_security",
+    signing_keys = ":production_keys",
+    target_registries = ["production", "staging"],
+)
+```
+
+## Multi-Architecture Components
+
+Build and distribute components for multiple architectures.
+
+### wasm_component_multi_arch
+
+Create multi-architecture component bundles:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_multi_arch")
+
+wasm_component_multi_arch(
+    name = "cross_platform_component",
+    components = {
+        "wasm32-wasi": ":component_wasi",
+        "wasm32-wasip2": ":component_wasip2", 
+        "wasm32-unknown-unknown": ":component_core",
+    },
+    default_architecture = "wasm32-wasip2",
+)
+```
+
+### wasm_component_multi_arch_publish
+
+Publish multi-arch components to registries:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_multi_arch_publish")
+
+wasm_component_multi_arch_publish(
+    name = "universal_publish",
+    multi_arch_component = ":cross_platform_component",
+    registry_config = ":production_registries",
+    package_name = "org/universal-component",
+    tag = "v1.0.0",
+)
+```
+
+## Component Metadata and Introspection
+
+Extract and analyze component metadata for deployment automation.
+
+### wasm_component_metadata_extract
+
+Extract comprehensive metadata from components:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_metadata_extract")
+
+wasm_component_metadata_extract(
+    name = "component_analysis", 
+    component = ":my_component",
+    include_dependencies = True,
+    include_exports = True,
+    include_imports = True,
+    output_format = "json",  # json, yaml, toml
+)
+```
+
+### wasm_component_oci_metadata_mapper
+
+Map component metadata to OCI annotations:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_metadata_mapper")
+
+wasm_component_oci_metadata_mapper(
+    name = "oci_annotations",
+    component_metadata = ":component_analysis",
+    custom_annotations = {
+        "org.example.team": "platform",
+        "org.example.service-tier": "production",
+    },
+    include_build_info = True,
+)
+```
+
+## Advanced Composition Patterns
+
+### Microservices Architecture
+
+Create microservices applications with multiple components:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wac_microservices_app")
+
+wac_microservices_app(
+    name = "ecommerce_platform",
+    frontend_component = ":web_ui",
+    services = {
+        "auth": ":auth_service",
+        "catalog": ":product_catalog", 
+        "payments": ":payment_processor",
+        "notifications": ":notification_service",
+    },
+    composition_template = "microservices",
+    load_balancer = "round_robin",
+    health_checks = True,
+)
+```
+
+### Distributed Systems
+
+Compose components across multiple registries and environments:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wac_distributed_system")
+
+wac_distributed_system(
+    name = "global_system",
+    components = {
+        # Local components
+        "frontend": ":web_frontend",
+        "api_gateway": ":gateway_component",
+        
+        # Remote components from different registries
+        "auth": "ghcr.io/company/auth-service:v2.1.0",
+        "database": "docker.io/company/db-proxy:latest",
+        "analytics": "internal.registry/analytics:v1.5.2",
+    },
+    composition = '''
+        let gateway = new api_gateway {};
+        let auth = new auth {};
+        let db = new database {};
+        let analytics = new analytics {};
+        let frontend = new frontend {};
+        
+        connect gateway.auth to auth.validate;
+        connect gateway.data to db.query;
+        connect gateway.events to analytics.track;
+        connect frontend.api to gateway.handle;
+        
+        export gateway.public;
+    ''',
+    registry_config = ":multi_registry_config",
+)
+```
+
+### OCI Composition with Remote Components
+
+Compose with components pulled from OCI registries:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wac_compose_with_oci")
+
+wac_compose_with_oci(
+    name = "hybrid_app",
+    local_components = {
+        ":my_frontend": "frontend",
+    },
+    oci_components = {
+        "ghcr.io/org/backend:v1.0.0": "backend",
+        "docker.io/vendor/ml-model:latest": "ml_engine",
+    },
+    composition_file = "hybrid.wac",
+    registry_config = ":production_registries",
+    cache_components = True,
+)
+```
+
+## Enhanced OCI Publishing
+
+### Multi-Registry Publishing
+
+Publish to multiple registries simultaneously:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_multi_registry_publish")
+
+wkg_multi_registry_publish(
+    name = "global_publish",
+    component = ":my_component",
+    registries = {
+        "github": {
+            "registry": "ghcr.io",
+            "namespace": "my-org",
+            "tag": "v1.0.0",
+        },
+        "docker": {
+            "registry": "docker.io",
+            "namespace": "mycompany", 
+            "tag": "latest",
+        },
+        "aws": {
+            "registry": "123456789012.dkr.ecr.us-west-2.amazonaws.com",
+            "namespace": "wasm-components",
+            "tag": "v1.0.0",
+        },
+    },
+    parallel_publish = True,
+    verify_after_publish = True,
+)
+```
+
+### Enhanced OCI Annotations
+
+Generate rich metadata annotations for OCI images:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "enhanced_oci_annotations")
+
+enhanced_oci_annotations(
+    name = "rich_metadata",
+    component = ":my_component",
+    build_info = {
+        "git_commit": "$(GIT_COMMIT)",
+        "build_timestamp": "$(BUILD_TIMESTAMP)",
+        "builder": "bazel",
+    },
+    security_info = {
+        "signed": "true",
+        "signature_type": "embedded",
+        "key_fingerprint": "$(KEY_FINGERPRINT)",
+    },
+    runtime_info = {
+        "wasi_version": "preview2",
+        "required_capabilities": ["fs", "network"],
+        "memory_limit": "64MB",
+    },
+)
+```
+
+## Performance Optimization
+
+### Wizer Pre-initialization
+
+For enhanced startup performance:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_wizer")
+
+rust_wasm_component_wizer(
+    name = "fast_startup_component",
+    component = ":my_component",
+    init_function = "initialize",
+    wizer_config = {
+        "allow_wasi": True,
+        "inherit_stdio": False,
+        "inherit_env": ["PATH"],
+    },
+)
+```
+
+### Component Validation and Testing
+
+Comprehensive validation for production deployments:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//test:defs.bzl", "component_integration_test")
+
+component_integration_test(
+    name = "component_validation",
+    component = ":my_component",
+    test_scenarios = [
+        "smoke_test.yaml",
+        "load_test.yaml", 
+        "security_test.yaml",
+    ],
+    timeout = "300s",
+    environments = ["local", "staging"],
+)
+```
+
+## Configuration Examples
+
+### Complete Production Setup
+
+Here's a complete example for a production-ready component:
+
+```python title="BUILD.bazel"
+# Security policy
+wasm_security_policy(
+    name = "production_security",
+    default_signing_required = True,
+    openssh_format = True,
+    registry_policies = [
+        "production|required|prod_keys",
+        "staging|required|staging_keys",
+    ],
+)
+
+# Multi-arch component
+wasm_component_multi_arch(
+    name = "universal_service",
+    components = {
+        "wasm32-wasip2": ":service_wasip2",
+        "wasm32-wasi": ":service_wasi",
+    },
+)
+
+# Enhanced metadata
+enhanced_oci_annotations(
+    name = "service_metadata",
+    component = ":universal_service", 
+    build_info = {"version": "v2.1.0"},
+    security_info = {"signed": "true"},
+)
+
+# Global publishing
+wkg_multi_registry_publish(
+    name = "deploy_globally",
+    component = ":universal_service",
+    security_policy = ":production_security",
+    metadata = ":service_metadata",
+    registries = {
+        "production": {
+            "registry": "ghcr.io",
+            "namespace": "company",
+            "tag": "v2.1.0",
+        },
+        "backup": {
+            "registry": "docker.io", 
+            "namespace": "company-backup",
+            "tag": "v2.1.0",
+        },
+    },
+)
+```
+
+These advanced features enable enterprise-grade WebAssembly component development, deployment, and management at scale.

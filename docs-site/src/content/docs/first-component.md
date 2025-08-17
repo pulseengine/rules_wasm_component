@@ -255,10 +255,10 @@ wasmtime run --wasi preview2 bazel-bin/greeting_component.wasm
 ```
 
 <div class="demo-buttons">
-  <a href="https://stackblitz.com/github/your-repo/rules_wasm_component/tree/main/examples/basic" class="demo-button">
+  <a href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/basic" class="demo-button">
     🚀 Try this tutorial in StackBlitz
   </a>
-  <a href="https://github.com/codespaces/new?repo=your-repo/rules_wasm_component" class="demo-button">
+  <a href="https://github.com/codespaces/new?repo=pulseengine/rules_wasm_component" class="demo-button">
     ☁️ Open in GitHub Codespace
   </a>
 </div>

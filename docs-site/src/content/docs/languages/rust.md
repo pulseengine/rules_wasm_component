@@ -356,7 +356,7 @@ bazel query 'kind(rust_wasm_component, //...)'
 ```
 
 <div class="demo-buttons">
-  <a href="https://stackblitz.com/github/your-repo/rules_wasm_component/tree/main/examples/basic" class="demo-button">
+  <a href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/basic" class="demo-button">
     🚀 Try Rust Example
   </a>
   <a href="/examples/basic/" class="demo-button">
