@@ -9,7 +9,8 @@ def _cpp_component_impl(ctx):
 
     # Get C/C++ toolchain
     cpp_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:cpp_component_toolchain_type"]
-    clang = cpp_toolchain.clang if ctx.attr.language == "c" else cpp_toolchain.clang_cpp
+    # Use clang for both C and C++ compilation to avoid clang++ preprocessor issues
+    clang = cpp_toolchain.clang  # if ctx.attr.language == "c" else cpp_toolchain.clang_cpp
     wit_bindgen = cpp_toolchain.wit_bindgen
     wasm_tools = cpp_toolchain.wasm_tools
     sysroot = cpp_toolchain.sysroot
@@ -130,10 +131,14 @@ def _cpp_component_impl(ctx):
     for src in sources:
         compile_args.add(work_dir.path + "/" + src.basename)
 
+    # Add dependency libraries for linking
+    for lib in dep_libraries:
+        compile_args.add(lib.path)
+
     ctx.actions.run(
         executable = clang,
         arguments = [compile_args],
-        inputs = [work_dir, sysroot],
+        inputs = [work_dir, sysroot] + dep_libraries,
         outputs = [wasm_binary],
         mnemonic = "CompileCppWasm",
         progress_message = "Compiling C/C++ to WASM for %s" % ctx.label,

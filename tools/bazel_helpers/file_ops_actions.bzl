@@ -182,11 +182,36 @@ def prepare_workspace_action(ctx, config):
     # For now, use a simple approach: just create the directory and copy files directly
     # This avoids the complex JSON parsing issues while still providing the functionality
 
-    # Create the workspace directory
-    ctx.actions.run(
-        executable = file_ops_component,
-        arguments = ["create_directory", "--path", workspace_dir.path],
-        inputs = [],
+    # Create workspace directory and copy all files in a single action
+    # Collect all input files
+    all_inputs = []
+    commands = ["mkdir -p {}".format(workspace_dir.path)]
+    
+    # Add sources
+    for source_info in config.get("sources", []):
+        src_file = source_info["source"]
+        dest_name = source_info.get("destination") or src_file.basename
+        all_inputs.append(src_file)
+        commands.append("cp {} {}/{}".format(src_file.path, workspace_dir.path, dest_name))
+    
+    # Add headers
+    for header_info in config.get("headers", []):
+        hdr_file = header_info["source"]
+        dest_name = header_info.get("destination") or hdr_file.basename
+        all_inputs.append(hdr_file)
+        commands.append("cp {} {}/{}".format(hdr_file.path, workspace_dir.path, dest_name))
+    
+    # Add dependencies
+    for dep_info in config.get("dependencies", []):
+        dep_file = dep_info["source"]
+        dest_name = dep_info.get("destination") or dep_file.basename
+        all_inputs.append(dep_file)
+        commands.append("cp {} {}/{}".format(dep_file.path, workspace_dir.path, dest_name))
+    
+    # Execute workspace preparation in single action
+    ctx.actions.run_shell(
+        command = " && ".join(commands),
+        inputs = all_inputs,
         outputs = [workspace_dir],
         mnemonic = "PrepareWorkspace",
         progress_message = "Preparing {} workspace for {}".format(
