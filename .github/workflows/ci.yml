@@ -79,6 +79,11 @@ jobs:
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
       - name: Verify Bazel Installation
         run: bazel version
 
@@ -100,8 +105,6 @@ jobs:
           bazel build -- //... \
             -//examples/world_export/... \
             -//examples/multi_profile/... \
-            -//examples/js_component/... \
-            -//test/js/... \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \
@@ -182,6 +185,11 @@ jobs:
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
       - name: Verify Bazel Installation
         run: bazel version
 
@@ -199,8 +207,6 @@ jobs:
           bazel build -- //... \
             -//examples/world_export/... \
             -//examples/multi_profile/... \
-            -//examples/js_component/... \
-            -//test/js/... \
             -//examples/wac_remote_compose/... \
             -//examples/wac_oci_composition/... \
             -//examples/wkg_integration/... \

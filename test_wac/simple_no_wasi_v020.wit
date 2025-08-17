@@ -1,0 +1,19 @@
+package test:nowasi020@1.0.0;
+
+interface math {
+    add: func(a: s32, b: s32) -> s32;
+}
+
+world simple-no-wasi-v020 {
+    // Core WASI 0.2.0 interfaces that should work better
+    import wasi:cli/environment@0.2.0;
+    import wasi:cli/exit@0.2.0;
+    import wasi:io/error@0.2.0;
+    import wasi:io/streams@0.2.0;
+    import wasi:cli/stdin@0.2.0;
+    import wasi:cli/stdout@0.2.0;
+    import wasi:cli/stderr@0.2.0;
+    import wasi:clocks/wall-clock@0.2.0;
+    
+    export math;
+}

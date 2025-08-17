@@ -263,13 +263,87 @@ wit_library(
 
 ## Available WASI Interfaces
 
-The following WASI interfaces are pre-configured and available:
+The following WASI interfaces are pre-configured and available with dual version support for maximum compatibility:
 
-| Package | Repository | Description |
-|---------|------------|-------------|
-| `@wasi_io//:streams` | `wasi:io@0.2.6` | I/O streams, error handling, polling |
+### WASI 0.2.3 (Latest - Full Feature Set)
 
-More WASI packages can be added to `wit/wasi_deps.bzl` as needed.
+| Package | Target | Interfaces | Description |
+|---------|--------|-------------|-------------|
+| `@wasi_io//:streams` | `wasi:io@0.2.3` | `error`, `poll`, `streams` | I/O streams, error handling, polling |
+| `@wasi_cli//:cli` | `wasi:cli@0.2.3` | `environment`, `exit`, `stdin`, `stdout`, `stderr`, `terminal-*` | CLI environment, standard I/O streams |
+| `@wasi_clocks//:clocks` | `wasi:clocks@0.2.3` | `wall-clock`, `monotonic-clock` | System time and timing operations |
+| `@wasi_random//:random` | `wasi:random@0.2.3` | `random`, `insecure`, `insecure-seed` | Random number generation |
+| `@wasi_filesystem//:filesystem` | `wasi:filesystem@0.2.3` | `types`, `preopens` | File system operations ⚠️ |
+| `@wasi_sockets//:sockets` | `wasi:sockets@0.2.3` | `network`, `udp`, `tcp`, `ip-name-lookup` | Network operations ⚠️ |
+| `@wasi_http//:http` | `wasi:http@0.2.3` | `types`, `handler`, `outgoing-handler`, `proxy` | HTTP client/server ⚠️ |
+
+### WASI 0.2.0 (Original - Maximum Compatibility)
+
+| Package | Target | Interfaces | Description |
+|---------|--------|-------------|-------------|
+| `@wasi_io_v020//:streams` | `wasi:io@0.2.0` | `error`, `poll`, `streams` | I/O streams (compatible version) |
+| `@wasi_cli_v020//:cli` | `wasi:cli@0.2.0` | `environment`, `exit`, `stdin`, `stdout`, `stderr` | CLI environment (compatible version) |
+| `@wasi_clocks_v020//:clocks` | `wasi:clocks@0.2.0` | `wall-clock`, `monotonic-clock` | System time (compatible version) |
+
+### Status & Recommendations
+
+- ✅ **Core WASI (IO, CLI, Clocks, Random)**: Work perfectly with current toolchain
+- ⚠️ **Advanced WASI (Filesystem, Sockets, HTTP)**: Complete architecture but may have toolchain compatibility issues
+- 🔄 **Use 0.2.0 versions**: For maximum compatibility with older toolchains
+- 📈 **Use 0.2.3 versions**: For latest features when toolchain supports
+
+### Usage Examples
+
+**Simple component (recommended start):**
+```starlark
+wit_library(
+    name = "basic_component",
+    srcs = ["basic.wit"],
+    deps = [
+        "@wasi_io//:streams",      # Basic I/O
+        "@wasi_clocks//:clocks",   # Timing
+    ],
+)
+```
+
+**CLI application:**
+```starlark
+wit_library(
+    name = "cli_app",
+    srcs = ["cli.wit"], 
+    deps = [
+        "@wasi_cli//:cli",         # CLI environment
+        "@wasi_io//:streams",      # Standard I/O
+        "@wasi_random//:random",   # Random numbers
+    ],
+)
+```
+
+**Advanced component (when toolchain supports):**
+```starlark
+wit_library(
+    name = "web_service",
+    srcs = ["service.wit"],
+    deps = [
+        "@wasi_http//:http",           # HTTP operations
+        "@wasi_filesystem//:filesystem", # File access
+        "@wasi_sockets//:sockets",     # Network sockets
+    ],
+)
+```
+
+**Maximum compatibility:**
+```starlark
+wit_library(
+    name = "compat_component", 
+    srcs = ["compat.wit"],
+    deps = [
+        "@wasi_cli_v020//:cli",
+        "@wasi_io_v020//:streams",
+        "@wasi_clocks_v020//:clocks",
+    ],
+)
+```
 
 ## Working with WKG (WebAssembly Component Registry)
 

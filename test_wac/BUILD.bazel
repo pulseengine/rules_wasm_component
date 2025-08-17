@@ -19,11 +19,33 @@ rust_wasm_component_bindgen(
     wit = ":simple_interfaces",
 )
 
-# Test no-WASI WIT interface
+# Test no-WASI WIT interface (but includes WASI dependencies)
 wit_library(
     name = "nowasi_interfaces",
     package_name = "test:nowasi@1.0.0",
     srcs = ["simple_no_wasi.wit"],
+    deps = [
+        "@wasi_cli//:cli",
+        "@wasi_io//:streams", 
+        "@wasi_clocks//:clocks",
+        # Temporarily exclude problematic WASI packages with bitflags issues
+        # "@wasi_filesystem//:filesystem",
+        # "@wasi_sockets//:sockets",
+        "@wasi_random//:random",
+        # "@wasi_http//:http",
+    ],
+)
+
+# Test with WASI 0.2.0 (potentially better compatibility)
+wit_library(
+    name = "nowasi_interfaces_v020",
+    package_name = "test:nowasi020@1.0.0",
+    srcs = ["simple_no_wasi_v020.wit"],
+    deps = [
+        "@wasi_cli_v020//:cli",
+        "@wasi_io_v020//:streams", 
+        "@wasi_clocks_v020//:clocks",
+    ],
 )
 
 # Test component without WASI (using no_std)
@@ -32,6 +54,14 @@ rust_wasm_component_bindgen(
     srcs = ["src/lib_no_wasi.rs"],
     profiles = ["release"],
     wit = ":nowasi_interfaces",
+)
+
+# Test component with WASI 0.2.0 (better compatibility)
+rust_wasm_component_bindgen(
+    name = "nowasi_component_v020",
+    srcs = ["src/lib_no_wasi_v020.rs"],
+    profiles = ["release"],
+    wit = ":nowasi_interfaces_v020",
 )
 
 # Simple WAC composition that should work
@@ -49,16 +79,31 @@ wac_compose(
     use_symlinks = True,
 )
 
-# Test composition with no-WASI component
+# Test composition with WASI dependencies (even "no-wasi" components need WASI)
 wac_compose(
-    name = "nowasi_system",
+    name = "nowasi_system", 
     components = {
         ":nowasi_component": "test:nowasi",
     },
     composition = """
         package test:nowasi-composition@1.0.0;
 
-        let comp = new test:nowasi {};
+        let comp = new test:nowasi { ... };
+        export comp as main;
+    """,
+    use_symlinks = True,
+)
+
+# Test composition with WASI 0.2.0 (potentially better compatibility)
+wac_compose(
+    name = "nowasi_system_v020", 
+    components = {
+        ":nowasi_component_v020": "test:nowasi020",
+    },
+    composition = """
+        package test:nowasi020-composition@1.0.0;
+
+        let comp = new test:nowasi020 { ... };
         export comp as main;
     """,
     use_symlinks = True,
