@@ -46,7 +46,7 @@ def _js_component_impl(ctx):
     )
 
     # Copy WIT file to workspace (needed for jco componentize)
-    wit_dest = ctx.actions.declare_file("component.wit")
+    wit_dest = ctx.actions.declare_file(ctx.attr.name + "_component.wit")
     ctx.actions.symlink(
         output = wit_dest,
         target_file = wit_file,

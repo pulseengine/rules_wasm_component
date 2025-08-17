@@ -104,4 +104,5 @@ test_suite(
         ":test_wit_library_basic",
         ":test_wit_library_with_deps",
     ],
+    visibility = ["//visibility:public"],
 )
