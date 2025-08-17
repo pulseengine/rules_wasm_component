@@ -18,6 +18,191 @@ When building WebAssembly components, you often need to import external WIT inte
 
 This guide shows how to manage these dependencies using Bazel's hermetic, reproducible approach instead of external package managers.
 
+## Overview: How to Get WIT Files
+
+There are several ways to obtain and use external WIT files in your project. Choose the method that best fits your source and requirements:
+
+### Method 1: Local WIT Files
+**Best for:** Your own interfaces, local development, vendored dependencies
+
+```python title="BUILD.bazel"
+# Simple local WIT files
+wit_library(
+    name = "my_interfaces",
+    srcs = ["interfaces/my-api.wit"],
+    package_name = "myorg:api@1.0.0",
+)
+```
+
+### Method 2: HTTP Archive (http_archive)
+**Best for:** GitHub releases, public repositories, versioned archives
+
+```python title="MODULE.bazel or WORKSPACE"
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "external_wit_interfaces",
+    urls = ["https://github.com/org/wit-interfaces/archive/v1.0.0.tar.gz"],
+    sha256 = "abcd1234...",
+    strip_prefix = "wit-interfaces-1.0.0",
+    build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+wit_library(
+    name = "api",
+    srcs = glob(["**/*.wit"]),
+    package_name = "org:api@1.0.0",
+    visibility = ["//visibility:public"],
+)
+''',
+)
+```
+
+### Method 3: WKG Registry
+**Best for:** Published component packages, official WASI interfaces, component ecosystem
+
+```python title="BUILD.bazel"
+# Pull from WKG registry (WebAssembly Component Registry)
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_wit_deps")
+
+wkg_wit_deps(
+    name = "registry_interfaces",
+    packages = [
+        "wasi:io@0.2.6",
+        "wasi:http@0.2.1", 
+        "bytecodealliance:preview2-adapter@0.1.0",
+    ],
+    registry = "registry.wasm.org",  # Default WKG registry
+)
+```
+
+### Method 4: Git Repository
+**Best for:** Development versions, internal repositories, specific commits
+
+```python title="MODULE.bazel"
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "wit_from_git",
+    remote = "https://github.com/org/interfaces.git",
+    branch = "main",  # or commit = "abc123..."
+    build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+wit_library(
+    name = "interfaces",
+    srcs = glob(["wit/**/*.wit"]),
+    package_name = "org:interfaces@dev",
+    visibility = ["//visibility:public"],
+)
+''',
+)
+```
+
+### Method 5: HTTP File (Single WIT Files)
+**Best for:** Individual interface files, simple dependencies
+
+```python title="MODULE.bazel"
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "single_wit_interface",
+    urls = ["https://raw.githubusercontent.com/org/repo/main/interface.wit"],
+    sha256 = "def5678...",
+    downloaded_file_path = "interface.wit",
+)
+
+# In BUILD.bazel:
+wit_library(
+    name = "single_interface",
+    srcs = ["@single_wit_interface//file:interface.wit"],
+    package_name = "org:interface@1.0.0",
+)
+```
+
+### Comparison Matrix
+
+| Method | Use Case | Pros | Cons |
+|--------|----------|------|------|
+| **Local Files** | Own interfaces, development | Simple, fast iteration | No versioning, not shared |
+| **HTTP Archive** | GitHub releases, public repos | Versioned, cacheable, reproducible | Manual setup, SHA256 required |
+| **WKG Registry** | Published components | Official packages, automatic deps | Limited to published packages |
+| **Git Repository** | Development, internal repos | Latest code, flexible | Can break, slower builds |
+| **HTTP File** | Single files | Simple for single interfaces | Not suitable for packages |
+
+### WIT Dependencies Flow
+
+This diagram shows where WIT files come from and how they integrate into your project:
+
+```mermaid
+graph TB
+    subgraph "External Sources"
+        LOCAL["📁 Local Files"]
+        GITHUB["🐙 GitHub Archives"]
+        WKG["📦 WKG Registry"]
+        GIT["🌿 Git Repos"]
+        HTTP["🌐 HTTP Files"]
+    end
+
+    subgraph "Bazel Workspace"
+        subgraph "External Repositories"
+            EXT1["@external_wit_interfaces"]
+            EXT2["@wasi_interfaces"]
+            EXT3["@company_apis"]
+            EXT4["@single_interface"]
+        end
+        
+        subgraph "Your Project"
+            BUILD["BUILD.bazel"]
+            WIT["your-component.wit"]
+            COMP["Component Implementation"]
+        end
+    end
+
+    subgraph "Build Process"
+        BINDGEN["wit-bindgen"]
+        RUSTC["Rust Compiler"]
+        WASMTOOLS["wasm-tools"]
+        FINAL["📦 Final Component"]
+    end
+
+    %% Source to External Repo flows
+    GITHUB -->|http_archive| EXT1
+    WKG -->|wkg_wit_deps| EXT2
+    GIT -->|git_repository| EXT3
+    HTTP -->|http_file| EXT4
+    LOCAL -->|Direct reference| BUILD
+
+    %% External repos to project
+    EXT1 --> BUILD
+    EXT2 --> BUILD
+    EXT3 --> BUILD
+    EXT4 --> BUILD
+
+    %% Project internal flow
+    BUILD --> WIT
+    WIT --> COMP
+
+    %% Build process
+    BUILD --> BINDGEN
+    BINDGEN --> RUSTC
+    RUSTC --> WASMTOOLS
+    WASMTOOLS --> FINAL
+
+    %% Styling
+    style LOCAL fill:#e1f5fe
+    style GITHUB fill:#f3e5f5
+    style WKG fill:#fff3e0
+    style GIT fill:#e8f5e8
+    style HTTP fill:#fce4ec
+    style FINAL fill:#e8f5e8,stroke:#4caf50,stroke-width:3px
+```
+
+**Key Insights:**
+- **Multiple sources** can feed into the same project
+- **External repositories** (@name) isolate dependencies 
+- **BUILD files** wire everything together with `wit_library` rules
+- **Import statements** in WIT files reference the external interfaces
+- **Build process** resolves all dependencies automatically
+
 ## Quick Start
 
 ### 1. Built-in WASI Dependencies
@@ -85,6 +270,285 @@ The following WASI interfaces are pre-configured and available:
 | `@wasi_io//:streams` | `wasi:io@0.2.6` | I/O streams, error handling, polling |
 
 More WASI packages can be added to `wit/wasi_deps.bzl` as needed.
+
+## Working with WKG (WebAssembly Component Registry)
+
+WKG is the standard registry for WebAssembly components and interfaces, similar to npm for JavaScript or crates.io for Rust.
+
+### Setting Up WKG Dependencies
+
+```python title="MODULE.bazel"
+# Configure WKG registry access
+wkg_ext = use_extension("@rules_wasm_component//wkg:extensions.bzl", "wkg_registry")
+wkg_ext.configure(
+    registry_url = "https://registry.wasm.org",  # Default WKG registry
+    auth_token = None,  # Use environment variable WKG_TOKEN for private registries
+)
+```
+
+### Using WKG Packages
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_component", "wkg_wit_deps")
+
+# Pull WIT interfaces from WKG registry
+wkg_wit_deps(
+    name = "wasi_interfaces",
+    packages = [
+        "wasi:io@0.2.6",
+        "wasi:http@0.2.1",
+        "wasi:filesystem@0.2.1",
+        "wasi:cli@0.2.1", 
+    ],
+)
+
+# Pull complete components from WKG
+wkg_component(
+    name = "external_auth_service",
+    package = "auth-corp:oauth-service@2.1.0",
+    registry = "registry.wasm.org",
+)
+```
+
+### Using WKG in WIT Files
+
+```wit title="my-service.wit"
+package myorg:web-service@1.0.0;
+
+// Import from WKG registry (these are resolved automatically)
+import wasi:http@0.2.1;
+import wasi:io@0.2.6;
+
+interface web-handler {
+    handle-request: func(
+        request: wasi:http.request
+    ) -> result<wasi:http.response, string>;
+}
+
+world web-service {
+    import wasi:http@0.2.1;
+    import wasi:io@0.2.6;
+    export web-handler;
+}
+```
+
+### Private WKG Registries
+
+For organization-specific registries:
+
+```python title="MODULE.bazel"
+# Configure private WKG registry
+wkg_ext = use_extension("@rules_wasm_component//wkg:extensions.bzl", "wkg_registry") 
+wkg_ext.configure(
+    registry_url = "https://wkg.company.com",
+    auth_token_env = "COMPANY_WKG_TOKEN",  # Environment variable with auth token
+)
+
+# Use packages from private registry
+wkg_wit_deps(
+    name = "company_interfaces",
+    packages = [
+        "company:common-types@3.0.0",
+        "company:auth-interfaces@2.1.0",
+        "company:data-interfaces@1.5.0",
+    ],
+    registry = "https://wkg.company.com",
+)
+```
+
+### Publishing to WKG
+
+You can also publish your own WIT interfaces to WKG registries:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_publish")
+
+# Publish WIT interfaces to registry
+wkg_publish(
+    name = "publish_interfaces",
+    wit_library = ":my_interfaces",
+    package_name = "myorg:api@1.0.0",
+    registry = "registry.wasm.org",
+    # Uses WKG_TOKEN environment variable for authentication
+)
+```
+
+## Practical Examples
+
+Here are real-world scenarios showing when and how to use each method:
+
+### Scenario 1: Building a Web Service
+**Goal:** Create a web service that handles HTTP requests and accesses a database
+
+```python title="MODULE.bazel"
+# Get WASI HTTP interfaces from WKG
+wkg_ext = use_extension("@rules_wasm_component//wkg:extensions.bzl", "wkg_registry")
+wkg_ext.configure(registry_url = "https://registry.wasm.org")
+
+# Get database interfaces from GitHub
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_archive(
+    name = "database_wit",
+    urls = ["https://github.com/wasm-db/interfaces/archive/v1.2.0.tar.gz"],
+    sha256 = "abc123...",
+    strip_prefix = "interfaces-1.2.0",
+    build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+wit_library(
+    name = "sql",
+    srcs = ["sql.wit"],
+    package_name = "db:sql@1.2.0",
+    visibility = ["//visibility:public"],
+)
+''',
+)
+```
+
+```python title="BUILD.bazel"
+# Use both WKG and HTTP archive dependencies
+wit_library(
+    name = "web_service_wit",
+    srcs = ["web-service.wit"],
+    deps = [
+        "@wasi_http//:types",      # From WKG
+        "@database_wit//:sql",     # From HTTP archive
+    ],
+)
+```
+
+### Scenario 2: Internal Company APIs
+**Goal:** Use shared interfaces from your company's internal systems
+
+```python title="company-deps.bzl"
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+def company_wit_dependencies():
+    # Latest development version of company APIs
+    git_repository(
+        name = "company_apis",
+        remote = "https://github.com/company/wasm-apis.git",
+        branch = "main",
+        build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "auth",
+    srcs = ["auth/interfaces.wit"],
+    package_name = "company:auth@dev",
+    visibility = ["//visibility:public"],
+)
+
+wit_library(
+    name = "data", 
+    srcs = ["data/interfaces.wit"],
+    package_name = "company:data@dev",
+    deps = [":auth"],
+    visibility = ["//visibility:public"],
+)
+''',
+    )
+```
+
+### Scenario 3: Rapid Prototyping
+**Goal:** Quickly grab a single interface file for experimentation
+
+```python title="MODULE.bazel"
+# Download a single WIT file directly
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "experimental_interface",
+    urls = ["https://raw.githubusercontent.com/experiment/new-protocol/main/protocol.wit"],
+    sha256 = "def456...",
+    downloaded_file_path = "protocol.wit",
+)
+```
+
+```python title="BUILD.bazel"
+# Use the single file
+wit_library(
+    name = "prototype",
+    srcs = ["@experimental_interface//file:protocol.wit"],
+    package_name = "experiment:protocol@0.1.0",
+)
+```
+
+### Scenario 4: Production System with Multiple Sources
+**Goal:** Enterprise system using interfaces from multiple sources with proper versioning
+
+```python title="production-deps.bzl"
+def production_wit_dependencies():
+    # Stable WASI from WKG
+    wkg_wit_deps(
+        name = "production_wasi",
+        packages = [
+            "wasi:io@0.2.6",           # Stable release
+            "wasi:http@0.2.1",         # Stable release  
+            "wasi:filesystem@0.2.1",   # Stable release
+        ],
+        registry = "registry.wasm.org",
+    )
+    
+    # Vendor-specific interfaces from HTTP archive (pinned version)
+    http_archive(
+        name = "vendor_interfaces",
+        urls = ["https://releases.vendor.com/wasm-interfaces/v3.1.0.tar.gz"],
+        sha256 = "production123...",
+        strip_prefix = "interfaces-3.1.0",
+        build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+wit_library(
+    name = "payment",
+    srcs = ["payment/*.wit"],
+    package_name = "vendor:payment@3.1.0",
+    visibility = ["//visibility:public"],
+)
+''',
+    )
+    
+    # Internal company interfaces (specific stable commit)
+    git_repository(
+        name = "company_stable_apis",
+        remote = "https://github.com/company/stable-apis.git",
+        commit = "a1b2c3d4e5f6...",  # Pinned stable commit
+        build_file_content = '''
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+wit_library(
+    name = "core",
+    srcs = glob(["core/**/*.wit"]),
+    package_name = "company:core@2.0.0",
+    visibility = ["//visibility:public"],
+)
+''',
+    )
+```
+
+### Scenario 5: Local Development with External Testing
+**Goal:** Develop interfaces locally but test against external implementations
+
+```python title="BUILD.bazel"
+wit_library(
+    name = "my_interface_dev",
+    srcs = ["local/my-interface.wit"],
+    package_name = "myorg:interface@dev",
+)
+
+# Test against external implementation
+wkg_component(
+    name = "reference_implementation", 
+    package = "reference:implementation@1.0.0",
+    registry = "registry.wasm.org",
+)
+
+# Test compatibility
+genrule(
+    name = "compatibility_test",
+    srcs = [":my_interface_dev", ":reference_implementation"],
+    outs = ["compatibility_result.txt"],
+    cmd = "$(location //tools:wit-compat-checker) $(SRCS) > $@",
+    tools = ["//tools:wit-compat-checker"],
+)
+```
 
 ## Adding External Dependencies
 
