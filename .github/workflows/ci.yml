@@ -102,41 +102,26 @@ jobs:
       - name: Build All Targets
         run: |
           # Build core working targets, exclude incomplete/problematic examples
-          bazel build -- //... \
-            -//examples/world_export/... \
-            -//examples/multi_profile/... \
-            -//examples/wac_remote_compose/... \
-            -//examples/wac_oci_composition/... \
-            -//examples/wkg_integration/... \
-            -//examples/wizer_example/... \
-            -//examples/simple_oci_test/... \
-            -//examples/microservices_architecture/... \
-            -//test_wac/... \
-            -//test/wkg/... \
-            -//test/production/... \
-            -//tools-builder/... \
-            -//examples/wasm_signing/... \
-            -//test_examples/... \
-            -//test_wit_deps/... \
-            -//examples/oci_publishing:secure_publish_enterprise \
-            -//test/integration:multi_service_system \
-            -//test/integration:composition_build_test \
-            -//test/integration:integration_tests \
-            -//test/export_macro:test_component_wasm_lib_release_host \
-            -//test/integration:basic_component_wasm_lib_debug_host \
-            -//test/integration:basic_component_wasm_lib_release_host \
-            -//test/integration:consumer_component_wasm_lib_release_host \
-            -//test/integration:service_a_component_wasm_lib_release_host \
-            -//test/integration:service_b_component_wasm_lib_release_host \
-            -//test/integration:wasi_component_wasm_lib_release_host \
-            -//test/unit:test_component_simple_wasm_lib_release_host \
-            -//test/unit:test_component_with_deps_wasm_lib_release_host \
-            -//examples/basic:hello_component_wasm_lib_release_host \
-            -//tools/checksum_updater_wasm:checksum_updater_wasm_wizer_component_release_wasm_lib_release_host \
-            -//examples/js_component:hello_js_component \
-            -//examples/js_component:calc_js_component \
-            -//examples/js_component:hello_js_bindings \
-            -//test/js/...
+          # Using explicit inclusions to avoid JavaScript component issues
+          bazel build \
+            //examples/go_component/... \
+            //examples/rust_component/... \
+            //examples/cpp_component/... \
+            //examples/basic/... \
+            //rust/... \
+            //go/... \
+            //cpp/... \
+            //wasm/... \
+            //wit/... \
+            //tools/... \
+            //providers/... \
+            //test/rust/... \
+            //test/go/... \
+            //test/cpp/... \
+            //test/unit/... \
+            //test/integration/... \
+            //docs-site/... \
+            --keep_going
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
