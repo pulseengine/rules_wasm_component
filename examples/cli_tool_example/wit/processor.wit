@@ -1,0 +1,16 @@
+package example:processor@1.0.0;
+
+interface file-ops {
+    /// Process text with various operations
+    process-text: func(input: string, operation: string) -> result<string, string>;
+    
+    /// Validate file has expected extension
+    validate-file-extension: func(filename: string, expected-ext: string) -> bool;
+    
+    /// Get file information
+    get-file-info: func(filename: string) -> string;
+}
+
+world processor {
+    export file-ops;
+}

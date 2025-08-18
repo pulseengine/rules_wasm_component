@@ -25,6 +25,62 @@ Rust is the **ideal language** for WebAssembly components. Its zero-cost abstrac
 - **rules_rust Integration** - Leverages existing Bazel Rust ecosystem
 - **Incremental Builds** - Fast iteration with Bazel caching
 
+## Choosing the Right Rule
+
+rules_wasm_component provides **two Rust rules** for different use cases:
+
+### `rust_wasm_component_bindgen` (Recommended)
+
+**Use for most component development** - exports custom interfaces for other components to use.
+
+```python
+rust_wasm_component_bindgen(
+    name = "my_component",
+    srcs = ["src/lib.rs"],
+    wit = ":my_interfaces",  # WIT interfaces automatically generate bindings
+    profiles = ["release"],  # Simple configuration
+)
+```
+
+**Perfect for:**
+- Components with custom WIT interfaces
+- Inter-component communication
+- Reusable component libraries
+- Standard component development workflows
+
+### `rust_wasm_component` (Advanced)
+
+**Use for CLI tools and utilities** - WASI-only components without custom interfaces.
+
+```python
+rust_wasm_component(
+    name = "my_cli_tool",
+    srcs = ["src/main.rs"],
+    deps = ["@crates//:clap"],
+    # No 'wit' - uses WASI capabilities only
+    rustc_flags = ["-C", "opt-level=3"],  # Custom compiler flags
+)
+```
+
+**Perfect for:**
+- Command-line tools and utilities
+- WASI-only components (filesystem, stdio, etc.)
+- Custom build requirements and optimization
+- Converting existing WASM modules
+
+### Rule Selection Guide
+
+| Use Case | Rule | WIT Required | Exports Interfaces |
+|----------|------|--------------|-------------------|
+| **Component Library** | `rust_wasm_component_bindgen` | ✅ Yes | ✅ Yes |
+| **CLI Tool** | `rust_wasm_component` | ❌ No | ❌ No |
+| **Microservice** | `rust_wasm_component_bindgen` | ✅ Yes | ✅ Yes |
+| **File Processor** | `rust_wasm_component` | ❌ No | ❌ No |
+| **API Server** | `rust_wasm_component_bindgen` | ✅ Yes | ✅ Yes |
+| **Data Converter** | `rust_wasm_component` | ❌ No | ❌ No |
+
+**Quick decision**: Do other components need to call your functions? Use `rust_wasm_component_bindgen`. Building a standalone tool? Use `rust_wasm_component`.
+
 ## Basic Component
 
 Let's build a calculator component to demonstrate the core concepts. This example shows how to:
