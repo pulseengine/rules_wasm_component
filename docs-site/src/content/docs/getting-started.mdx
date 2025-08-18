@@ -48,7 +48,7 @@ wasm_toolchain = use_extension(
 )
 wasm_toolchain.register(
     name = "wasm_tools",
-    version = "1.0.60",  # Optional, defaults to latest stable
+    version = "1.235.0",  # Optional, defaults to latest stable
 )
 
 # Optional: Configure TinyGo toolchain version
@@ -62,7 +62,7 @@ tinygo.register(
 ### 2. Add Rust dependencies (if using Rust)
 
 ```python title="MODULE.bazel"
-bazel_dep(name = "rules_rust", version = "0.48.0")
+bazel_dep(name = "rules_rust", version = "0.62.0")
 
 # Configure crate dependencies
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")

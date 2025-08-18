@@ -1,0 +1,375 @@
+---
+title: JavaScript & TypeScript
+description: Build WebAssembly components using JavaScript and TypeScript with jco (JavaScript Component Tools)
+---
+
+# JavaScript & TypeScript WebAssembly Components
+
+Build WebAssembly components using **JavaScript** and **TypeScript** with the power of **jco (JavaScript Component Tools)**. Create portable, secure components that can run anywhere and interface with components written in other languages.
+
+## Overview
+
+JavaScript components in rules_wasm_component use **jco** (JavaScript Component Tools) to compile JavaScript/TypeScript code into WebAssembly components. This enables:
+
+- **Universal deployment**: Run JavaScript components in any WebAssembly runtime
+- **Language interoperability**: Call JavaScript components from Rust, Go, C++, and other languages
+- **Performance**: Near-native speed with WebAssembly optimization
+- **Security**: Sandboxed execution with capability-based security
+
+## Prerequisites
+
+JavaScript components are built using **hermetic Node.js toolchains** - no local Node.js installation required! The toolchain automatically provides:
+
+- **Node.js v18.19.0** (hermetic, managed by Bazel)
+- **jco (JavaScript Component Tools) v1.4.0**
+- **Platform-specific native bindings** (automatically detected)
+
+## Quick Start
+
+### 1. Add JavaScript Support to MODULE.bazel
+
+```python title="MODULE.bazel"
+# JavaScript/TypeScript WebAssembly components with JCO
+jco = use_extension("//wasm:extensions.bzl", "jco")
+jco.register(
+    name = "jco",
+    node_version = "18.19.0",
+    version = "1.4.0",
+)
+use_repo(jco, "jco_toolchain")
+
+# Register jco toolchain for JavaScript/TypeScript components
+register_toolchains("@jco_toolchain//:jco_toolchain")
+```
+
+### 2. Create a Simple Component
+
+**Define the WIT interface:**
+
+```wit title="wit/calculator.wit"
+package example:calculator@1.0.0;
+
+world calculator {
+  export add: func(a: s32, b: s32) -> s32;
+  export subtract: func(a: s32, b: s32) -> s32;
+  export multiply: func(a: s32, b: s32) -> s32;
+}
+```
+
+**Implement in JavaScript:**
+
+```javascript title="src/calculator.js"
+// Export functions matching the WIT interface
+export function add(a, b) {
+  return a + b;
+}
+
+export function subtract(a, b) {
+  return a - b;
+}
+
+export function multiply(a, b) {
+  return a * b;
+}
+```
+
+**Create the BUILD file:**
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//js:defs.bzl", "js_component")
+
+js_component(
+    name = "calculator",
+    package_name = "example:calculator@1.0.0",
+    srcs = ["src/calculator.js"],
+    entry_point = "calculator.js",
+    wit = "wit/calculator.wit",
+    world = "calculator",
+)
+```
+
+### 3. Build the Component
+
+```bash
+bazel build //:calculator
+```
+
+Your WebAssembly component is now ready to run in any WebAssembly runtime!
+
+## Rules Reference
+
+### js_component
+
+Creates a WebAssembly component from JavaScript/TypeScript source files.
+
+```python
+js_component(
+    name = "my_component",
+    package_name = "org:component@1.0.0",
+    srcs = ["src/main.js", "src/utils.js"],
+    entry_point = "main.js",
+    wit = "wit/component.wit",
+    world = "my-world",
+    npm_dependencies = {
+        "lodash": "^4.17.21",
+        "@types/node": "^18.0.0",
+    },
+    optimize = True,
+    minify = True,
+)
+```
+
+**Attributes:**
+- `name`: Target name
+- `package_name`: WIT package identifier (e.g., "org:component@1.0.0")
+- `srcs`: JavaScript/TypeScript source files
+- `entry_point`: Main entry file (relative to srcs)
+- `wit`: WIT interface definition file
+- `world`: WIT world name to implement
+- `npm_dependencies`: NPM package dependencies (optional)
+- `optimize`: Enable optimization (default: False)
+- `minify`: Enable code minification (default: False)
+
+### npm_install
+
+Installs NPM dependencies for JavaScript components.
+
+```python
+npm_install(
+    name = "npm_deps",
+    package_json = "package.json",
+)
+```
+
+### jco_transpile
+
+Transpiles a WebAssembly component back to JavaScript for testing or integration.
+
+```python
+jco_transpile(
+    name = "component_bindings",
+    component = ":my_component",
+    instantiation = "async",  # or "sync"
+    world_name = "my-world",
+)
+```
+
+## Advanced Examples
+
+### Multi-File Component with NPM Dependencies
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//js:defs.bzl", "js_component", "npm_install")
+
+# Install dependencies
+npm_install(
+    name = "npm_deps",
+    package_json = "package.json",
+)
+
+# Complex component with multiple files and dependencies
+js_component(
+    name = "web_service",
+    package_name = "example:web-service@1.0.0",
+    srcs = [
+        "src/server.js",
+        "src/handlers.js",
+        "src/utils.js",
+        "src/types.js",
+    ],
+    entry_point = "server.js",
+    npm_dependencies = {
+        "express": "^4.18.0",
+        "lodash": "^4.17.21",
+        "uuid": "^9.0.0",
+    },
+    optimize = True,
+    minify = True,
+    wit = "wit/web-service.wit",
+    world = "web-service",
+)
+```
+
+### TypeScript Component
+
+```typescript title="src/math.ts"
+// TypeScript implementation with type safety
+export interface CalculationResult {
+  success: boolean;
+  value?: number;
+  error?: string;
+}
+
+export function divide(a: number, b: number): CalculationResult {
+  if (b === 0) {
+    return {
+      success: false,
+      error: "Division by zero",
+    };
+  }
+  
+  return {
+    success: true,
+    value: a / b,
+  };
+}
+
+export function sqrt(x: number): CalculationResult {
+  if (x < 0) {
+    return {
+      success: false,
+      error: "Cannot compute square root of negative number",
+    };
+  }
+  
+  return {
+    success: true,
+    value: Math.sqrt(x),
+  };
+}
+```
+
+### Component with WASI Imports
+
+```wit title="wit/file-processor.wit"
+package example:file-processor@1.0.0;
+
+world file-processor {
+  import wasi:io/streams@0.2.3;
+  import wasi:filesystem/types@0.2.3;
+  
+  export process-file: func(path: string) -> result<string, string>;
+}
+```
+
+```javascript title="src/file-processor.js"
+// Component that uses WASI imports
+export function processFile(path) {
+  try {
+    // File processing logic using WASI APIs
+    const content = readFileSync(path, 'utf8');
+    const processed = content.toUpperCase();
+    return { tag: 'ok', val: processed };
+  } catch (error) {
+    return { tag: 'err', val: error.message };
+  }
+}
+```
+
+## Testing JavaScript Components
+
+### Integration Testing with jco_transpile
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//js:defs.bzl", "js_component", "jco_transpile")
+
+js_component(
+    name = "calculator",
+    srcs = ["src/calculator.js"],
+    entry_point = "calculator.js",
+    wit = "wit/calculator.wit",
+    world = "calculator",
+)
+
+# Generate JavaScript bindings for testing
+jco_transpile(
+    name = "calculator_bindings",
+    component = ":calculator",
+    instantiation = "async",
+    world_name = "calculator",
+)
+
+# Test the component
+nodejs_test(
+    name = "calculator_test",
+    entry_point = "test/calculator.test.js",
+    deps = [":calculator_bindings"],
+)
+```
+
+### Test Implementation
+
+```javascript title="test/calculator.test.js"
+import { calculator } from './calculator_bindings.js';
+
+async function testCalculator() {
+  const instance = await calculator();
+  
+  console.assert(instance.add(2, 3) === 5, "Addition test failed");
+  console.assert(instance.subtract(5, 3) === 2, "Subtraction test failed");
+  console.assert(instance.multiply(4, 3) === 12, "Multiplication test failed");
+  
+  console.log("All tests passed!");
+}
+
+testCalculator().catch(console.error);
+```
+
+## Best Practices
+
+### Performance Optimization
+
+1. **Enable optimization**: Use `optimize = True` for production builds
+2. **Minify code**: Use `minify = True` to reduce component size
+3. **Minimize dependencies**: Only include necessary NPM packages
+4. **Single entry point**: Keep component interface focused
+
+### Code Organization
+
+1. **Separate concerns**: Use multiple files for complex components
+2. **Type safety**: Use TypeScript for better development experience
+3. **Clear interfaces**: Design clean WIT interfaces for your components
+4. **Error handling**: Implement robust error handling patterns
+
+### Development Workflow
+
+1. **Start simple**: Begin with single-file components
+2. **Test frequently**: Use jco_transpile for integration testing
+3. **Version carefully**: Use semantic versioning in package_name
+4. **Document interfaces**: Provide clear WIT interface documentation
+
+## Troubleshooting
+
+### Common Issues
+
+**Module resolution errors in multi-file components:**
+```
+Error: Cannot resolve module './utils.js'
+```
+- Ensure all source files are listed in `srcs`
+- Use relative imports from the entry point perspective
+- Check file paths and naming consistency
+
+**NPM dependency issues:**
+```
+Error: Cannot find module 'lodash'
+```
+- Verify `npm_dependencies` are correctly specified
+- Ensure `npm_install` rule is properly configured
+- Check package.json if using npm_install
+
+**WIT interface mismatches:**
+```
+Error: Function 'calculate' not found in exports
+```
+- Verify JavaScript function names match WIT interface exactly
+- Check export statements in your JavaScript files
+- Ensure function signatures match WIT types
+
+### Performance Tips
+
+- Use `optimize = True` for production components
+- Minimize external dependencies
+- Consider WebAssembly-specific optimizations
+- Profile component performance in target runtime
+
+## Integration with Other Languages
+
+JavaScript components built with rules_wasm_component can be called from any language that supports WebAssembly components:
+
+- **Rust**: Use wit-bindgen for type-safe bindings
+- **Go**: Use TinyGo WebAssembly component support
+- **C++**: Use WASI SDK component integration
+- **Web browsers**: Use jco JavaScript bindings
+
+This makes JavaScript components truly universal building blocks for multi-language systems.

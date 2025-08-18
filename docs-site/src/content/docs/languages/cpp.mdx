@@ -1,0 +1,551 @@
+---
+title: C & C++
+description: Build WebAssembly components using C and C++ with WASI SDK integration
+---
+
+# C & C++ WebAssembly Components
+
+Build high-performance WebAssembly components using **C** and **C++** with full **WASI SDK** integration. Create efficient, portable components that leverage existing C/C++ libraries and codebases.
+
+## Overview
+
+C/C++ components in rules_wasm_component use the **WASI SDK** to compile C and C++ code into WebAssembly components. This enables:
+
+- **High performance**: Near-native execution speed with optimized compilation
+- **Legacy integration**: Bring existing C/C++ libraries into the component ecosystem
+- **Memory efficiency**: Direct memory management and minimal runtime overhead
+- **Standards compliance**: Full C11/C++20 support with modern language features
+
+## Prerequisites
+
+C/C++ components are built using **hermetic WASI SDK toolchains** - no local installation required! The toolchain automatically provides:
+
+- **WASI SDK v25** (hermetic, managed by Bazel)
+- **Clang/LLVM toolchain** optimized for WebAssembly
+- **Standard C/C++ libraries** with WASI integration
+- **Cross-platform compilation** support
+
+## Quick Start
+
+### 1. Add C++ Support to MODULE.bazel
+
+```python title="MODULE.bazel"
+# C++ WebAssembly components with WASI SDK
+cpp_component = use_extension("//wasm:extensions.bzl", "cpp_component")
+cpp_component.register(
+    name = "cpp",
+    strategy = "download",
+    wasi_sdk_version = "25",
+)
+use_repo(cpp_component, "cpp_toolchain")
+
+# Register C++ toolchain
+register_toolchains("@cpp_toolchain//:cpp_component_toolchain")
+```
+
+### 2. Create a Simple Component
+
+**Define the WIT interface:**
+
+```wit title="wit/math.wit"
+package example:math@1.0.0;
+
+interface calculator {
+  add: func(a: f64, b: f64) -> f64;
+  subtract: func(a: f64, b: f64) -> f64;
+  multiply: func(a: f64, b: f64) -> f64;
+  
+  record calculation-result {
+    success: bool,
+    value: option<f64>,
+    error: option<string>,
+  }
+  
+  divide: func(a: f64, b: f64) -> calculation-result;
+}
+
+world calculator {
+  export calculator;
+}
+```
+
+**Implement in C++:**
+
+```cpp title="src/calculator.cpp"
+#include "calculator_impl.h"
+#include <cmath>
+#include <limits>
+
+namespace calculator {
+
+double Calculator::add(double a, double b) const {
+    return a + b;
+}
+
+double Calculator::subtract(double a, double b) const {
+    return a - b;
+}
+
+double Calculator::multiply(double a, double b) const {
+    return a * b;
+}
+
+CalculationResult Calculator::divide(double a, double b) const {
+    if (b == 0.0) {
+        return CalculationResult{
+            .success = false,
+            .value = std::nullopt,
+            .error = "Division by zero"
+        };
+    }
+    
+    return CalculationResult{
+        .success = true,
+        .value = a / b,
+        .error = std::nullopt
+    };
+}
+
+} // namespace calculator
+```
+
+**Create the BUILD file:**
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_component", "cpp_wit_bindgen")
+
+# Generate C++ bindings from WIT
+cpp_wit_bindgen(
+    name = "calculator_bindings",
+    wit = "wit/math.wit",
+    world = "calculator",
+)
+
+# Build the component
+cpp_component(
+    name = "calculator",
+    package_name = "example:math@1.0.0",
+    srcs = ["src/calculator.cpp"],
+    hdrs = ["src/calculator_impl.h"],
+    cxx_std = "c++20",
+    language = "cpp",
+    optimize = True,
+    wit = "wit/math.wit",
+    world = "calculator",
+)
+```
+
+### 3. Build the Component
+
+```bash
+bazel build //:calculator
+```
+
+## Rules Reference
+
+### cpp_component
+
+Creates a WebAssembly component from C/C++ source files.
+
+```python
+cpp_component(
+    name = "my_component",
+    package_name = "org:component@1.0.0",
+    srcs = ["src/main.cpp", "src/utils.cpp"],
+    hdrs = ["src/main.h", "src/utils.h"],
+    wit = "wit/component.wit",
+    world = "my-world",
+    language = "cpp",  # or "c"
+    cxx_std = "c++20",  # c++11, c++14, c++17, c++20
+    optimize = True,
+    enable_exceptions = True,
+    deps = [":utility_lib"],
+)
+```
+
+**Attributes:**
+- `name`: Target name
+- `package_name`: WIT package identifier
+- `srcs`: Source files (.c, .cpp, .cc)
+- `hdrs`: Header files (.h, .hpp, .hh)
+- `wit`: WIT interface definition file
+- `world`: WIT world name to implement
+- `language`: "c" or "cpp" (default: "cpp")
+- `cxx_std`: C++ standard version (default: "c++17")
+- `optimize`: Enable optimization (default: True)
+- `enable_exceptions`: Enable C++ exceptions (default: False)
+- `deps`: Dependencies on other C/C++ libraries
+
+### cpp_wit_bindgen
+
+Generates C/C++ bindings from WIT definitions.
+
+```python
+cpp_wit_bindgen(
+    name = "component_bindings",
+    wit = "wit/component.wit",
+    world = "my-world",
+    string_encoding = "utf8",  # or "utf16"
+)
+```
+
+### cc_component_library
+
+Creates a C/C++ library for use in components.
+
+```python
+cc_component_library(
+    name = "utility_lib",
+    srcs = ["src/utils.cpp"],
+    hdrs = ["src/utils.h"],
+    language = "cpp",
+    cxx_std = "c++20",
+    optimize = True,
+)
+```
+
+## Advanced Examples
+
+### Complex C++ Component with Libraries
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_component", "cc_component_library", "cpp_wit_bindgen")
+
+# Math utilities library
+cc_component_library(
+    name = "math_utils",
+    srcs = ["src/math_utils.cpp"],
+    hdrs = ["src/math_utils.h"],
+    cxx_std = "c++20",
+    enable_exceptions = True,
+    language = "cpp",
+    optimize = True,
+)
+
+# String processing library
+cc_component_library(
+    name = "string_utils",
+    srcs = ["src/string_utils.cpp"],
+    hdrs = ["src/string_utils.h"],
+    cxx_std = "c++20",
+    language = "cpp",
+)
+
+# Generate bindings
+cpp_wit_bindgen(
+    name = "processor_bindings", 
+    wit = "wit/processor.wit",
+    world = "data-processor",
+    string_encoding = "utf8",
+)
+
+# Main component
+cpp_component(
+    name = "data_processor",
+    package_name = "example:data-processor@1.0.0",
+    srcs = [
+        "src/processor.cpp",
+        "src/handlers.cpp",
+    ],
+    hdrs = [
+        "src/processor.h",
+        "src/handlers.h",
+    ],
+    cxx_std = "c++20",
+    enable_exceptions = True,
+    language = "cpp",
+    optimize = True,
+    wit = "wit/processor.wit",
+    world = "data-processor",
+    deps = [
+        ":math_utils",
+        ":string_utils",
+    ],
+)
+```
+
+### Pure C Component
+
+```c title="src/calculator.c"
+#include <stdio.h>
+#include <math.h>
+#include <stdbool.h>
+
+typedef struct {
+    bool success;
+    double value;
+    const char* error;
+} calculation_result_t;
+
+double add(double a, double b) {
+    return a + b;
+}
+
+double subtract(double a, double b) {
+    return a - b;
+}
+
+calculation_result_t divide(double a, double b) {
+    if (b == 0.0) {
+        calculation_result_t result = {
+            .success = false,
+            .value = 0.0,
+            .error = "Division by zero"
+        };
+        return result;
+    }
+    
+    calculation_result_t result = {
+        .success = true,
+        .value = a / b,
+        .error = NULL
+    };
+    return result;
+}
+```
+
+```python title="BUILD.bazel"
+cpp_component(
+    name = "calculator_c",
+    package_name = "example:calculator-c@1.0.0",
+    srcs = ["src/calculator.c"],
+    hdrs = ["src/calculator.h"],
+    language = "c",
+    optimize = True,
+    wit = "wit/calculator.wit",
+    world = "calculator",
+)
+```
+
+### Component with WASI Imports
+
+```wit title="wit/file-processor.wit"
+package example:file-processor@1.0.0;
+
+world file-processor {
+  import wasi:io/streams@0.2.3;
+  import wasi:filesystem/types@0.2.3;
+  
+  export process-file: func(path: string) -> result<string, string>;
+  export file-size: func(path: string) -> result<u64, string>;
+}
+```
+
+```cpp title="src/file_processor.cpp"
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+
+class FileProcessor {
+public:
+    std::variant<std::string, std::string> processFile(const std::string& path) {
+        try {
+            std::ifstream file(path);
+            if (!file.is_open()) {
+                return std::string("Failed to open file: " + path);
+            }
+            
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            std::string content = buffer.str();
+            
+            // Process content (example: convert to uppercase)
+            std::transform(content.begin(), content.end(), content.begin(), ::toupper);
+            
+            return content;
+        } catch (const std::exception& e) {
+            return std::string("Error processing file: " + std::string(e.what()));
+        }
+    }
+    
+    std::variant<uint64_t, std::string> fileSize(const std::string& path) {
+        try {
+            std::filesystem::path filePath(path);
+            if (!std::filesystem::exists(filePath)) {
+                return std::string("File does not exist: " + path);
+            }
+            
+            return static_cast<uint64_t>(std::filesystem::file_size(filePath));
+        } catch (const std::exception& e) {
+            return std::string("Error getting file size: " + std::string(e.what()));
+        }
+    }
+};
+```
+
+## C++ Standards and Features
+
+### Supported Standards
+- **C++11**: Basic modern C++ features
+- **C++14**: Enhanced constexpr, variable templates
+- **C++17**: std::optional, std::variant, filesystem
+- **C++20**: Concepts, modules, coroutines (recommended)
+
+### Language Features
+- **Templates**: Full template metaprogramming support
+- **STL**: Standard Template Library available
+- **Exceptions**: Optional exception handling support
+- **RTTI**: Runtime Type Information (limited)
+- **Threading**: Limited threading support (single-threaded execution)
+
+### Memory Management
+```cpp
+// Smart pointers work well in components
+std::unique_ptr<Calculator> calc = std::make_unique<Calculator>();
+std::shared_ptr<Resource> resource = std::make_shared<Resource>();
+
+// RAII patterns are recommended
+class ResourceManager {
+    std::unique_ptr<Resource> resource;
+public:
+    ResourceManager() : resource(std::make_unique<Resource>()) {}
+    ~ResourceManager() = default; // Automatic cleanup
+};
+```
+
+## Performance Optimization
+
+### Compilation Flags
+```python
+cpp_component(
+    name = "optimized_component",
+    # ... other attributes
+    optimize = True,           # Enable -O2 optimization
+    cxx_std = "c++20",        # Use latest standard
+    enable_exceptions = False, # Disable exceptions for size
+)
+```
+
+### Best Practices
+1. **Minimize allocations**: Use stack allocation when possible
+2. **Avoid exceptions**: For smaller component size (optional)
+3. **Use const correctness**: Enable compiler optimizations
+4. **Profile memory usage**: WebAssembly has limited memory
+5. **Optimize hot paths**: Focus on frequently called functions
+
+## Integration Patterns
+
+### Error Handling
+```cpp
+// WIT result types map to C++ variants
+using CalculationResult = std::variant<double, std::string>;
+
+CalculationResult divide(double a, double b) {
+    if (b == 0.0) {
+        return std::string("Division by zero");
+    }
+    return a / b;
+}
+```
+
+### String Handling
+```cpp
+// WIT strings map to std::string
+std::string processText(const std::string& input) {
+    std::string result = input;
+    std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+    return result;
+}
+```
+
+### Collections
+```cpp
+// WIT lists map to std::vector
+std::vector<double> processNumbers(const std::vector<double>& numbers) {
+    std::vector<double> results;
+    for (double num : numbers) {
+        results.push_back(num * 2.0);
+    }
+    return results;
+}
+```
+
+## Testing C++ Components
+
+### Unit Testing
+```cpp title="test/calculator_test.cpp"
+#include "calculator.h"
+#include <cassert>
+#include <iostream>
+
+void testBasicOperations() {
+    Calculator calc;
+    
+    assert(calc.add(2.0, 3.0) == 5.0);
+    assert(calc.subtract(5.0, 3.0) == 2.0);
+    assert(calc.multiply(4.0, 3.0) == 12.0);
+    
+    auto result = calc.divide(10.0, 2.0);
+    assert(std::holds_alternative<double>(result));
+    assert(std::get<double>(result) == 5.0);
+    
+    auto errorResult = calc.divide(10.0, 0.0);
+    assert(std::holds_alternative<std::string>(errorResult));
+    
+    std::cout << "All tests passed!" << std::endl;
+}
+```
+
+### Integration Testing
+```python title="BUILD.bazel"
+load("@rules_wasm_component//test:defs.bzl", "wasm_component_test")
+
+wasm_component_test(
+    name = "calculator_integration_test",
+    component = ":calculator",
+    test_runner = "wasmtime",
+    test_data = ["test/test_cases.json"],
+)
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Linker errors with undefined symbols:**
+```
+Error: undefined symbol: std::__throw_bad_alloc
+```
+- Enable exceptions: `enable_exceptions = True`
+- Or avoid code paths that throw (recommended)
+
+**Memory allocation failures:**
+```
+Error: out of memory
+```
+- Reduce memory usage in component
+- Use stack allocation instead of heap when possible
+- Profile memory usage patterns
+
+**Missing standard library functions:**
+```
+Error: 'pthread_create' undefined
+```
+- Threading is limited in WebAssembly
+- Use single-threaded algorithms
+- Consider async patterns instead of threads
+
+### Performance Issues
+
+**Large component size:**
+- Disable exceptions: `enable_exceptions = False`
+- Use smaller standard library subset
+- Enable optimization: `optimize = True`
+- Consider C instead of C++ for minimal components
+
+**Slow execution:**
+- Enable compiler optimization
+- Profile hot code paths
+- Minimize dynamic allocation
+- Use efficient algorithms and data structures
+
+## Integration with Other Languages
+
+C++ components built with rules_wasm_component can be called from any language that supports WebAssembly components:
+
+- **Rust**: Use wit-bindgen for zero-cost bindings
+- **Go**: Use TinyGo WebAssembly component support
+- **JavaScript**: Use jco for web integration
+- **Native applications**: Use wasmtime or other runtimes
+
+This makes C++ components ideal for performance-critical shared libraries in multi-language systems.
