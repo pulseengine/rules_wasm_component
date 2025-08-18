@@ -105,9 +105,10 @@ jobs:
           # Using explicit inclusions to avoid JavaScript component issues
           bazel build -- \
             //examples/go_component/... \
-            //examples/rust_component/... \
-            //examples/cpp_component/... \
             //examples/basic/... \
+            //examples/simple_module/... \
+            //examples/cli_tool_example/... \
+            //examples/cpp_component/... \
             //rust/... \
             //go/... \
             //cpp/... \
