@@ -1,6 +1,7 @@
 """Centralized checksum management for WebAssembly toolchain"""
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//checksums:registry_test.bzl", "registry_test_suite")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -58,3 +59,11 @@ filegroup(
     name = "jco_checksums",
     srcs = ["tools/jco.json"],
 )
+
+filegroup(
+    name = "wizer_checksums",
+    srcs = ["tools/wizer.json"],
+)
+
+# Unit tests for registry API
+registry_test_suite(name = "registry_test")

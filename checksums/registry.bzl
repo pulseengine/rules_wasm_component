@@ -1,24 +1,30 @@
 """Centralized checksum registry API for WebAssembly toolchain
 
-This module provides a unified API for accessing tool checksums stored in JSON files.
-All checksum data is loaded from checksums/tools/*.json files, providing a single
-source of truth for tool versions and platform-specific checksums.
+This module provides a unified API for accessing tool checksums. Checksum data is
+embedded in this file and kept synchronized with checksums/tools/*.json files, which
+serve as the canonical source for checksum updater tools and external documentation.
+
+The embedded approach is used because Bazel rules don't have built-in JSON parsing
+capabilities, making direct JSON loading impractical in the build system.
 """
 
 def _load_tool_checksums(tool_name):
-    """Load checksums for a tool from JSON file
+    """Load checksums for a tool from embedded registry data
 
     Args:
         tool_name: Name of the tool (e.g., 'wasm-tools', 'wit-bindgen')
 
     Returns:
-        Dict: Tool data from JSON file, or empty dict if not found
+        Dict: Tool data from embedded registry, or empty dict if not found
+        
+    Note:
+        This function uses embedded data rather than JSON file loading because
+        Bazel rules don't have built-in JSON parsing capabilities. The embedded
+        data is kept synchronized with checksums/tools/*.json files, which serve
+        as the canonical source for checksum updater tools and documentation.
     """
 
-    # For now, return fallback data until JSON loading is fully implemented
-    # This maintains compatibility while we transition to JSON-only storage
     tool_data = _get_fallback_checksums(tool_name)
-
     return tool_data
 
 def _get_fallback_checksums(tool_name):
