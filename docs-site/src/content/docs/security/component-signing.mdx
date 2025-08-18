@@ -407,6 +407,44 @@ wasm_validate(
 
 ## Integration with OCI Registries
 
+**WebAssembly component signing integrates seamlessly with OCI container registries**, providing end-to-end security from build to deployment. You can sign both the WebAssembly component AND the OCI container that packages it.
+
+### Dual Signing: Component + Container
+
+**Best Practice: Sign both the WebAssembly component and its OCI container** for comprehensive security:
+
+```python
+load("@rules_wasm_component//oci:defs.bzl", "wasm_component_oci_push")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_sign")
+
+# Step 1: Sign the WebAssembly component
+wasm_sign(
+    name = "signed_component",
+    component = ":my_component",
+    keys = ":production_keys",
+    detached = True,  # Preserves original component + signature
+)
+
+# Step 2: Sign the OCI container containing the component
+wasm_component_oci_push(
+    name = "push_signed_container",
+    component = ":signed_component",
+    registry = "ghcr.io",
+    namespace = "my-org",
+    component_name = "my-service",
+    tag = "v1.0.0",
+    # OCI container signing options
+    sign_container = True,              # Sign the OCI container itself
+    container_signing_key = ":oci_signing_key",  # Separate key for container
+    # Both component signature and container signature are preserved
+)
+```
+
+**Why dual signing matters:**
+- **Component signature**: Verifies the WebAssembly component's integrity and authenticity
+- **Container signature**: Verifies the OCI packaging, metadata, and distribution integrity
+- **Supply chain security**: Protects against attacks at both the component and distribution levels
+
 ### Publishing Signed Components
 
 ```python
@@ -421,6 +459,18 @@ wasm_component_oci_push(
     component_name = "my-service",
     tag = "v1.0.0",
     # Signature is preserved in OCI layers
+)
+
+# Push with container signing
+wasm_component_oci_push(
+    name = "push_dual_signed",
+    component = ":signed_component",
+    registry = "ghcr.io",
+    namespace = "my-org", 
+    component_name = "secure-service",
+    tag = "v1.0.0",
+    sign_container = True,
+    container_signing_key = ":container_keys",
 )
 ```
 
@@ -438,6 +488,51 @@ wasm_component_from_oci(
     tag = "v2.1.0",
     verify_signature = True,
     trusted_keys = ":trusted_public_keys",
+)
+
+# Pull with dual verification (component + container)
+wasm_component_from_oci(
+    name = "dual_verified_component",
+    registry = "ghcr.io",
+    namespace = "security-critical-org",
+    component_name = "payment-processor",
+    tag = "v3.0.0",
+    verify_component_signature = True,     # Verify WebAssembly component
+    verify_container_signature = True,     # Verify OCI container
+    component_trusted_keys = ":component_keys",
+    container_trusted_keys = ":container_keys",
+)
+```
+
+### OCI Security Standards Integration
+
+**Integration with industry-standard container security:**
+
+```python
+# Sigstore/Cosign integration
+wasm_component_oci_push(
+    name = "push_cosign_signed",
+    component = ":signed_component",
+    registry = "ghcr.io",
+    namespace = "my-org",
+    component_name = "enterprise-service",
+    tag = "v1.0.0",
+    # Use Sigstore/Cosign for container signing
+    use_cosign = True,
+    cosign_key = ":sigstore_key",
+)
+
+# Notary v2 integration
+wasm_component_oci_push(
+    name = "push_notary_signed",
+    component = ":signed_component", 
+    registry = "private-registry.company.com",
+    namespace = "production",
+    component_name = "core-service",
+    tag = "v2.1.0",
+    # Use Notary v2 for enterprise signing
+    use_notary = True,
+    notary_key = ":enterprise_notary_key",
 )
 ```
 

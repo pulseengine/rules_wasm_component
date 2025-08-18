@@ -362,6 +362,43 @@ def _get_fallback_checksums(tool_name):
                 },
             },
         },
+        "wizer": {
+            "tool_name": "wizer",
+            "github_repo": "bytecodealliance/wizer",
+            "latest_version": "9.0.0",
+            "versions": {
+                "9.0.0": {
+                    "release_date": "2024-06-03",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "5d5e457abf3fd6e307dee9fe9f7423185a88d90f0c96677b9a5418c448ced52e",
+                            "url_suffix": "x86_64-macos.tar.xz",
+                            "strip_prefix": "wizer-v9.0.0-x86_64-macos",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "3372ee8215abc39b15a51b4aed27f8ae5a42e84261a29e7491ec82bf806bc491",
+                            "url_suffix": "aarch64-macos.tar.xz",
+                            "strip_prefix": "wizer-v9.0.0-aarch64-macos",
+                        },
+                        "linux_amd64": {
+                            "sha256": "d1d85703bc40f18535e673992bef723dc3f84e074bcd1e05b57f24d5adb4f058",
+                            "url_suffix": "x86_64-linux.tar.xz",
+                            "strip_prefix": "wizer-v9.0.0-x86_64-linux",
+                        },
+                        "linux_arm64": {
+                            "sha256": "f560a675d686d42c18de8bd4014a34a0e8b95dafbd696bf8d54817311ae87a4d",
+                            "url_suffix": "aarch64-linux.tar.xz",
+                            "strip_prefix": "wizer-v9.0.0-aarch64-linux",
+                        },
+                        "windows_amd64": {
+                            "sha256": "d9cc5ed028ca873f40adcac513812970d34dd08cec4397ffc5a47d4acee8e782",
+                            "url_suffix": "x86_64-windows.zip",
+                            "strip_prefix": "wizer-v9.0.0-x86_64-windows",
+                        },
+                    },
+                },
+            },
+        },
         "jco": {
             "tool_name": "jco",
             "github_repo": "bytecodealliance/jco",
@@ -535,6 +572,7 @@ def list_available_tools():
         "wasmtime",
         "wasi-sdk",
         "wasmsign2",
+        "wizer",
         "nodejs",
         "jco",
     ]

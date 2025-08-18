@@ -259,8 +259,8 @@
     },
     "//wasm:extensions.bzl%cpp_component": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
-        "usagesDigest": "KERVkkyQzlvYNLbCaBpMj9urmK7glE2PKp9/GlHysFg=",
+        "bzlTransitiveDigest": "t7G4h4hbAm5oM9ZjLvGzYKnSVLPP6OHpVGoBi+Hypes=",
+        "usagesDigest": "60f0O3+qNo5tYrXjypa0YLZBtNMmSOws3xIOdJkff/0=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -269,7 +269,7 @@
             "repoRuleId": "@@//toolchains:cpp_component_toolchain.bzl%cpp_component_toolchain_repository",
             "attributes": {
               "strategy": "download",
-              "wasi_sdk_version": "25"
+              "wasi_sdk_version": "27"
             }
           }
         },
@@ -284,7 +284,7 @@
     },
     "//wasm:extensions.bzl%jco": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
+        "bzlTransitiveDigest": "t7G4h4hbAm5oM9ZjLvGzYKnSVLPP6OHpVGoBi+Hypes=",
         "usagesDigest": "PQqUinjtsk87/5n7cHDUYhpglImiMDMUgHdoZs4aVNg=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -309,7 +309,7 @@
     },
     "//wasm:extensions.bzl%tinygo": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
+        "bzlTransitiveDigest": "t7G4h4hbAm5oM9ZjLvGzYKnSVLPP6OHpVGoBi+Hypes=",
         "usagesDigest": "tE5hZWIXf+a1hThQOIcRRVjPbVQjFDb2aj5a1eEhvaA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -333,8 +333,8 @@
     },
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
-        "usagesDigest": "alR+pUqsJ738YkyooBLo61S409k3zQk0DMrGQ+rPP0w=",
+        "bzlTransitiveDigest": "t7G4h4hbAm5oM9ZjLvGzYKnSVLPP6OHpVGoBi+Hypes=",
+        "usagesDigest": "RoedjSblpjIxlcUjWjhz1L4mn2x/vCtO1RtPL64VguE=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -343,7 +343,7 @@
             "repoRuleId": "@@//toolchains:wasi_sdk_toolchain.bzl%wasi_sdk_repository",
             "attributes": {
               "strategy": "download",
-              "version": "25",
+              "version": "27",
               "url": ""
             }
           }
@@ -359,7 +359,7 @@
     },
     "//wasm:extensions.bzl%wasi_wit": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
+        "bzlTransitiveDigest": "JCW2BqXA1CcjhYL9LHhEecgGNrvxZu2LYxXIo407GQ8=",
         "usagesDigest": "aprKQAVHUGZU3Qda4GY+rceEATrn/fard2WlVtmwyIU=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -487,7 +487,7 @@
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
+        "bzlTransitiveDigest": "t7G4h4hbAm5oM9ZjLvGzYKnSVLPP6OHpVGoBi+Hypes=",
         "usagesDigest": "j2w0KsG/e6tltUI+WAeNH505251eBn4uleGJW2ExVag=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -521,7 +521,7 @@
     },
     "//wasm:extensions.bzl%wasmtime": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
+        "bzlTransitiveDigest": "t7G4h4hbAm5oM9ZjLvGzYKnSVLPP6OHpVGoBi+Hypes=",
         "usagesDigest": "s1jIaDZbU9PAsYZLH9PgXwfrefil+sn/XLcVn/P9Q6U=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -546,7 +546,7 @@
     },
     "//wasm:extensions.bzl%wizer": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
+        "bzlTransitiveDigest": "t7G4h4hbAm5oM9ZjLvGzYKnSVLPP6OHpVGoBi+Hypes=",
         "usagesDigest": "6/Tf087fjdhszmx0SYaOq709EsMncT4yVq6Sh711KFo=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -571,7 +571,7 @@
     },
     "//wasm:extensions.bzl%wkg": {
       "general": {
-        "bzlTransitiveDigest": "6su/oXVq8Pxaj8/gDsdokTkGlHPvBbyNaNOUzf5DXCM=",
+        "bzlTransitiveDigest": "t7G4h4hbAm5oM9ZjLvGzYKnSVLPP6OHpVGoBi+Hypes=",
         "usagesDigest": "mH3SUo8xNuIm+C21hj2zQVuSslC4w2RVQ5JRqzScS24=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

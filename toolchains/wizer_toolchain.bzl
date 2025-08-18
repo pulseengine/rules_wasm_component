@@ -1,5 +1,7 @@
 """Wizer WebAssembly pre-initialization toolchain definitions"""
 
+load("//checksums:registry.bzl", "get_tool_info")
+
 WIZER_VERSIONS = {
     "9.0.0": {
         "release_date": "2024-06-03",
@@ -54,59 +56,25 @@ def _detect_host_platform(repository_ctx):
         fail("Unsupported operating system: {}".format(os_name))
 
 def _get_wizer_download_info(platform, version):
-    """Get download information for wizer prebuilt binaries"""
-
-    # Platform mapping to GitHub release asset names
-    platform_map = {
-        "darwin_amd64": {
-            "asset": "wizer-v{}-x86_64-macos.tar.xz",
-            "type": "tar.xz",
-            "strip_prefix": "wizer-v{}-x86_64-macos",
-            "sha256": "5d5e457abf3fd6e307dee9fe9f7423185a88d90f0c96677b9a5418c448ced52e",  # v9.0.0
-        },
-        "darwin_arm64": {
-            "asset": "wizer-v{}-aarch64-macos.tar.xz",
-            "type": "tar.xz",
-            "strip_prefix": "wizer-v{}-aarch64-macos",
-            "sha256": "3372ee8215abc39b15a51b4aed27f8ae5a42e84261a29e7491ec82bf806bc491",  # v9.0.0
-        },
-        "linux_amd64": {
-            "asset": "wizer-v{}-x86_64-linux.tar.xz",
-            "type": "tar.xz",
-            "strip_prefix": "wizer-v{}-x86_64-linux",
-            "sha256": "d1d85703bc40f18535e673992bef723dc3f84e074bcd1e05b57f24d5adb4f058",  # v9.0.0
-        },
-        "linux_arm64": {
-            "asset": "wizer-v{}-aarch64-linux.tar.xz",
-            "type": "tar.xz",
-            "strip_prefix": "wizer-v{}-aarch64-linux",
-            "sha256": "f560a675d686d42c18de8bd4014a34a0e8b95dafbd696bf8d54817311ae87a4d",  # v9.0.0
-        },
-        "windows_amd64": {
-            "asset": "wizer-v{}-x86_64-windows.zip",
-            "type": "zip",
-            "strip_prefix": "wizer-v{}-x86_64-windows",
-            "sha256": "d9cc5ed028ca873f40adcac513812970d34dd08cec4397ffc5a47d4acee8e782",  # v9.0.0
-        },
-    }
-
-    if platform not in platform_map:
-        fail("Unsupported platform for Wizer download: {}. Supported: {}".format(
-            platform,
-            list(platform_map.keys()),
-        ))
-
-    if version != "9.0.0":
-        fail("Only Wizer version 9.0.0 is supported for download strategy. Requested: {}".format(version))
-
-    info = platform_map[platform]
-    asset_name = info["asset"].format(version)
-
+    """Get download information for wizer prebuilt binaries from central registry"""
+    
+    # Get tool info from central registry
+    tool_info = get_tool_info("wizer", version, platform)
+    if not tool_info:
+        fail("Unsupported platform {} for wizer version {}. Supported platforms can be found in //checksums/tools/wizer.json".format(platform, version))
+    
+    # Build download URL
+    asset_name = "wizer-v{}-{}".format(version, tool_info["url_suffix"])
+    url = "https://github.com/bytecodealliance/wizer/releases/download/v{}/{}".format(version, asset_name)
+    
+    # Determine archive type from suffix
+    archive_type = "zip" if tool_info["url_suffix"].endswith(".zip") else "tar.xz"
+    
     return {
-        "url": "https://github.com/bytecodealliance/wizer/releases/download/v{}/{}".format(version, asset_name),
-        "sha256": info["sha256"],
-        "type": info["type"],
-        "strip_prefix": info["strip_prefix"].format(version),
+        "url": url,
+        "sha256": tool_info["sha256"],
+        "type": archive_type,
+        "strip_prefix": tool_info["strip_prefix"],
     }
 
 def _wizer_toolchain_repository_impl(ctx):

@@ -63,6 +63,8 @@ export default defineConfig({
 					items: [
 						{ label: 'Rust Components', slug: 'languages/rust' },
 						{ label: 'Go Components', slug: 'languages/go' },
+						{ label: 'JavaScript & TypeScript', slug: 'languages/javascript' },
+						{ label: 'C & C++', slug: 'languages/cpp' },
 					],
 				},
 				{

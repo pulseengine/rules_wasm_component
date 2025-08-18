@@ -309,7 +309,7 @@ cpp_component_toolchain(
     llvm_ar = ":llvm_ar_binary",
     wit_bindgen = ":wit_bindgen_binary",
     wasm_tools = ":wasm_tools_binary",
-    sysroot = "sysroot",
+    sysroot = ":sysroot_files",
     include_dirs = glob(["sysroot/include/**/*"]),
 )
 
