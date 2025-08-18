@@ -29,6 +29,91 @@ def _detect_host_platform(repository_ctx):
     else:
         fail("Unsupported operating system: {}".format(os_name))
 
+def _download_go(repository_ctx, version, platform):
+    """Download hermetic Go SDK for TinyGo to use"""
+    
+    go_version = "1.24.4"  # Match the version TinyGo expects
+    
+    # Map platform to Go's naming convention
+    go_platform_map = {
+        "darwin_amd64": "darwin-amd64",
+        "darwin_arm64": "darwin-arm64", 
+        "linux_amd64": "linux-amd64",
+        "windows_amd64": "windows-amd64",
+    }
+    
+    go_platform = go_platform_map.get(platform)
+    if not go_platform:
+        fail("Unsupported platform for Go SDK: {}".format(platform))
+    
+    go_url = "https://go.dev/dl/go{}.{}.tar.gz".format(go_version, go_platform)
+    
+    print("Downloading Go {} for TinyGo from: {}".format(go_version, go_url))
+    
+    # Download and extract Go SDK
+    repository_ctx.download_and_extract(
+        url = go_url,
+        output = "go_sdk",
+        stripPrefix = "go",
+    )
+    
+    # Verify Go installation
+    go_binary = repository_ctx.path("go_sdk/bin/go")
+    if not go_binary.exists:
+        fail("Go binary not found after download: {}".format(go_binary))
+    
+    result = repository_ctx.execute([go_binary, "version"])
+    if result.return_code != 0:
+        fail("Go installation test failed: {}".format(result.stderr))
+    
+    print("Successfully installed Go for TinyGo: {}".format(result.stdout.strip()))
+    
+    return go_binary
+
+def _download_binaryen(repository_ctx, platform):
+    """Download Binaryen (wasm-opt) for the specified platform"""
+    
+    binaryen_version = "123"  # Latest stable version
+    
+    # Map platform to Binaryen's naming convention
+    binaryen_platform_map = {
+        "darwin_amd64": "x86_64-macos",
+        "darwin_arm64": "arm64-macos", 
+        "linux_amd64": "x86_64-linux",
+        "windows_amd64": "x86_64-windows",
+    }
+    
+    binaryen_platform = binaryen_platform_map.get(platform)
+    if not binaryen_platform:
+        fail("Unsupported platform for Binaryen: {}".format(platform))
+    
+    binaryen_url = "https://github.com/WebAssembly/binaryen/releases/download/version_{}/binaryen-version_{}-{}.tar.gz".format(
+        binaryen_version, binaryen_version, binaryen_platform
+    )
+    
+    print("Downloading Binaryen {} for {}".format(binaryen_version, platform))
+    
+    # Download and extract Binaryen
+    repository_ctx.download_and_extract(
+        url = binaryen_url,
+        output = "binaryen",
+        stripPrefix = "binaryen-version_{}".format(binaryen_version),
+    )
+    
+    # Verify wasm-opt installation
+    wasm_opt_binary = repository_ctx.path("binaryen/bin/wasm-opt")
+    if not wasm_opt_binary.exists:
+        fail("wasm-opt binary not found after download: {}".format(wasm_opt_binary))
+    
+    # Test wasm-opt installation
+    result = repository_ctx.execute([wasm_opt_binary, "--version"])
+    if result.return_code != 0:
+        fail("wasm-opt installation test failed: {}".format(result.stderr))
+    
+    print("Successfully installed Binaryen: {}".format(result.stdout.strip()))
+    
+    return wasm_opt_binary
+
 def _download_tinygo(repository_ctx, version, platform):
     """Download TinyGo release for the specified platform and version"""
 
@@ -142,6 +227,12 @@ def _tinygo_toolchain_repository_impl(repository_ctx):
 
     print("Setting up TinyGo toolchain v{} for {}".format(tinygo_version, platform))
 
+    # Download hermetic Go SDK for TinyGo
+    go_binary = _download_go(repository_ctx, tinygo_version, platform)
+
+    # Download Binaryen (wasm-opt) for TinyGo optimization
+    wasm_opt_binary = _download_binaryen(repository_ctx, platform)
+
     # Download and set up TinyGo
     tinygo_binary = _download_tinygo(repository_ctx, tinygo_version, platform)
 
@@ -160,6 +251,34 @@ package(default_visibility = ["//visibility:public"])
 filegroup(
     name = "tinygo_files",
     srcs = glob(["tinygo/**/*"]),
+    visibility = ["//visibility:public"],
+)
+
+# Hermetic Go SDK files
+filegroup(
+    name = "go_sdk_files",
+    srcs = glob(["go_sdk/**/*"]),
+    visibility = ["//visibility:public"],
+)
+
+# Binaryen files
+filegroup(
+    name = "binaryen_files",
+    srcs = glob(["binaryen/**/*"]),
+    visibility = ["//visibility:public"],
+)
+
+# Go binary for TinyGo
+alias(
+    name = "go_binary",
+    actual = "go_sdk/bin/go",
+    visibility = ["//visibility:public"],
+)
+
+# wasm-opt binary from Binaryen
+alias(
+    name = "wasm_opt_binary",
+    actual = "binaryen/bin/wasm-opt",
     visibility = ["//visibility:public"],
 )
 
@@ -183,6 +302,10 @@ tinygo_toolchain(
     tinygo = ":tinygo_binary",
     tinygo_files = ":tinygo_files",
     wit_bindgen_go = ":wit_bindgen_go_binary",
+    go = ":go_binary",
+    go_sdk_files = ":go_sdk_files",
+    wasm_opt = ":wasm_opt_binary",
+    binaryen_files = ":binaryen_files",
 )
 
 # Toolchain definition
@@ -226,6 +349,10 @@ def _tinygo_toolchain_impl(ctx):
             tinygo = ctx.executable.tinygo,
             tinygo_files = ctx.attr.tinygo_files,
             wit_bindgen_go = ctx.executable.wit_bindgen_go,
+            go = ctx.executable.go if hasattr(ctx.executable, "go") else None,
+            go_sdk_files = ctx.attr.go_sdk_files if hasattr(ctx.attr, "go_sdk_files") else None,
+            wasm_opt = ctx.executable.wasm_opt if hasattr(ctx.executable, "wasm_opt") else None,
+            binaryen_files = ctx.attr.binaryen_files if hasattr(ctx.attr, "binaryen_files") else None,
             # WASI Preview 2 configuration
             wasip2_target = "wasip2",
             component_model_support = True,
@@ -254,6 +381,30 @@ tinygo_toolchain = rule(
             cfg = "exec",
             doc = "wit-bindgen-go tool",
             mandatory = True,
+        ),
+        "go": attr.label(
+            allow_single_file = True,
+            executable = True,
+            cfg = "exec",
+            doc = "Hermetic Go binary for TinyGo",
+            mandatory = False,
+        ),
+        "go_sdk_files": attr.label(
+            allow_files = True,
+            doc = "Hermetic Go SDK files for TinyGo",
+            mandatory = False,
+        ),
+        "wasm_opt": attr.label(
+            allow_single_file = True,
+            executable = True,
+            cfg = "exec",
+            doc = "wasm-opt binary from Binaryen",
+            mandatory = False,
+        ),
+        "binaryen_files": attr.label(
+            allow_files = True,
+            doc = "Binaryen installation files",
+            mandatory = False,
         ),
     },
 )

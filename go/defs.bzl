@@ -23,6 +23,26 @@ load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_go_module_action")
 
+def _build_tool_path_resolution(tool_paths):
+    """Build shell script code to resolve relative tool paths to absolute paths"""
+    if not tool_paths:
+        return 'TOOL_PATHS="/usr/bin:/bin"  # fallback'
+    
+    resolution_code = []
+    for i, path in enumerate(tool_paths):
+        resolution_code.append("""
+if [[ "{path}" = /* ]]; then
+    TOOL_PATH_{i}="{path}"
+else
+    TOOL_PATH_{i}="$(pwd)/{path}"
+fi""".format(path=path, i=i))
+    
+    # Add system utilities to PATH
+    path_assignment = "TOOL_PATHS=" + ":".join(["\"$TOOL_PATH_%d\"" % i for i in range(len(tool_paths))]) + ":/usr/bin:/bin"
+    resolution_code.append("\n" + path_assignment)
+    
+    return "".join(resolution_code)
+
 def _go_wasm_component_impl(ctx):
     """Implementation of go_wasm_component rule - THE BAZEL WAY"""
 
@@ -37,26 +57,19 @@ def _go_wasm_component_impl(ctx):
     tinygo = tinygo_toolchain.tinygo
     wasm_tools = wasm_tools_toolchain.wasm_tools
     
-    # Get hermetic Go binary from exec configuration
-    go_sdk = ctx.attr._go_binary
-    go_binary = None
-    if go_sdk and hasattr(go_sdk, "files"):
-        # Find the go binary in the SDK files
-        for file in go_sdk.files.to_list():
-            if file.basename == "go" and file.is_executable:
-                go_binary = file
-                print("DEBUG: Found hermetic Go binary at: %s" % go_binary.path)
-                break
+    # Get hermetic Go binary from TinyGo toolchain
+    go_binary = getattr(tinygo_toolchain, "go", None)
+    if go_binary:
+        print("DEBUG: Found hermetic Go binary from TinyGo toolchain: %s" % go_binary.path)
+    else:
+        print("DEBUG: No Go binary provided by TinyGo toolchain")
     
-    if not go_binary:
-        print("DEBUG: No hermetic Go binary found in SDK: %s" % go_sdk)
-        if go_sdk and hasattr(go_sdk, "files"):
-            files = go_sdk.files.to_list()
-            print("DEBUG: SDK contains %d files: %s" % (len(files), [f.path for f in files[:5]]))
-            print("DEBUG: Looking for executable files with basename 'go'")
-            for file in files:
-                if file.basename == "go":
-                    print("DEBUG: Found 'go' file at %s, executable: %s" % (file.path, file.is_executable))
+    # Get wasm-opt binary from TinyGo toolchain
+    wasm_opt_binary = getattr(tinygo_toolchain, "wasm_opt", None)
+    if wasm_opt_binary:
+        print("DEBUG: Found wasm-opt binary from TinyGo toolchain: %s" % wasm_opt_binary.path)
+    else:
+        print("DEBUG: No wasm-opt binary provided by TinyGo toolchain")
 
     # Validate toolchain binaries
     if not tinygo:
@@ -72,7 +85,7 @@ def _go_wasm_component_impl(ctx):
     go_module_files = _prepare_go_module(ctx, tinygo_toolchain)
 
     # Step 2: Compile with TinyGo to WASM module
-    _compile_tinygo_module(ctx, tinygo, go_binary, wasm_module, go_module_files)
+    _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, wasm_tools_toolchain, wasm_module, go_module_files)
 
     # Step 3: Convert module to component if needed
     _convert_to_component(ctx, wasm_tools, wasm_module, component_wasm)
@@ -120,7 +133,7 @@ def _prepare_go_module(ctx, tinygo_toolchain):
 
     return module_dir
 
-def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_module, go_module_files):
+def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, wasm_tools_toolchain, wasm_module, go_module_files):
     """Compile Go sources to WASM module using TinyGo - THE BAZEL WAY"""
 
     # Validate inputs
@@ -148,11 +161,11 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_module, go_module_files)
         wasm_module.path,
     ]
 
-    # Add optimization flags
+    # Add optimization flags (now we have hermetic wasm-opt)
     if ctx.attr.optimization == "release":
-        tinygo_args.extend(["-opt=2", "-no-debug"])
+        tinygo_args.extend(["-opt=2", "-no-debug"])  # Use full optimization with wasm-opt
     else:
-        tinygo_args.extend(["-opt=1"])
+        tinygo_args.extend(["-opt=1"])  # Use basic optimization for debug
 
     # Add WIT integration if available
     if ctx.attr.wit and ctx.attr.world:
@@ -207,6 +220,19 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_module, go_module_files)
     if go_binary:
         go_bin_dir = go_binary.dirname
         tool_paths.append(go_bin_dir)
+        print("DEBUG: Added Go binary directory to PATH: %s" % go_bin_dir)
+    
+    # Include wasm-opt binary directory from Binaryen
+    if wasm_opt_binary:
+        wasm_opt_bin_dir = wasm_opt_binary.dirname
+        tool_paths.append(wasm_opt_bin_dir)
+        print("DEBUG: Added wasm-opt binary directory to PATH: %s" % wasm_opt_bin_dir)
+    
+    # Include wasm-tools binary directory
+    if wasm_tools:
+        wasm_tools_bin_dir = wasm_tools.dirname
+        tool_paths.append(wasm_tools_bin_dir)
+        print("DEBUG: Added wasm-tools binary directory to PATH: %s" % wasm_tools_bin_dir)
 
     # Set up environment - THE BAZEL WAY with proper path handling
     # Build environment with absolute paths for TinyGo
@@ -241,6 +267,10 @@ fi
 # Create GOCACHE directory if it doesn't exist
 mkdir -p "{cache_path}"
 
+# Build absolute PATH from relative tool paths
+TOOL_PATHS=""
+{tool_path_resolution}
+
 # Set up environment with absolute paths
 export TINYGOROOT
 export GOCACHE="{cache_path}"
@@ -249,7 +279,8 @@ export GO111MODULE="off"
 export GOPROXY="direct"
 export HOME="{home_path}"
 export TMPDIR="{tmp_path}"
-export PATH="{tool_path}"
+export PATH="$TOOL_PATHS"
+# Note: WASMOPT is not set - TinyGo will find wasm-opt in PATH
 
 # Debug output (can be disabled in production)
 echo "TinyGo wrapper environment:"
@@ -266,7 +297,7 @@ exec "$@"
         cache_path = abs_cache_path,
         home_path = temp_cache_dir.path,
         tmp_path = temp_cache_dir.path,
-        tool_path = ":".join(tool_paths),
+        tool_path_resolution = _build_tool_path_resolution(tool_paths),
     )
 
     ctx.actions.write(
@@ -278,14 +309,24 @@ exec "$@"
     # Prepare wrapper arguments: wrapper_script + tinygo_binary + tinygo_args
     wrapper_args = [tinygo.path] + tinygo_args
 
-    # Prepare inputs including wrapper script and hermetic Go binary (if available)
-    inputs = [go_module_files, tinygo, wrapper_script]
+    # Prepare inputs including wrapper script and hermetic binaries (if available)
+    inputs = [go_module_files, tinygo, wrapper_script, wasm_tools]
     if go_binary:
         inputs.append(go_binary)
+    if wasm_opt_binary:
+        inputs.append(wasm_opt_binary)
 
     # Include TinyGo toolchain files for complete environment
     if hasattr(tinygo_toolchain, "tinygo_files") and tinygo_toolchain.tinygo_files:
         inputs.extend(tinygo_toolchain.tinygo_files.files.to_list())
+    
+    # Include Binaryen files for wasm-opt
+    if hasattr(tinygo_toolchain, "binaryen_files") and tinygo_toolchain.binaryen_files:
+        inputs.extend(tinygo_toolchain.binaryen_files.files.to_list())
+    
+    # Include wasm-tools files
+    if hasattr(wasm_tools_toolchain, "wasm_tools_files") and wasm_tools_toolchain.wasm_tools_files:
+        inputs.extend(wasm_tools_toolchain.wasm_tools_files.files.to_list())
 
     if ctx.attr.wit:
         wit_info = ctx.attr.wit[WitInfo]
@@ -344,11 +385,6 @@ go_wasm_component = rule(
             doc = "Optimization level: 'debug' or 'release'",
             default = "release",
             values = ["debug", "release"],
-        ),
-        "_go_binary": attr.label(
-            default = "@go_toolchains//:_0000_main___download_0_go_darwin_arm64",
-            cfg = "exec",
-            doc = "Hermetic Go binary for TinyGo compilation",
         ),
     },
     toolchains = [
