@@ -67,8 +67,8 @@ load("@rules_wasm_component//wkg:defs.bzl", "wkg_wit_deps")
 wkg_wit_deps(
     name = "registry_interfaces",
     packages = [
-        "wasi:io@0.2.6",
-        "wasi:http@0.2.1",
+        "wasi:io@0.2.3",
+        "wasi:http@0.2.3",
         "bytecodealliance:preview2-adapter@0.1.0",
     ],
     registry = "registry.wasm.org",  # Default WKG registry
@@ -230,7 +230,7 @@ wit_library(
 package example:my-component@1.0.0;
 
 world my-world {
-    import wasi:io/streams@0.2.6;  // Import external interface
+    import wasi:io/streams@0.2.3;  // Import external interface
     export my-api;
 }
 ```
@@ -369,10 +369,10 @@ load("@rules_wasm_component//wkg:defs.bzl", "wkg_component", "wkg_wit_deps")
 wkg_wit_deps(
     name = "wasi_interfaces",
     packages = [
-        "wasi:io@0.2.6",
-        "wasi:http@0.2.1",
-        "wasi:filesystem@0.2.1",
-        "wasi:cli@0.2.1",
+        "wasi:io@0.2.3",
+        "wasi:http@0.2.3",
+        "wasi:filesystem@0.2.3",
+        "wasi:cli@0.2.3",
     ],
 )
 
@@ -390,8 +390,8 @@ wkg_component(
 package myorg:web-service@1.0.0;
 
 // Import from WKG registry (these are resolved automatically)
-import wasi:http@0.2.1;
-import wasi:io@0.2.6;
+import wasi:http@0.2.3;
+import wasi:io@0.2.3;
 
 interface web-handler {
     handle-request: func(
@@ -400,8 +400,8 @@ interface web-handler {
 }
 
 world web-service {
-    import wasi:http@0.2.1;
-    import wasi:io@0.2.6;
+    import wasi:http@0.2.3;
+    import wasi:io@0.2.3;
     export web-handler;
 }
 ```
@@ -556,9 +556,9 @@ def production_wit_dependencies():
     wkg_wit_deps(
         name = "production_wasi",
         packages = [
-            "wasi:io@0.2.6",           # Stable release
-            "wasi:http@0.2.1",         # Stable release
-            "wasi:filesystem@0.2.1",   # Stable release
+            "wasi:io@0.2.3",           # Stable release
+            "wasi:http@0.2.3",         # Stable release
+            "wasi:filesystem@0.2.3",   # Stable release
         ],
         registry = "registry.wasm.org",
     )
@@ -744,7 +744,7 @@ Import external interfaces in your WIT definitions:
 package example:my-app@1.0.0;
 
 // Import external interfaces
-import wasi:io/streams@0.2.6;
+import wasi:io/streams@0.2.3;
 import wasm:http-client@2.1.0;
 import db:sql@1.0.0;
 import company:common@3.0.0;
@@ -760,7 +760,7 @@ interface my-service {
 }
 
 world my-service-world {
-    import wasi:io/streams@0.2.6;
+    import wasi:io/streams@0.2.3;
     import wasm:http-client@2.1.0;
     import db:sql@1.0.0;
     import company:common@3.0.0;

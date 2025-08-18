@@ -628,7 +628,7 @@ use_repo(wasi_wit_ext, "wasi_io")  # Add more as needed
 
 | Package | Repository | Usage |
 |---------|------------|-------|
-| `@wasi_io//:streams` | `wasi:io@0.2.6` | I/O streams, error handling |
+| `@wasi_io//:streams` | `wasi:io@0.2.3` | I/O streams, error handling |
 
 ### Using in WIT Files
 
@@ -636,7 +636,7 @@ use_repo(wasi_wit_ext, "wasi_io")  # Add more as needed
 package example:my-component@1.0.0;
 
 world my-world {
-    import wasi:io/streams@0.2.6;  // Use external interface
+    import wasi:io/streams@0.2.3;  // Use external interface
     export my-api;
 }
 ```
