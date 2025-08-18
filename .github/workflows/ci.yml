@@ -103,7 +103,7 @@ jobs:
         run: |
           # Build core working targets, exclude incomplete/problematic examples
           # Using explicit inclusions to avoid JavaScript component issues
-          bazel build -- \
+          bazel build --keep_going -- \
             //examples/go_component/... \
             //examples/basic/... \
             //examples/simple_module/... \
@@ -121,8 +121,7 @@ jobs:
             //test/unit/... \
             //test/integration/... \
             //docs-site/... \
-            -//examples/cpp_component/multi_component_system:analytics_service \
-            --keep_going
+            -//examples/cpp_component/multi_component_system:analytics_service
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
@@ -187,7 +186,7 @@ jobs:
         run: |
           # Build core working targets using explicit inclusions
           # Same approach as Linux but with macOS-specific exclusions
-          bazel build -- \
+          bazel build --keep_going -- \
             //examples/go_component/... \
             //examples/basic/... \
             //examples/simple_module/... \
@@ -209,8 +208,7 @@ jobs:
             -//examples/simple_oci_test/... \
             -//examples/microservices_architecture/... \
             -//test/integration:validate_consumer_deps \
-            -//test_wit_deps/consumer:check_deps \
-            --keep_going
+            -//test_wit_deps/consumer:check_deps
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
