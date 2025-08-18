@@ -775,7 +775,7 @@ Reference external dependencies in your build targets:
 
 ```starlark title="BUILD.bazel"
 load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 # WIT library with external dependencies
 wit_library(
@@ -797,10 +797,9 @@ wit_markdown(
 )
 
 # Build component with all dependencies resolved
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "my_service",
     srcs = ["src/lib.rs"],
-    world = "my-service-world",
     wit = ":my_service_wit",
 )
 ```

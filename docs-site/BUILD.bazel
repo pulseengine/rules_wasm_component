@@ -127,9 +127,9 @@ genrule(
     <div class="feature">
         <h3>📦 Quick Start Example</h3>
         <div class="example">
-<pre><code>load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+<pre><code>load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "hello_component",
     srcs = ["src/lib.rs"],
     wit = "component.wit",

@@ -47,7 +47,7 @@ The **WebAssembly Component Model** is a revolutionary approach to building port
 Building WebAssembly components traditionally involves complex toolchains and manual configuration. **rules_wasm_component** makes it as easy as:
 
 ```python
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "my_service",
     srcs = ["src/lib.rs"],
     wit = ":my_interfaces",
@@ -103,7 +103,7 @@ Create your first WebAssembly component in just a few steps:
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 wit_library(
     name = "hello_interfaces",
@@ -111,7 +111,7 @@ wit_library(
     package_name = "hello:world@1.0.0",
 )
 
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "hello_component",
     srcs = ["src/lib.rs"],
     wit = ":hello_interfaces",

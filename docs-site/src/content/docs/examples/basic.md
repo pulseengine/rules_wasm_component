@@ -62,7 +62,7 @@ Think of this as defining a microservice API, but one that works across any lang
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 # Define WIT library target
 wit_library(
@@ -72,13 +72,10 @@ wit_library(
 )
 
 # Build Rust WebAssembly component
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "basic_component",
     srcs = ["src/lib.rs"],
     wit = ":hello_interfaces",
-    deps = [
-        "@crates//:wit-bindgen",
-    ],
 )
 
 # Test the component
@@ -91,7 +88,7 @@ rust_wasm_component_test(
 **What each target does:**
 
 - **`wit_library`** - Processes your WIT file and validates the interface
-- **`rust_wasm_component`** - Compiles your Rust code into a WebAssembly component
+- **`rust_wasm_component_bindgen`** - Compiles your Rust code into a WebAssembly component
 - **`rust_wasm_component_test`** - Creates tests for your component
 
 The build system handles all the complexity: downloading toolchains, generating bindings, compiling to WebAssembly, and packaging as a component.
