@@ -1,9 +1,59 @@
 {
   "tool_name": "wasi-sdk",
   "github_repo": "WebAssembly/wasi-sdk",
-  "latest_version": "25",
-  "last_checked": "2025-01-02T10:30:00Z",
+  "latest_version": "27",
+  "last_checked": "2025-08-18T10:30:00Z",
   "versions": {
+    "27": {
+      "release_date": "2025-07-28",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "163dfd47f989b1a682744c1ae1f0e09a83ff5c4bbac9dcd8546909ab54cda5a1",
+          "url_suffix": "macos.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "055c3dc2766772c38e71a05d353e35c322c7b2c6458a36a26a836f9808a550f8",
+          "url_suffix": "macos.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "b7d4d944c88503e4f21d84af07ac293e3440b1b6210bfd7fe78e0afd92c23bc2",
+          "url_suffix": "linux.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "4cf4c553c4640e63e780442146f87d83fdff5737f988c06a6e3b2f0228e37665",
+          "url_suffix": "linux.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "windows.tar.gz"
+        }
+      }
+    },
+    "26": {
+      "release_date": "2025-07-28",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "9853b66701d017cb17e53beb2e540e522bdded772fd1661ce29a88eb8b333902",
+          "url_suffix": "macos.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "f6c76a183cf7fce9fc8af95b10f851a679f8ea6dae0354c5f84b52157a3398e1",
+          "url_suffix": "macos.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "37cddd06e354b0354db40e42a011752b0d5b77075af4bc5a2e0999aab908484e",
+          "url_suffix": "linux.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "7ba6e76f2b1bb7b85429ebe96a4d867923f14cbd77a55f31fca6e02b26fe0754",
+          "url_suffix": "linux.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
+          "url_suffix": "windows.tar.gz"
+        }
+      }
+    },
     "25": {
       "release_date": "2024-11-01",
       "platforms": {

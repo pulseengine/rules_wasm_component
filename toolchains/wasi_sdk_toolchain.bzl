@@ -415,7 +415,7 @@ wasi_sdk_repository = repository_rule(
         ),
         "version": attr.string(
             doc = "WASI SDK version",
-            default = "22",
+            default = "27",
         ),
         "url": attr.string(
             doc = "Custom download URL (optional)",
