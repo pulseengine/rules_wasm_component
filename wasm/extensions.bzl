@@ -130,7 +130,7 @@ def _wasi_sdk_extension_impl(module_ctx):
         wasi_sdk_repository(
             name = "wasi_sdk",
             strategy = "download",
-            version = "25",
+            version = "27",
         )
 
 # Module extension for WASI SDK
@@ -150,7 +150,7 @@ wasi_sdk = module_extension(
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download strategy)",
-                    default = "25",
+                    default = "27",
                 ),
                 "url": attr.string(
                     doc = "Custom download URL for WASI SDK (optional)",
@@ -297,7 +297,7 @@ def _cpp_component_extension_impl(module_ctx):
         cpp_component_toolchain_repository(
             name = "cpp_component_toolchain",
             strategy = "download",
-            wasi_sdk_version = "24",
+            wasi_sdk_version = "27",
         )
 
 # Module extension for C/C++ WebAssembly components
@@ -317,7 +317,7 @@ cpp_component = module_extension(
                 ),
                 "wasi_sdk_version": attr.string(
                     doc = "WASI SDK version to use",
-                    default = "24",
+                    default = "27",
                 ),
             },
         ),

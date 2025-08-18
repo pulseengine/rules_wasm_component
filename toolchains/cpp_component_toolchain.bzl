@@ -158,7 +158,7 @@ def _setup_built_cpp_tools(repository_ctx):
     # For now, fall back to download strategy
     print("Build strategy not yet implemented for C/C++ toolchain, using download strategy")
     platform = _detect_host_platform(repository_ctx)
-    _setup_downloaded_cpp_tools(repository_ctx, platform, "25")
+    _setup_downloaded_cpp_tools(repository_ctx, platform, "27")
 
 def _get_wasi_sdk_url(platform, version):
     """Get WASI SDK download URL for platform and version"""
@@ -340,7 +340,7 @@ cpp_component_toolchain_repository = repository_rule(
         ),
         "wasi_sdk_version": attr.string(
             doc = "WASI SDK version to use",
-            default = "24",
+            default = "27",
         ),
     },
 )
