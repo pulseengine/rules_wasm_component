@@ -15,6 +15,7 @@ def _cpp_component_impl(ctx):
     wit_bindgen = cpp_toolchain.wit_bindgen
     wasm_tools = cpp_toolchain.wasm_tools
     sysroot = cpp_toolchain.sysroot
+    sysroot_files = cpp_toolchain.sysroot_files
 
     # Output files
     component_wasm = ctx.actions.declare_file(ctx.attr.name + ".wasm")
@@ -369,6 +370,7 @@ def _cc_component_library_impl(ctx):
     clang = cpp_toolchain.clang if ctx.attr.language == "c" else cpp_toolchain.clang_cpp
     llvm_ar = cpp_toolchain.llvm_ar
     sysroot = cpp_toolchain.sysroot
+    sysroot_files = cpp_toolchain.sysroot_files
 
     # Output library
     library = ctx.actions.declare_file("lib{}.a".format(ctx.attr.name))
