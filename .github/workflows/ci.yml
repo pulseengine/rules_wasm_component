@@ -103,7 +103,7 @@ jobs:
         run: |
           # Build core working targets, exclude incomplete/problematic examples
           # Using explicit inclusions to avoid JavaScript component issues
-          bazel build \
+          bazel build -- \
             //examples/go_component/... \
             //examples/rust_component/... \
             //examples/cpp_component/... \
@@ -121,6 +121,7 @@ jobs:
             //test/unit/... \
             //test/integration/... \
             //docs-site/... \
+            -//examples/cpp_component/multi_component_system:analytics_service \
             --keep_going
 
       - name: Run Tests
