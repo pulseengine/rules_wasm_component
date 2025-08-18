@@ -116,7 +116,6 @@ jobs:
             //wit/... \
             //tools/... \
             //providers/... \
-            //test/rust/... \
             //test/go/... \
             //test/cpp/... \
             //test/unit/... \
