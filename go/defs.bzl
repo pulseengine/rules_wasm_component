@@ -36,6 +36,27 @@ def _go_wasm_component_impl(ctx):
 
     tinygo = tinygo_toolchain.tinygo
     wasm_tools = wasm_tools_toolchain.wasm_tools
+    
+    # Get hermetic Go binary from exec configuration
+    go_sdk = ctx.attr._go_binary
+    go_binary = None
+    if go_sdk and hasattr(go_sdk, "files"):
+        # Find the go binary in the SDK files
+        for file in go_sdk.files.to_list():
+            if file.basename == "go" and file.is_executable:
+                go_binary = file
+                print("DEBUG: Found hermetic Go binary at: %s" % go_binary.path)
+                break
+    
+    if not go_binary:
+        print("DEBUG: No hermetic Go binary found in SDK: %s" % go_sdk)
+        if go_sdk and hasattr(go_sdk, "files"):
+            files = go_sdk.files.to_list()
+            print("DEBUG: SDK contains %d files: %s" % (len(files), [f.path for f in files[:5]]))
+            print("DEBUG: Looking for executable files with basename 'go'")
+            for file in files:
+                if file.basename == "go":
+                    print("DEBUG: Found 'go' file at %s, executable: %s" % (file.path, file.is_executable))
 
     # Validate toolchain binaries
     if not tinygo:
@@ -51,7 +72,7 @@ def _go_wasm_component_impl(ctx):
     go_module_files = _prepare_go_module(ctx, tinygo_toolchain)
 
     # Step 2: Compile with TinyGo to WASM module
-    _compile_tinygo_module(ctx, tinygo, wasm_module, go_module_files)
+    _compile_tinygo_module(ctx, tinygo, go_binary, wasm_module, go_module_files)
 
     # Step 3: Convert module to component if needed
     _convert_to_component(ctx, wasm_tools, wasm_module, component_wasm)
@@ -99,7 +120,7 @@ def _prepare_go_module(ctx, tinygo_toolchain):
 
     return module_dir
 
-def _compile_tinygo_module(ctx, tinygo, wasm_module, go_module_files):
+def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_module, go_module_files):
     """Compile Go sources to WASM module using TinyGo - THE BAZEL WAY"""
 
     # Validate inputs
@@ -180,15 +201,12 @@ def _compile_tinygo_module(ctx, tinygo, wasm_module, go_module_files):
     if not tinygo_root or tinygo_root == "":
         fail("Failed to determine TINYGOROOT from TinyGo binary path: %s" % tinygo.path)
 
-    # Build PATH including common tool locations
-    # TODO: Make this more dynamic by detecting available wasm-opt locations
-    tool_paths = [
-        "/Users/r/.cargo/bin",  # Rust cargo tools (wasm-opt)
-        "/opt/homebrew/bin",  # Homebrew tools
-        "/usr/local/bin",  # Local tools
-        "/usr/bin",  # System tools
-        "/bin",  # Core system tools
-    ]
+    # Build PATH - hermetic toolchain approach
+    # Include Go binary directory from Bazel's hermetic Go toolchain if available
+    tool_paths = []
+    if go_binary:
+        go_bin_dir = go_binary.dirname
+        tool_paths.append(go_bin_dir)
 
     # Set up environment - THE BAZEL WAY with proper path handling
     # Build environment with absolute paths for TinyGo
@@ -237,6 +255,8 @@ export PATH="{tool_path}"
 echo "TinyGo wrapper environment:"
 echo "  TINYGOROOT=$TINYGOROOT"
 echo "  GOCACHE=$GOCACHE"
+echo "  PATH=$PATH"
+echo "  Go binary check: $(which go 2>/dev/null || echo 'NOT FOUND')"
 echo "  Executing: $@"
 
 # Execute TinyGo with resolved paths
@@ -258,8 +278,10 @@ exec "$@"
     # Prepare wrapper arguments: wrapper_script + tinygo_binary + tinygo_args
     wrapper_args = [tinygo.path] + tinygo_args
 
-    # Prepare inputs including wrapper script
+    # Prepare inputs including wrapper script and hermetic Go binary (if available)
     inputs = [go_module_files, tinygo, wrapper_script]
+    if go_binary:
+        inputs.append(go_binary)
 
     # Include TinyGo toolchain files for complete environment
     if hasattr(tinygo_toolchain, "tinygo_files") and tinygo_toolchain.tinygo_files:
@@ -323,10 +345,15 @@ go_wasm_component = rule(
             default = "release",
             values = ["debug", "release"],
         ),
+        "_go_binary": attr.label(
+            default = "@go_toolchains//:_0000_main___download_0_go_darwin_arm64",
+            cfg = "exec",
+            doc = "Hermetic Go binary for TinyGo compilation",
+        ),
     },
     toolchains = [
         "@rules_wasm_component//toolchains:tinygo_toolchain_type",
-        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
+        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type", 
         "@rules_wasm_component//toolchains:file_ops_toolchain_type",
     ],
     doc = """Builds a WebAssembly component from Go source using TinyGo + WASI Preview 2.
