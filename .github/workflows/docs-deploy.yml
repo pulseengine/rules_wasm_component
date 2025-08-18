@@ -47,17 +47,18 @@ jobs:
 
           # Extract deployment bundle for FTP upload
           echo "📂 Extracting deployment bundle..."
-          cd bazel-bin/docs-site
-          tar -xzf docs_deployment.tar.gz
+          mkdir -p deployment_temp
+          cd deployment_temp
+          tar -xzf ../bazel-bin/docs-site/docs_deployment.tar.gz
 
           # Verify deployment content
           echo "✅ Verifying deployment content..."
-          ls -la dist/
+          ls -la .
           echo "📄 Documentation site preview:"
-          head -5 dist/index.html | grep -E "(title|h1)" || echo "Basic HTML structure verified"
+          head -5 index.html | grep -E "(title|h1)" || echo "Basic HTML structure verified"
 
           # Check file size (should be reasonable)
-          SIZE=$(wc -c < dist/index.html)
+          SIZE=$(wc -c < index.html)
           echo "📊 Site size: ${SIZE} bytes"
           if [ $SIZE -lt 1000 ]; then
             echo "❌ Warning: Site seems too small"
@@ -77,7 +78,7 @@ jobs:
           server: ${{ env.NETCUP_URI }}
           username: ${{ env.NETCUP_USER }}
           password: ${{ env.NETCUP_PASSWORD }}
-          local-dir: ./bazel-bin/docs-site/dist/
+          local-dir: ./deployment_temp/
           server-dir: /
           exclude: |
             **/.git*
