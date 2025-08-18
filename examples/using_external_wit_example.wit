@@ -3,7 +3,7 @@
 package example:my-component@1.0.0;
 
 // Import external WIT interfaces
-import wasi:io/streams@0.2.6;                // From @wasi_io
+import wasi:io/streams@0.2.3;                // From @wasi_io
 import wasi:filesystem/types@0.2.1;          // From @wasi_filesystem
 import myorg:api/http-client@1.2.3;          // From @my_external_wit
 
@@ -20,7 +20,7 @@ interface my-api {
 
 world my-component-world {
     // Import the interfaces your component needs
-    import wasi:io/streams@0.2.6;
+    import wasi:io/streams@0.2.3;
     import wasi:filesystem/types@0.2.1;
     import myorg:api/http-client@1.2.3;
 
