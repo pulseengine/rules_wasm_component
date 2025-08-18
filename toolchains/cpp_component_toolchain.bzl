@@ -13,6 +13,7 @@ def _cpp_component_toolchain_impl(ctx):
         wit_bindgen = ctx.file.wit_bindgen,
         wasm_tools = ctx.file.wasm_tools,
         sysroot = ctx.file.sysroot,
+        sysroot_files = ctx.attr.sysroot_files,
         crt_objects = ctx.files.crt_objects,
         include_dirs = ctx.files.include_dirs,
     )
@@ -55,6 +56,9 @@ cpp_component_toolchain = rule(
         "sysroot": attr.label(
             allow_single_file = True,
             doc = "WASI SDK sysroot directory",
+        ),
+        "sysroot_files": attr.label(
+            doc = "WASI SDK sysroot files for dependency tracking",
         ),
         "crt_objects": attr.label_list(
             allow_files = [".o"],
@@ -309,7 +313,8 @@ cpp_component_toolchain(
     llvm_ar = ":llvm_ar_binary",
     wit_bindgen = ":wit_bindgen_binary",
     wasm_tools = ":wasm_tools_binary",
-    sysroot = ":sysroot_files",
+    sysroot = "sysroot",
+    sysroot_files = ":sysroot_files",
     include_dirs = glob(["sysroot/include/**/*"]),
 )
 
