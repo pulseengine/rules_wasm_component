@@ -55,7 +55,7 @@ world calculator {
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 wit_library(
     name = "calculator_interfaces",
@@ -63,14 +63,10 @@ wit_library(
     package_name = "calculator:math@1.0.0",
 )
 
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "calculator_component",
     srcs = ["src/lib.rs"],
     wit = ":calculator_interfaces",
-    deps = [
-        "@crates//:wit-bindgen",
-        "@crates//:anyhow",  # For error handling
-    ],
     # Multiple build profiles
     profiles = ["debug", "release"],
 )
@@ -238,15 +234,11 @@ bazel build //:calculator_component_release
 ### Custom Profile
 
 ```python title="BUILD.bazel"
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "calculator_optimized",
     srcs = ["src/lib.rs"],
     wit = ":calculator_interfaces",
-    rustc_flags = [
-        "-C", "opt-level=3",
-        "-C", "lto=fat",
-        "-C", "codegen-units=1",
-    ],
+    profiles = ["release"],  # Use release profile for optimization
 )
 ```
 
@@ -371,7 +363,7 @@ calculator_component_bindings::export!(Calculator with_types_in calculator_compo
 
 ```bash
 # Check available profiles
-bazel query 'kind(rust_wasm_component, //...)'
+bazel query 'kind(rust_wasm_component_bindgen, //...)'
 ```
 
 <div class="demo-buttons">

@@ -39,7 +39,7 @@ Let's start with a simple example to understand the fundamentals of component co
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 # Frontend component
@@ -49,11 +49,10 @@ wit_library(
     package_name = "frontend:ui@1.0.0",
 )
 
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "frontend_component",
     srcs = ["src/frontend.rs"],
     wit = ":frontend_interfaces",
-    deps = ["@crates//:wit-bindgen"],
 )
 
 # Backend component
@@ -63,11 +62,10 @@ wit_library(
     package_name = "backend:api@1.0.0",
 )
 
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "backend_component",
     srcs = ["src/backend.rs"],
     wit = ":backend_interfaces",
-    deps = ["@crates//:wit-bindgen"],
 )
 
 # Compose them together

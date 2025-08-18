@@ -21,11 +21,10 @@ wit_markdown(
 )
 
 # Use in your actual component build
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "my_component",
     srcs = ["src/lib.rs"],
-    world = "my-component-world",
     wit = ":my_component_wit",  # All dependencies automatically included
 )

@@ -118,7 +118,7 @@ Set up your `BUILD.bazel`:
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component", "rust_wasm_component_test")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen", "rust_wasm_component_test")
 
 # WIT interface library
 wit_library(
@@ -128,13 +128,10 @@ wit_library(
 )
 
 # Rust WebAssembly component
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "greeting_component",
     srcs = ["src/lib.rs"],
     wit = ":greeting_interfaces",
-    deps = [
-        "@crates//:wit-bindgen",
-    ],
 )
 
 # Component test

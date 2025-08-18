@@ -139,16 +139,11 @@ bazel build //examples/wizer_example:optimized_component
 ### Build Optimizations
 
 ```python
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "optimized_component",
     srcs = ["lib.rs"],
     wit = ":interfaces",
-    # Release optimizations
-    compilation_mode = "opt",
-    # Link-time optimization
-    rustc_flags = ["-C", "lto=fat"],
-    # Size optimization
-    wasm_opt = True,
+    profiles = ["release"],  # Release optimizations
 )
 ```
 
