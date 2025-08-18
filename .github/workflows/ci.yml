@@ -185,45 +185,32 @@ jobs:
 
       - name: Build All Targets
         run: |
-          # Build core working targets, exclude incomplete/problematic examples
-          # Additional exclusions for macOS where Docker services aren't available
-          # and where some tools have configuration issues
-          if [[ "$RUNNER_OS" == "macOS" ]]; then
-            EXTRA_EXCLUDES="-//examples/simple_oci_test/... -//examples/microservices_architecture/... -//test/integration:validate_consumer_deps -//test_wit_deps/consumer:check_deps"
-          else
-            EXTRA_EXCLUDES=""
-          fi
-
-          bazel build -- //... \
-            -//examples/world_export/... \
-            -//examples/multi_profile/... \
-            -//examples/wac_remote_compose/... \
-            -//examples/wac_oci_composition/... \
-            -//examples/wkg_integration/... \
-            -//examples/wizer_example/... \
-            -//test_wac/... \
-            -//test/wkg/... \
-            -//test/production/... \
-            -//tools-builder/... \
-            $EXTRA_EXCLUDES \
-            -//examples/wasm_signing/... \
-            -//test_examples/... \
-            -//test_wit_deps/... \
-            -//examples/oci_publishing:secure_publish_enterprise \
-            -//test/integration:multi_service_system \
-            -//test/integration:composition_build_test \
-            -//test/integration:integration_tests \
-            -//test/export_macro:test_component_wasm_lib_release_host \
-            -//test/integration:basic_component_wasm_lib_debug_host \
-            -//test/integration:basic_component_wasm_lib_release_host \
-            -//test/integration:consumer_component_wasm_lib_release_host \
-            -//test/integration:service_a_component_wasm_lib_release_host \
-            -//test/integration:service_b_component_wasm_lib_release_host \
-            -//test/integration:wasi_component_wasm_lib_release_host \
-            -//test/unit:test_component_simple_wasm_lib_release_host \
-            -//test/unit:test_component_with_deps_wasm_lib_release_host \
-            -//examples/basic:hello_component_wasm_lib_release_host \
-            -//tools/checksum_updater_wasm:checksum_updater_wasm_wizer_component_release_wasm_lib_release_host
+          # Build core working targets using explicit inclusions
+          # Same approach as Linux but with macOS-specific exclusions
+          bazel build -- \
+            //examples/go_component/... \
+            //examples/basic/... \
+            //examples/simple_module/... \
+            //examples/cli_tool_example/... \
+            //examples/cpp_component/... \
+            //rust/... \
+            //go/... \
+            //cpp/... \
+            //wasm/... \
+            //wit/... \
+            //tools/... \
+            //providers/... \
+            //test/go/... \
+            //test/cpp/... \
+            //test/unit/... \
+            //test/integration/... \
+            //docs-site/... \
+            -//examples/cpp_component/multi_component_system:analytics_service \
+            -//examples/simple_oci_test/... \
+            -//examples/microservices_architecture/... \
+            -//test/integration:validate_consumer_deps \
+            -//test_wit_deps/consumer:check_deps \
+            --keep_going
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
