@@ -123,7 +123,9 @@ jobs:
             //docs-site/... \
             -//examples/cpp_component/multi_component_system:analytics_service \
             -//examples/cli_tool_example:file_processor_cli_wasm_lib_release_host \
-            -//tools/checksum_updater_wasm/...
+            -//tools/checksum_updater_wasm/... \
+            -//test/integration:wasi_component_wasm_lib_release_host \
+            -//test/integration:service_b_component_wasm_lib_release_host
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
@@ -212,7 +214,9 @@ jobs:
             -//test/integration:validate_consumer_deps \
             -//test_wit_deps/consumer:check_deps \
             -//examples/cli_tool_example:file_processor_cli_wasm_lib_release_host \
-            -//tools/checksum_updater_wasm/...
+            -//tools/checksum_updater_wasm/... \
+            -//test/integration:wasi_component_wasm_lib_release_host \
+            -//test/integration:service_b_component_wasm_lib_release_host
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
