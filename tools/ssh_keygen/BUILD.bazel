@@ -6,15 +6,17 @@ Built as a WebAssembly component for hermetic execution.
 """
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
-load("//rust:defs.bzl", "rust_wasm_component")
+load("//rust:defs.bzl", "rust_wasm_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-# Hermetic ssh-keygen as WebAssembly component
-rust_wasm_component(
+# Hermetic ssh-keygen as WebAssembly CLI component
+# Built as proper WASI CLI binary that exports wasi:cli/command
+rust_binary(
     name = "ssh_keygen_component",
     srcs = ["src/main.rs"],
     edition = "2021",
+    platform = "//platforms:wasm32-wasip2",
     deps = [
         "@ssh_keygen_crates//:anyhow",
         "@ssh_keygen_crates//:clap",

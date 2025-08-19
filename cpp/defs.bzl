@@ -74,7 +74,7 @@ def _cpp_component_impl(ctx):
 
     # Basic compiler flags for Preview2
     compile_args.add("--target=wasm32-wasip2")
-    compile_args.add("--sysroot=" + sysroot.path)
+    compile_args.add("--sysroot=" + sysroot)
 
     # Component model definitions
     compile_args.add("-D_WASI_EMULATED_PROCESS_CLOCKS")
@@ -140,7 +140,7 @@ def _cpp_component_impl(ctx):
     ctx.actions.run(
         executable = clang,
         arguments = [compile_args],
-        inputs = [work_dir, sysroot] + dep_libraries,
+        inputs = [work_dir] + sysroot_files.files.to_list() + dep_libraries,
         outputs = [wasm_binary],
         mnemonic = "CompileCppWasm",
         progress_message = "Compiling C/C++ to WASM for %s" % ctx.label,
@@ -393,7 +393,7 @@ def _cc_component_library_impl(ctx):
         # Compile arguments
         compile_args = ctx.actions.args()
         compile_args.add("--target=wasm32-wasip2")
-        compile_args.add("--sysroot=" + sysroot.path)
+        compile_args.add("--sysroot=" + sysroot)
         compile_args.add("-c")  # Compile only, don't link
 
         # Component model definitions
@@ -446,7 +446,7 @@ def _cc_component_library_impl(ctx):
         ctx.actions.run(
             executable = clang,
             arguments = [compile_args],
-            inputs = [src, sysroot] + ctx.files.hdrs + dep_headers,
+            inputs = [src] + sysroot_files.files.to_list() + ctx.files.hdrs + dep_headers,
             outputs = [obj_file],
             mnemonic = "CompileCppObject",
             progress_message = "Compiling {} for component library".format(src.basename),

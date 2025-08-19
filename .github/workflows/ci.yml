@@ -126,7 +126,6 @@ jobs:
             -//tools/checksum_updater_wasm/... \
             -//test/integration:wasi_component_wasm_lib_release_host \
             -//test/integration:service_b_component_wasm_lib_release_host \
-            -//examples/oci_publishing:hello_oci_openssh_signed_image
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
@@ -218,7 +217,6 @@ jobs:
             -//tools/checksum_updater_wasm/... \
             -//test/integration:wasi_component_wasm_lib_release_host \
             -//test/integration:service_b_component_wasm_lib_release_host \
-            -//examples/oci_publishing:hello_oci_openssh_signed_image
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests

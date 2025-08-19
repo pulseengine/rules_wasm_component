@@ -1,0 +1,13 @@
+package test:wasi-nn-v0625;
+
+/// Test world for WASI-NN v0.2.0-rc-2024-06-25
+world nn-test-v0625 {
+    /// Import WASI-NN v0.2.0-rc-2024-06-25 interfaces
+    import wasi:nn/inference@0.2.0-rc-2024-06-25;
+    import wasi:nn/graph@0.2.0-rc-2024-06-25;
+    import wasi:nn/tensor@0.2.0-rc-2024-06-25;
+    import wasi:nn/errors@0.2.0-rc-2024-06-25;
+    
+    /// Test function for v0.2.0-rc-2024-06-25
+    export test-nn-v0625: func() -> string;
+}

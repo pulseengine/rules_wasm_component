@@ -1,0 +1,59 @@
+"""WASI Neural Network (WASI-NN) Test
+
+This test demonstrates that WASI-NN interfaces are properly available
+and can be imported by WebAssembly components.
+"""
+
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen", "rust_wasm_component_test")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Test WASI-NN latest version (0.2.0-rc-2024-10-28)
+wit_library(
+    name = "nn_test_interfaces",
+    package_name = "test:wasi-nn",
+    srcs = ["wit/nn-test.wit"],
+    world = "nn-test",
+    deps = ["@wasi_nn//:nn"],
+)
+
+# Test WASI-NN v0.2.0-rc-2024-06-25
+wit_library(
+    name = "nn_test_interfaces_v0625",
+    package_name = "test:wasi-nn-v0625",
+    srcs = ["wit/nn-test-v0625.wit"],
+    world = "nn-test-v0625",
+    deps = ["@wasi_nn_v0_2_0_rc_2024_06_25//:nn"],
+)
+
+# Test WASI-NN v0.2.0-rc-2024-08-19
+wit_library(
+    name = "nn_test_interfaces_v0819",
+    package_name = "test:wasi-nn-v0819",
+    srcs = ["wit/nn-test-v0819.wit"],
+    world = "nn-test-v0819",
+    deps = ["@wasi_nn_v0_2_0_rc_2024_08_19//:nn"],
+)
+
+# Build Rust WASM component that demonstrates WASI-NN usage
+wit_library(
+    name = "nn_example_interfaces",
+    package_name = "example:wasi-nn",
+    srcs = ["wit/nn-example.wit"],
+    world = "nn-example",
+    deps = ["@wasi_nn//:nn"],
+)
+
+rust_wasm_component_bindgen(
+    name = "nn_example_component",
+    srcs = ["src/lib.rs"],
+    profiles = ["release"],
+    wit = ":nn_example_interfaces",
+)
+
+# Test the component
+rust_wasm_component_test(
+    name = "nn_example_component_test",
+    component = ":nn_example_component",
+)

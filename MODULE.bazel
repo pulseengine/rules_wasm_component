@@ -27,17 +27,7 @@ bazel_dep(name = "rules_go", version = "0.55.1")
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.7.1", dev_dependency = True)
 
-# OpenSSH for proper SSH key generation
-bazel_dep(name = "openssh", version = "9.9p1.bcr.1")
-
-# Override rules_coreutils to fix busybox package 404 issue
-# openssh depends on outdated rules_coreutils 1.0.0-beta.6 which tries to download
-# busybox-static_1.35.0-4+b3_amd64.deb (404). Upgrade to 1.0.1 which should have
-# the correct package version (b4).
-single_version_override(
-    module_name = "rules_coreutils",
-    version = "1.0.1",
-)
+# Note: SSH key generation now uses hermetic WebAssembly component (tools/ssh_keygen)
 
 # Rust toolchain setup
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
@@ -71,7 +61,7 @@ register_toolchains("@go_toolchains//:all")
 # WASI WIT interface definitions
 wasi_wit_ext = use_extension("//wasm:extensions.bzl", "wasi_wit")
 wasi_wit_ext.init()
-use_repo(wasi_wit_ext, "wasi_cli", "wasi_cli_v020", "wasi_clocks", "wasi_clocks_v020", "wasi_filesystem", "wasi_http", "wasi_io", "wasi_io_v020", "wasi_nn", "wasi_random", "wasi_sockets")  # Complete WASI ecosystem (0.2.3 + 0.2.0 + NN)
+use_repo(wasi_wit_ext, "wasi_cli", "wasi_cli_v020", "wasi_clocks", "wasi_clocks_v020", "wasi_filesystem", "wasi_http", "wasi_io", "wasi_io_v020", "wasi_nn", "wasi_nn_v0_2_0_rc_2024_06_25", "wasi_nn_v0_2_0_rc_2024_08_19", "wasi_random", "wasi_sockets")  # Complete WASI ecosystem (0.2.3 + 0.2.0 + all NN versions)
 
 # WebAssembly toolchains
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")

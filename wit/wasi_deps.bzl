@@ -221,6 +221,67 @@ wit_library(
 """,
     )
 
+    # ========================================================================
+    # WASI Neural Network (WASI-NN) interfaces - All versions
+    # ========================================================================
+
+    # WASI-NN v0.2.0-rc-2024-06-25 (Initial release)
+    http_archive(
+        name = "wasi_nn_v0_2_0_rc_2024_06_25",
+        urls = ["https://github.com/WebAssembly/wasi-nn/archive/refs/tags/0.2.0-rc-2024-06-25.tar.gz"],
+        sha256 = "f95b982ea5d7475ff3825e65a6319d6ca1e7aa0a5f92c175ee27db1cd0b2ab06",
+        strip_prefix = "wasi-nn-0.2.0-rc-2024-06-25",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "nn",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:nn@0.2.0-rc-2024-06-25",
+    interfaces = ["tensor", "graph", "inference", "errors"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI-NN v0.2.0-rc-2024-08-19 (Mid release)
+    http_archive(
+        name = "wasi_nn_v0_2_0_rc_2024_08_19",
+        urls = ["https://github.com/WebAssembly/wasi-nn/archive/refs/tags/0.2.0-rc-2024-08-19.tar.gz"],
+        sha256 = "f512a77274cfda4f0afc47c417071a718ea379221987446b19e5060bba6594bc",
+        strip_prefix = "wasi-nn-0.2.0-rc-2024-08-19",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "nn",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:nn@0.2.0-rc-2024-08-19",
+    interfaces = ["tensor", "graph", "inference", "errors"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI-NN v0.2.0-rc-2024-10-28 (Latest release)
+    http_archive(
+        name = "wasi_nn",
+        urls = ["https://github.com/WebAssembly/wasi-nn/archive/refs/tags/0.2.0-rc-2024-10-28.tar.gz"],
+        sha256 = "2cefa3ff992bd064562547f92e20789a88770f0a6898c569b76125bc4f219ab5",
+        strip_prefix = "wasi-nn-0.2.0-rc-2024-10-28",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "nn",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:nn@0.2.0-rc-2024-10-28",
+    interfaces = ["tensor", "graph", "inference", "errors"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
     # Example: Add your own external WIT dependency
     # Replace with your actual repository URL, version, and package info
     # http_archive(
