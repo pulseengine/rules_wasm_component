@@ -11,6 +11,9 @@ clap = { version = "4.0", features = ["derive"] }
 ssh-key = { version = "0.6", features = ["ed25519", "rsa", "ecdsa", "rand_core"] }
 rand = "0.8"
 
+[dev-dependencies]
+tempfile = "3.0"
+
 [[bin]]
 name = "ssh-keygen"
 path = "src/main.rs"

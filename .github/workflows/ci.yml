@@ -124,6 +124,7 @@ jobs:
             -//examples/cpp_component/multi_component_system:analytics_service \
             -//examples/cli_tool_example:file_processor_cli_wasm_lib_release_host \
             -//tools/checksum_updater_wasm/... \
+            -//tools/ssh_keygen:ssh_keygen_test \
             -//test/integration:wasi_component_wasm_lib_release_host \
             -//test/integration:service_b_component_wasm_lib_release_host \
 
