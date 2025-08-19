@@ -1,0 +1,16 @@
+[package]
+name = "ssh_keygen"
+version = "0.1.0"
+edition = "2021"
+description = "Hermetic SSH key generation tool compatible with OpenSSH format"
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+ssh-key = { version = "0.6", features = ["ed25519", "rsa", "ecdsa", "rand_core"] }
+rand = "0.8"
+
+[[bin]]
+name = "ssh-keygen"
+path = "src/main.rs"
