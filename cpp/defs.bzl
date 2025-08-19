@@ -25,11 +25,24 @@ def _cpp_component_impl(ctx):
     headers = ctx.files.hdrs
     wit_file = ctx.file.wit
 
-    # Collect dependency headers
+    # Collect dependency headers and libraries using CcInfo provider
     dep_headers = []
     dep_libraries = []
+    dep_includes = []
+    
     for dep in ctx.attr.deps:
-        if DefaultInfo in dep:
+        if CcInfo in dep:
+            # Use proper CcInfo provider for header and library information
+            cc_info = dep[CcInfo]
+            dep_headers.extend(cc_info.compilation_context.headers.to_list())
+            dep_includes.extend(cc_info.compilation_context.includes.to_list())
+            # Extract static libraries from linking context
+            for linker_input in cc_info.linking_context.linker_inputs.to_list():
+                for library in linker_input.libraries:
+                    if library.static_library:
+                        dep_libraries.append(library.static_library)
+        elif DefaultInfo in dep:
+            # Fallback for non-CcInfo dependencies (e.g., legacy rules)
             for file in dep[DefaultInfo].files.to_list():
                 if file.extension in ["h", "hpp", "hh", "hxx"]:
                     dep_headers.append(file)
@@ -74,7 +87,17 @@ def _cpp_component_impl(ctx):
 
     # Basic compiler flags for Preview2
     compile_args.add("--target=wasm32-wasip2")
-    compile_args.add("--sysroot=" + sysroot)
+    # Compute sysroot path from sysroot_files for external repository compatibility
+    if sysroot_files and sysroot_files.files:
+        # Use the directory containing the sysroot files as the sysroot path
+        sysroot_file = sysroot_files.files.to_list()[0]
+        # Extract the repository-relative sysroot path
+        sysroot_path = sysroot_file.path.split("/sysroot/")[0] + "/sysroot"
+    else:
+        # Fallback to configured path
+        sysroot_path = sysroot
+    
+    compile_args.add("--sysroot=" + sysroot_path)
 
     # Component model definitions
     compile_args.add("-D_WASI_EMULATED_PROCESS_CLOCKS")
@@ -112,16 +135,21 @@ def _cpp_component_impl(ctx):
     
     # Add C++ standard library paths for wasm32-wasip2 target
     if ctx.attr.language == "cpp":
-        compile_args.add("-I" + sysroot + "/include/wasm32-wasip2/c++/v1")
-        compile_args.add("-I" + sysroot + "/include/c++/v1")
+        compile_args.add("-I" + sysroot_path + "/include/wasm32-wasip2/c++/v1")
+        compile_args.add("-I" + sysroot_path + "/include/c++/v1")
     
     for include in ctx.attr.includes:
         compile_args.add("-I" + include)
 
-    # Add dependency header directories
+    # Add dependency include directories from CcInfo
+    for include_dir in dep_includes:
+        if include_dir not in [work_dir.path] + ctx.attr.includes:
+            compile_args.add("-I" + include_dir)
+    
+    # Add dependency header directories (fallback for non-CcInfo deps)
     for dep_hdr in dep_headers:
         include_dir = dep_hdr.dirname
-        if include_dir not in [work_dir.path] + ctx.attr.includes:
+        if include_dir not in [work_dir.path] + ctx.attr.includes + dep_includes:
             compile_args.add("-I" + include_dir)
 
     # Defines
@@ -400,7 +428,9 @@ def _cc_component_library_impl(ctx):
         # Compile arguments
         compile_args = ctx.actions.args()
         compile_args.add("--target=wasm32-wasip2")
-        compile_args.add("--sysroot=" + sysroot)
+        # Resolve sysroot path dynamically for external repository compatibility
+        sysroot_dir = sysroot_files.files.to_list()[0].dirname if sysroot_files.files else sysroot
+        compile_args.add("--sysroot=" + sysroot_dir)
         compile_args.add("-c")  # Compile only, don't link
 
         # Component model definitions
@@ -480,8 +510,33 @@ def _cc_component_library_impl(ctx):
         progress_message = "Creating component library %s" % ctx.label,
     )
 
+    # Collect transitive headers and libraries from dependencies
+    transitive_headers = []
+    transitive_libraries = []
+    transitive_includes = []
+    
+    for dep in ctx.attr.deps:
+        if CcInfo in dep:
+            cc_info = dep[CcInfo]
+            transitive_headers.append(cc_info.compilation_context.headers)
+            transitive_includes.extend(cc_info.compilation_context.includes.to_list())
+            transitive_libraries.append(cc_info.linking_context.linker_inputs)
+
+    # Create compilation context with current headers and transitive headers
+    compilation_context = cc_common.create_compilation_context(
+        headers = depset(ctx.files.hdrs, transitive = transitive_headers),
+        includes = depset([h.dirname for h in ctx.files.hdrs] + ctx.attr.includes, transitive = [depset(transitive_includes)]),
+    )
+    
+    # Create CcInfo provider with compilation context only
+    # Note: We don't create linking context since we're using custom WASM toolchain
+    cc_info = CcInfo(
+        compilation_context = compilation_context,
+    )
+
     return [
         DefaultInfo(files = depset([library] + ctx.files.hdrs)),
+        cc_info,
         OutputGroupInfo(
             library = depset([library]),
             objects = depset(object_files),

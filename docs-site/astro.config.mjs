@@ -23,7 +23,16 @@ export default defineConfig({
 			expressiveCode: {
 				themes: ['github-dark', 'github-light'],
 				// Map languages for better syntax highlighting
-				langs: ['python', 'rust', 'go', 'javascript', 'typescript', 'bash', 'yaml', 'json', 'dockerfile', 'starlark']
+				langs: ['python', 'rust', 'go', 'javascript', 'typescript', 'bash', 'yaml', 'json', 'dockerfile'],
+				// Use Python grammar for Starlark since Starlark syntax is a subset of Python
+				shiki: {
+					langAlias: {
+						'starlark': 'python',
+						'star': 'python',
+						'bzl': 'python',
+						'bazel': 'python'
+					}
+				}
 			},
 			social: [
 				{
@@ -79,6 +88,9 @@ export default defineConfig({
 					label: 'Examples',
 					items: [
 						{ label: 'Basic Component', slug: 'examples/basic' },
+						{ label: 'Calculator (C++)', slug: 'examples/calculator' },
+						{ label: 'HTTP Service (Go)', slug: 'examples/http-service' },
+						{ label: 'Multi-Language System', slug: 'examples/multi-language' },
 					],
 				},
 				{
@@ -98,6 +110,8 @@ export default defineConfig({
 					label: 'Production',
 					items: [
 						{ label: 'Deployment Guide', slug: 'production/deployment-guide' },
+						{ label: 'OCI Publishing', slug: 'production/publishing' },
+						{ label: 'Performance Optimization', slug: 'production/performance' },
 					],
 				},
 				{

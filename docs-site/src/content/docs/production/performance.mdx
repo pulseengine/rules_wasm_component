@@ -1,0 +1,90 @@
+---
+title: Performance Optimization
+description: Optimize WebAssembly components for production using Wizer pre-initialization
+---
+
+# Performance Optimization
+
+Learn how to optimize WebAssembly components for faster startup times and better runtime performance.
+
+## Wizer Pre-initialization
+
+Wizer is a WebAssembly pre-initialization tool that can dramatically improve startup performance by running initialization code at build time.
+
+### Basic Usage
+
+```starlark
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_component_wizer_library")
+
+wasm_component_wizer_library(
+    name = "optimized_component",
+    component = ":my_component",
+    init_func = "init",
+    allow_wasi = True,
+)
+```
+
+### Performance Gains
+
+Wizer can provide:
+- **1.35-6x faster startup** for typical components
+- Reduced cold start latency
+- Pre-computed initialization state
+
+### Best Practices
+
+1. **Identify expensive initialization** - Profile your component to find slow startup code
+2. **Design for pre-initialization** - Structure code to separate initialization from runtime logic
+3. **Test thoroughly** - Ensure pre-initialized state is correct
+
+## Build Optimizations
+
+### Compiler Flags
+
+```starlark
+rust_wasm_component(
+    name = "optimized_rust_component",
+    srcs = ["lib.rs"],
+    wit = "component.wit",
+    optimization = "release",  # Use release optimizations
+    features = ["opt-level=s"], # Optimize for size
+)
+```
+
+### Profile-Based Optimization
+
+Use different optimization profiles:
+
+```starlark
+rust_wasm_component(
+    name = "my_component_all_profiles",
+    srcs = ["lib.rs"], 
+    wit = "component.wit",
+    profiles = ["debug", "release", "size"],
+)
+```
+
+## Runtime Performance
+
+### Memory Management
+- Use appropriate memory allocation strategies
+- Profile memory usage with tools like `wasm-profiler`
+- Consider memory pre-allocation for performance-critical paths
+
+### Function Call Optimization
+- Minimize host function calls
+- Batch operations when possible
+- Use efficient data serialization
+
+## Measurement and Profiling
+
+Track key metrics:
+- Component load time
+- First function call latency  
+- Memory usage
+- Execution time
+
+## Next Steps
+
+- [Deployment Guide](/production/deployment-guide/) - Production deployment strategies
+- [Component Signing](/security/component-signing/) - Secure your optimized components

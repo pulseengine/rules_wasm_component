@@ -420,4 +420,88 @@ wkg_multi_registry_publish(
 )
 ```
 
+## WASI-NN Machine Learning Integration
+
+Build WebAssembly components that perform neural network inference using the standardized WASI-NN interfaces.
+
+### Supported WASI-NN Versions
+
+All WASI-NN releases are supported with proper version isolation:
+
+```starlark title="BUILD.bazel"
+# Latest version (recommended for new projects)
+wit_library(
+    name = "ml_latest",
+    srcs = ["inference.wit"],
+    deps = ["@wasi_nn//:nn"],  # v0.2.0-rc-2024-10-28
+)
+
+# Pinned version for production stability
+wit_library(
+    name = "ml_production",
+    srcs = ["inference.wit"], 
+    deps = ["@wasi_nn_v0_2_0_rc_2024_06_25//:nn"],  # Initial stable release
+)
+```
+
+### Machine Learning Component Pattern
+
+```wit title="ml-component.wit"
+package company:ml-service@1.0.0;
+
+world ml-inference {
+    // Neural network operations
+    import wasi:nn/graph@0.2.0-rc-2024-10-28;
+    import wasi:nn/tensor@0.2.0-rc-2024-10-28;
+    import wasi:nn/inference@0.2.0-rc-2024-10-28;
+    import wasi:nn/errors@0.2.0-rc-2024-10-28;
+    
+    // File access for models
+    import wasi:filesystem/types@0.2.3;
+    import wasi:io/streams@0.2.3;
+    
+    // Export high-level ML API
+    export classify-image: func(image-data: list<u8>) -> result<string, string>;
+    export load-model: func(model-path: string) -> result<(), string>;
+}
+```
+
+### Real-World ML Deployment
+
+```python title="BUILD.bazel"
+# Production ML inference service
+rust_wasm_component_bindgen(
+    name = "image_classifier",
+    srcs = ["src/classifier.rs"],
+    wit = ":ml_interfaces",
+    profiles = ["release"],
+)
+
+# Test with validation dataset  
+rust_wasm_component_test(
+    name = "classifier_accuracy_test",
+    component = ":image_classifier", 
+    data = ["//testdata:validation_dataset"],
+)
+
+# Deploy to container registry
+wkg_publish(
+    name = "deploy_classifier",
+    component = ":image_classifier",
+    registry = "ghcr.io/company",
+    tag = "v1.0.0",
+)
+```
+
+### WASI-NN Interface Guide
+
+The WASI-NN specification provides four core interfaces:
+
+- **`tensor`**: Multi-dimensional arrays for ML data (input/output)
+- **`graph`**: Neural network model loading and management  
+- **`inference`**: Execute inference operations on loaded models
+- **`errors`**: Standardized error handling for ML operations
+
+This enables portable ML components that work across different runtime environments while maintaining consistent APIs for neural network operations.
+
 These advanced features enable enterprise-grade WebAssembly component development, deployment, and management at scale.
