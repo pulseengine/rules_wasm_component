@@ -25,6 +25,7 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
   - [rust_wasm_component](#rust_wasm_component)
   - [rust_wasm_component_bindgen](#rust_wasm_component_bindgen)
   - [rust_wasm_component_test](#rust_wasm_component_test)
+  - [rust_wasm_binary](#rust_wasm_binary)
   - [wasm_component_from_oci](#wasm_component_from_oci)
   - [wasm_component_new](#wasm_component_new)
 - [Composition Rules](#composition-rules)
@@ -422,6 +423,82 @@ rust_wasm_component_test(
     component = ":my_component",
 )
 ```
+
+### rust_wasm_binary
+
+Builds a Rust WebAssembly CLI binary that exports `wasi:cli/command`. Compiles Rust applications with a `main()` function into executable WASM components that can be run with `wasmtime run`.
+
+**Load from:**
+```python
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_binary")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `crate_features` | List of Strings | ❌ | Rust crate features to enable |
+| `deps` | List of Labels | ❌ | Rust dependencies (crates) |
+| `edition` | String<br/>*Default: '2021'* | ❌ | Rust edition |
+| `name` | String | ✅ | A unique name for this target |
+| `rustc_flags` | List of Strings | ❌ | Additional rustc flags |
+| `srcs` | List of Labels | ✅ | Rust source files (must include main.rs) |
+
+**Examples:**
+
+#### CLI tool with clap
+
+Simple command-line tool using the clap argument parser
+
+```python
+rust_wasm_binary(
+    name = "my_cli_tool",
+    srcs = ["src/main.rs"],
+    deps = [
+        "@crates//:clap",
+        "@crates//:anyhow",
+    ],
+)
+```
+
+#### File processor application
+
+Application that processes files using WASI filesystem APIs
+
+```python
+rust_wasm_binary(
+    name = "file_processor",
+    srcs = [
+        "src/main.rs",
+        "src/processor.rs",
+    ],
+    deps = [
+        "@crates//:serde",
+        "@crates//:serde_json",
+    ],
+    crate_features = ["async"],
+)
+```
+
+**Usage:**
+
+Run the compiled CLI binary with Wasmtime:
+
+```bash
+# Build the component
+bazel build //my_package:my_cli_tool --platforms=//platforms:wasm32-wasip2
+
+# Run with Wasmtime
+wasmtime run bazel-bin/my_package/my_cli_tool.wasm -- --help
+```
+
+**Key Features:**
+
+- **Proper CLI Interface**: Exports `wasi:cli/run@0.2.3` for execution with Wasmtime
+- **Main Function Support**: Works with standard Rust `main()` functions
+- **Full WASI Support**: Access to filesystem, environment variables, stdin/stdout
+- **Platform Transition**: Automatically builds for `wasm32-wasip2` target
+- **Hermetic Execution**: Self-contained binaries with no external dependencies
 
 ### wasm_component_from_oci
 
