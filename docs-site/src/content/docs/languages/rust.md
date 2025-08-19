@@ -27,7 +27,7 @@ Rust is the **ideal language** for WebAssembly components. Its zero-cost abstrac
 
 ## Choosing the Right Rule
 
-rules_wasm_component provides **two Rust rules** for different use cases:
+rules_wasm_component provides **three Rust rules** for different use cases:
 
 ### `rust_wasm_component_bindgen` (Recommended)
 
@@ -48,38 +48,59 @@ rust_wasm_component_bindgen(
 - Reusable component libraries
 - Standard component development workflows
 
+### `rust_wasm_binary` (CLI Applications)
+
+**Use for CLI tools and applications** - builds proper WASI CLI binaries that export `wasi:cli/command`.
+
+```python
+rust_wasm_binary(
+    name = "my_cli_tool",
+    srcs = ["src/main.rs"],  # Must have main() function
+    deps = ["@crates//:clap"],
+    edition = "2021",
+)
+```
+
+**Perfect for:**
+- Command-line applications with `main()` function
+- CLI tools executable via `wasmtime run`
+- Standalone applications that need CLI argument parsing
+- Hermetic tool replacements (like ssh-keygen, file processors, etc.)
+
 ### `rust_wasm_component` (Advanced)
 
-**Use for CLI tools and utilities** - WASI-only components without custom interfaces.
+**Use for library components** - WASI-only components without custom interfaces.
 
 ```python
 rust_wasm_component(
-    name = "my_cli_tool",
-    srcs = ["src/main.rs"],
-    deps = ["@crates//:clap"],
-    # No 'wit' - uses WASI capabilities only
+    name = "my_lib_component",
+    srcs = ["src/lib.rs"],  # Library with exports, no main()
+    deps = ["@crates//:serde"],
     rustc_flags = ["-C", "opt-level=3"],  # Custom compiler flags
 )
 ```
 
 **Perfect for:**
-- Command-line tools and utilities
+- Library components without custom WIT interfaces
 - WASI-only components (filesystem, stdio, etc.)
 - Custom build requirements and optimization
 - Converting existing WASM modules
 
 ### Rule Selection Guide
 
-| Use Case | Rule | WIT Required | Exports Interfaces |
-|----------|------|--------------|-------------------|
-| **Component Library** | `rust_wasm_component_bindgen` | ✅ Yes | ✅ Yes |
-| **CLI Tool** | `rust_wasm_component` | ❌ No | ❌ No |
-| **Microservice** | `rust_wasm_component_bindgen` | ✅ Yes | ✅ Yes |
-| **File Processor** | `rust_wasm_component` | ❌ No | ❌ No |
-| **API Server** | `rust_wasm_component_bindgen` | ✅ Yes | ✅ Yes |
-| **Data Converter** | `rust_wasm_component` | ❌ No | ❌ No |
+| Use Case | Rule | Entry Point | Exports Interfaces | Executable |
+|----------|------|-------------|-------------------|------------|
+| **Component Library** | `rust_wasm_component_bindgen` | `lib.rs` | ✅ Yes | ❌ No |
+| **CLI Application** | `rust_wasm_binary` | `main.rs` | ❌ No | ✅ Yes |
+| **Microservice** | `rust_wasm_component_bindgen` | `lib.rs` | ✅ Yes | ❌ No |
+| **File Processor Tool** | `rust_wasm_binary` | `main.rs` | ❌ No | ✅ Yes |
+| **API Server** | `rust_wasm_component_bindgen` | `lib.rs` | ✅ Yes | ❌ No |
+| **Data Converter Library** | `rust_wasm_component` | `lib.rs` | ❌ No | ❌ No |
 
-**Quick decision**: Do other components need to call your functions? Use `rust_wasm_component_bindgen`. Building a standalone tool? Use `rust_wasm_component`.
+**Quick decisions**: 
+- **Has `main()` function?** → Use `rust_wasm_binary`
+- **Other components call your functions?** → Use `rust_wasm_component_bindgen`
+- **Library without custom interfaces?** → Use `rust_wasm_component`
 
 ## Basic Component
 
