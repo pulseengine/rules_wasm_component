@@ -85,7 +85,9 @@ impl KeyType {
             }
             KeyType::Ecdsa => {
                 // Default to P-256 for ECDSA
-                Ok(Algorithm::Ecdsa { curve: ssh_key::EcdsaCurve::NistP256 })
+                Ok(Algorithm::Ecdsa {
+                    curve: ssh_key::EcdsaCurve::NistP256,
+                })
             }
         }
     }
@@ -104,7 +106,9 @@ fn main() -> Result<()> {
     }
 
     // Determine algorithm
-    let algorithm = cli.key_type.to_algorithm(cli.bits)
+    let algorithm = cli
+        .key_type
+        .to_algorithm(cli.bits)
         .context("Failed to determine key algorithm")?;
 
     // Generate the private key
@@ -122,7 +126,8 @@ fn main() -> Result<()> {
     // Write private key file
     let private_key_data = if cli.passphrase.is_empty() {
         // No encryption
-        private_key.to_openssh(LineEnding::LF)
+        private_key
+            .to_openssh(LineEnding::LF)
             .context("Failed to encode private key")?
     } else {
         anyhow::bail!("Encrypted private keys are not yet supported");
@@ -143,26 +148,42 @@ fn main() -> Result<()> {
 
     // Write public key file
     let public_key_file = cli.filename.with_extension("pub");
-    let public_key_data = public_key.to_openssh()
+    let public_key_data = public_key
+        .to_openssh()
         .context("Failed to encode public key")?;
 
-    fs::write(&public_key_file, format!("{}\n", public_key_data))
-        .with_context(|| format!("Failed to write public key to {}", public_key_file.display()))?;
+    fs::write(&public_key_file, format!("{}\n", public_key_data)).with_context(|| {
+        format!(
+            "Failed to write public key to {}",
+            public_key_file.display()
+        )
+    })?;
 
     if cli.verbose {
         println!("Private key saved to: {}", cli.filename.display());
         println!("Public key saved to: {}", public_key_file.display());
-        println!("Key fingerprint: {}", public_key.fingerprint(ssh_key::HashAlg::Sha256));
+        println!(
+            "Key fingerprint: {}",
+            public_key.fingerprint(ssh_key::HashAlg::Sha256)
+        );
     } else {
         // Mimic ssh-keygen output format
-        println!("Generating public/private {} key pair.", 
-                 match cli.key_type {
-                     KeyType::Ed25519 => "ed25519",
-                     KeyType::Rsa => "rsa",
-                     KeyType::Ecdsa => "ecdsa",
-                 });
-        println!("Your identification has been saved in {}", cli.filename.display());
-        println!("Your public key has been saved in {}", public_key_file.display());
+        println!(
+            "Generating public/private {} key pair.",
+            match cli.key_type {
+                KeyType::Ed25519 => "ed25519",
+                KeyType::Rsa => "rsa",
+                KeyType::Ecdsa => "ecdsa",
+            }
+        );
+        println!(
+            "Your identification has been saved in {}",
+            cli.filename.display()
+        );
+        println!(
+            "Your public key has been saved in {}",
+            public_key_file.display()
+        );
         println!("The key fingerprint is:");
         println!("{}", public_key.fingerprint(ssh_key::HashAlg::Sha256));
     }
@@ -179,7 +200,7 @@ mod tests {
     fn test_ed25519_key_generation() -> Result<()> {
         let temp_dir = TempDir::new()?;
         let key_path = temp_dir.path().join("test_ed25519");
-        
+
         let cli = Cli {
             key_type: KeyType::Ed25519,
             filename: key_path.clone(),
@@ -192,11 +213,11 @@ mod tests {
         // Generate key using our algorithm
         let algorithm = cli.key_type.to_algorithm(cli.bits)?;
         let private_key = PrivateKey::random(&mut rand::thread_rng(), algorithm)?;
-        
+
         // Verify we can encode both private and public keys
         let _private_data = private_key.to_openssh(LineEnding::LF)?;
         let _public_data = private_key.public_key().to_openssh()?;
-        
+
         Ok(())
     }
 
@@ -204,11 +225,11 @@ mod tests {
     fn test_rsa_key_generation() -> Result<()> {
         let algorithm = KeyType::Rsa.to_algorithm(Some(2048))?;
         let private_key = PrivateKey::random(&mut rand::thread_rng(), algorithm)?;
-        
+
         // Verify we can encode both keys
         let _private_data = private_key.to_openssh(LineEnding::LF)?;
         let _public_data = private_key.public_key().to_openssh()?;
-        
+
         Ok(())
     }
 
@@ -217,11 +238,11 @@ mod tests {
         // Test valid RSA key sizes
         assert!(KeyType::Rsa.to_algorithm(Some(2048)).is_ok());
         assert!(KeyType::Rsa.to_algorithm(Some(4096)).is_ok());
-        
+
         // Test invalid RSA key sizes
         assert!(KeyType::Rsa.to_algorithm(Some(512)).is_err());
         assert!(KeyType::Rsa.to_algorithm(Some(16384)).is_err());
-        
+
         // Test Ed25519 (bits parameter should be ignored)
         assert!(KeyType::Ed25519.to_algorithm(None).is_ok());
         assert!(KeyType::Ed25519.to_algorithm(Some(2048)).is_ok());

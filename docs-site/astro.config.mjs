@@ -80,7 +80,9 @@ export default defineConfig({
 					label: 'Guides',
 					items: [
 						{ label: 'Advanced Features', slug: 'guides/advanced-features' },
+						{ label: 'Migration Guide', slug: 'guides/migration' },
 						{ label: 'Toolchain Configuration', slug: 'guides/toolchain-configuration' },
+						{ label: 'Multi-Profile Builds', slug: 'guides/multi-profile-builds' },
 						{ label: 'External WIT Dependencies', slug: 'guides/external-wit-dependencies' },
 					],
 				},
@@ -88,6 +90,9 @@ export default defineConfig({
 					label: 'Examples',
 					items: [
 						{ label: 'Basic Component', slug: 'examples/basic' },
+						{ label: 'Basic Examples', slug: 'examples/basic-examples' },
+						{ label: 'Intermediate Examples', slug: 'examples/intermediate-examples' },
+						{ label: 'Advanced Examples', slug: 'examples/advanced-examples' },
 						{ label: 'Calculator (C++)', slug: 'examples/calculator' },
 						{ label: 'HTTP Service (Go)', slug: 'examples/http-service' },
 						{ label: 'Multi-Language System', slug: 'examples/multi-language' },
@@ -104,6 +109,7 @@ export default defineConfig({
 					label: 'Security',
 					items: [
 						{ label: 'Component Signing', slug: 'security/component-signing' },
+						{ label: 'OCI Component Signing', slug: 'security/oci-signing' },
 					],
 				},
 				{
@@ -112,6 +118,12 @@ export default defineConfig({
 						{ label: 'Deployment Guide', slug: 'production/deployment-guide' },
 						{ label: 'OCI Publishing', slug: 'production/publishing' },
 						{ label: 'Performance Optimization', slug: 'production/performance' },
+					],
+				},
+				{
+					label: 'Troubleshooting',
+					items: [
+						{ label: 'Export Macro Visibility', slug: 'troubleshooting/export-macro-visibility' },
 					],
 				},
 				{

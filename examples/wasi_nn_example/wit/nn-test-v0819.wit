@@ -7,7 +7,7 @@ world nn-test-v0819 {
     import wasi:nn/graph@0.2.0-rc-2024-08-19;
     import wasi:nn/tensor@0.2.0-rc-2024-08-19;
     import wasi:nn/errors@0.2.0-rc-2024-08-19;
-    
+
     /// Test function for v0.2.0-rc-2024-08-19
     export test-nn-v0819: func() -> string;
 }

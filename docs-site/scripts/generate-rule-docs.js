@@ -177,26 +177,46 @@ function generateRuleReference(schemas) {
     lines.push('> For the most up-to-date information, see the [source repository](https://github.com/pulseengine/rules_wasm_component).');
     lines.push('');
 
-    // Categorize rules
+    // Categorize rules by language and type
     const categories = {
         'WIT & Interface Rules': [],
-        'Component Rules': [],
+        'Rust Component Rules': [],
+        'Go Component Rules': [],
+        'JavaScript Component Rules': [],
+        'C++ Component Rules': [],
         'Composition Rules': [],
-        'Providers': [],
-        'Other Rules': []
+        'RPC & Communication': [],
+        'Component Tools': [],
+        'Security & Signing': [],
+        'Registry & Distribution': [],
+        'Providers': []
     };
 
     Object.entries(schemas).forEach(([name, data]) => {
         if (data.type === 'provider') {
             categories['Providers'].push({ name, data });
-        } else if (name.includes('wit_')) {
+        } else if (name.includes('wit_') && !name.includes('go_wit') && !name.includes('cpp_wit')) {
             categories['WIT & Interface Rules'].push({ name, data });
-        } else if (name.includes('wasm_component') || name.includes('rust_') || name.includes('go_') || name.includes('js_') || name.includes('cpp_')) {
-            categories['Component Rules'].push({ name, data });
+        } else if (name.includes('rust_') || name === 'rust_wasm_component' || name === 'rust_wasm_component_bindgen' || name === 'rust_wasm_component_test') {
+            categories['Rust Component Rules'].push({ name, data });
+        } else if (name.includes('go_') || name === 'go_wasm_component' || name === 'go_wit_bindgen') {
+            categories['Go Component Rules'].push({ name, data });
+        } else if (name.includes('js_') || name.includes('jco_') || name.includes('npm_') || name === 'js_component') {
+            categories['JavaScript Component Rules'].push({ name, data });
+        } else if (name.includes('cpp_') || name.includes('cc_') || name === 'cpp_component') {
+            categories['C++ Component Rules'].push({ name, data });
         } else if (name.includes('wac_') || name.includes('compose')) {
             categories['Composition Rules'].push({ name, data });
+        } else if (name.includes('wrpc_')) {
+            categories['RPC & Communication'].push({ name, data });
+        } else if (name.includes('wasm_component_new') || name.includes('wasm_component_wizer') || name.includes('wasm_validate')) {
+            categories['Component Tools'].push({ name, data });
+        } else if (name.includes('wasm_sign') || name.includes('wasm_verify') || name.includes('wasm_keygen')) {
+            categories['Security & Signing'].push({ name, data });
+        } else if (name.includes('wkg_') || name.includes('wasm_component_from_oci')) {
+            categories['Registry & Distribution'].push({ name, data });
         } else {
-            categories['Other Rules'].push({ name, data });
+            categories['Component Tools'].push({ name, data });
         }
     });
 

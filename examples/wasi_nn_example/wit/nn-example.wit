@@ -7,7 +7,7 @@ world nn-example {
     import wasi:nn/graph@0.2.0-rc-2024-10-28;
     import wasi:nn/tensor@0.2.0-rc-2024-10-28;
     import wasi:nn/errors@0.2.0-rc-2024-10-28;
-    
+
     /// Export a simple ML inference function
     export infer: func(model-data: list<u8>) -> result<string, string>;
 }

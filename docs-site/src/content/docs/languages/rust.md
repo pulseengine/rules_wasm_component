@@ -43,6 +43,7 @@ rust_wasm_component_bindgen(
 ```
 
 **Perfect for:**
+
 - Components with custom WIT interfaces
 - Inter-component communication
 - Reusable component libraries
@@ -62,6 +63,7 @@ rust_wasm_binary(
 ```
 
 **Perfect for:**
+
 - Command-line applications with `main()` function
 - CLI tools executable via `wasmtime run`
 - Standalone applications that need CLI argument parsing
@@ -81,6 +83,7 @@ rust_wasm_component(
 ```
 
 **Perfect for:**
+
 - Library components without custom WIT interfaces
 - WASI-only components (filesystem, stdio, etc.)
 - Custom build requirements and optimization
@@ -97,7 +100,8 @@ rust_wasm_component(
 | **API Server** | `rust_wasm_component_bindgen` | `lib.rs` | ✅ Yes | ❌ No |
 | **Data Converter Library** | `rust_wasm_component` | `lib.rs` | ❌ No | ❌ No |
 
-**Quick decisions**: 
+**Quick decisions**:
+
 - **Has `main()` function?** → Use `rust_wasm_binary`
 - **Other components call your functions?** → Use `rust_wasm_component_bindgen`
 - **Library without custom interfaces?** → Use `rust_wasm_component`

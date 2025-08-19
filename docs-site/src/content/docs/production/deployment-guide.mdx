@@ -242,10 +242,10 @@ wkg_registry_config(
 ### Component Publishing Pipeline
 
 ```python title="BUILD.bazel"
-load("@rules_wasm_component//oci:defs.bzl", "wasm_component_oci_push")
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_publish")
 
 # Push to staging registry
-wasm_component_oci_push(
+wasm_component_oci_publish(
     name = "push_auth_staging",
     component = ":auth_service_staging_signed",
     registry = "registry.company.com",
@@ -256,7 +256,7 @@ wasm_component_oci_push(
 )
 
 # Push to production registry with versioning
-wasm_component_oci_push(
+wasm_component_oci_publish(
     name = "push_auth_production",
     component = ":auth_service_prod_signed",
     registry = "registry.company.com",

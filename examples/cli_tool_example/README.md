@@ -5,6 +5,7 @@ This example demonstrates the **key differences** between the two Rust WebAssemb
 ## Rule Comparison
 
 ### `rust_wasm_component` (Lower-Level Rule)
+
 **Use for**: CLI tools, utilities, WASI-only components
 
 ```starlark
@@ -17,12 +18,13 @@ rust_wasm_component(
 )
 ```
 
-### `rust_wasm_component_bindgen` (High-Level Rule)  
+### `rust_wasm_component_bindgen` (High-Level Rule)
+
 **Use for**: Components with custom interfaces, inter-component communication
 
 ```starlark
 rust_wasm_component_bindgen(
-    name = "file_processor_component", 
+    name = "file_processor_component",
     srcs = ["src/component_lib.rs"],
     wit = ":processor_interfaces",  # Custom WIT interfaces
     profiles = ["release"],         # Simplified configuration
@@ -31,7 +33,7 @@ rust_wasm_component_bindgen(
 
 ## When to Use Each
 
-### Use `rust_wasm_component` when:
+### Use `rust_wasm_component` when
 
 1. **CLI Tools & Utilities**
    - Command-line applications run by users
@@ -53,7 +55,7 @@ rust_wasm_component_bindgen(
    - Complex compilation pipelines
    - Performance-critical components requiring fine-tuned compilation
 
-### Use `rust_wasm_component_bindgen` when:
+### Use `rust_wasm_component_bindgen` when
 
 1. **Custom Component Interfaces**
    - Exporting functions for other components to call
@@ -78,12 +80,14 @@ rust_wasm_component_bindgen(
 ## Examples in This Directory
 
 ### CLI Tool (`file_processor_cli`)
+
 - **File**: `src/cli_tool.rs`
 - **Use case**: Command-line file processing utility
 - **Interfaces**: WASI only (filesystem, stdio)
 - **Usage**: `wasmtime run file_processor_cli.wasm -- upper -i input.txt -o output.txt`
 
 ### Component Library (`file_processor_component`)
+
 - **File**: `src/component_lib.rs` + `wit/processor.wit`
 - **Use case**: Reusable file processing functions for other components
 - **Interfaces**: Custom WIT interfaces + WASI

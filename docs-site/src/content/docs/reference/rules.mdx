@@ -13,63 +13,49 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
 ## Table of Contents
 
 - [WIT & Interface Rules](#wit-interface-rules)
-  - [go_wit_bindgen](#go_wit_bindgen)
   - [wit_bindgen](#wit_bindgen)
   - [wit_deps_check](#wit_deps_check)
   - [wit_library](#wit_library)
   - [wit_markdown](#wit_markdown)
-- [Component Rules](#component-rules)
-  - [cpp_component](#cpp_component)
-  - [go_wasm_component](#go_wasm_component)
-  - [js_component](#js_component)
+- [Rust Component Rules](#rust-component-rules)
   - [rust_wasm_component](#rust_wasm_component)
   - [rust_wasm_component_bindgen](#rust_wasm_component_bindgen)
   - [rust_wasm_component_test](#rust_wasm_component_test)
-  - [rust_wasm_binary](#rust_wasm_binary)
-  - [wasm_component_from_oci](#wasm_component_from_oci)
-  - [wasm_component_new](#wasm_component_new)
+- [Go Component Rules](#go-component-rules)
+  - [go_wasm_component](#go_wasm_component)
+  - [go_wit_bindgen](#go_wit_bindgen)
+- [JavaScript Component Rules](#javascript-component-rules)
+  - [jco_transpile](#jco_transpile)
+  - [js_component](#js_component)
+  - [npm_install](#npm_install)
+- [C++ Component Rules](#c-component-rules)
+  - [cc_component_library](#cc_component_library)
+  - [cpp_component](#cpp_component)
+  - [cpp_wit_bindgen](#cpp_wit_bindgen)
 - [Composition Rules](#composition-rules)
   - [wac_compose](#wac_compose)
   - [wac_remote_compose](#wac_remote_compose)
+- [RPC & Communication](#rpc-communication)
+  - [wrpc_bindgen](#wrpc_bindgen)
+  - [wrpc_invoke](#wrpc_invoke)
+  - [wrpc_serve](#wrpc_serve)
+- [Component Tools](#component-tools)
+  - [wasm_component_new](#wasm_component_new)
+  - [wasm_component_wizer_library](#wasm_component_wizer_library)
+  - [wasm_validate](#wasm_validate)
+- [Security & Signing](#security-signing)
+  - [wasm_keygen](#wasm_keygen)
+  - [wasm_sign](#wasm_sign)
+  - [wasm_verify](#wasm_verify)
+- [Registry & Distribution](#registry-distribution)
+  - [wasm_component_from_oci](#wasm_component_from_oci)
+  - [wkg_registry_config](#wkg_registry_config)
 - [Providers](#providers)
   - [WacCompositionInfo](#waccompositioninfo)
   - [WasmComponentInfo](#wasmcomponentinfo)
   - [WitInfo](#witinfo)
-- [Other Rules](#other-rules)
-  - [jco_transpile](#jco_transpile)
-  - [wasm_keygen](#wasm_keygen)
-  - [wasm_signing](#wasm_signing)
-  - [wasm_validate](#wasm_validate)
-  - [wkg_registry_config](#wkg_registry_config)
 
 ## WIT & Interface Rules
-
-### go_wit_bindgen
-
-Generates Go bindings from WIT files using wit-bindgen-go. Creates Go language bindings for WebAssembly Interface Types.
-
-**Load from:**
-```python
-load("@rules_wasm_component//go:defs.bzl", "go_wit_bindgen")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `world` | String | ✅ | WIT world to generate bindings for |
-
-**Examples:**
-
-Generate Go bindings from WIT
-
-```python
-go_wit_bindgen(
-    name = "calculator_bindings",
-    world = "calculator-world",
-)
-```
 
 ### wit_bindgen
 
@@ -176,25 +162,6 @@ wit_library(
 )
 ```
 
-#### WIT library with external dependencies
-
-WIT library using external WASI and third-party dependencies
-
-```python
-wit_library(
-    name = "my_component_wit",
-    package_name = "example:my-component@1.0.0",
-    srcs = ["my-component.wit"],
-    deps = [
-        "@wasi_io//:streams",           # WASI IO interfaces
-        "@external_wit//:api",          # External third-party interfaces
-    ],
-)
-```
-
-> **Note:** External WIT dependencies must be configured via `http_archive` rules.
-> See the [External WIT Dependencies Guide](/guides/external-wit-dependencies/) for setup instructions.
-
 ### wit_markdown
 
 Generates markdown documentation from WIT files. Creates human-readable documentation from WebAssembly Interface Types.
@@ -222,102 +189,7 @@ wit_markdown(
 )
 ```
 
-## Component Rules
-
-### cpp_component
-
-Builds a C++ WebAssembly component using WASI SDK. Compiles C++ source code into a WASM component with Preview2 support.
-
-**Load from:**
-```python
-load("@rules_wasm_component//cpp:defs.bzl", "cpp_component")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `deps` | List of Labels | ❌ | C++ dependencies |
-| `hdrs` | List of Labels | ❌ | C++ header files |
-| `name` | String | ✅ | A unique name for this target |
-| `srcs` | List of Labels | ✅ | C++ source files |
-| `wit` | Label | ❌ | WIT library for component interfaces |
-
-**Examples:**
-
-C++ WebAssembly component
-
-```python
-cpp_component(
-    name = "calculator_cpp",
-    srcs = ["calculator.cpp"],
-    hdrs = ["calculator.h"],
-)
-```
-
-### go_wasm_component
-
-Builds a Go WebAssembly component using TinyGo. Compiles Go source code into a WASM component with WASI Preview 2 support.
-
-**Load from:**
-```python
-load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `adapter` | Label | ❌ | Optional WASI adapter |
-| `go_mod` | Label | ❌ | go.mod file for dependency management |
-| `name` | String | ✅ | A unique name for this target |
-| `optimization` | String<br/>*Default: 'release'*<br/>*Values: debug, release* | ❌ | Build optimization level |
-| `srcs` | List of Labels | ✅ | Go source files |
-| `world` | String | ❌ | WIT world for the component |
-
-**Examples:**
-
-Simple Go WASM component with TinyGo
-
-```python
-go_wasm_component(
-    name = "calculator_component",
-    srcs = ["calculator.go", "main.go"],
-    go_mod = "go.mod",
-    optimization = "release",
-)
-```
-
-### js_component
-
-Builds a JavaScript WebAssembly component using ComponentizeJS. Transpiles JavaScript/TypeScript source code into a WASM component.
-
-**Load from:**
-```python
-load("@rules_wasm_component//js:defs.bzl", "js_component")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `entry` | String | ❌ | Entry point for the component |
-| `name` | String | ✅ | A unique name for this target |
-| `package` | Label | ❌ | package.json file |
-| `srcs` | List of Labels | ✅ | JavaScript/TypeScript source files |
-| `wit` | Label | ✅ | WIT library for the component interfaces |
-
-**Examples:**
-
-JavaScript WebAssembly component
-
-```python
-js_component(
-    name = "calculator_js",
-    srcs = ["src/calculator.js"],
-    wit = ":calculator_wit",
-)
-```
+## Rust Component Rules
 
 ### rust_wasm_component
 
@@ -424,142 +296,265 @@ rust_wasm_component_test(
 )
 ```
 
-### rust_wasm_binary
+## Go Component Rules
 
-Builds a Rust WebAssembly CLI binary that exports `wasi:cli/command`. Compiles Rust applications with a `main()` function into executable WASM components that can be run with `wasmtime run`.
+### go_wasm_component
+
+Builds a Go WebAssembly component using TinyGo. Compiles Go source code into a WASM component with WASI Preview 2 support.
 
 **Load from:**
 ```python
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_binary")
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
 ```
 
 **Attributes:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `crate_features` | List of Strings | ❌ | Rust crate features to enable |
-| `deps` | List of Labels | ❌ | Rust dependencies (crates) |
-| `edition` | String<br/>*Default: '2021'* | ❌ | Rust edition |
+| `adapter` | Label | ❌ | Optional WASI adapter |
+| `go_mod` | Label | ❌ | go.mod file for dependency management |
 | `name` | String | ✅ | A unique name for this target |
-| `rustc_flags` | List of Strings | ❌ | Additional rustc flags |
-| `srcs` | List of Labels | ✅ | Rust source files (must include main.rs) |
+| `optimization` | String<br/>*Default: 'release'*<br/>*Values: debug, release* | ❌ | Build optimization level |
+| `srcs` | List of Labels | ✅ | Go source files |
+| `world` | String | ❌ | WIT world for the component |
 
 **Examples:**
 
-#### CLI tool with clap
-
-Simple command-line tool using the clap argument parser
+Simple Go WASM component with TinyGo
 
 ```python
-rust_wasm_binary(
-    name = "my_cli_tool",
-    srcs = ["src/main.rs"],
-    deps = [
-        "@crates//:clap",
-        "@crates//:anyhow",
-    ],
+go_wasm_component(
+    name = "calculator_component",
+    srcs = ["calculator.go", "main.go"],
+    go_mod = "go.mod",
+    optimization = "release",
 )
 ```
 
-#### File processor application
+### go_wit_bindgen
 
-Application that processes files using WASI filesystem APIs
-
-```python
-rust_wasm_binary(
-    name = "file_processor",
-    srcs = [
-        "src/main.rs",
-        "src/processor.rs",
-    ],
-    deps = [
-        "@crates//:serde",
-        "@crates//:serde_json",
-    ],
-    crate_features = ["async"],
-)
-```
-
-**Usage:**
-
-Run the compiled CLI binary with Wasmtime:
-
-```bash
-# Build the component
-bazel build //my_package:my_cli_tool --platforms=//platforms:wasm32-wasip2
-
-# Run with Wasmtime
-wasmtime run bazel-bin/my_package/my_cli_tool.wasm -- --help
-```
-
-**Key Features:**
-
-- **Proper CLI Interface**: Exports `wasi:cli/run@0.2.3` for execution with Wasmtime
-- **Main Function Support**: Works with standard Rust `main()` functions
-- **Full WASI Support**: Access to filesystem, environment variables, stdin/stdout
-- **Platform Transition**: Automatically builds for `wasm32-wasip2` target
-- **Hermetic Execution**: Self-contained binaries with no external dependencies
-
-### wasm_component_from_oci
-
-Downloads WebAssembly components from OCI registries. Enables using remote components from container registries in builds.
+Legacy compatibility function for Go WIT binding generation. **DEPRECATED**: WIT binding generation is now handled automatically by go_wasm_component rule. This function exists for backward compatibility with existing examples and creates a placeholder genrule. For new code, use go_wasm_component directly with wit and world attributes.
 
 **Load from:**
 ```python
-load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_from_oci")
+load("@rules_wasm_component//go:defs.bzl", "go_wit_bindgen")
 ```
 
 **Attributes:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `component_name` | String | ✅ | Component name |
 | `name` | String | ✅ | A unique name for this target |
-| `namespace` | String | ✅ | Registry namespace |
-| `registry` | String | ✅ | Registry hostname |
-| `registry_config` | Label | ❌ | Registry configuration |
-| `tag` | String<br/>*Default: 'latest'* | ❌ | Component tag or version |
 
 **Examples:**
 
-Pull component from OCI registry
+Placeholder for backward compatibility (use go_wasm_component instead)
 
 ```python
-wasm_component_from_oci(
-    name = "auth_service",
-    registry = "ghcr.io",
-    namespace = "my-org",
-    component_name = "auth-service",
-    tag = "v1.0.0",
+// DEPRECATED: Use go_wasm_component instead
+go_wit_bindgen(
+    name = "calculator_bindings",
+)
+
+// RECOMMENDED: Use go_wasm_component directly
+go_wasm_component(
+    name = "calculator_component",
+    srcs = ["calculator.go"],
+    wit = ":calculator_wit",
+    world = "calculator",
 )
 ```
 
-### wasm_component_new
+## JavaScript Component Rules
 
-Creates a WebAssembly component from a core WASM module using wasm-tools component new. Wraps core modules into the component model.
+### jco_transpile
+
+Transpiles WebAssembly components to JavaScript using jco (JavaScript Component Tools). Converts WASM components into JavaScript modules.
 
 **Load from:**
 ```python
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_component_new")
+load("@rules_wasm_component//js:defs.bzl", "jco_transpile")
 ```
 
 **Attributes:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `adapter` | Label | ❌ | WASI adapter to use |
-| `module` | Label | ✅ | Core WASM module to wrap |
+| `component` | Label | ✅ | WebAssembly component to transpile |
 | `name` | String | ✅ | A unique name for this target |
+| `options` | List of Strings | ❌ | Additional jco options |
 
 **Examples:**
 
-Convert core WASM module to component
+Convert WASM component to JavaScript
 
 ```python
-wasm_component_new(
-    name = "my_component",
-    module = ":my_module",
-    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+jco_transpile(
+    name = "calculator_js_bindings",
+    component = ":calculator_component",
+)
+```
+
+### js_component
+
+Builds a JavaScript WebAssembly component using ComponentizeJS. Transpiles JavaScript/TypeScript source code into a WASM component.
+
+**Load from:**
+```python
+load("@rules_wasm_component//js:defs.bzl", "js_component")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `entry_point` | String<br/>*Default: index.js* | ❌ | Main entry point file |
+| `name` | String | ✅ | A unique name for this target |
+| `package_json` | Label | ❌ | package.json file (auto-generated if not provided) |
+| `srcs` | List of Labels | ✅ | JavaScript/TypeScript source files |
+| `wit` | Label | ✅ | WIT library for the component interfaces |
+
+**Examples:**
+
+JavaScript WebAssembly component
+
+```python
+js_component(
+    name = "calculator_js",
+    srcs = ["src/calculator.js"],
+    wit = ":calculator_wit",
+)
+```
+
+### npm_install
+
+Installs NPM dependencies for JavaScript components. Runs npm install to fetch dependencies specified in package.json, making them available for JavaScript component builds.
+
+**Load from:**
+```python
+load("@rules_wasm_component//js:defs.bzl", "npm_install")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `package_json` | Label | ✅ | package.json file with dependencies |
+
+**Examples:**
+
+Install NPM dependencies
+
+```python
+npm_install(
+    name = "npm_deps",
+    package_json = "package.json",
+)
+```
+
+## C++ Component Rules
+
+### cc_component_library
+
+Creates a static library for use in WebAssembly components. Compiles C/C++ source files into a static library that can be linked into WebAssembly components.
+
+**Load from:**
+```python
+load("@rules_wasm_component//cpp:defs.bzl", "cc_component_library")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `copts` | List of Strings | ❌ | Additional compiler options |
+| `cxx_std` | String | ❌ | C++ standard (e.g., c++17, c++20, c++23) |
+| `defines` | List of Strings | ❌ | Preprocessor definitions |
+| `deps` | List of Labels | ❌ | Dependencies (other cc_component_library targets) |
+| `enable_exceptions` | Boolean | ❌ | Enable C++ exceptions (increases binary size) |
+| `hdrs` | List of Labels | ❌ | C/C++ header files |
+| `includes` | List of Strings | ❌ | Additional include directories |
+| `language` | String<br/>*Default: 'cpp'*<br/>*Values: c, cpp* | ❌ | Language variant (c or cpp) |
+| `name` | String | ✅ | A unique name for this target |
+| `optimize` | Boolean<br/>*Default: True* | ❌ | Enable optimizations |
+| `srcs` | List of Labels | ✅ | C/C++ source files |
+
+**Examples:**
+
+Create a static library for components
+
+```python
+cc_component_library(
+    name = "math_utils",
+    srcs = ["math.cpp", "algorithms.cpp"],
+    hdrs = ["math.h", "algorithms.h"],
+    language = "cpp",
+    cxx_std = "c++20",
+    optimize = True,
+)
+```
+
+### cpp_component
+
+Builds a C++ WebAssembly component using WASI SDK. Compiles C++ source code into a WASM component with Preview2 support.
+
+**Load from:**
+```python
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_component")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `deps` | List of Labels | ❌ | C++ dependencies |
+| `hdrs` | List of Labels | ❌ | C++ header files |
+| `name` | String | ✅ | A unique name for this target |
+| `srcs` | List of Labels | ✅ | C++ source files |
+| `wit` | Label | ❌ | WIT library for component interfaces |
+
+**Examples:**
+
+C++ WebAssembly component
+
+```python
+cpp_component(
+    name = "calculator_cpp",
+    srcs = ["calculator.cpp"],
+    hdrs = ["calculator.h"],
+)
+```
+
+### cpp_wit_bindgen
+
+Generates C/C++ bindings from WIT interface definitions. Creates header and source files for WebAssembly component development.
+
+**Load from:**
+```python
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_wit_bindgen")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `string_encoding` | String<br/>*Values: utf8, utf16, compact-utf16* | ❌ | String encoding to use in generated bindings |
+| `stubs_only` | Boolean | ❌ | Generate only stub functions without implementation |
+| `wit` | Label | ✅ | WIT interface definition file |
+| `world` | String | ❌ | WIT world to generate bindings for |
+
+**Examples:**
+
+Generate C++ bindings from WIT
+
+```python
+cpp_wit_bindgen(
+    name = "calculator_bindings",
+    wit = "calculator.wit",
+    world = "calculator",
+    string_encoding = "utf8",
 )
 ```
 
@@ -636,6 +631,356 @@ wac_remote_compose(
         "ghcr.io/org/backend:v1.0.0": "backend",
     },
     composition_file = "app.wac",
+)
+```
+
+## RPC & Communication
+
+### wrpc_bindgen
+
+Generates language bindings for wrpc (WebAssembly Component RPC) from WIT interfaces. Creates client and server stubs for remote component communication.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wrpc:defs.bzl", "wrpc_bindgen")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `language` | String<br/>*Default: 'rust'*<br/>*Values: rust, go* | ❌ | Target language for bindings |
+| `name` | String | ✅ | A unique name for this target |
+| `wit` | Label | ✅ | WIT file defining the interface |
+| `world` | String | ✅ | WIT world to generate bindings for |
+
+**Examples:**
+
+Generate Rust RPC bindings from WIT
+
+```python
+wrpc_bindgen(
+    name = "api_bindings",
+    wit = "api.wit",
+    world = "api-world",
+    language = "rust",
+)
+```
+
+### wrpc_invoke
+
+Invokes functions on remote WebAssembly components via wrpc. Creates executable scripts to call remote component functions.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wrpc:defs.bzl", "wrpc_invoke")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `address` | String<br/>*Default: 'localhost:8080'* | ❌ | Address of the remote component |
+| `function` | String | ✅ | Function to invoke on remote component |
+| `name` | String | ✅ | A unique name for this target |
+| `transport` | String<br/>*Default: 'tcp'*<br/>*Values: tcp, nats* | ❌ | Transport protocol |
+
+**Examples:**
+
+Invoke a function on remote component
+
+```python
+wrpc_invoke(
+    name = "call_api",
+    function = "process-data",
+    transport = "tcp",
+    address = "localhost:8080",
+)
+```
+
+### wrpc_serve
+
+Serves a WebAssembly component via wrpc for remote procedure calls. Creates executable scripts to run components as RPC servers.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wrpc:defs.bzl", "wrpc_serve")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `address` | String<br/>*Default: '0.0.0.0:8080'* | ❌ | Address to bind server to |
+| `component` | Label | ✅ | WebAssembly component to serve |
+| `name` | String | ✅ | A unique name for this target |
+| `transport` | String<br/>*Default: 'tcp'*<br/>*Values: tcp, nats* | ❌ | Transport protocol |
+
+**Examples:**
+
+Serve a component as RPC server
+
+```python
+wrpc_serve(
+    name = "api_server",
+    component = ":my_component",
+    transport = "tcp",
+    address = "0.0.0.0:8080",
+)
+```
+
+## Component Tools
+
+### wasm_component_new
+
+Creates a WebAssembly component from a core WASM module using wasm-tools component new. Wraps core modules into the component model.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_component_new")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `adapter` | Label | ❌ | WASI adapter to use |
+| `module` | Label | ✅ | Core WASM module to wrap |
+| `name` | String | ✅ | A unique name for this target |
+
+**Examples:**
+
+Convert core WASM module to component
+
+```python
+wasm_component_new(
+    name = "my_component",
+    module = ":my_module",
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+)
+```
+
+### wasm_component_wizer_library
+
+Pre-initializes a WebAssembly component using Wizer library for improved startup performance. Executes initialization functions at build time to reduce runtime overhead.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:wasm_component_wizer_library.bzl", "wasm_component_wizer_library")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `allow_wasi` | Boolean<br/>*Default: True* | ❌ | Allow WASI calls during initialization |
+| `component` | Label | ✅ | Input WebAssembly component to pre-initialize |
+| `init_function_name` | String<br/>*Default: 'wizer.initialize'* | ❌ | Name of the initialization function to call |
+| `name` | String | ✅ | A unique name for this target |
+| `verbose` | Boolean | ❌ | Enable verbose output |
+
+**Examples:**
+
+Pre-initialize a WebAssembly component
+
+```python
+wasm_component_wizer_library(
+    name = "optimized_component",
+    component = ":my_component",
+    init_function_name = "wizer.initialize",
+    allow_wasi = True,
+)
+```
+
+### wasm_validate
+
+Validates WebAssembly components and modules using wasm-tools validate. Ensures WASM files are well-formed.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_validate")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `wasm` | Label | ✅ | WASM file to validate |
+
+**Examples:**
+
+Validate a WASM component
+
+```python
+wasm_validate(
+    name = "validate_component",
+    wasm = ":my_component",
+)
+```
+
+## Security & Signing
+
+### wasm_keygen
+
+Generates cryptographic keys for WebAssembly component signing using wasmsign2. Creates key pairs for secure component distribution.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `openssh_format` | Boolean | ❌ | Generate keys in OpenSSH format |
+
+**Examples:**
+
+Create signing keys
+
+```python
+wasm_keygen(
+    name = "production_keys",
+    openssh_format = True,
+)
+```
+
+### wasm_sign
+
+Signs WebAssembly components using wasmsign2 for secure deployment. Provides cryptographic signatures for component integrity.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_sign")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `component` | Label | ❌ | WebAssembly component to sign (alternative to wasm_file) |
+| `detached` | Boolean<br/>*Default: False* | ❌ | Create detached signature file |
+| `keys` | Label | ❌ | Key pair from wasm_keygen or ssh_keygen |
+| `name` | String | ✅ | A unique name for this target |
+| `openssh_format` | Boolean<br/>*Default: False* | ❌ | Use OpenSSH key format (when not using keys attribute) |
+| `secret_key` | Label | ❌ | Secret key file (alternative to keys) |
+| `wasm_file` | Label | ❌ | WASM file to sign (alternative to component) |
+
+**Examples:**
+
+Sign a WebAssembly component with embedded signature
+
+```python
+wasm_sign(
+    name = "signed_component",
+    component = ":my_component",
+    keys = ":signing_keys",
+    detached = false,
+)
+```
+
+### wasm_verify
+
+Verifies signatures of signed WebAssembly components using wasmsign2. Validates component authenticity and integrity.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_verify")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `github_account` | String | ❌ | GitHub account for key verification |
+| `keys` | Label | ❌ | Public key from key pair |
+| `name` | String | ✅ | A unique name for this target |
+| `signed_component` | Label | ❌ | Signed component to verify |
+| `split_regex` | String | ❌ | Regular expression for partial verification |
+| `wasm_file` | Label | ❌ | WASM file to verify (alternative to signed_component) |
+
+**Examples:**
+
+Verify a signed WebAssembly component
+
+```python
+wasm_verify(
+    name = "verify_component",
+    signed_component = ":signed_component",
+    keys = ":signing_keys",
+)
+```
+
+## Registry & Distribution
+
+### wasm_component_from_oci
+
+Downloads WebAssembly components from OCI registries. Enables using remote components from container registries in builds.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_from_oci")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `component_name` | String | ✅ | Component name |
+| `name` | String | ✅ | A unique name for this target |
+| `namespace` | String | ✅ | Registry namespace |
+| `registry` | String | ✅ | Registry hostname |
+| `registry_config` | Label | ❌ | Registry configuration |
+| `tag` | String<br/>*Default: 'latest'* | ❌ | Component tag or version |
+
+**Examples:**
+
+Pull component from OCI registry
+
+```python
+wasm_component_from_oci(
+    name = "auth_service",
+    registry = "ghcr.io",
+    namespace = "my-org",
+    component_name = "auth-service",
+    tag = "v1.0.0",
+)
+```
+
+### wkg_registry_config
+
+Configures WebAssembly component registries for OCI distribution. Sets up authentication and registry endpoints for component publishing and retrieval.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_registry_config")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cache_dir` | String | ❌ | Directory for caching components |
+| `default_registry` | String | ❌ | Default registry to use |
+| `enable_mirror_fallback` | Boolean | ❌ | Enable fallback to mirror registries |
+| `name` | String | ✅ | A unique name for this target |
+| `registries` | List of Strings | ✅ | List of registry configurations |
+
+**Examples:**
+
+Configure multiple component registries
+
+```python
+wkg_registry_config(
+    name = "production_registries",
+    registries = [
+        "github|ghcr.io|oci|env|GITHUB_TOKEN",
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+    ],
+    default_registry = "github",
 )
 ```
 
@@ -718,152 +1063,4 @@ def _my_rule_impl(ctx):
     package_name = wit_info.package_name
     wit_files = wit_info.wit_files.to_list()
     # Use wit_info...
-```
-
-## Other Rules
-
-### jco_transpile
-
-Transpiles WebAssembly components to JavaScript using jco (JavaScript Component Tools). Converts WASM components into JavaScript modules.
-
-**Load from:**
-```python
-load("@rules_wasm_component//js:defs.bzl", "jco_transpile")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `component` | Label | ✅ | WebAssembly component to transpile |
-| `name` | String | ✅ | A unique name for this target |
-| `options` | List of Strings | ❌ | Additional jco options |
-
-**Examples:**
-
-Convert WASM component to JavaScript
-
-```python
-jco_transpile(
-    name = "calculator_js_bindings",
-    component = ":calculator_component",
-)
-```
-
-### wasm_keygen
-
-Generates cryptographic keys for WebAssembly component signing using wasmsign2. Creates key pairs for secure component distribution.
-
-**Load from:**
-```python
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `openssh_format` | Boolean | ❌ | Generate keys in OpenSSH format |
-
-**Examples:**
-
-Create signing keys
-
-```python
-wasm_keygen(
-    name = "production_keys",
-    openssh_format = True,
-)
-```
-
-### wasm_signing
-
-Signs WebAssembly components using wasmsign2 for secure deployment. Provides cryptographic signatures for component integrity.
-
-**Load from:**
-```python
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_signing")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `component` | Label | ✅ | Component to sign |
-| `detached` | Boolean | ❌ | Create detached signature |
-| `keys` | Label | ✅ | Signing keys |
-| `name` | String | ✅ | A unique name for this target |
-
-**Examples:**
-
-Sign a WebAssembly component
-
-```python
-wasm_signing(
-    name = "signed_component",
-    component = ":my_component",
-    keys = ":signing_keys",
-)
-```
-
-### wasm_validate
-
-Validates WebAssembly components and modules using wasm-tools validate. Ensures WASM files are well-formed.
-
-**Load from:**
-```python
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_validate")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `wasm` | Label | ✅ | WASM file to validate |
-
-**Examples:**
-
-Validate a WASM component
-
-```python
-wasm_validate(
-    name = "validate_component",
-    wasm = ":my_component",
-)
-```
-
-### wkg_registry_config
-
-Configures WebAssembly component registries for OCI distribution. Sets up authentication and registry endpoints for component publishing and retrieval.
-
-**Load from:**
-```python
-load("@rules_wasm_component//wkg:defs.bzl", "wkg_registry_config")
-```
-
-**Attributes:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `cache_dir` | String | ❌ | Directory for caching components |
-| `default_registry` | String | ❌ | Default registry to use |
-| `enable_mirror_fallback` | Boolean | ❌ | Enable fallback to mirror registries |
-| `name` | String | ✅ | A unique name for this target |
-| `registries` | List of Strings | ✅ | List of registry configurations |
-
-**Examples:**
-
-Configure multiple component registries
-
-```python
-wkg_registry_config(
-    name = "production_registries",
-    registries = [
-        "github|ghcr.io|oci|env|GITHUB_TOKEN",
-        "docker|docker.io|oci|env|DOCKER_TOKEN",
-    ],
-    default_registry = "github",
-)
 ```

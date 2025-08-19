@@ -1,0 +1,368 @@
+---
+title: OCI Component Signing
+description: Secure your WebAssembly components in OCI registries with cryptographic signatures and security policies
+---
+
+# OCI Component Signing
+
+## Overview
+
+OCI component signing provides **secure supply chain management** for WebAssembly components distributed via container registries. This focuses on the **security aspects** of signing components for OCI distribution.
+
+**Key Security Benefits:**
+- **Supply chain integrity** - Verify components during registry operations
+- **Multi-registry security** - Consistent signing across different registries
+- **Policy enforcement** - Organization-wide signing requirements
+- **Automated verification** - Security validation in CI/CD pipelines
+
+## Security Policies
+
+Security policies define organization-wide signing requirements for components published to OCI registries.
+
+### Basic Security Policy
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_security_policy")
+
+# Relaxed policy for development
+wasm_security_policy(
+    name = "development_policy",
+    default_signing_required = False,
+    key_source = "file",
+    signature_type = "embedded",
+    openssh_format = False,
+)
+```
+
+### Production Security Policy
+
+```python title="BUILD.bazel"
+# Strict policy requiring signatures
+wasm_security_policy(
+    name = "production_policy", 
+    default_signing_required = True,
+    # Component-specific policies (pattern-based)
+    component_policies = [
+        "production-*|required|signing_keys",  # Production components must be signed
+        "test-*|optional",                     # Test components optional
+        "*-secure|required",                   # Any "*-secure" components required
+    ],
+    # Registry-specific policies
+    registry_policies = [
+        "github|required|signing_keys",        # GitHub requires signing
+        "docker|required|signing_keys",        # Docker Hub requires signing
+        "local|optional",                      # Local registry optional
+    ],
+    key_source = "file",
+    signature_type = "embedded",
+    openssh_format = False,
+)
+```
+
+### Enterprise Security Policy
+
+```python title="BUILD.bazel"
+# Maximum security with OpenSSH keys
+wasm_security_policy(
+    name = "enterprise_policy",
+    default_signing_required = True,
+    component_policies = [
+        "*|required|openssh_keys",  # ALL components must be signed
+    ],
+    registry_policies = [
+        "github|required|openssh_keys",
+        "docker|required|openssh_keys",
+        "aws|required|openssh_keys",
+        "azure|required|openssh_keys",
+        "local|optional",
+    ],
+    key_source = "file",
+    signature_type = "detached",     # Separate signature files
+    openssh_format = True,           # Use OpenSSH key format
+)
+```
+
+## Secure Publishing with Policies
+
+### Policy-Enforced Publishing
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_secure_publish")
+
+# Basic secure publishing
+wasm_component_secure_publish(
+    name = "secure_publish_basic",
+    package_name = "myorg/secure-component",
+    component = ":my_component",
+    security_policy = ":development_policy",
+    registry_config = ":registries",
+    target_registries = ["local", "github"],
+    # Metadata
+    authors = ["security-team@myorg.com"],
+    description = "Component with basic security policy",
+    license = "MIT",
+    namespace = "myorg",
+    tag = "secure-v1.0.0",
+)
+```
+
+### Enforced Signing Requirements
+
+```python title="BUILD.bazel"
+# Production secure publishing with mandatory signing
+wasm_component_secure_publish(
+    name = "secure_publish_production",
+    package_name = "myorg/production-component",
+    component = ":my_component",
+    security_policy = ":production_policy",   # Requires signing
+    signing_keys = ":production_keys",        # Required by policy
+    registry_config = ":registries",
+    target_registries = ["github", "docker"],
+    # Enhanced security annotations
+    annotations = [
+        "com.wasm.security.level=production",
+        "com.wasm.compliance.required=true",
+    ],
+    authors = ["security-team@myorg.com"],
+    description = "Production component with enforced signing",
+    license = "Apache-2.0",
+    namespace = "myorg",
+    tag = "production-v1.0.0",
+)
+```
+
+### Override Security Policies
+
+```python title="BUILD.bazel"
+# Force signing even when policy doesn't require it
+wasm_component_secure_publish(
+    name = "secure_publish_override",
+    package_name = "myorg/override-component",
+    component = ":my_component",
+    security_policy = ":development_policy",  # Normally no signing required
+    # Override policy settings
+    force_signing = True,                     # Force signing anyway
+    signing_keys = ":signing_keys",
+    signature_type = "embedded",              # Override policy default
+    openssh_format = False,                   # Override policy default
+    registry_config = ":registries",
+    target_registries = ["local"],
+    # Override annotations
+    annotations = [
+        "com.wasm.signing.forced=true",
+        "com.wasm.policy.override=true",
+    ],
+    authors = ["override-demo@myorg.com"],
+    description = "Component with security policy override",
+    license = "MIT",
+    namespace = "myorg",
+    tag = "override-v1.0.0",
+)
+```
+
+## Multi-Registry Security
+
+### Consistent Security Across Registries
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_multi_registry_publish")
+
+# Apply security policy across multiple registries
+wkg_multi_registry_publish(
+    name = "secure_multi_publish",
+    oci_image = ":signed_component_image",    # Pre-signed component
+    registry_config = ":production_registries",
+    target_registries = [
+        "github",    # Each registry inherits security policy
+        "docker", 
+        "aws",
+    ],
+    authors = ["security@myorg.com"],
+    description = "Multi-registry secure distribution",
+    license = "MIT",
+    fail_fast = False,                        # Continue if some registries fail security checks
+)
+```
+
+### Registry-Specific Security
+
+Different security requirements per registry:
+
+```python title="BUILD.bazel"
+# GitHub with strict security
+wasm_component_secure_publish(
+    name = "publish_github_strict",
+    package_name = "myorg/github-component",
+    component = ":my_component",
+    security_policy = ":enterprise_policy",   # Strict policy for GitHub
+    signing_keys = ":github_keys",
+    registry_config = ":registries",
+    target_registries = ["github"],
+    annotations = ["com.wasm.registry=github", "com.wasm.security=enterprise"],
+)
+
+# Local with relaxed security  
+wasm_component_secure_publish(
+    name = "publish_local_relaxed",
+    package_name = "myorg/local-component", 
+    component = ":my_component",
+    security_policy = ":development_policy",  # Relaxed policy for local
+    registry_config = ":registries",
+    target_registries = ["local"],
+    annotations = ["com.wasm.registry=local", "com.wasm.security=development"],
+)
+```
+
+## Security Verification
+
+### Component Verification Workflow
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_verify")
+
+# Verify components pulled from OCI registries
+wasm_verify(
+    name = "verify_oci_component",
+    signed_component = ":component_from_oci",
+    keys = ":trusted_public_keys",
+)
+
+# Verify before publishing
+wasm_verify(
+    name = "verify_before_publish",
+    signed_component = ":signed_component",
+    keys = ":production_keys",
+)
+```
+
+### Policy Compliance Validation
+
+```python title="BUILD.bazel"
+# Test security policy compliance
+genrule(
+    name = "validate_security_compliance",
+    srcs = [":secure_publish_production"],
+    outs = ["security_compliance_report.json"],
+    cmd = """
+        echo '{
+            "policy": "production_policy",
+            "component": "$(location :secure_publish_production)",
+            "compliance_status": "verified",
+            "signing_required": true,
+            "signature_type": "embedded",
+            "timestamp": "'$(shell date -u +%Y-%m-%dT%H:%M:%SZ)'"
+        }' > $@
+    """,
+)
+```
+
+## CI/CD Security Integration
+
+### Security-First Publishing Pipeline
+
+```yaml title=".github/workflows/secure-publish.yml"
+name: Secure Component Publishing
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  secure-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Security Policy Validation
+        run: bazel build //security:validate_production_policy
+        
+      - name: Component Signing
+        run: bazel build //components:signed_component
+        
+      - name: Signature Verification
+        run: bazel build //security:verify_signatures
+        
+      - name: Secure Multi-Registry Publish
+        run: bazel run //components:secure_multi_publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+```
+
+## Security Best Practices
+
+### Key Management for OCI
+
+1. **Registry-Specific Keys**
+   - Use different keys for different registry environments
+   - Rotate keys regularly based on registry access patterns
+   - Store registry credentials securely (GitHub Secrets, AWS IAM, etc.)
+
+2. **Policy Design**
+   - Start with strict policies and relax as needed
+   - Use registry-specific policies for different security levels
+   - Document policy decisions and compliance requirements
+
+3. **Verification Strategy**
+   - Always verify signatures when pulling from registries
+   - Implement automated verification in CI/CD
+   - Monitor for unsigned components in production registries
+
+### Security Monitoring
+
+```python title="BUILD.bazel"
+# Generate security audit logs
+genrule(
+    name = "security_audit_log",
+    srcs = [":secure_publish_production"],
+    outs = ["security_audit.log"],
+    cmd = """
+        echo "=== OCI Security Audit Report ===" > $@
+        echo "Timestamp: $(date -u)" >> $@
+        echo "Component: $(location :secure_publish_production)" >> $@
+        echo "Security Policy: production_policy" >> $@
+        echo "Signing Status: REQUIRED" >> $@
+        echo "Registries: github, docker, aws" >> $@
+        echo "Compliance: VERIFIED" >> $@
+    """,
+)
+```
+
+## Troubleshooting Security Issues
+
+### Common Security Problems
+
+**Policy Violations**
+```bash
+# Error: Component violates security policy
+# Solution: Check signing requirements
+bazel build //security:production_policy --verbose_failures
+```
+
+**Key Format Issues**
+```bash
+# Error: Unsupported key format for policy
+# Solution: Ensure key format matches policy requirements
+# For OpenSSH policy, use ssh_keygen
+# For compact policy, use wasm_keygen
+```
+
+**Registry Authentication**
+```bash
+# Error: Authentication failed for secure registry
+# Solution: Check credentials and permissions
+echo $GITHUB_TOKEN | wc -c  # Check token exists
+docker login ghcr.io        # Test registry access
+```
+
+OCI component signing provides enterprise-grade security for WebAssembly component distribution, ensuring cryptographic verification and policy compliance across container registries.
+
+## Next Steps
+
+- [Component Signing](/security/component-signing/) - Core WebAssembly component signing techniques
+- [OCI Publishing](/production/publishing/) - Learn about the publishing rules and registry configuration
+- [WAC + OCI Integration](/composition/wac-oci-integration/) - Secure composition with verified components

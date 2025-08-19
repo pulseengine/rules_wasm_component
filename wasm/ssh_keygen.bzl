@@ -12,7 +12,7 @@ def _ssh_keygen_impl(ctx):
 
     # Get the Wasmtime toolchain
     wasmtime_toolchain = ctx.toolchains["//toolchains:wasmtime_toolchain_type"]
-    
+
     # Declare output files
     private_key = ctx.actions.declare_file(ctx.attr.private_key_name)
     public_key = ctx.actions.declare_file(ctx.attr.public_key_name)

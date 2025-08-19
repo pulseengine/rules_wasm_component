@@ -58,7 +58,7 @@ Use different optimization profiles:
 ```starlark
 rust_wasm_component(
     name = "my_component_all_profiles",
-    srcs = ["lib.rs"], 
+    srcs = ["lib.rs"],
     wit = "component.wit",
     profiles = ["debug", "release", "size"],
 )
@@ -80,7 +80,7 @@ rust_wasm_component(
 
 Track key metrics:
 - Component load time
-- First function call latency  
+- First function call latency
 - Memory usage
 - Execution time
 

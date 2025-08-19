@@ -5,50 +5,362 @@ description: Distribute WebAssembly components via container registries
 
 # OCI Publishing
 
-This guide covers publishing WebAssembly components to OCI (Open Container Initiative) registries for distribution and sharing.
+Distribute WebAssembly components via OCI (Open Container Initiative) registries using comprehensive publishing rules with support for signing, metadata, and multi-registry distribution.
 
 ## Overview
 
-The rules support publishing components to OCI-compatible registries like:
-- Docker Hub
-- GitHub Container Registry (ghcr.io)
-- AWS ECR
-- Azure Container Registry
-- Any OCI-compatible registry
+The rules provide enterprise-grade OCI publishing with:
+- **Multiple OCI registries**: Docker Hub, GitHub Container Registry, AWS ECR, Azure Container Registry
+- **Component signing integration**: Automatic signing during publish
+- **Enhanced metadata**: Rich annotations and component information
+- **Multi-registry distribution**: Publish to multiple registries simultaneously
+- **Security policies**: Enforce signing requirements across registries
+
+## Registry Configuration
+
+First, configure your target registries:
+
+```starlark
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_registry_config")
+
+# Basic registry configuration
+wkg_registry_config(
+    name = "registries",
+    default_registry = "github",
+    registries = [
+        "local|localhost:5000|oci",
+        "github|ghcr.io|oci|env|GITHUB_TOKEN",
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+    ],
+)
+
+# Production registry configuration with advanced features
+wkg_registry_config(
+    name = "production_registries",
+    default_registry = "github",
+    cache_dir = "/tmp/wkg_cache",
+    enable_mirror_fallback = True,
+    timeout_seconds = 120,
+    registries = [
+        "github|ghcr.io|oci|env|GITHUB_TOKEN",
+        "docker|docker.io|oci|env|DOCKER_TOKEN",
+        "aws|123456789.dkr.ecr.us-west-2.amazonaws.com|oci|oauth|client_id|client_secret",
+    ],
+)
+```
 
 ## Basic Publishing
 
-```starlark
-load("@rules_wasm_component//oci:defs.bzl", "oci_push")
+### Simple Component Publishing
 
-oci_push(
+```starlark
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_image", "wasm_component_publish")
+
+# Create OCI image
+wasm_component_oci_image(
+    name = "my_component_image",
+    component = ":my_component",
+    package_name = "myorg/my-component",
+    registry = "ghcr.io",
+    namespace = "myorg",
+    tag = "v1.0.0",
+    description = "My WebAssembly component",
+    authors = ["developer@myorg.com"],
+    license = "MIT",
+)
+
+# Publish to registry
+wasm_component_publish(
     name = "publish_component",
-    image = ":my_component",
-    repository = "ghcr.io/myorg/my-component",
+    oci_image = ":my_component_image",
+    registry_config = ":registries",
+)
+```
+
+### One-Step Publishing
+
+```starlark
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_publish")
+
+# Publish directly without separate image creation
+wasm_component_oci_publish(
+    name = "publish_direct",
+    component = ":my_component",
+    package_name = "myorg/my-component",
+    registry = "ghcr.io",
+    namespace = "myorg",
     tag = "latest",
+    registry_config = ":registries",
+    description = "Direct publishing example",
+    authors = ["developer@myorg.com"],
+    license = "MIT",
+)
+```
+
+## Enhanced Metadata
+
+### Rich Component Annotations
+
+```starlark
+load("@rules_wasm_component//wkg:defs.bzl", "enhanced_oci_annotations", "wasm_component_oci_image")
+
+wasm_component_oci_image(
+    name = "annotated_component",
+    component = ":my_component",
+    package_name = "myorg/annotated-component",
+    # Use enhanced annotations for rich metadata
+    annotations = enhanced_oci_annotations(
+        component_type = "service",
+        language = "rust",
+        framework = "wasmtime",
+        wasi_version = "preview2",
+        security_level = "production",
+        compliance_tags = ["SOC2", "GDPR"],
+        custom_annotations = [
+            "com.myorg.team=backend",
+            "com.myorg.environment=production",
+        ],
+    ),
+    registry = "ghcr.io",
+    namespace = "myorg",
+    tag = "annotated-v1.0.0",
+)
+```
+
+## Multi-Registry Publishing
+
+### Publish to Multiple Registries
+
+```starlark
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_multi_registry_publish")
+
+# Publish to selected registries
+wkg_multi_registry_publish(
+    name = "publish_multi",
+    oci_image = ":my_component_image",
+    registry_config = ":production_registries",
+    target_registries = [
+        "github",
+        "docker",
+        "aws",
+    ],
+    authors = ["distribution@myorg.com"],
+    description = "Multi-registry component distribution",
+    license = "Apache-2.0",
+    fail_fast = False,  # Continue if some registries fail
+)
+
+# Publish to ALL configured registries
+wkg_multi_registry_publish(
+    name = "publish_everywhere",
+    oci_image = ":my_component_image",
+    registry_config = ":production_registries",
+    # target_registries not specified = use all
+    authors = ["distribution@myorg.com"],
+    description = "Universal component distribution",
+    license = "MIT",
+    fail_fast = True,  # Stop on first failure
+)
+```
+
+## Multi-Architecture Publishing
+
+### Cross-Platform Component Distribution
+
+```starlark
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_multi_arch_package", "wasm_component_multi_arch_publish")
+
+# Create multi-architecture package
+wasm_component_multi_arch_package(
+    name = "multiarch_package",
+    package_name = "myorg/multiarch-component",
+    components = {
+        "wasm32-wasi": ":wasm32_wasi_component",
+        "wasm32-unknown": ":wasm32_unknown_component",
+    },
+    default_architecture = "wasm32-wasi",
+    namespace = "myorg",
+    version = "1.0.0",
+)
+
+# Publish multi-architecture package
+wasm_component_multi_arch_publish(
+    name = "publish_multiarch",
+    multi_arch_image = ":multiarch_package",
+    registry = "ghcr.io",
+    namespace = "myorg",
+    tag = "multiarch",
+    registry_config = ":registries",
 )
 ```
 
 ## Registry Authentication
 
-Configure authentication using standard OCI methods:
-- Docker config file (`~/.docker/config.json`)
-- Environment variables
-- Service account credentials
+Configure authentication for different registry types:
 
-## Automated Publishing
+### GitHub Container Registry
 
-Integrate with CI/CD pipelines:
+```bash
+# Set GitHub token
+export GITHUB_TOKEN="your_token_here"
 
-```yaml
-# GitHub Actions example
-- name: Publish Component
-  run: bazel run //my/component:publish_component
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+# Or use Docker config
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+### Docker Hub
+
+```bash
+# Set Docker Hub token
+export DOCKER_TOKEN="your_token_here"
+
+# Or use Docker config
+echo $DOCKER_TOKEN | docker login docker.io -u USERNAME --password-stdin
+```
+
+### AWS ECR
+
+```bash
+# Use AWS CLI for authentication
+aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 123456789.dkr.ecr.us-west-2.amazonaws.com
+```
+
+## CI/CD Integration
+
+### GitHub Actions Workflow
+
+```yaml title=".github/workflows/publish.yml"
+name: Publish Components
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Bazel
+        uses: bazelbuild/setup-bazelisk@v2
+        
+      - name: Build component
+        run: bazel build //src:my_component
+        
+      - name: Publish to registries
+        run: bazel run //src:publish_multi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+```
+
+### Jenkins Pipeline
+
+```groovy title="Jenkinsfile"
+pipeline {
+    agent any
+    
+    environment {
+        GITHUB_TOKEN = credentials('github-token')
+        DOCKER_TOKEN = credentials('docker-token')
+    }
+    
+    stages {
+        stage('Build') {
+            steps {
+                sh 'bazel build //src:my_component'
+            }
+        }
+        
+        stage('Publish') {
+            when {
+                tag pattern: 'v\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
+            }
+            steps {
+                sh 'bazel run //src:publish_everywhere'
+            }
+        }
+    }
+}
+```
+
+## Advanced Features
+
+### Dry Run Publishing
+
+```starlark
+# Test publishing without actually pushing
+wasm_component_publish(
+    name = "publish_dry_run",
+    oci_image = ":my_component_image",
+    registry_config = ":registries",
+    dry_run = True,  # Only simulate the publish
+)
+```
+
+### Metadata Extraction
+
+```starlark
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_metadata_extract", "wasm_component_oci_metadata_mapper")
+
+# Extract metadata from component
+wasm_component_metadata_extract(
+    name = "extract_metadata",
+    component = ":my_component",
+)
+
+# Map metadata to OCI annotations
+wasm_component_oci_metadata_mapper(
+    name = "mapped_metadata",
+    component = ":my_component",
+    metadata_extract = ":extract_metadata",
+    component_type = "service",
+    language = "rust",
+    security_level = "production",
+)
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Authentication Failures**
+```bash
+# Check Docker config
+cat ~/.docker/config.json
+
+# Test registry access
+docker pull hello-world
+```
+
+**Network Issues**
+```bash
+# Test registry connectivity
+curl -I https://ghcr.io/v2/
+
+# Check firewall/proxy settings
+echo $HTTP_PROXY
+echo $HTTPS_PROXY
+```
+
+**Multi-Registry Failures**
+```starlark
+# Use fail_fast = False to continue on individual failures
+wkg_multi_registry_publish(
+    name = "resilient_publish",
+    oci_image = ":my_component_image",
+    registry_config = ":registries",
+    fail_fast = False,  # Continue even if some registries fail
+)
 ```
 
 ## Next Steps
 
-- [Component Signing](/security/component-signing/) - Add cryptographic signatures
+- [Component Signing](/security/component-signing/) - Add cryptographic signatures for security
+- [OCI Component Signing](/security/oci-signing/) - Secure your published components
 - [WAC + OCI Integration](/composition/wac-oci-integration/) - Use published components in compositions

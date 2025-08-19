@@ -176,7 +176,7 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
         "PATH": node_dir + ":" + repository_ctx.os.environ.get("PATH", ""),
         "NODE_PATH": "",  # Clear any existing NODE_PATH
     }
-    
+
     # Install platform-specific oxc-parser bindings first
     platform_binding = ""
     if platform == "linux_amd64":
@@ -187,16 +187,16 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
         platform_binding = "@oxc-parser/binding-darwin-arm64"
     elif platform == "windows_amd64":
         platform_binding = "@oxc-parser/binding-win32-x64-msvc"
-    
+
     install_packages = [
         "@bytecodealliance/jco@{}".format(jco_version),
         "@bytecodealliance/componentize-js",  # Required dependency
     ]
-    
+
     if platform_binding:
         install_packages.append(platform_binding)
         print("Installing platform-specific oxc-parser binding: {}".format(platform_binding))
-    
+
     npm_install_result = repository_ctx.execute(
         [
             npm_binary,
@@ -216,7 +216,7 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
         ))
 
     print("Successfully installed jco via hermetic npm")
-    
+
     # Try to rebuild native modules to ensure platform compatibility
     print("Rebuilding native modules for platform compatibility...")
     rebuild_result = repository_ctx.execute(
@@ -228,7 +228,7 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
         ],
         environment = npm_env,
     )
-    
+
     if rebuild_result.return_code != 0:
         print("Warning: npm rebuild failed, but continuing: {}".format(rebuild_result.stderr))
     else:

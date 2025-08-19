@@ -1,10 +1,16 @@
 """Unit tests for the checksum registry API"""
 
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
-load("//checksums:registry.bzl", 
-     "get_tool_checksum", "get_tool_info", "get_latest_version", 
-     "list_supported_platforms", "get_github_repo", "validate_tool_exists",
-     "list_available_tools")
+load(
+    "//checksums:registry.bzl",
+    "get_github_repo",
+    "get_latest_version",
+    "get_tool_checksum",
+    "get_tool_info",
+    "list_available_tools",
+    "list_supported_platforms",
+    "validate_tool_exists",
+)
 
 def _test_get_tool_checksum(ctx):
     """Test get_tool_checksum function"""
