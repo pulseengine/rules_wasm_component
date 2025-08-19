@@ -6,7 +6,7 @@ file operations, JSON validation, and tool execution.
 */
 
 use anyhow::Result;
-use checksum_updater::{
+use checksum_updater_lib::{
     checksum_manager::ChecksumManager, update_engine::UpdateEngine, validator::ChecksumValidator,
 };
 use serde_json::Value;
@@ -191,7 +191,7 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
     assert_eq!(parsed["latest_version"], "0.0.0");
 
     // Test updating tool version
-    use checksum_updater::checksum_manager::{PlatformInfo, VersionInfo};
+    use checksum_updater_lib::checksum_manager::{PlatformInfo, VersionInfo};
     use std::collections::HashMap;
 
     let mut platforms = HashMap::new();
@@ -224,7 +224,7 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
 /// Test configuration parsing and tool configuration
 #[tokio::test]
 async fn test_tool_configuration() -> Result<()> {
-    use checksum_updater::tool_config::ToolConfig;
+    use checksum_updater_lib::tool_config::ToolConfig;
 
     let tool_config = ToolConfig::default();
 
