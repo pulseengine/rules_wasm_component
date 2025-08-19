@@ -1,0 +1,56 @@
+"""Hermetic SSH key generation tool as WebAssembly Component
+
+This provides a Bazel-native replacement for OpenSSH's ssh-keygen tool,
+eliminating external dependencies while maintaining OpenSSH format compatibility.
+Built as a WebAssembly component for hermetic execution.
+"""
+
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//rust:defs.bzl", "rust_wasm_component")
+
+package(default_visibility = ["//visibility:public"])
+
+# Hermetic ssh-keygen as WebAssembly component
+rust_wasm_component(
+    name = "ssh_keygen_component",
+    srcs = ["src/main.rs"],
+    edition = "2021",
+    deps = [
+        "@ssh_keygen_crates//:anyhow",
+        "@ssh_keygen_crates//:clap",
+        "@ssh_keygen_crates//:rand",
+        "@ssh_keygen_crates//:ssh-key",
+    ],
+)
+
+# Native binary for host execution (used in toolchain)
+rust_binary(
+    name = "ssh-keygen-native",
+    srcs = ["src/main.rs"],
+    edition = "2021",
+    deps = [
+        "@ssh_keygen_crates//:anyhow",
+        "@ssh_keygen_crates//:clap",
+        "@ssh_keygen_crates//:rand",
+        "@ssh_keygen_crates//:ssh-key",
+    ],
+)
+
+# Tests for the ssh-keygen tool
+rust_test(
+    name = "ssh_keygen_test",
+    srcs = ["src/main.rs"],
+    deps = [
+        "@ssh_keygen_crates//:anyhow",
+        "@ssh_keygen_crates//:clap",
+        "@ssh_keygen_crates//:rand",
+        "@ssh_keygen_crates//:ssh-key",
+        "@ssh_keygen_crates//:tempfile",
+    ],
+)
+
+# Alias for easier usage
+alias(
+    name = "keygen",
+    actual = ":ssh_keygen_component",
+)

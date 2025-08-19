@@ -71,7 +71,7 @@ register_toolchains("@go_toolchains//:all")
 # WASI WIT interface definitions
 wasi_wit_ext = use_extension("//wasm:extensions.bzl", "wasi_wit")
 wasi_wit_ext.init()
-use_repo(wasi_wit_ext, "wasi_cli", "wasi_cli_v020", "wasi_clocks", "wasi_clocks_v020", "wasi_filesystem", "wasi_http", "wasi_io", "wasi_io_v020", "wasi_random", "wasi_sockets")  # Complete WASI ecosystem (0.2.3 + 0.2.0)
+use_repo(wasi_wit_ext, "wasi_cli", "wasi_cli_v020", "wasi_clocks", "wasi_clocks_v020", "wasi_filesystem", "wasi_http", "wasi_io", "wasi_io_v020", "wasi_nn", "wasi_random", "wasi_sockets")  # Complete WASI ecosystem (0.2.3 + 0.2.0 + NN)
 
 # WebAssembly toolchains
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
@@ -213,7 +213,22 @@ crate.from_cargo(
         "x86_64-pc-windows-msvc",
     ],
 )
-use_repo(crate, "crates", "wasmsign2_crates", "wizer_crates")
+crate.from_cargo(
+    name = "ssh_keygen_crates",
+    cargo_lockfile = "//tools/ssh_keygen:Cargo.lock",
+    manifests = ["//tools/ssh_keygen:Cargo.toml"],
+    supported_platform_triples = [
+        "wasm32-wasip2",  # Enable WebAssembly WASI Preview 2 support
+        "wasm32-wasip1",
+        "wasm32-unknown-unknown",
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+    ],
+)
+use_repo(crate, "crates", "ssh_keygen_crates", "wasmsign2_crates", "wizer_crates")
 
 # Modernized WASM tool repositories using git_repository + rules_rust
 wasm_tool_repos = use_extension("//toolchains:extensions.bzl", "wasm_tool_repositories")
