@@ -23,7 +23,7 @@ export default defineConfig({
 			expressiveCode: {
 				themes: ['github-dark', 'github-light'],
 				// Map languages for better syntax highlighting
-				langs: ['python', 'rust', 'go', 'javascript', 'typescript', 'bash', 'yaml', 'json', 'dockerfile']
+				langs: ['python', 'rust', 'go', 'javascript', 'typescript', 'bash', 'yaml', 'json', 'dockerfile', 'starlark']
 			},
 			social: [
 				{

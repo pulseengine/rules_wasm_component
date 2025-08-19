@@ -148,7 +148,7 @@ bazel_dep(name = "rules_nodejs", version = "6.5.0")
 
 # Configure Node.js version and tools
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
-node.toolchain(node_version = "18.19.0")
+node.toolchain(node_version = "18.20.8")
 use_repo(node, "nodejs_toolchains")
 
 # JavaScript/TypeScript WebAssembly components with JCO
