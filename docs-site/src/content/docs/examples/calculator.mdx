@@ -1,0 +1,171 @@
+---
+title: Calculator Component (C++)
+description: Math operations component with error handling in C++
+---
+
+# Calculator Component (C++)
+
+A comprehensive C++ calculator component demonstrating advanced WebAssembly component development patterns.
+
+## Features
+
+- Basic arithmetic operations (add, subtract, multiply, divide)
+- Error handling for division by zero
+- C++20 features and standard library usage
+- WASI Preview 2 integration
+
+## Project Structure
+
+```
+examples/cpp_component/calculator/
+├── BUILD.bazel
+├── src/
+│   ├── calculator.cpp      # Main component implementation
+│   ├── calculator_impl.h   # Calculator interface
+│   ├── math_utils.cpp      # Utility functions
+│   └── math_utils.h        # Math utilities header
+└── wit/
+    └── calculator.wit      # WIT interface definition
+```
+
+## WIT Interface
+
+```wit
+package example:calculator@1.0.0;
+
+interface calculator {
+    // Basic arithmetic operations
+    add: func(a: f64, b: f64) -> f64;
+    subtract: func(a: f64, b: f64) -> f64;
+    multiply: func(a: f64, b: f64) -> f64;
+    
+    // Division with error handling
+    divide: func(a: f64, b: f64) -> result<f64, string>;
+    
+    // Advanced operations
+    power: func(base: f64, exponent: f64) -> f64;
+    sqrt: func(value: f64) -> result<f64, string>;
+}
+
+world calculator {
+    export calculator;
+}
+```
+
+## Implementation
+
+```cpp
+// calculator.cpp
+#include "calculator_impl.h"
+#include "math_utils.h"
+#include <cmath>
+#include <stdexcept>
+
+namespace calculator {
+
+double Calculator::add(double a, double b) {
+    return a + b;
+}
+
+double Calculator::subtract(double a, double b) {
+    return a - b;
+}
+
+double Calculator::multiply(double a, double b) {
+    return a * b;
+}
+
+std::expected<double, std::string> Calculator::divide(double a, double b) {
+    if (std::abs(b) < std::numeric_limits<double>::epsilon()) {
+        return std::unexpected("Division by zero");
+    }
+    return a / b;
+}
+
+double Calculator::power(double base, double exponent) {
+    return std::pow(base, exponent);
+}
+
+std::expected<double, std::string> Calculator::sqrt(double value) {
+    if (value < 0) {
+        return std::unexpected("Cannot take square root of negative number");
+    }
+    return std::sqrt(value);
+}
+
+} // namespace calculator
+```
+
+## BUILD Configuration
+
+```starlark
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_component", "cc_component_library")
+
+# Math utilities library
+cc_component_library(
+    name = "math_utils",
+    srcs = ["src/math_utils.cpp"],
+    hdrs = ["src/math_utils.h"],
+    cxx_std = "c++20",
+    enable_exceptions = True,
+    language = "cpp",
+    optimize = True,
+)
+
+# Calculator component
+cpp_component(
+    name = "calculator_cpp_component", 
+    package_name = "example:calculator@1.0.0",
+    srcs = ["src/calculator.cpp"],
+    hdrs = ["src/calculator_impl.h"],
+    cxx_std = "c++20",
+    enable_exceptions = True,
+    language = "cpp",
+    optimize = True,
+    wit = "wit/calculator.wit",
+    world = "calculator",
+    deps = [":math_utils"],
+)
+```
+
+## Building
+
+```bash
+# Build the component
+bazel build //examples/cpp_component/calculator:calculator_cpp_component
+
+# Validate the component
+bazel run //tools:wasm-tools -- validate \\
+  bazel-bin/examples/cpp_component/calculator/calculator_cpp_component.wasm
+```
+
+## Advanced Features
+
+### Error Handling
+The component demonstrates proper error handling using C++23's `std::expected`:
+
+```cpp
+auto result = calculator.divide(10.0, 0.0);
+if (!result) {
+    // Handle error: result.error() contains "Division by zero"
+}
+```
+
+### Standard Library Usage
+Uses modern C++ features:
+- `<cmath>` for mathematical functions
+- `<limits>` for epsilon comparisons
+- Exception handling for robust error management
+
+## Testing
+
+```bash
+# Run component tests
+bazel test //examples/cpp_component/calculator:all
+```
+
+## Next Steps
+
+- [Multi-Language System](/examples/multi-language/) - Combine with other language components
+- [Performance Optimization](/production/performance/) - Add Wizer pre-initialization
+- [HTTP Service (Go)](/examples/http-service/) - Build web services

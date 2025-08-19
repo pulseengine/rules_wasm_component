@@ -1,0 +1,54 @@
+---
+title: OCI Publishing
+description: Distribute WebAssembly components via container registries
+---
+
+# OCI Publishing
+
+This guide covers publishing WebAssembly components to OCI (Open Container Initiative) registries for distribution and sharing.
+
+## Overview
+
+The rules support publishing components to OCI-compatible registries like:
+- Docker Hub
+- GitHub Container Registry (ghcr.io)
+- AWS ECR
+- Azure Container Registry
+- Any OCI-compatible registry
+
+## Basic Publishing
+
+```starlark
+load("@rules_wasm_component//oci:defs.bzl", "oci_push")
+
+oci_push(
+    name = "publish_component",
+    image = ":my_component",
+    repository = "ghcr.io/myorg/my-component",
+    tag = "latest",
+)
+```
+
+## Registry Authentication
+
+Configure authentication using standard OCI methods:
+- Docker config file (`~/.docker/config.json`)
+- Environment variables
+- Service account credentials
+
+## Automated Publishing
+
+Integrate with CI/CD pipelines:
+
+```yaml
+# GitHub Actions example
+- name: Publish Component
+  run: bazel run //my/component:publish_component
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Next Steps
+
+- [Component Signing](/security/component-signing/) - Add cryptographic signatures
+- [WAC + OCI Integration](/composition/wac-oci-integration/) - Use published components in compositions

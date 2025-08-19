@@ -1,0 +1,286 @@
+---
+title: HTTP Service Component (Go)
+description: Web service component built with TinyGo and WASI Preview 2
+---
+
+# HTTP Service Component (Go)
+
+A production-ready HTTP service component demonstrating web service development with TinyGo and WebAssembly.
+
+## Features
+
+- HTTP/1.1 server implementation
+- JSON request/response handling  
+- Middleware support
+- WASI Preview 2 networking
+- Resource management and cleanup
+
+## Project Structure
+
+```
+examples/go_component/http_service/
+├── BUILD.bazel
+├── src/
+│   ├── main.go           # HTTP server implementation
+│   ├── handlers.go       # Request handlers
+│   ├── middleware.go     # HTTP middleware
+│   └── models.go         # Data models
+└── wit/
+    └── http-service.wit  # WIT interface definition
+```
+
+## WIT Interface
+
+```wit
+package example:http-service@1.0.0;
+
+interface http-handler {
+    // HTTP request/response types
+    record http-request {
+        method: string,
+        path: string,
+        headers: list<tuple<string, string>>,
+        body: option<list<u8>>,
+    }
+    
+    record http-response {
+        status: u32,
+        headers: list<tuple<string, string>>,
+        body: option<list<u8>>,
+    }
+    
+    // Handle HTTP requests
+    handle-request: func(request: http-request) -> http-response;
+}
+
+world http-service-world {
+    export http-handler;
+    import wasi:http/outgoing-handler@0.2.0;
+    import wasi:http/incoming-handler@0.2.0;
+}
+```
+
+## Implementation
+
+```go
+// main.go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "strings"
+)
+
+//go:export handle-request
+func handleRequest(method, path string, headers []Header, body []byte) *Response {
+    // Create request object
+    req := &Request{
+        Method:  method,
+        Path:    path,
+        Headers: headers,
+        Body:    body,
+    }
+    
+    // Route requests
+    switch {
+    case req.Path == "/health":
+        return handleHealth(req)
+    case req.Path == "/api/users" && req.Method == "GET":
+        return handleGetUsers(req)
+    case req.Path == "/api/users" && req.Method == "POST":
+        return handleCreateUser(req)
+    case strings.HasPrefix(req.Path, "/api/users/"):
+        return handleUserByID(req)
+    default:
+        return &Response{
+            Status: 404,
+            Body:   []byte(`{"error": "Not Found"}`),
+            Headers: []Header{
+                {"Content-Type", "application/json"},
+            },
+        }
+    }
+}
+
+func handleHealth(req *Request) *Response {
+    return &Response{
+        Status: 200,
+        Body:   []byte(`{"status": "healthy", "service": "http-service"}`),
+        Headers: []Header{
+            {"Content-Type", "application/json"},
+        },
+    }
+}
+
+func handleGetUsers(req *Request) *Response {
+    users := []User{
+        {ID: 1, Name: "Alice", Email: "alice@example.com"},
+        {ID: 2, Name: "Bob", Email: "bob@example.com"},
+    }
+    
+    data, err := json.Marshal(users)
+    if err != nil {
+        return errorResponse(500, "Failed to serialize users")
+    }
+    
+    return &Response{
+        Status: 200,
+        Body:   data,
+        Headers: []Header{
+            {"Content-Type", "application/json"},
+        },
+    }
+}
+```
+
+## Data Models
+
+```go
+// models.go
+package main
+
+type Request struct {
+    Method  string   `json:"method"`
+    Path    string   `json:"path"`
+    Headers []Header `json:"headers"`
+    Body    []byte   `json:"body,omitempty"`
+}
+
+type Response struct {
+    Status  int      `json:"status"`
+    Headers []Header `json:"headers"`
+    Body    []byte   `json:"body,omitempty"`
+}
+
+type Header struct {
+    Name  string `json:"name"`
+    Value string `json:"value"`
+}
+
+type User struct {
+    ID    int    `json:"id"`
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+```
+
+## BUILD Configuration
+
+```starlark
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
+
+go_wasm_component(
+    name = "http_service_component",
+    srcs = [
+        "src/main.go",
+        "src/handlers.go", 
+        "src/middleware.go",
+        "src/models.go",
+    ],
+    wit = "wit/http-service.wit",
+    world = "http-service-world",
+    package_name = "example:http-service@1.0.0",
+    
+    # TinyGo optimization settings
+    gc = "leaking",  # Use leaking GC for better performance
+    scheduler = "none",  # No goroutine scheduler needed
+    
+    # Performance optimizations
+    optimize = True,
+    wasm_opt_flags = ["-O3", "--enable-bulk-memory"],
+)
+```
+
+## Building and Testing
+
+```bash
+# Build the HTTP service component
+bazel build //examples/go_component/http_service:http_service_component
+
+# Validate the component
+bazel run //tools:wasm-tools -- validate \\
+  bazel-bin/examples/go_component/http_service/http_service_component.wasm
+
+# Run integration tests
+bazel test //examples/go_component/http_service:integration_tests
+```
+
+## Middleware Support
+
+```go
+// middleware.go
+package main
+
+type Middleware func(*Request, func(*Request) *Response) *Response
+
+func LoggingMiddleware(req *Request, next func(*Request) *Response) *Response {
+    // Log request
+    fmt.Printf("Request: %s %s\\n", req.Method, req.Path)
+    
+    // Process request
+    resp := next(req)
+    
+    // Log response
+    fmt.Printf("Response: %d\\n", resp.Status)
+    
+    return resp
+}
+
+func CORSMiddleware(req *Request, next func(*Request) *Response) *Response {
+    resp := next(req)
+    
+    // Add CORS headers
+    resp.Headers = append(resp.Headers, 
+        Header{"Access-Control-Allow-Origin", "*"},
+        Header{"Access-Control-Allow-Methods", "GET, POST, PUT, DELETE"},
+    )
+    
+    return resp
+}
+```
+
+## Performance Considerations
+
+### TinyGo Optimizations
+- Use leaking GC for better performance in short-lived components
+- Disable goroutine scheduler for single-threaded operations
+- Enable bulk memory operations for faster data transfers
+
+### Memory Management
+```go
+// Efficient byte slice handling
+func handleLargePayload(body []byte) *Response {
+    // Process in chunks to reduce memory pressure
+    const chunkSize = 4096
+    for i := 0; i < len(body); i += chunkSize {
+        end := i + chunkSize
+        if end > len(body) {
+            end = len(body)
+        }
+        processChunk(body[i:end])
+    }
+    
+    return successResponse("Processed")
+}
+```
+
+## Production Deployment
+
+Use with Wizer for better startup performance:
+
+```starlark
+wasm_component_wizer_library(
+    name = "optimized_http_service",
+    component = ":http_service_component",
+    init_func = "init_service",
+    allow_wasi = True,
+)
+```
+
+## Next Steps
+
+- [Multi-Language System](/examples/multi-language/) - Compose with other components
+- [Performance Optimization](/production/performance/) - Add pre-initialization
+- [Calculator (C++)](/examples/calculator/) - Learn C++ component development

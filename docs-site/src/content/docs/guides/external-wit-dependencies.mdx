@@ -213,7 +213,11 @@ The most common external dependencies are WASI interfaces. These are pre-configu
 # Enable WASI WIT interfaces
 wasi_wit_ext = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasi_wit")
 wasi_wit_ext.init()
-use_repo(wasi_wit_ext, "wasi_io")
+use_repo(wasi_wit_ext, 
+    "wasi_io", "wasi_cli", "wasi_clocks", "wasi_random",           # Core WASI
+    "wasi_filesystem", "wasi_sockets", "wasi_http",               # Advanced WASI
+    "wasi_nn", "wasi_nn_v0_2_0_rc_2024_08_19", "wasi_nn_v0_2_0_rc_2024_06_25"  # Neural Network
+)
 ```
 
 ```starlark title="BUILD.bazel"
@@ -277,6 +281,14 @@ The following WASI interfaces are pre-configured and available with dual version
 | `@wasi_sockets//:sockets` | `wasi:sockets@0.2.3` | `network`, `udp`, `tcp`, `ip-name-lookup` | Network operations ⚠️ |
 | `@wasi_http//:http` | `wasi:http@0.2.3` | `types`, `handler`, `outgoing-handler`, `proxy` | HTTP client/server ⚠️ |
 
+### WASI-NN (Neural Network / Machine Learning)
+
+| Package | Target | Interfaces | Description |
+|---------|--------|-------------|-------------|
+| `@wasi_nn//:nn` | `wasi:nn@0.2.0-rc-2024-10-28` | `tensor`, `graph`, `inference`, `errors` | Neural network inference (latest) |
+| `@wasi_nn_v0_2_0_rc_2024_08_19//:nn` | `wasi:nn@0.2.0-rc-2024-08-19` | `tensor`, `graph`, `inference`, `errors` | Neural network inference |
+| `@wasi_nn_v0_2_0_rc_2024_06_25//:nn` | `wasi:nn@0.2.0-rc-2024-06-25` | `tensor`, `graph`, `inference`, `errors` | Neural network inference (initial) |
+
 ### WASI 0.2.0 (Original - Maximum Compatibility)
 
 | Package | Target | Interfaces | Description |
@@ -288,9 +300,11 @@ The following WASI interfaces are pre-configured and available with dual version
 ### Status & Recommendations
 
 - ✅ **Core WASI (IO, CLI, Clocks, Random)**: Work perfectly with current toolchain
-- ⚠️ **Advanced WASI (Filesystem, Sockets, HTTP)**: Complete architecture but may have toolchain compatibility issues
+- ⚠️ **Advanced WASI (Filesystem, Sockets, HTTP)**: Complete architecture but may have toolchain compatibility issues  
+- ✅ **WASI-NN (Neural Networks)**: All versions supported, stable interface across releases
 - 🔄 **Use 0.2.0 versions**: For maximum compatibility with older toolchains
 - 📈 **Use 0.2.3 versions**: For latest features when toolchain supports
+- 🧠 **Use latest WASI-NN**: `@wasi_nn//:nn` recommended for new projects
 
 ### Usage Examples
 
@@ -319,6 +333,19 @@ wit_library(
 )
 ```
 
+**Machine learning component:**
+```starlark
+wit_library(
+    name = "ml_service",
+    srcs = ["ml.wit"],
+    deps = [
+        "@wasi_nn//:nn",           # Neural network inference (latest)
+        "@wasi_io//:streams",      # I/O operations
+        "@wasi_filesystem//:filesystem", # Model file access
+    ],
+)
+```
+
 **Advanced component (when toolchain supports):**
 ```starlark
 wit_library(
@@ -341,6 +368,30 @@ wit_library(
         "@wasi_cli_v020//:cli",
         "@wasi_io_v020//:streams",
         "@wasi_clocks_v020//:clocks",
+    ],
+)
+```
+
+**WASI-NN version selection:**
+```starlark
+# Latest features (recommended)
+wit_library(
+    name = "ml_latest",
+    deps = ["@wasi_nn//:nn"],  # v0.2.0-rc-2024-10-28
+)
+
+# Specific version for compatibility
+wit_library(
+    name = "ml_stable",
+    deps = ["@wasi_nn_v0_2_0_rc_2024_06_25//:nn"],  # Initial stable version
+)
+
+# Multiple versions for migration testing
+wit_library(
+    name = "ml_migration_test",
+    deps = [
+        "@wasi_nn_v0_2_0_rc_2024_06_25//:nn",  # Old version
+        "@wasi_nn//:nn",                        # New version
     ],
 )
 ```
@@ -451,7 +502,79 @@ wkg_publish(
 
 Here are real-world scenarios showing when and how to use each method:
 
-### Scenario 1: Building a Web Service
+### Scenario 1: Building a Machine Learning Inference Service
+**Goal:** Create an ML service that processes data using neural network models
+
+```python title="MODULE.bazel"
+# Enable WASI-NN interfaces
+wasi_wit_ext = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasi_wit")
+wasi_wit_ext.init()
+use_repo(wasi_wit_ext, "wasi_nn", "wasi_io", "wasi_filesystem")
+```
+
+```starlark title="BUILD.bazel"
+wit_library(
+    name = "ml_inference_wit",
+    srcs = ["ml-inference.wit"],
+    deps = [
+        "@wasi_nn//:nn",                    # Neural network operations
+        "@wasi_io//:streams",               # Data I/O
+        "@wasi_filesystem//:filesystem",    # Model file loading
+    ],
+)
+
+rust_wasm_component_bindgen(
+    name = "ml_inference_service",
+    srcs = ["src/lib.rs"],
+    wit = ":ml_inference_wit",
+)
+```
+
+```wit title="ml-inference.wit"
+package example:ml-inference@1.0.0;
+
+world ml-inference {
+    // Import WASI-NN for neural network operations
+    import wasi:nn/graph@0.2.0-rc-2024-10-28;
+    import wasi:nn/tensor@0.2.0-rc-2024-10-28;
+    import wasi:nn/inference@0.2.0-rc-2024-10-28;
+    import wasi:nn/errors@0.2.0-rc-2024-10-28;
+    
+    // Import WASI for file and I/O operations
+    import wasi:filesystem/types@0.2.3;
+    import wasi:io/streams@0.2.3;
+    
+    // Export inference API
+    export infer: func(model-path: string, input-data: list<u8>) -> result<list<f32>, string>;
+}
+```
+
+```rust title="src/lib.rs"
+use crate::bindings::wasi::nn::{graph, tensor, inference};
+
+impl Guest for Component {
+    fn infer(model_path: String, input_data: Vec<u8>) -> Result<Vec<f32>, String> {
+        // 1. Load the neural network model
+        let graph_builder = graph::load(&model_path)
+            .map_err(|e| format!("Failed to load model: {:?}", e))?;
+        
+        // 2. Create input tensor from raw data
+        let tensor_data = tensor::TensorData {
+            data: input_data,
+            dimensions: vec![1, 784], // Example: 28x28 image flattened
+        };
+        
+        // 3. Execute inference
+        let outputs = inference::compute(&graph_builder, &[tensor_data])
+            .map_err(|e| format!("Inference failed: {:?}", e))?;
+        
+        // 4. Extract and return results
+        Ok(outputs[0].data.iter().map(|&x| x as f32).collect())
+    }
+}
+```
+
+### Scenario 2: Building a Web Service
 **Goal:** Create a web service that handles HTTP requests and accesses a database
 
 ```python title="MODULE.bazel"
@@ -719,7 +842,7 @@ wit_library(
 Update `MODULE.bazel`:
 
 ```python title="MODULE.bazel"
-use_repo(wasi_wit_ext, "wasi_io", "company_shared_wit")
+use_repo(wasi_wit_ext, "wasi_io", "wasi_nn", "company_shared_wit")
 ```
 
 ## Calculating SHA256 Checksums
