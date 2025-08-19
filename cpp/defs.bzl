@@ -109,6 +109,12 @@ def _cpp_component_impl(ctx):
 
     # Include directories
     compile_args.add("-I" + work_dir.path)
+    
+    # Add C++ standard library paths for wasm32-wasip2 target
+    if ctx.attr.language == "cpp":
+        compile_args.add("-I" + sysroot + "/include/wasm32-wasip2/c++/v1")
+        compile_args.add("-I" + sysroot + "/include/c++/v1")
+    
     for include in ctx.attr.includes:
         compile_args.add("-I" + include)
 
@@ -179,8 +185,9 @@ def _cpp_component_impl(ctx):
         metadata = {
             "name": ctx.label.name,
             "language": "cpp",
-            "target": "wasm32-wasi",
+            "target": "wasm32-wasip2",
             "wasi_sdk": True,
+            "toolchain": "wasi-sdk",
         },
         profile = ctx.attr.optimization if hasattr(ctx.attr, "optimization") else "release",
         profile_variants = {},
@@ -424,6 +431,12 @@ def _cc_component_library_impl(ctx):
         # Include directories
         for hdr in ctx.files.hdrs:
             compile_args.add("-I" + hdr.dirname)
+            
+        # Add C++ standard library paths for wasm32-wasip2 target
+        if ctx.attr.language == "cpp":
+            compile_args.add("-I" + sysroot + "/include/wasm32-wasip2/c++/v1")
+            compile_args.add("-I" + sysroot + "/include/c++/v1")
+            
         for include in ctx.attr.includes:
             compile_args.add("-I" + include)
 
