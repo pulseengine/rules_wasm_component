@@ -29,13 +29,14 @@ def _cpp_component_impl(ctx):
     dep_headers = []
     dep_libraries = []
     dep_includes = []
-    
+
     for dep in ctx.attr.deps:
         if CcInfo in dep:
             # Use proper CcInfo provider for header and library information
             cc_info = dep[CcInfo]
             dep_headers.extend(cc_info.compilation_context.headers.to_list())
             dep_includes.extend(cc_info.compilation_context.includes.to_list())
+
             # Extract static libraries from linking context
             for linker_input in cc_info.linking_context.linker_inputs.to_list():
                 for library in linker_input.libraries:
@@ -87,16 +88,22 @@ def _cpp_component_impl(ctx):
 
     # Basic compiler flags for Preview2
     compile_args.add("--target=wasm32-wasip2")
-    # Compute sysroot path from sysroot_files for external repository compatibility
+
+    # Build sysroot path from toolchain repository for external compatibility
     if sysroot_files and sysroot_files.files:
-        # Use the directory containing the sysroot files as the sysroot path
-        sysroot_file = sysroot_files.files.to_list()[0]
-        # Extract the repository-relative sysroot path
-        sysroot_path = sysroot_file.path.split("/sysroot/")[0] + "/sysroot"
+        # Use sysroot_files to determine the actual sysroot directory
+        toolchain_file = sysroot_files.files.to_list()[0]
+
+        # Extract the sysroot directory by removing the file component
+        if "/sysroot/" in toolchain_file.path:
+            # Get everything up to and including /sysroot/
+            sysroot_base = toolchain_file.path.split("/sysroot/")[0] + "/sysroot"
+            sysroot_path = sysroot_base
+        else:
+            sysroot_path = sysroot
     else:
-        # Fallback to configured path
         sysroot_path = sysroot
-    
+
     compile_args.add("--sysroot=" + sysroot_path)
 
     # Component model definitions
@@ -132,12 +139,22 @@ def _cpp_component_impl(ctx):
 
     # Include directories
     compile_args.add("-I" + work_dir.path)
-    
+
     # Add C++ standard library paths for wasm32-wasip2 target
     if ctx.attr.language == "cpp":
-        compile_args.add("-I" + sysroot_path + "/include/wasm32-wasip2/c++/v1")
-        compile_args.add("-I" + sysroot_path + "/include/c++/v1")
-    
+        # WASI SDK stores C++ headers in share/wasi-sysroot, not just sysroot
+        if "/external/" in sysroot_path:
+            toolchain_repo = sysroot_path.split("/sysroot")[0]
+            wasi_sysroot = toolchain_repo + "/share/wasi-sysroot"
+        else:
+            wasi_sysroot = sysroot_path
+        compile_args.add("-I" + wasi_sysroot + "/include/wasm32-wasip2/c++/v1")
+        compile_args.add("-I" + wasi_sysroot + "/include/c++/v1")
+
+        # Also add clang's builtin headers
+        if "/external/" in sysroot_path:
+            compile_args.add("-I" + toolchain_repo + "/lib/clang/20/include")
+
     for include in ctx.attr.includes:
         compile_args.add("-I" + include)
 
@@ -145,7 +162,7 @@ def _cpp_component_impl(ctx):
     for include_dir in dep_includes:
         if include_dir not in [work_dir.path] + ctx.attr.includes:
             compile_args.add("-I" + include_dir)
-    
+
     # Add dependency header directories (fallback for non-CcInfo deps)
     for dep_hdr in dep_headers:
         include_dir = dep_hdr.dirname
@@ -428,8 +445,16 @@ def _cc_component_library_impl(ctx):
         # Compile arguments
         compile_args = ctx.actions.args()
         compile_args.add("--target=wasm32-wasip2")
+
         # Resolve sysroot path dynamically for external repository compatibility
-        sysroot_dir = sysroot_files.files.to_list()[0].dirname if sysroot_files.files else sysroot
+        if sysroot_files and sysroot_files.files:
+            toolchain_file = sysroot_files.files.to_list()[0]
+            if "/sysroot/" in toolchain_file.path:
+                sysroot_dir = toolchain_file.path.split("/sysroot/")[0] + "/sysroot"
+            else:
+                sysroot_dir = sysroot
+        else:
+            sysroot_dir = sysroot
         compile_args.add("--sysroot=" + sysroot_dir)
         compile_args.add("-c")  # Compile only, don't link
 
@@ -461,12 +486,22 @@ def _cc_component_library_impl(ctx):
         # Include directories
         for hdr in ctx.files.hdrs:
             compile_args.add("-I" + hdr.dirname)
-            
+
         # Add C++ standard library paths for wasm32-wasip2 target
         if ctx.attr.language == "cpp":
-            compile_args.add("-I" + sysroot + "/include/wasm32-wasip2/c++/v1")
-            compile_args.add("-I" + sysroot + "/include/c++/v1")
-            
+            # WASI SDK stores C++ headers in share/wasi-sysroot, not just sysroot
+            if "/external/" in sysroot_dir:
+                toolchain_repo = sysroot_dir.split("/sysroot")[0]
+                wasi_sysroot = toolchain_repo + "/share/wasi-sysroot"
+            else:
+                wasi_sysroot = sysroot_dir
+            compile_args.add("-I" + wasi_sysroot + "/include/wasm32-wasip2/c++/v1")
+            compile_args.add("-I" + wasi_sysroot + "/include/c++/v1")
+
+            # Also add clang's builtin headers
+            if "/external/" in sysroot_dir:
+                compile_args.add("-I" + toolchain_repo + "/lib/clang/20/include")
+
         for include in ctx.attr.includes:
             compile_args.add("-I" + include)
 
@@ -514,7 +549,7 @@ def _cc_component_library_impl(ctx):
     transitive_headers = []
     transitive_libraries = []
     transitive_includes = []
-    
+
     for dep in ctx.attr.deps:
         if CcInfo in dep:
             cc_info = dep[CcInfo]
@@ -527,7 +562,7 @@ def _cc_component_library_impl(ctx):
         headers = depset(ctx.files.hdrs, transitive = transitive_headers),
         includes = depset([h.dirname for h in ctx.files.hdrs] + ctx.attr.includes, transitive = [depset(transitive_includes)]),
     )
-    
+
     # Create CcInfo provider with compilation context only
     # Note: We don't create linking context since we're using custom WASM toolchain
     cc_info = CcInfo(
