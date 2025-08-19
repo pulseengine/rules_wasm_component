@@ -54,13 +54,13 @@ interface calculator {
   add: func(a: f64, b: f64) -> f64;
   subtract: func(a: f64, b: f64) -> f64;
   multiply: func(a: f64, b: f64) -> f64;
-  
+
   record calculation-result {
     success: bool,
     value: option<f64>,
     error: option<string>,
   }
-  
+
   divide: func(a: f64, b: f64) -> calculation-result;
 }
 
@@ -98,7 +98,7 @@ CalculationResult Calculator::divide(double a, double b) const {
             .error = "Division by zero"
         };
     }
-    
+
     return CalculationResult{
         .success = true,
         .value = a / b,
@@ -233,7 +233,7 @@ cc_component_library(
 
 # Generate bindings
 cpp_wit_bindgen(
-    name = "processor_bindings", 
+    name = "processor_bindings",
     wit = "wit/processor.wit",
     world = "data-processor",
     string_encoding = "utf8",
@@ -294,7 +294,7 @@ calculation_result_t divide(double a, double b) {
         };
         return result;
     }
-    
+
     calculation_result_t result = {
         .success = true,
         .value = a / b,
@@ -325,7 +325,7 @@ package example:file-processor@1.0.0;
 world file-processor {
   import wasi:io/streams@0.2.3;
   import wasi:filesystem/types@0.2.3;
-  
+
   export process-file: func(path: string) -> result<string, string>;
   export file-size: func(path: string) -> result<u64, string>;
 }
@@ -344,27 +344,27 @@ public:
             if (!file.is_open()) {
                 return std::string("Failed to open file: " + path);
             }
-            
+
             std::stringstream buffer;
             buffer << file.rdbuf();
             std::string content = buffer.str();
-            
+
             // Process content (example: convert to uppercase)
             std::transform(content.begin(), content.end(), content.begin(), ::toupper);
-            
+
             return content;
         } catch (const std::exception& e) {
             return std::string("Error processing file: " + std::string(e.what()));
         }
     }
-    
+
     std::variant<uint64_t, std::string> fileSize(const std::string& path) {
         try {
             std::filesystem::path filePath(path);
             if (!std::filesystem::exists(filePath)) {
                 return std::string("File does not exist: " + path);
             }
-            
+
             return static_cast<uint64_t>(std::filesystem::file_size(filePath));
         } catch (const std::exception& e) {
             return std::string("Error getting file size: " + std::string(e.what()));
@@ -470,18 +470,18 @@ std::vector<double> processNumbers(const std::vector<double>& numbers) {
 
 void testBasicOperations() {
     Calculator calc;
-    
+
     assert(calc.add(2.0, 3.0) == 5.0);
     assert(calc.subtract(5.0, 3.0) == 2.0);
     assert(calc.multiply(4.0, 3.0) == 12.0);
-    
+
     auto result = calc.divide(10.0, 2.0);
     assert(std::holds_alternative<double>(result));
     assert(std::get<double>(result) == 5.0);
-    
+
     auto errorResult = calc.divide(10.0, 0.0);
     assert(std::holds_alternative<std::string>(errorResult));
-    
+
     std::cout << "All tests passed!" << std::endl;
 }
 ```

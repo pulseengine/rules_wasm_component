@@ -213,7 +213,7 @@ The most common external dependencies are WASI interfaces. These are pre-configu
 # Enable WASI WIT interfaces
 wasi_wit_ext = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasi_wit")
 wasi_wit_ext.init()
-use_repo(wasi_wit_ext, 
+use_repo(wasi_wit_ext,
     "wasi_io", "wasi_cli", "wasi_clocks", "wasi_random",           # Core WASI
     "wasi_filesystem", "wasi_sockets", "wasi_http",               # Advanced WASI
     "wasi_nn", "wasi_nn_v0_2_0_rc_2024_08_19", "wasi_nn_v0_2_0_rc_2024_06_25"  # Neural Network
@@ -300,7 +300,7 @@ The following WASI interfaces are pre-configured and available with dual version
 ### Status & Recommendations
 
 - ✅ **Core WASI (IO, CLI, Clocks, Random)**: Work perfectly with current toolchain
-- ⚠️ **Advanced WASI (Filesystem, Sockets, HTTP)**: Complete architecture but may have toolchain compatibility issues  
+- ⚠️ **Advanced WASI (Filesystem, Sockets, HTTP)**: Complete architecture but may have toolchain compatibility issues
 - ✅ **WASI-NN (Neural Networks)**: All versions supported, stable interface across releases
 - 🔄 **Use 0.2.0 versions**: For maximum compatibility with older toolchains
 - 📈 **Use 0.2.3 versions**: For latest features when toolchain supports
@@ -539,11 +539,11 @@ world ml-inference {
     import wasi:nn/tensor@0.2.0-rc-2024-10-28;
     import wasi:nn/inference@0.2.0-rc-2024-10-28;
     import wasi:nn/errors@0.2.0-rc-2024-10-28;
-    
+
     // Import WASI for file and I/O operations
     import wasi:filesystem/types@0.2.3;
     import wasi:io/streams@0.2.3;
-    
+
     // Export inference API
     export infer: func(model-path: string, input-data: list<u8>) -> result<list<f32>, string>;
 }
@@ -557,17 +557,17 @@ impl Guest for Component {
         // 1. Load the neural network model
         let graph_builder = graph::load(&model_path)
             .map_err(|e| format!("Failed to load model: {:?}", e))?;
-        
+
         // 2. Create input tensor from raw data
         let tensor_data = tensor::TensorData {
             data: input_data,
             dimensions: vec![1, 784], // Example: 28x28 image flattened
         };
-        
+
         // 3. Execute inference
         let outputs = inference::compute(&graph_builder, &[tensor_data])
             .map_err(|e| format!("Inference failed: {:?}", e))?;
-        
+
         // 4. Extract and return results
         Ok(outputs[0].data.iter().map(|&x| x as f32).collect())
     }

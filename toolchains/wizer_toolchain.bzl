@@ -57,19 +57,19 @@ def _detect_host_platform(repository_ctx):
 
 def _get_wizer_download_info(platform, version):
     """Get download information for wizer prebuilt binaries from central registry"""
-    
+
     # Get tool info from central registry
     tool_info = get_tool_info("wizer", version, platform)
     if not tool_info:
         fail("Unsupported platform {} for wizer version {}. Supported platforms can be found in //checksums/tools/wizer.json".format(platform, version))
-    
+
     # Build download URL
     asset_name = "wizer-v{}-{}".format(version, tool_info["url_suffix"])
     url = "https://github.com/bytecodealliance/wizer/releases/download/v{}/{}".format(version, asset_name)
-    
+
     # Determine archive type from suffix
     archive_type = "zip" if tool_info["url_suffix"].endswith(".zip") else "tar.xz"
-    
+
     return {
         "url": url,
         "sha256": tool_info["sha256"],

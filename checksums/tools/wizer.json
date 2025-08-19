@@ -5,7 +5,7 @@
   "last_checked": "2025-08-18T00:00:00.000000Z",
   "supported_platforms": [
     "darwin_amd64",
-    "darwin_arm64", 
+    "darwin_arm64",
     "linux_amd64",
     "linux_arm64",
     "windows_amd64"

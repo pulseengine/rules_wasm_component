@@ -1,7 +1,7 @@
 /*!
 Example CLI tool using rust_wasm_component.
 
-This demonstrates a component that uses WASI capabilities but doesn't 
+This demonstrates a component that uses WASI capabilities but doesn't
 export custom interfaces - perfect for the lower-level rust_wasm_component rule.
 */
 
@@ -47,7 +47,7 @@ enum Commands {
         /// Input file path
         #[arg(short, long)]
         input: PathBuf,
-        /// Output file path  
+        /// Output file path
         #[arg(short, long)]
         output: PathBuf,
     },
@@ -60,12 +60,12 @@ fn main() -> Result<()> {
         Commands::Upper { input, output } => {
             let content = fs::read_to_string(&input)
                 .with_context(|| format!("Failed to read file: {:?}", input))?;
-            
+
             let upper_content = content.to_uppercase();
-            
+
             fs::write(&output, upper_content)
                 .with_context(|| format!("Failed to write file: {:?}", output))?;
-            
+
             if cli.verbose {
                 println!("Converted {:?} to uppercase -> {:?}", input, output);
             }
@@ -73,30 +73,30 @@ fn main() -> Result<()> {
         Commands::Count { input } => {
             let content = fs::read_to_string(&input)
                 .with_context(|| format!("Failed to read file: {:?}", input))?;
-            
+
             let word_count = content.split_whitespace().count();
             let char_count = content.chars().count();
             let line_count = content.lines().count();
-            
+
             println!("File: {:?}", input);
             println!("Lines: {}", line_count);
-            println!("Words: {}", word_count); 
+            println!("Words: {}", word_count);
             println!("Characters: {}", char_count);
         }
         Commands::JsonWrap { input, output } => {
             let content = fs::read_to_string(&input)
                 .with_context(|| format!("Failed to read file: {:?}", input))?;
-            
+
             let json_output = json!({
                 "source_file": input.to_string_lossy(),
                 "content": content,
                 "processed_at": chrono::Utc::now().to_rfc3339(),
                 "length": content.len()
             });
-            
+
             fs::write(&output, serde_json::to_string_pretty(&json_output)?)
                 .with_context(|| format!("Failed to write JSON file: {:?}", output))?;
-            
+
             if cli.verbose {
                 println!("Wrapped {:?} as JSON -> {:?}", input, output);
             }
@@ -110,7 +110,7 @@ fn main() -> Result<()> {
 This component demonstrates rust_wasm_component usage:
 
 1. WASI-only: Uses filesystem, stdio - no custom component interfaces
-2. CLI tool: Designed to be run from command line, not called by other components  
+2. CLI tool: Designed to be run from command line, not called by other components
 3. Self-contained: Doesn't export functions for other components to use
 4. Simple build: No WIT binding generation needed
 

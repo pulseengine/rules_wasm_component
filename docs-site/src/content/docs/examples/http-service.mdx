@@ -10,7 +10,7 @@ A production-ready HTTP service component demonstrating web service development 
 ## Features
 
 - HTTP/1.1 server implementation
-- JSON request/response handling  
+- JSON request/response handling
 - Middleware support
 - WASI Preview 2 networking
 - Resource management and cleanup
@@ -42,13 +42,13 @@ interface http-handler {
         headers: list<tuple<string, string>>,
         body: option<list<u8>>,
     }
-    
+
     record http-response {
         status: u32,
         headers: list<tuple<string, string>>,
         body: option<list<u8>>,
     }
-    
+
     // Handle HTTP requests
     handle-request: func(request: http-request) -> http-response;
 }
@@ -82,7 +82,7 @@ func handleRequest(method, path string, headers []Header, body []byte) *Response
         Headers: headers,
         Body:    body,
     }
-    
+
     // Route requests
     switch {
     case req.Path == "/health":
@@ -119,12 +119,12 @@ func handleGetUsers(req *Request) *Response {
         {ID: 1, Name: "Alice", Email: "alice@example.com"},
         {ID: 2, Name: "Bob", Email: "bob@example.com"},
     }
-    
+
     data, err := json.Marshal(users)
     if err != nil {
         return errorResponse(500, "Failed to serialize users")
     }
-    
+
     return &Response{
         Status: 200,
         Body:   data,
@@ -175,18 +175,18 @@ go_wasm_component(
     name = "http_service_component",
     srcs = [
         "src/main.go",
-        "src/handlers.go", 
+        "src/handlers.go",
         "src/middleware.go",
         "src/models.go",
     ],
     wit = "wit/http-service.wit",
     world = "http-service-world",
     package_name = "example:http-service@1.0.0",
-    
+
     # TinyGo optimization settings
     gc = "leaking",  # Use leaking GC for better performance
     scheduler = "none",  # No goroutine scheduler needed
-    
+
     # Performance optimizations
     optimize = True,
     wasm_opt_flags = ["-O3", "--enable-bulk-memory"],
@@ -218,25 +218,25 @@ type Middleware func(*Request, func(*Request) *Response) *Response
 func LoggingMiddleware(req *Request, next func(*Request) *Response) *Response {
     // Log request
     fmt.Printf("Request: %s %s\\n", req.Method, req.Path)
-    
+
     // Process request
     resp := next(req)
-    
+
     // Log response
     fmt.Printf("Response: %d\\n", resp.Status)
-    
+
     return resp
 }
 
 func CORSMiddleware(req *Request, next func(*Request) *Response) *Response {
     resp := next(req)
-    
+
     // Add CORS headers
-    resp.Headers = append(resp.Headers, 
+    resp.Headers = append(resp.Headers,
         Header{"Access-Control-Allow-Origin", "*"},
         Header{"Access-Control-Allow-Methods", "GET, POST, PUT, DELETE"},
     )
-    
+
     return resp
 }
 ```
@@ -261,7 +261,7 @@ func handleLargePayload(body []byte) *Response {
         }
         processChunk(body[i:end])
     }
-    
+
     return successResponse("Processed")
 }
 ```

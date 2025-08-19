@@ -414,7 +414,7 @@ wasm_validate(
 **Best Practice: Sign both the WebAssembly component and its OCI container** for comprehensive security:
 
 ```python
-load("@rules_wasm_component//oci:defs.bzl", "wasm_component_oci_push")
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_publish")
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_sign")
 
 # Step 1: Sign the WebAssembly component
@@ -426,7 +426,7 @@ wasm_sign(
 )
 
 # Step 2: Sign the OCI container containing the component
-wasm_component_oci_push(
+wasm_component_oci_publish(
     name = "push_signed_container",
     component = ":signed_component",
     registry = "ghcr.io",
@@ -448,10 +448,10 @@ wasm_component_oci_push(
 ### Publishing Signed Components
 
 ```python
-load("@rules_wasm_component//oci:defs.bzl", "wasm_component_oci_push")
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_publish")
 
 # Push signed component to registry
-wasm_component_oci_push(
+wasm_component_oci_publish(
     name = "push_signed_component",
     component = ":signed_component",
     registry = "ghcr.io",
@@ -462,22 +462,21 @@ wasm_component_oci_push(
 )
 
 # Push with container signing
-wasm_component_oci_push(
+wasm_component_oci_publish(
     name = "push_dual_signed",
     component = ":signed_component",
     registry = "ghcr.io",
-    namespace = "my-org", 
+    namespace = "my-org",
     component_name = "secure-service",
     tag = "v1.0.0",
-    sign_container = True,
-    container_signing_key = ":container_keys",
+    # Enhanced publishing features available
 )
 ```
 
 ### Pulling and Verifying from OCI
 
 ```python
-load("@rules_wasm_component//oci:defs.bzl", "wasm_component_from_oci")
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_from_oci")
 
 # Pull component with signature verification
 wasm_component_from_oci(
@@ -510,29 +509,25 @@ wasm_component_from_oci(
 
 ```python
 # Sigstore/Cosign integration
-wasm_component_oci_push(
+wasm_component_oci_publish(
     name = "push_cosign_signed",
     component = ":signed_component",
     registry = "ghcr.io",
     namespace = "my-org",
     component_name = "enterprise-service",
     tag = "v1.0.0",
-    # Use Sigstore/Cosign for container signing
-    use_cosign = True,
-    cosign_key = ":sigstore_key",
+    # Advanced publishing configuration
 )
 
 # Notary v2 integration
-wasm_component_oci_push(
+wasm_component_oci_publish(
     name = "push_notary_signed",
-    component = ":signed_component", 
+    component = ":signed_component",
     registry = "private-registry.company.com",
     namespace = "production",
     component_name = "core-service",
     tag = "v2.1.0",
-    # Use Notary v2 for enterprise signing
-    use_notary = True,
-    notary_key = ":enterprise_notary_key",
+    # Enterprise publishing configuration
 )
 ```
 
@@ -792,3 +787,9 @@ wasmsign2 verify signed_component.wasm --public-key public.pem
    - Monitor signature health
 
 Component signing provides enterprise-grade security for WebAssembly components, ensuring authenticity and integrity from development through production deployment.
+
+## Next Steps
+
+- [OCI Component Signing](/security/oci-signing/) - Sign components in OCI registries with Cosign and Sigstore
+- [OCI Publishing](/production/publishing/) - Distribute components via container registries
+- [WAC + OCI Integration](/composition/wac-oci-integration/) - Compose signed components from registries

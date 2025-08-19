@@ -27,7 +27,7 @@ def _build_tool_path_resolution(tool_paths):
     """Build shell script code to resolve relative tool paths to absolute paths"""
     if not tool_paths:
         return 'TOOL_PATHS="/usr/bin:/bin"  # fallback'
-    
+
     resolution_code = []
     for i, path in enumerate(tool_paths):
         resolution_code.append("""
@@ -35,12 +35,12 @@ if [[ "{path}" = /* ]]; then
     TOOL_PATH_{i}="{path}"
 else
     TOOL_PATH_{i}="$(pwd)/{path}"
-fi""".format(path=path, i=i))
-    
+fi""".format(path = path, i = i))
+
     # Add system utilities to PATH
     path_assignment = "TOOL_PATHS=" + ":".join(["\"$TOOL_PATH_%d\"" % i for i in range(len(tool_paths))]) + ":/usr/bin:/bin"
     resolution_code.append("\n" + path_assignment)
-    
+
     return "".join(resolution_code)
 
 def _go_wasm_component_impl(ctx):
@@ -56,14 +56,14 @@ def _go_wasm_component_impl(ctx):
 
     tinygo = tinygo_toolchain.tinygo
     wasm_tools = wasm_tools_toolchain.wasm_tools
-    
+
     # Get hermetic Go binary from TinyGo toolchain
     go_binary = getattr(tinygo_toolchain, "go", None)
     if go_binary:
         print("DEBUG: Found hermetic Go binary from TinyGo toolchain: %s" % go_binary.path)
     else:
         print("DEBUG: No Go binary provided by TinyGo toolchain")
-    
+
     # Get wasm-opt binary from TinyGo toolchain
     wasm_opt_binary = getattr(tinygo_toolchain, "wasm_opt", None)
     if wasm_opt_binary:
@@ -221,13 +221,13 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         go_bin_dir = go_binary.dirname
         tool_paths.append(go_bin_dir)
         print("DEBUG: Added Go binary directory to PATH: %s" % go_bin_dir)
-    
+
     # Include wasm-opt binary directory from Binaryen
     if wasm_opt_binary:
         wasm_opt_bin_dir = wasm_opt_binary.dirname
         tool_paths.append(wasm_opt_bin_dir)
         print("DEBUG: Added wasm-opt binary directory to PATH: %s" % wasm_opt_bin_dir)
-    
+
     # Include wasm-tools binary directory
     if wasm_tools:
         wasm_tools_bin_dir = wasm_tools.dirname
@@ -319,11 +319,11 @@ exec "$@"
     # Include TinyGo toolchain files for complete environment
     if hasattr(tinygo_toolchain, "tinygo_files") and tinygo_toolchain.tinygo_files:
         inputs.extend(tinygo_toolchain.tinygo_files.files.to_list())
-    
+
     # Include Binaryen files for wasm-opt
     if hasattr(tinygo_toolchain, "binaryen_files") and tinygo_toolchain.binaryen_files:
         inputs.extend(tinygo_toolchain.binaryen_files.files.to_list())
-    
+
     # Include wasm-tools files
     if hasattr(wasm_tools_toolchain, "wasm_tools_files") and wasm_tools_toolchain.wasm_tools_files:
         inputs.extend(wasm_tools_toolchain.wasm_tools_files.files.to_list())
@@ -389,7 +389,7 @@ go_wasm_component = rule(
     },
     toolchains = [
         "@rules_wasm_component//toolchains:tinygo_toolchain_type",
-        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type", 
+        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
         "@rules_wasm_component//toolchains:file_ops_toolchain_type",
     ],
     doc = """Builds a WebAssembly component from Go source using TinyGo + WASI Preview 2.

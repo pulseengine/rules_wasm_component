@@ -20,10 +20,10 @@ graph TB
         D --> E[Database Service]
         D --> F[External APIs]
     end
-    
+
     subgraph "Languages Used"
         G[🦀 Rust - Auth & Security]
-        H[🐹 Go - HTTP & Networking] 
+        H[🐹 Go - HTTP & Networking]
         I[⚡ C++ - Performance Critical]
         J[🟨 JavaScript - UI Logic]
     end
@@ -54,18 +54,18 @@ impl Guest for AuthService {
         // Verify password using Argon2
         let parsed_hash = PasswordHash::new(&get_stored_hash(&username)?)
             .map_err(|_| AuthError::InvalidCredentials)?;
-            
+
         Argon2::default()
             .verify_password(password.as_bytes(), &parsed_hash)
             .map_err(|_| AuthError::InvalidCredentials)?;
-            
+
         // Generate JWT token
         let claims = JWTClaims {
             subject: username,
             issued_at: now(),
             expires_at: now() + Duration::from_hours(24),
         };
-        
+
         let key = HS256Key::from_bytes(&get_secret_key());
         key.authenticate(claims)
             .map_err(|_| AuthError::TokenGeneration)
@@ -88,10 +88,10 @@ Performance-critical mathematical computations:
 
 extern "C" {
     // Matrix operations with SIMD optimization
-    double* matrix_multiply(const double* a, const double* b, 
+    double* matrix_multiply(const double* a, const double* b,
                            size_t rows_a, size_t cols_a, size_t cols_b) {
         auto result = new double[rows_a * cols_b]();
-        
+
         // Parallel matrix multiplication
         std::transform(
             std::execution::par_unseq,
@@ -102,17 +102,17 @@ extern "C" {
                 return compute_element(a, b, /* indices */);
             }
         );
-        
+
         return result;
     }
-    
+
     // Statistical functions
     double compute_stddev(const double* data, size_t len) {
         double mean = std::reduce(
             std::execution::par_unseq,
             data, data + len
         ) / len;
-        
+
         double variance = std::transform_reduce(
             std::execution::par_unseq,
             data, data + len,
@@ -120,7 +120,7 @@ extern "C" {
             std::plus<double>(),
             [mean](double x) { return (x - mean) * (x - mean); }
         ) / (len - 1);
-        
+
         return std::sqrt(variance);
     }
 }
@@ -144,7 +144,7 @@ import (
 //go:export handle-request
 func handleRequest(method, path string, headers []Header, body []byte) *Response {
     ctx := context.Background()
-    
+
     // Route to appropriate service
     switch {
     case path == "/api/auth/login":
@@ -162,18 +162,18 @@ func handleAuth(ctx context.Context, method string, body []byte) *Response {
     if method != "POST" {
         return methodNotAllowedResponse()
     }
-    
+
     var req AuthRequest
     if err := json.Unmarshal(body, &req); err != nil {
         return badRequestResponse("Invalid JSON")
     }
-    
+
     // Call Rust authentication service
     token, err := authService.Authenticate(req.Username, req.Password)
     if err != nil {
         return unauthorizedResponse(err.Error())
     }
-    
+
     return jsonResponse(200, AuthResponse{Token: token})
 }
 
@@ -200,7 +200,7 @@ export function renderDashboard(userData, mathResults) {
                 <h1>Welcome, ${userData.username}!</h1>
                 <button @click=${logout}>Logout</button>
             </header>
-            
+
             <section class="math-results">
                 <h2>Computation Results</h2>
                 ${mathResults.map(result => html`
@@ -213,7 +213,7 @@ export function renderDashboard(userData, mathResults) {
             </section>
         </div>
     `;
-    
+
     return template.strings.join('');
 }
 
@@ -246,7 +246,7 @@ world composed-system {
   import auth-service: auth-service;
   import math-engine: math-engine;
   import ui-handler: ui-handler;
-  
+
   export gateway: gateway;
 }
 
@@ -267,7 +267,7 @@ export gateway;
 ```starlark
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component")
 load("@rules_wasm_component//cpp:defs.bzl", "cpp_component")
-load("@rules_wasm_component//go:defs.bzl", "go_wasm_component") 
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
 load("@rules_wasm_component//js:defs.bzl", "js_wasm_component")
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
 
@@ -282,7 +282,7 @@ rust_wasm_component(
 )
 
 cpp_component(
-    name = "math_engine_component", 
+    name = "math_engine_component",
     srcs = ["math-engine/src/math_engine.cpp"],
     wit = "wit/math.wit",
     world = "math-engine",
@@ -294,7 +294,7 @@ cpp_component(
 go_wasm_component(
     name = "http_gateway_component",
     srcs = ["http-gateway/src/main.go"],
-    wit = "wit/gateway.wit", 
+    wit = "wit/gateway.wit",
     world = "gateway",
     optimize = True,
 )
@@ -313,7 +313,7 @@ wac_compose(
     composition = "composition.wac",
     components = [
         ":auth_service_component",
-        ":math_engine_component", 
+        ":math_engine_component",
         ":http_gateway_component",
         ":ui_handler_component",
     ],

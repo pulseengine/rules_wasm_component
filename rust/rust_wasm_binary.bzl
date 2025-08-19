@@ -10,14 +10,14 @@ load(":transitions.bzl", "wasm_transition")
 def _wasm_rust_binary_impl(ctx):
     """Implementation that forwards a rust_binary with WASM transition applied"""
     target_info = ctx.attr.target[0]
-    
+
     # Forward the default info and any rust-specific providers
     providers = [target_info[DefaultInfo]]
-    
+
     # Forward RustInfo if available
     if hasattr(target_info, "rust_info"):
         providers.append(target_info.rust_info)
-    
+
     return providers
 
 _wasm_rust_binary_rule = rule(
@@ -45,10 +45,10 @@ def rust_wasm_binary(
         **kwargs):
     """
     Builds a Rust WebAssembly CLI binary component.
-    
+
     This macro creates a Rust binary compiled to wasm32-wasip2 that automatically
     exports the wasi:cli/command interface, making it executable via wasmtime.
-    
+
     Args:
         name: Target name
         srcs: Rust source files (must include main.rs)
@@ -58,7 +58,7 @@ def rust_wasm_binary(
         visibility: Target visibility
         edition: Rust edition (default: "2021")
         **kwargs: Additional arguments passed to rust_binary
-        
+
     Example:
         rust_wasm_binary(
             name = "my_cli_tool",
@@ -69,7 +69,7 @@ def rust_wasm_binary(
             ],
         )
     """
-    
+
     # Build the host-platform rust_binary first
     host_binary_name = name + "_host"
     rust_binary(
@@ -82,7 +82,7 @@ def rust_wasm_binary(
         visibility = ["//visibility:private"],
         **kwargs
     )
-    
+
     # Apply WASM transition to get actual WASM binary
     _wasm_rust_binary_rule(
         name = name,

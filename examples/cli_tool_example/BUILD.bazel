@@ -10,16 +10,18 @@ package(default_visibility = ["//visibility:public"])
 rust_wasm_component(
     name = "file_processor_cli",
     srcs = ["src/cli_tool.rs"],
-    deps = [
-        "@crates//:clap",      # CLI argument parsing
-        "@crates//:anyhow",    # Error handling
-        "@crates//:serde_json", # JSON processing
-    ],
     # This component doesn't need custom WIT - uses standard WASI only
     # No 'wit' attribute needed
     rustc_flags = [
-        "-C", "opt-level=3",   # Custom optimization
-        "-C", "lto=thin",      # Link-time optimization
+        "-C",
+        "opt-level=3",  # Custom optimization
+        "-C",
+        "lto=thin",  # Link-time optimization
+    ],
+    deps = [
+        "@crates//:anyhow",  # Error handling
+        "@crates//:clap",  # CLI argument parsing
+        "@crates//:serde_json",  # JSON processing
     ],
 )
 
@@ -27,16 +29,16 @@ rust_wasm_component(
 # Use case: Components that export custom functions to other components
 wit_library(
     name = "processor_interfaces",
-    srcs = ["wit/processor.wit"],
     package_name = "example:processor@1.0.0",
+    srcs = ["wit/processor.wit"],
 )
 
 rust_wasm_component_bindgen(
     name = "file_processor_component",
     srcs = ["src/component_lib.rs"],
-    wit = ":processor_interfaces",
     # This automatically generates WIT bindings and handles interface exports
     profiles = ["release"],
+    wit = ":processor_interfaces",
 )
 
 # Comparison test to show the difference
@@ -44,7 +46,7 @@ genrule(
     name = "component_comparison",
     srcs = [
         ":file_processor_cli",
-        ":file_processor_component", 
+        ":file_processor_component",
     ],
     outs = ["comparison.txt"],
     cmd = """

@@ -16,7 +16,7 @@ def _load_tool_checksums(tool_name):
 
     Returns:
         Dict: Tool data from embedded registry, or empty dict if not found
-        
+
     Note:
         This function uses embedded data rather than JSON file loading because
         Bazel rules don't have built-in JSON parsing capabilities. The embedded

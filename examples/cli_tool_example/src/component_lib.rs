@@ -1,7 +1,7 @@
 /*!
 Example library component using rust_wasm_component_bindgen.
 
-This demonstrates a component that exports custom interfaces for other 
+This demonstrates a component that exports custom interfaces for other
 components to use - perfect for the high-level rust_wasm_component_bindgen rule.
 */
 
@@ -20,15 +20,17 @@ impl Guest for FileProcessor {
             _ => Err(format!("Unknown operation: {}", operation)),
         }
     }
-    
+
     fn validate_file_extension(filename: String, expected_ext: String) -> bool {
         filename.ends_with(&format!(".{}", expected_ext))
     }
-    
+
     fn get_file_info(filename: String) -> String {
-        format!("File: {}, Extension: {:?}", 
-                filename, 
-                std::path::Path::new(&filename).extension())
+        format!(
+            "File: {}, Extension: {:?}",
+            filename,
+            std::path::Path::new(&filename).extension()
+        )
     }
 }
 
@@ -51,6 +53,6 @@ Perfect for rust_wasm_component_bindgen because:
 
 Usage (from other components):
 let result = file_processor.process_text("hello world", "uppercase");
-let valid = file_processor.validate_file_extension("doc.txt", "txt"); 
+let valid = file_processor.validate_file_extension("doc.txt", "txt");
 let info = file_processor.get_file_info("document.pdf");
 */

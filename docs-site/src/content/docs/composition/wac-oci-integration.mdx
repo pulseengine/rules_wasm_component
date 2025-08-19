@@ -63,7 +63,7 @@ wkg_registry_config(
 ### Step 2: Pull Remote Components
 
 ```python title="BUILD.bazel"
-load("@rules_wasm_component//oci:defs.bzl", "wasm_component_from_oci")
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_from_oci")
 
 # Pull authentication service from GitHub
 wasm_component_from_oci(

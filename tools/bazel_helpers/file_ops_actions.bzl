@@ -307,17 +307,17 @@ def setup_js_workspace_action(ctx, sources, package_json = None, npm_deps = None
 
     # Create workspace directory
     workspace_dir = ctx.actions.declare_directory(ctx.label.name + "_jswork")
-    
+
     # Prepare inputs
     all_inputs = list(sources)
     if package_json:
         all_inputs.append(package_json)
     if npm_deps:
         all_inputs.append(npm_deps)
-    
+
     # Create a shell script that properly copies files (not symlinks)
     setup_script = ctx.actions.declare_file(ctx.label.name + "_setup_workspace.sh")
-    
+
     script_lines = [
         "#!/bin/bash",
         "set -euo pipefail",
@@ -330,39 +330,39 @@ def setup_js_workspace_action(ctx, sources, package_json = None, npm_deps = None
         "echo \"Setting up JavaScript workspace: $WORKSPACE_DIR\"",
         "",
     ]
-    
+
     # Copy source files to workspace root (flatten structure)
     for src in sources:
         script_lines.extend([
             "echo \"Copying {} to $WORKSPACE_DIR/{}\"".format(src.path, src.basename),
             "cp \"{}\" \"$WORKSPACE_DIR/{}\"".format(src.path, src.basename),
         ])
-    
+
     if package_json:
         script_lines.extend([
             "echo \"Copying package.json\"",
             "cp \"{}\" \"$WORKSPACE_DIR/package.json\"".format(package_json.path),
         ])
-    
+
     if npm_deps:
         script_lines.extend([
             "echo \"Copying npm dependencies\"",
             "cp -r \"{}\" \"$WORKSPACE_DIR/node_modules\"".format(npm_deps.path),
         ])
-    
+
     script_lines.extend([
         "",
         "echo \"JavaScript workspace setup complete\"",
         "echo \"Files in workspace:\"",
         "ls -la \"$WORKSPACE_DIR\"",
     ])
-    
+
     ctx.actions.write(
         output = setup_script,
         content = "\n".join(script_lines),
         is_executable = True,
     )
-    
+
     # Run the setup script
     ctx.actions.run(
         executable = setup_script,
@@ -372,5 +372,5 @@ def setup_js_workspace_action(ctx, sources, package_json = None, npm_deps = None
         mnemonic = "SetupJSWorkspace",
         progress_message = "Setting up JavaScript workspace for %s" % ctx.label,
     )
-    
+
     return workspace_dir

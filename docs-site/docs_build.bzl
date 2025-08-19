@@ -15,7 +15,6 @@ def _docs_build_impl(ctx):
     source_files = ctx.files.srcs
     package_json = ctx.file.package_json
 
-
     # Prepare input files list
     input_file_args = []
     for src in source_files:
@@ -25,7 +24,7 @@ def _docs_build_impl(ctx):
     ctx.actions.run_shell(
         command = """
         set -euo pipefail
-        
+
         # Store execution root and output path
         EXEC_ROOT="$(pwd)"
         OUTPUT_TAR="$1"
@@ -42,7 +41,7 @@ def _docs_build_impl(ctx):
         # Copy all source files, maintaining docs-site structure
         for src_file in "$@"; do
             if [[ "$src_file" == docs-site/* ]]; then
-                # Remove docs-site/ prefix to get relative path  
+                # Remove docs-site/ prefix to get relative path
                 rel_path="${src_file#docs-site/}"
                 dest_file="$WORK_DIR/$rel_path"
                 dest_dir="$(dirname "$dest_file")"
@@ -103,10 +102,10 @@ docs_build = rule(
     toolchains = ["@rules_wasm_component//toolchains:jco_toolchain_type"],
     doc = """
     Builds documentation site using hermetic Node.js and npm from jco_toolchain.
-    
-    This rule follows the Bazel Way by properly using toolchains instead of 
+
+    This rule follows the Bazel Way by properly using toolchains instead of
     direct file references in genrules.
-    
+
     Example:
         docs_build(
             name = "site",

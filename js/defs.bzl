@@ -42,15 +42,16 @@ def _js_component_impl(ctx):
         if src.basename == ctx.attr.entry_point:
             entry_point_file = src
             break
-    
+
     if not entry_point_file:
         fail("Entry point '{}' not found in sources: {}".format(
-            ctx.attr.entry_point, [src.basename for src in source_files]
+            ctx.attr.entry_point,
+            [src.basename for src in source_files],
         ))
-    
+
     # Create a build script that sets up a workspace and runs jco with proper working directory
     build_script = ctx.actions.declare_file(ctx.attr.name + "_build.sh")
-    
+
     script_lines = [
         "#!/bin/bash",
         "set -euo pipefail",
@@ -61,13 +62,13 @@ def _js_component_impl(ctx):
         "",
         "# Copy all source files to workspace (flattened)",
     ]
-    
+
     for src in source_files:
         script_lines.append("cp \"{}\" \"$WORK_DIR/{}\"".format(src.path, src.basename))
-    
+
     if package_json:
         script_lines.append("cp \"{}\" \"$WORK_DIR/package.json\"".format(package_json.path))
-    
+
     # Build jco command - change to workspace and use relative paths for module resolution
     script_lines.extend([
         "",
@@ -87,7 +88,7 @@ def _js_component_impl(ctx):
         "",
         "# Run jco componentize from workspace with correct module resolution",
     ])
-    
+
     # Build jco command - use absolute path for entry point for proper module resolution
     jco_cmd_parts = [
         "\"$ORIGINAL_DIR/{}\"".format(jco.path),  # jco binary path
@@ -96,33 +97,33 @@ def _js_component_impl(ctx):
         "--wit \"$ORIGINAL_DIR/{}\"".format(wit_file.path),  # Absolute path to WIT file
         "--out \"$ORIGINAL_DIR/{}\"".format(component_wasm.path),  # Absolute path to output
     ]
-    
+
     if ctx.attr.world:
         jco_cmd_parts.append("--world-name {}".format(ctx.attr.world))
-    
+
     if ctx.attr.disable_feature_detection:
         jco_cmd_parts.append("--disable-feature-detection")
-    
+
     if ctx.attr.compat:
         jco_cmd_parts.append("--compat")
-    
+
     script_lines.extend([
         " ".join(jco_cmd_parts),
         "",
         "echo \"Component build complete\"",
     ])
-    
+
     ctx.actions.write(
         output = build_script,
         content = "\n".join(script_lines),
         is_executable = True,
     )
-    
+
     # All input files
     all_inputs = list(source_files) + [wit_file]
     if package_json:
         all_inputs.append(package_json)
-    
+
     ctx.actions.run(
         executable = build_script,
         inputs = all_inputs,
@@ -346,7 +347,7 @@ def _npm_install_impl(ctx):
 
     # Create a simple workspace for npm install
     build_script = ctx.actions.declare_file(ctx.attr.name + "_npm_install.sh")
-    
+
     script_lines = [
         "#!/bin/bash",
         "set -euo pipefail",
@@ -358,7 +359,7 @@ def _npm_install_impl(ctx):
         "# Copy package.json to workspace",
         "cp \"{}\" \"$WORK_DIR/package.json\"".format(package_json.path),
         "",
-        "# Save original directory and change to workspace", 
+        "# Save original directory and change to workspace",
         "ORIGINAL_DIR=\"$(pwd)\"",
         "cd \"$WORK_DIR\"",
         "\"$ORIGINAL_DIR/{}\" install".format(npm.path),
@@ -369,7 +370,7 @@ def _npm_install_impl(ctx):
         "",
         "echo \"NPM install complete\"",
     ]
-    
+
     ctx.actions.write(
         output = build_script,
         content = "\n".join(script_lines),
