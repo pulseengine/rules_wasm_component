@@ -6,7 +6,7 @@ registry files are properly structured and valid.
 */
 
 use anyhow::Result;
-use checksum_updater::checksum_manager::ChecksumManager;
+use checksum_updater_lib::checksum_manager::ChecksumManager;
 use serde_json::Value;
 use std::env;
 use std::path::PathBuf;
