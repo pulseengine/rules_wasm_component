@@ -129,7 +129,7 @@ jobs:
             -//test/integration:service_b_component_wasm_lib_release_host \
 
       - name: Run Tests
-        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
+        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/wkg/unit:smoke
 
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
