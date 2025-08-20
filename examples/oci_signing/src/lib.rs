@@ -1,12 +1,15 @@
 #[cfg(target_arch = "wasm32")]
-use greeting_component_bindings::exports::example::greeting::Guest;
+use greeting_component_bindings::Guest;
 
 struct Component;
 
 #[cfg(target_arch = "wasm32")]
 impl Guest for Component {
     fn greet(name: String) -> String {
-        format!("🔒 Secure hello, {}! This component is dual-layer signed.", name)
+        format!(
+            "🔒 Secure hello, {}! This component is dual-layer signed.",
+            name
+        )
     }
 }
 

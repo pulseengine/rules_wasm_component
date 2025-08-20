@@ -95,14 +95,14 @@ For the complete BUILD.bazel example, see the [basic example](/examples/basic/) 
 ### The BUILD.bazel File Orchestrates Three Key Steps:
 
 1. **[`wit_library()`](/reference/rules/#wit_library)** - Processes and validates your WIT interface files
-2. **[`rust_wasm_component_bindgen()`](/reference/rules/#rust_wasm_component_bindgen)** - Generates Rust bindings and compiles to WebAssembly 
+2. **[`rust_wasm_component_bindgen()`](/reference/rules/#rust_wasm_component_bindgen)** - Generates Rust bindings and compiles to WebAssembly
 3. **[`rust_wasm_component_test()`](/reference/rules/#rust_wasm_component_test)** - Creates tests to verify your component works
 
 **What happens behind the scenes:**
 - **Stage 1:** WIT Interface Definition → Validated Interface (Internal Bazel representation)
 - **Stage 2:** Multiple stages in one rule:
   1. Generate Rust traits/types from WIT
-  2. Compile your Rust code with these bindings  
+  2. Compile your Rust code with these bindings
   3. Create WebAssembly core module
   4. Wrap as Component Model component
 - **Stage 3:** Test framework integration

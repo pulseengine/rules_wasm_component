@@ -15,13 +15,13 @@ flowchart LR
     B[⚙️ BUILD.bazel]
     C[🦀 src/lib.rs]
     D[📦 hello_component.wasm]
-    
+
     A --> B
     B --> C
     C --> D
-    
+
     style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
-    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px  
+    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px
     style C fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     style D fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
 ```
@@ -96,16 +96,16 @@ Now we have our interface defined! Here's what exists so far:
 flowchart LR
     A[📄 hello.wit ✅]
     A1[📋 Package Definition]
-    
+
     B[⚙️ BUILD.bazel ⏳]
-    C[🦀 src/lib.rs ⏳] 
+    C[🦀 src/lib.rs ⏳]
     D[📦 hello_component.wasm ⏳]
-    
+
     A --> A1
     A1 -.-> B
-    B -.-> C  
+    B -.-> C
     C -.-> D
-    
+
     style A fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style A1 fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style B fill:#f5f5f5,stroke:#999,stroke-dasharray: 3 3
@@ -113,7 +113,7 @@ flowchart LR
     style D fill:#f5f5f5,stroke:#999,stroke-dasharray: 3 3
 ```
 
-**What we have**: A contract defining what our component will do  
+**What we have**: A contract defining what our component will do
 **What's next**: Tell Bazel how to process this interface
 
 ---
@@ -203,16 +203,16 @@ Now Bazel knows how to process our WIT file! The first connection is made:
 flowchart LR
     A[📄 hello.wit ✅]
     B1[📚 wit_library ✅]
-    
+
     B2[🔧 rust_component_bindgen ⏳]
     C[🦀 src/lib.rs ⏳]
     D[📦 hello_component.wasm ⏳]
-    
+
     A --> B1
     B1 -.-> B2
     B2 -.-> C
     C -.-> D
-    
+
     style A fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style B1 fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style B2 fill:#f5f5f5,stroke:#999,stroke-dasharray: 3 3
@@ -220,7 +220,7 @@ flowchart LR
     style D fill:#f5f5f5,stroke:#999,stroke-dasharray: 3 3
 ```
 
-**What we have**: Bazel can now process our WIT file into a reusable library  
+**What we have**: Bazel can now process our WIT file into a reusable library
 **What's next**: Configure the Rust component compilation
 
 ```python
@@ -279,15 +279,15 @@ flowchart LR
     A[📄 hello.wit ✅]
     B1[📚 wit_library ✅]
     B2[🔧 rust_component_bindgen ✅]
-    
+
     C[🦀 src/lib.rs ⏳]
     D[📦 hello_component.wasm ⏳]
-    
+
     A --> B1
     B1 --> B2
     B2 -.-> C
     C -.-> D
-    
+
     style A fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style B1 fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style B2 fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
@@ -295,7 +295,7 @@ flowchart LR
     style D fill:#f5f5f5,stroke:#999,stroke-dasharray: 3 3
 ```
 
-**What we have**: Complete build pipeline configured - Bazel knows how to transform WIT + Rust → Component  
+**What we have**: Complete build pipeline configured - Bazel knows how to transform WIT + Rust → Component
 **What's next**: Implement the actual function logic in Rust
 
 **Complete meaning**: "Create a WIT library from hello.wit, then use it to build a Rust WebAssembly component from src/lib.rs, generating the necessary bindings automatically."
@@ -329,19 +329,19 @@ The magic happens! The macro generates the connection between WIT and Rust:
 flowchart LR
     A[📄 hello.wit ✅]
     B[🔧 BUILD.bazel ✅]
-    
+
     C1[✨ wit_bindgen ✅]
     C2[🎯 Guest trait ✅]
     C3[🏗️ Component struct ⏳]
-    
+
     D[📦 hello_component.wasm ⏳]
-    
+
     A --> B
     B --> C1
     C1 --> C2
     C2 -.-> C3
     C3 -.-> D
-    
+
     style A fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style B fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style C1 fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
@@ -350,7 +350,7 @@ flowchart LR
     style D fill:#f5f5f5,stroke:#999,stroke-dasharray: 3 3
 ```
 
-**What we have**: Rust knows what functions to implement (Guest trait generated from WIT)  
+**What we have**: Rust knows what functions to implement (Guest trait generated from WIT)
 **What's next**: Implement the Guest trait in our Component struct
 
 ```rust
@@ -437,19 +437,19 @@ export!(Component);
 flowchart LR
     A[📄 hello.wit ✅]
     B[🔧 BUILD.bazel ✅]
-    
+
     C[✨ Generated Bindings ✅]
     D[🏗️ Implementation ✅]
     E[📤 export! ✅]
-    
+
     F[📦 hello_component.wasm 🎉]
-    
+
     A --> B
     B --> C
     C --> D
     D --> E
     E --> F
-    
+
     style A fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style B fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
     style C fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
@@ -458,7 +458,7 @@ flowchart LR
     style F fill:#e8f5e8,stroke:#4caf50,stroke-width:3px
 ```
 
-**What we have**: A complete, working WebAssembly component! 🚀  
+**What we have**: A complete, working WebAssembly component! 🚀
 **What you can do**: Use it from any WebAssembly runtime, in any language, on any platform!
 
 ---

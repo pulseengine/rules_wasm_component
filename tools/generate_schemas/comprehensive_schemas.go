@@ -432,12 +432,12 @@ go_wasm_component(
 			Description: "Signs WebAssembly components using wasmsign2 for secure deployment. Provides cryptographic signatures for component integrity.",
 			LoadFrom:    "@rules_wasm_component//wasm:defs.bzl",
 			Attributes: map[string]Attribute{
-				"name":          {"string", true, nil, "A unique name for this target", nil},
-				"component":     {"label", false, nil, "WebAssembly component to sign (alternative to wasm_file)", nil},
-				"wasm_file":     {"label", false, nil, "WASM file to sign (alternative to component)", nil},
-				"keys":          {"label", false, nil, "Key pair from wasm_keygen or ssh_keygen", nil},
-				"secret_key":    {"label", false, nil, "Secret key file (alternative to keys)", nil},
-				"detached":      {"bool", false, stringPtr("False"), "Create detached signature file", nil},
+				"name":           {"string", true, nil, "A unique name for this target", nil},
+				"component":      {"label", false, nil, "WebAssembly component to sign (alternative to wasm_file)", nil},
+				"wasm_file":      {"label", false, nil, "WASM file to sign (alternative to component)", nil},
+				"keys":           {"label", false, nil, "Key pair from wasm_keygen or ssh_keygen", nil},
+				"secret_key":     {"label", false, nil, "Secret key file (alternative to keys)", nil},
+				"detached":       {"bool", false, stringPtr("False"), "Create detached signature file", nil},
 				"openssh_format": {"bool", false, stringPtr("False"), "Use OpenSSH key format (when not using keys attribute)", nil},
 			},
 			Examples: []Example{

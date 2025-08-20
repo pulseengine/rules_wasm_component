@@ -11,9 +11,9 @@ This guide helps you quickly fix the most common problems when building WebAssem
 
 ### "rules_wasm_component not found" or "No such package"
 
-**Symptom**: 
+**Symptom**:
 ```
-ERROR: Skipping '//...': no such package '@rules_wasm_component//': 
+ERROR: Skipping '//...': no such package '@rules_wasm_component//':
 Repository '@rules_wasm_component' is not defined
 ```
 
@@ -102,7 +102,7 @@ error: procedural macro `generate` panicked
 // ❌ Wrong - looks for world.wit in src/
 wit_bindgen::generate!();
 
-// ✅ Correct - specify the world explicitly  
+// ✅ Correct - specify the world explicitly
 wit_bindgen::generate!({
     world: "hello",  // Match your world name in WIT file
 });
@@ -111,7 +111,7 @@ wit_bindgen::generate!({
 2. **Verify WIT library setup**:
 ```python title="BUILD.bazel"
 wit_library(
-    name = "hello_interfaces", 
+    name = "hello_interfaces",
     srcs = ["hello.wit"],  # Check this path
     package_name = "hello:component@0.1.0",  # Must match WIT file
 )
@@ -152,7 +152,7 @@ rust_binary(
 
 # ✅ Correct: Native application using native bindings
 rust_binary(
-    name = "test_runner", 
+    name = "test_runner",
     deps = [":my_component_bindings_host"],  # aarch64-apple-darwin target
 )
 ```
@@ -192,7 +192,7 @@ package hello:component@0.1.0;
 world hello {
     // ✅ Use 'export' to make function available externally
     export hello: func(name: string) -> string;
-    
+
     // ❌ This would be an import (function you need from outside)
     // import log: func(message: string);
 }
@@ -228,7 +228,7 @@ rust_wasm_component_bindgen(
 
 # ❌ Don't use regular WASM rules for components
 # rust_binary(
-#     name = "my_component", 
+#     name = "my_component",
 #     srcs = ["src/lib.rs"],
 #     crate_type = "cdylib",
 # )
