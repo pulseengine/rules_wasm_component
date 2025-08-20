@@ -38,7 +38,7 @@ def _cpp_component_impl(ctx):
                     dep_headers.append(file)
                 elif file.extension == "a":
                     dep_libraries.append(file)
-        
+
         # Also extract headers and includes from CcInfo for proper transitive dependencies
         if CcInfo in dep:
             cc_info = dep[CcInfo]
@@ -566,7 +566,7 @@ def _cc_component_library_impl(ctx):
         owner = ctx.label,
         user_link_flags = [library.path],  # Pass library as link flag
     )
-    
+
     linking_context = cc_common.create_linking_context(
         linker_inputs = depset([linker_input], transitive = transitive_libraries),
     )

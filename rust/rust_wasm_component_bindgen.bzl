@@ -63,6 +63,15 @@ pub mod wit_bindgen {
     }
 }
 
+// Provide export! macro for native-guest mode as a no-op
+#[macro_export]
+macro_rules! export {
+    ($component:ident with_types_in $pkg:path) => {
+        // No-op for native-guest mode - the component struct can be used directly
+        // In native applications, you would typically call Guest trait methods directly
+    };
+}
+
 // Generated bindings follow:
 """
     else:
@@ -124,13 +133,31 @@ pub mod wit_bindgen {
         content = wrapper_content + "\n",
     )
 
-    # Single clean command to concatenate files
+    # Concatenate files but filter out conflicting exports to avoid symbol conflicts
+    filter_cmd = """
+        cat {} > {}
+        # Filter out problematic export-related lines for native-guest mode
+        if grep -q "native-guest" {}; then
+            # For native-guest mode, filter out the generated export macro and pub use
+            grep -v '^pub(crate) use __export_.*as export;$' {} | \
+            grep -v '^macro_rules! export' | \
+            grep -v '^pub use __export_.*_cabi;$' >> {} || true
+        else
+            # For guest mode, only filter out duplicate cabi exports
+            grep -v '^pub use __export_.*_cabi;$' {} >> {} || true
+        fi
+    """.format(
+        temp_wrapper.path,
+        out_file.path,
+        temp_wrapper.path,
+        ctx.file.bindgen.path,
+        out_file.path,
+        ctx.file.bindgen.path,
+        out_file.path,
+    )
+
     ctx.actions.run_shell(
-        command = "cat {} {} > {}".format(
-            temp_wrapper.path,
-            ctx.file.bindgen.path,
-            out_file.path,
-        ),
+        command = filter_cmd,
         inputs = [temp_wrapper, ctx.file.bindgen],
         outputs = [out_file],
         mnemonic = "ConcatWitWrapper",
@@ -221,7 +248,7 @@ def rust_wasm_component_bindgen(
 
     Generated targets:
     - {name}_bindings_host: Host-platform rust_library for host applications
-    - {name}_bindings: WASM-platform rust_library for WASM components  
+    - {name}_bindings: WASM-platform rust_library for WASM components
     - {name}: The final WASM component that depends on the bindings
 
     Args:
@@ -245,7 +272,7 @@ def rust_wasm_component_bindgen(
 
         # In WASM component src/lib.rs:
         use my_component_bindings::exports::my_interface::{Guest};
-        
+
         # In host application BUILD.bazel:
         rust_binary(
             name = "host_app",
@@ -256,7 +283,7 @@ def rust_wasm_component_bindgen(
     # Generate separate WIT bindings for guest and native-guest modes
     bindgen_guest_target = name + "_wit_bindgen_guest"
     bindgen_native_guest_target = name + "_wit_bindgen_native_guest"
-    
+
     # Guest mode bindings for WASM component implementation
     wit_bindgen(
         name = bindgen_guest_target,
@@ -265,7 +292,7 @@ def rust_wasm_component_bindgen(
         generation_mode = "guest",
         visibility = ["//visibility:private"],
     )
-    
+
     # Native-guest mode bindings for native applications
     wit_bindgen(
         name = bindgen_native_guest_target,
@@ -278,14 +305,14 @@ def rust_wasm_component_bindgen(
     # Create separate wrappers for guest and native-guest bindings
     wrapper_guest_target = name + "_wrapper_guest"
     wrapper_native_guest_target = name + "_wrapper_native_guest"
-    
+
     _generate_wrapper(
         name = wrapper_guest_target,
         bindgen = ":" + bindgen_guest_target,
         mode = "guest",
         visibility = ["//visibility:private"],
     )
-    
+
     _generate_wrapper(
         name = wrapper_native_guest_target,
         bindgen = ":" + bindgen_native_guest_target,
@@ -317,7 +344,7 @@ def rust_wasm_component_bindgen(
         edition = "2021",
         visibility = ["//visibility:private"],
     )
-    
+
     # Create a WASM-transitioned version of the WASM bindings library
     _wasm_rust_library(
         name = bindings_lib,
