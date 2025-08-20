@@ -1,40 +1,47 @@
 ---
-title: Host vs WASM Bindings
-description: Understanding when to use host-platform vs WASM-platform bindings for different development scenarios
+title: Native vs Guest Bindings
+description: Understanding when to use native platform bindings vs guest component bindings for different development scenarios
 ---
 
-# Host vs WASM Bindings
+# Native vs Guest Bindings
 
 When you generate WIT bindings with `rust_wasm_component_bindgen`, you actually get **two different versions** of the same bindings compiled for different platforms. Understanding when to use each one is crucial for building effective WebAssembly component ecosystems.
+
+> **Important Terminology**: In the WebAssembly Component Model, "host" refers to the runtime executing components (like wasmtime), while "guest" refers to the component implementation. Our bindings use different terminology to avoid confusion.
 
 ## The Two Binding Types
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[WIT Interface] --> B[Generated Rust Code]
-    B --> C[Host Bindings<br/>{name}_bindings_host]
-    B --> D[WASM Bindings<br/>{name}_bindings]
+    B --> C[Native Platform Bindings<br/>name_bindings_host]
+    B --> D[Guest Component Bindings<br/>name_bindings]
     
-    C --> E[Host Applications<br/>rust_binary, rust_test]
-    D --> F[WASM Components<br/>Component Implementation]
+    C --> E[Native Applications<br/>rust_binary, rust_test]
+    D --> F[Guest Components<br/>Component Implementation]
     
-    style C fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
-    style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    style E fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
-    style F fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    G[Host Runtime<br/>wasmtime] --> F
+    
+    style C fill:#e8f5e8,stroke:#4caf50
+    style D fill:#fff3e0,stroke:#f57c00
+    style E fill:#e8f5e8,stroke:#4caf50
+    style F fill:#fff3e0,stroke:#f57c00
+    style G fill:#e3f2fd,stroke:#1976d2
 ```
 
-### Host Bindings (`{name}_bindings_host`)
+### Native Platform Bindings (`{name}_bindings_host`)
 
 **Target Platform**: Your development machine (e.g., `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`)  
 **Runtime**: Native execution, no WebAssembly runtime required  
-**Purpose**: Development tools, testing, benchmarking, host applications
+**Purpose**: Development tools, testing, benchmarking, native applications  
+**Role**: Enables native programs to understand component interfaces
 
-### WASM Bindings (`{name}_bindings`)
+### Guest Component Bindings (`{name}_bindings`)
 
 **Target Platform**: WebAssembly (`wasm32-wasip2`)  
 **Runtime**: WebAssembly runtime (wasmtime, web browsers, etc.)  
-**Purpose**: Actual component implementations that run as WebAssembly
+**Purpose**: Actual component implementations compiled to WebAssembly  
+**Role**: The "guest" that runs inside a "host" runtime like wasmtime
 
 ## Key Insight: Same Source, Different Targets
 
@@ -48,20 +55,32 @@ wit_bindgen::generate!({
 });
 
 // Compiled for two different targets:
-// 1. Host Platform   (aarch64-apple-darwin) → {name}_bindings_host
-// 2. WASM Platform   (wasm32-wasip2)        → {name}_bindings
+// 1. Native Platform (aarch64-apple-darwin) → {name}_bindings_host
+// 2. Guest Platform  (wasm32-wasip2)        → {name}_bindings
 ```
 
-## When to Use Host Bindings
+## WebAssembly Component Model Context
+
+To understand this architecture, it's important to know the WebAssembly Component Model terminology:
+
+- **Host**: The runtime environment (wasmtime, browser, etc.) that executes WebAssembly components
+- **Guest**: The WebAssembly component implementation that runs inside the host
+- **WIT**: WebAssembly Interface Type definitions that describe component interfaces
+
+Our binding system creates:
+- **Native platform bindings**: For native applications that need to understand component interfaces
+- **Guest component bindings**: For actual guest implementations that run in a host runtime
+
+## When to Use Native Platform Bindings
 
 Use `{name}_bindings_host` for:
 
 ### ✅ Test Applications
 ```python
 rust_test(
-    name = "component_integration_test",
+    name = "component_integration_test", 
     srcs = ["tests/integration.rs"],
-    deps = [":calculator_bindings_host"],  # Host bindings for tests
+    deps = [":calculator_bindings_host"],  # Native bindings for tests
 )
 ```
 
@@ -70,7 +89,7 @@ rust_test(
 rust_binary(
     name = "component_benchmark",
     srcs = ["bench/benchmark.rs"],
-    deps = [":calculator_bindings_host"],  # Host bindings for benchmarks
+    deps = [":calculator_bindings_host"],  # Native bindings for benchmarks
 )
 ```
 
@@ -79,13 +98,13 @@ rust_binary(
 rust_binary(
     name = "schema_validator",
     srcs = ["tools/validate.rs"],
-    deps = [":calculator_bindings_host"],  # Host bindings for tooling
+    deps = [":calculator_bindings_host"],  # Native bindings for tooling
 )
 ```
 
 ### ✅ Mock Implementations
 ```rust
-// In your test file
+// In your test file - runs natively, not in WebAssembly
 use calculator_bindings_host::exports::calculator::math::Guest;
 
 struct MockCalculator;
@@ -96,13 +115,13 @@ impl Guest for MockCalculator {
 }
 ```
 
-## When to Use WASM Bindings
+## When to Use Guest Component Bindings
 
 Use `{name}_bindings` for:
 
-### ✅ Component Implementations
+### ✅ Guest Component Implementations
 ```rust
-// Component source code (src/lib.rs)
+// Guest component source code (src/lib.rs) - compiles to WebAssembly
 use calculator_bindings::exports::calculator::math::Guest;
 
 struct Calculator;
@@ -112,7 +131,7 @@ impl Guest for Calculator {
     }
 }
 
-// Export the component
+// Export the guest component implementation
 calculator_bindings::export!(Calculator with_types_in calculator_bindings);
 ```
 
@@ -120,44 +139,44 @@ This is automatically handled by `rust_wasm_component_bindgen`:
 ```python
 rust_wasm_component_bindgen(
     name = "calculator",
-    srcs = ["src/lib.rs"],         # Uses calculator_bindings (WASM)
+    srcs = ["src/lib.rs"],         # Uses calculator_bindings (guest)
     wit = ":calculator_interfaces",
 )
 ```
 
 ## Capabilities and Limitations
 
-### Host Bindings Can Do
+### Native Platform Bindings Can Do
 
 - ✅ **Run natively** on your development machine
-- ✅ **Access component interfaces** and type definitions
+- ✅ **Access component interfaces** and type definitions  
 - ✅ **Import and use** WIT-generated traits and types
 - ✅ **Create mock implementations** for testing
 - ✅ **Build development tools** that understand component interfaces
 - ✅ **Serialize/deserialize** component data types
 
-### Host Bindings Cannot Do
+### Native Platform Bindings Cannot Do
 
-- ❌ **Run as WebAssembly components** in WASM runtimes
-- ❌ **Export component functions** to other languages
+- ❌ **Run as WebAssembly components** in host runtimes like wasmtime
+- ❌ **Export component functions** to other languages via WebAssembly
 - ❌ **Participate in WAC compositions** or component graphs
 - ❌ **Use WASI Preview 2** or component model features
-- ❌ **Be called by** JavaScript, Python, or other host languages
+- ❌ **Be executed by host runtimes** as guest components
 
-### WASM Bindings Can Do
+### Guest Component Bindings Can Do
 
-- ✅ **Run in WebAssembly runtimes** (wasmtime, browsers, etc.)
-- ✅ **Export component functions** to any language
+- ✅ **Run in host runtimes** (wasmtime, browsers, etc.)
+- ✅ **Export component functions** to any language via WebAssembly
 - ✅ **Participate in component compositions** via WAC
 - ✅ **Use WASI Preview 2** filesystem, networking, etc.
-- ✅ **Be distributed** via OCI registries
+- ✅ **Be distributed** via OCI registries  
 - ✅ **Provide secure sandboxing** and portability
 
-### WASM Bindings Cannot Do
+### Guest Component Bindings Cannot Do
 
-- ❌ **Run natively** on host platforms
-- ❌ **Be used directly** in host applications
-- ❌ **Access host system resources** outside WASI
+- ❌ **Run natively** on native platforms
+- ❌ **Be used directly** in native applications
+- ❌ **Access native system resources** outside WASI sandbox
 
 ## Common Error and Solution
 
@@ -170,19 +189,19 @@ note: the following crate versions were found:
 ```
 
 ### The Problem
-You're trying to use WASM-platform bindings (`my_component_bindings`) in a host application that expects host-platform target triples.
+You're trying to use guest component bindings (`my_component_bindings`) in a native application that expects native platform target triples.
 
 ### The Solution
-Use host-platform bindings instead:
+Use native platform bindings instead:
 
 ```python
-# ❌ Wrong: Host application using WASM bindings
+# ❌ Wrong: Native application using guest bindings
 rust_binary(
     name = "test_runner",
     deps = [":my_component_bindings"],  # wasm32-wasip2 target
 )
 
-# ✅ Correct: Host application using host bindings
+# ✅ Correct: Native application using native bindings
 rust_binary(
     name = "test_runner", 
     deps = [":my_component_bindings_host"],  # aarch64-apple-darwin target
@@ -303,17 +322,19 @@ rust_wasm_component_test(
 
 ### 4. Development Workflow
 1. **Design**: Define WIT interfaces
-2. **Implement**: Create component with WASM bindings
-3. **Test**: Build test tools with host bindings
-4. **Deploy**: Distribute WASM components
+2. **Implement**: Create guest components with guest bindings
+3. **Test**: Build test tools with native bindings
+4. **Deploy**: Distribute guest components to host runtimes
 
 ## Summary
 
-Host and WASM bindings enable a rich development ecosystem around WebAssembly components:
+Native and guest bindings enable a rich development ecosystem around WebAssembly components:
 
-- **Host bindings** provide native access to component interfaces for development tools
-- **WASM bindings** enable actual component execution in WebAssembly runtimes
+- **Native platform bindings** provide native access to component interfaces for development tools
+- **Guest component bindings** enable actual component execution in WebAssembly host runtimes
 - **Both are generated** from the same WIT interfaces, ensuring consistency
-- **Choose based on context**: host applications use host bindings, components use WASM bindings
+- **Choose based on context**: native applications use native bindings, guest components use guest bindings
 
 This dual binding architecture resolves target triple mismatches while enabling powerful tooling and testing capabilities for WebAssembly component development.
+
+> **Key Takeaway**: Don't confuse our "host bindings" (native platform) with the WebAssembly Component Model "host runtime" (wasmtime). They serve different purposes in the ecosystem.

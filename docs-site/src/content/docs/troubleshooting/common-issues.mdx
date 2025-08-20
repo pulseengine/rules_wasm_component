@@ -139,25 +139,25 @@ note: the following crate versions were found:
       crate 'my_component_bindings', target triple wasm32-wasip2
 ```
 
-**Cause**: You're using WASM-platform bindings (`my_component_bindings`) in a host application that expects host-platform target triples.
+**Cause**: You're using guest component bindings (`my_component_bindings`) in a native application that expects native platform target triples.
 
-**Solution**: Use host-platform bindings for host applications:
+**Solution**: Use native platform bindings for native applications:
 
 ```python
-# ❌ Wrong: Host application using WASM bindings
+# ❌ Wrong: Native application using guest bindings
 rust_binary(
     name = "test_runner",
     deps = [":my_component_bindings"],  # wasm32-wasip2 target
 )
 
-# ✅ Correct: Host application using host bindings
+# ✅ Correct: Native application using native bindings
 rust_binary(
     name = "test_runner", 
     deps = [":my_component_bindings_host"],  # aarch64-apple-darwin target
 )
 ```
 
-**Learn more**: [Host vs WASM Bindings Guide](/guides/host-vs-wasm-bindings/)
+**Learn more**: [Native vs Guest Bindings Guide](/guides/host-vs-wasm-bindings/)
 
 ---
 
