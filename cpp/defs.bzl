@@ -191,7 +191,7 @@ def _cpp_component_impl(ctx):
     ctx.actions.run(
         executable = clang,
         arguments = [compile_args],
-        inputs = [work_dir] + sysroot_files.files.to_list() + dep_libraries,
+        inputs = [work_dir] + sysroot_files.files.to_list() + dep_libraries + dep_headers,
         outputs = [wasm_binary],
         mnemonic = "CompileCppWasm",
         progress_message = "Compiling C/C++ to WASM for %s" % ctx.label,

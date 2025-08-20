@@ -1,0 +1,76 @@
+"""Cross-package header staging tests"""
+
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_component", "cpp_wit_bindgen") 
+load("//test/cpp:cross_package_tests.bzl", "cross_package_header_test", "nested_dependency_test")
+
+package(default_visibility = ["//test:__subpackages__"])
+
+cpp_wit_bindgen(
+    name = "test_bindings",
+    wit = "test.wit",
+    world = "test-world",
+)
+
+# Test 1: Simple cross-package dependency
+cpp_component(
+    name = "simple_consumer",
+    srcs = ["simple_consumer.cpp"],
+    hdrs = ["simple_consumer.h"],
+    wit = "test.wit", 
+    world = "test-world",
+    language = "cpp",
+    cxx_std = "c++17",
+    deps = [
+        "//test/cpp/cross_package_test_data:foundation",  # Cross-package!
+    ],
+)
+
+# Test 2: Nested cross-package dependencies (consumer -> math_lib -> foundation)
+cpp_component(
+    name = "nested_consumer", 
+    srcs = ["nested_consumer.cpp"],
+    hdrs = ["nested_consumer.h"],
+    wit = "test.wit",
+    world = "test-world", 
+    language = "cpp",
+    cxx_std = "c++17",
+    deps = [
+        "//test/cpp/cross_package_test_data:math_lib",  # Pulls in foundation transitively
+    ],
+)
+
+# Test 3: Multiple cross-package dependencies
+cpp_component(
+    name = "multiple_consumer",
+    srcs = ["multiple_consumer.cpp"],
+    hdrs = ["multiple_consumer.h"],
+    wit = "test.wit",
+    world = "test-world",
+    language = "cpp", 
+    cxx_std = "c++17",
+    deps = [
+        "//test/cpp/cross_package_test_data:foundation",
+        "//test/cpp/cross_package_test_data:math_lib",
+        "//test/cpp/cross_package_test_data:utils",
+    ],
+)
+
+# Analysis tests to verify the fix
+cross_package_header_test(
+    name = "test_simple_cross_package_headers",
+    target_under_test = ":simple_consumer",
+)
+
+nested_dependency_test(
+    name = "test_nested_cross_package_headers",
+    target_under_test = ":nested_consumer", 
+)
+
+# Build test to verify all scenarios work
+test_suite(
+    name = "cross_package_header_tests",
+    tests = [
+        ":test_simple_cross_package_headers",
+        ":test_nested_cross_package_headers",
+    ],
+)

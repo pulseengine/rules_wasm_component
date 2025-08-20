@@ -1,0 +1,48 @@
+"""Test data for cross-package header staging tests"""
+
+load("@rules_wasm_component//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen")
+
+package(default_visibility = ["//test:__subpackages__"])
+
+# Foundation library (base of dependency chain)
+cc_component_library(
+    name = "foundation",
+    srcs = ["foundation.cpp"],
+    hdrs = ["foundation.h", "foundation_types.hpp"],
+    includes = ["."],
+    language = "cpp",
+    cxx_std = "c++17",
+)
+
+# Math library (depends on foundation)
+cc_component_library(
+    name = "math_lib",
+    srcs = ["math.cpp"],
+    hdrs = ["math.h", "math_templates.hxx"],
+    includes = ["."],
+    language = "cpp",
+    cxx_std = "c++17",
+    deps = [":foundation"],
+)
+
+# Utils library (parallel dependency)
+cc_component_library(
+    name = "utils",
+    srcs = ["utils.cc"],
+    hdrs = ["utils.hh"],
+    includes = ["."],
+    language = "cpp",
+    cxx_std = "c++17",
+    deps = [":foundation"],
+)
+
+# Complex library (multiple dependencies)
+cc_component_library(
+    name = "complex",
+    srcs = ["complex.cpp"],
+    hdrs = ["complex.h"],
+    includes = ["."],
+    language = "cpp",
+    cxx_std = "c++17",
+    deps = [":math_lib", ":utils"],
+)
