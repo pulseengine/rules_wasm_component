@@ -39,7 +39,7 @@ wasm_security_policy(
 ```python title="BUILD.bazel"
 # Strict policy requiring signatures
 wasm_security_policy(
-    name = "production_policy", 
+    name = "production_policy",
     default_signing_required = True,
     # Component-specific policies (pattern-based)
     component_policies = [
@@ -174,7 +174,7 @@ wkg_multi_registry_publish(
     registry_config = ":production_registries",
     target_registries = [
         "github",    # Each registry inherits security policy
-        "docker", 
+        "docker",
         "aws",
     ],
     authors = ["security@myorg.com"],
@@ -201,10 +201,10 @@ wasm_component_secure_publish(
     annotations = ["com.wasm.registry=github", "com.wasm.security=enterprise"],
 )
 
-# Local with relaxed security  
+# Local with relaxed security
 wasm_component_secure_publish(
     name = "publish_local_relaxed",
-    package_name = "myorg/local-component", 
+    package_name = "myorg/local-component",
     component = ":my_component",
     security_policy = ":development_policy",  # Relaxed policy for local
     registry_config = ":registries",
@@ -273,19 +273,19 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Security Policy Validation
         run: bazel build //security:validate_production_policy
-        
+
       - name: Component Signing
         run: bazel build //components:signed_component
-        
+
       - name: Signature Verification
         run: bazel build //security:verify_signatures
-        
+
       - name: Secure Multi-Registry Publish
         run: bazel run //components:secure_multi_publish
         env:

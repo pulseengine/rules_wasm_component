@@ -1,13 +1,13 @@
 ---
-title: Native vs Guest Bindings
-description: Understanding when to use native platform bindings vs guest component bindings for different development scenarios
+title: Guest vs Native-Guest Bindings  
+description: Understanding the difference between guest component bindings and native-guest application bindings
 ---
 
-# Native vs Guest Bindings
+# Guest vs Native-Guest Bindings
 
-When you generate WIT bindings with `rust_wasm_component_bindgen`, you actually get **two different versions** of the same bindings compiled for different platforms. Understanding when to use each one is crucial for building effective WebAssembly component ecosystems.
+When you generate WIT bindings with `rust_wasm_component_bindgen`, you actually get **two different versions** of the same bindings compiled for different platforms. Understanding the distinction is crucial for building effective WebAssembly component ecosystems.
 
-> **Important Terminology**: In the WebAssembly Component Model, "host" refers to the runtime executing components (like wasmtime), while "guest" refers to the component implementation. Our bindings use different terminology to avoid confusion.
+> **Key Terminology**: We build **guest** components (WASM) and **native-guest** applications (native). We do NOT build "host" components - those are runtimes like wasmtime that execute guest components.
 
 ## The Two Binding Types
 
@@ -16,12 +16,12 @@ flowchart TD
     A[WIT Interface] --> B[Generated Rust Code]
     B --> C[Native Platform Bindings<br/>name_bindings_host]
     B --> D[Guest Component Bindings<br/>name_bindings]
-    
+
     C --> E[Native Applications<br/>rust_binary, rust_test]
     D --> F[Guest Components<br/>Component Implementation]
-    
+
     G[Host Runtime<br/>wasmtime] --> F
-    
+
     style C fill:#e8f5e8,stroke:#4caf50
     style D fill:#fff3e0,stroke:#f57c00
     style E fill:#e8f5e8,stroke:#4caf50
@@ -31,16 +31,16 @@ flowchart TD
 
 ### Native Platform Bindings (`{name}_bindings_host`)
 
-**Target Platform**: Your development machine (e.g., `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`)  
-**Runtime**: Native execution, no WebAssembly runtime required  
-**Purpose**: Development tools, testing, benchmarking, native applications  
+**Target Platform**: Your development machine (e.g., `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`)
+**Runtime**: Native execution, no WebAssembly runtime required
+**Purpose**: Development tools, testing, benchmarking, native applications
 **Role**: Enables native programs to understand component interfaces
 
 ### Guest Component Bindings (`{name}_bindings`)
 
-**Target Platform**: WebAssembly (`wasm32-wasip2`)  
-**Runtime**: WebAssembly runtime (wasmtime, web browsers, etc.)  
-**Purpose**: Actual component implementations compiled to WebAssembly  
+**Target Platform**: WebAssembly (`wasm32-wasip2`)
+**Runtime**: WebAssembly runtime (wasmtime, web browsers, etc.)
+**Purpose**: Actual component implementations compiled to WebAssembly
 **Role**: The "guest" that runs inside a "host" runtime like wasmtime
 
 ## Key Insight: Same Source, Different Targets
@@ -78,7 +78,7 @@ Use `{name}_bindings_host` for:
 ### Test Applications
 ```python
 rust_test(
-    name = "component_integration_test", 
+    name = "component_integration_test",
     srcs = ["tests/integration.rs"],
     deps = [":calculator_bindings_host"],  # Native bindings for tests
 )
@@ -149,7 +149,7 @@ rust_wasm_component_bindgen(
 ### Native Platform Bindings Can Do
 
 - **Run natively** on your development machine
-- **Access component interfaces** and type definitions  
+- **Access component interfaces** and type definitions
 - **Import and use** WIT-generated traits and types
 - **Create mock implementations** for testing
 - **Build development tools** that understand component interfaces
@@ -169,7 +169,7 @@ rust_wasm_component_bindgen(
 - **Export component functions** to any language via WebAssembly
 - **Participate in component compositions** via WAC
 - **Use WASI Preview 2** filesystem, networking, etc.
-- **Be distributed** via OCI registries  
+- **Be distributed** via OCI registries
 - **Provide secure sandboxing** and portability
 
 ### Guest Component Bindings Cannot Do
@@ -203,7 +203,7 @@ rust_binary(
 
 # ✅ Correct: Native application using native bindings
 rust_binary(
-    name = "test_runner", 
+    name = "test_runner",
     deps = [":my_component_bindings_host"],  # aarch64-apple-darwin target
 )
 ```
@@ -315,7 +315,7 @@ rust_test(
 
 # Test the actual component with wasmtime
 rust_wasm_component_test(
-    name = "component_test", 
+    name = "component_test",
     component = ":component",
 )
 ```

@@ -242,16 +242,16 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Bazel
         uses: bazelbuild/setup-bazelisk@v2
-        
+
       - name: Build component
         run: bazel build //src:my_component
-        
+
       - name: Publish to registries
         run: bazel run //src:publish_multi
         env:
@@ -264,19 +264,19 @@ jobs:
 ```groovy title="Jenkinsfile"
 pipeline {
     agent any
-    
+
     environment {
         GITHUB_TOKEN = credentials('github-token')
         DOCKER_TOKEN = credentials('docker-token')
     }
-    
+
     stages {
         stage('Build') {
             steps {
                 sh 'bazel build //src:my_component'
             }
         }
-        
+
         stage('Publish') {
             when {
                 tag pattern: 'v\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'

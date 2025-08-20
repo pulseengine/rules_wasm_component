@@ -9,12 +9,14 @@ This document defines the clear content hierarchy for the docs-site to prevent d
 ### 1. Installation & Setup (Canonical Sources)
 
 **Primary owner:** `/installation.md`
+
 - Complete installation instructions for all platforms
 - All language-specific setup (Rust, Go, C++, JavaScript)
 - Toolchain configuration details
 - Troubleshooting installation issues
 
 **Secondary references:**
+
 - `/getting-started.mdx` - Quick reference with link to full installation
 - `/first-component.md` - Minimal setup with reference to installation guide
 - Language-specific guides - Link to installation for setup details
@@ -24,21 +26,25 @@ This document defines the clear content hierarchy for the docs-site to prevent d
 ### 2. Tutorial Progression (Learning Path)
 
 **Ultra-fast (2 min):** `/zero-to-component.mdx`
+
 - Immediate success using existing examples
 - Minimal explanation, maximum speed
 - References detailed tutorials for understanding
 
-**Quick hands-on (10 min):** `/first-component.md`  
+**Quick hands-on (10 min):** `/first-component.md`
+
 - Build from scratch step-by-step
 - Focused on practical implementation
 - References installation and detailed tutorials
 
 **Complete understanding (30 min):** `/tutorials/rust-guided-walkthrough.mdx`
+
 - Deep explanations of concepts and pipeline
 - Line-by-line code analysis with diagrams
 - Complete mental model building
 
 **Technical reference:** `/tutorials/code-explained.mdx`
+
 - Visual diagrams of component building process
 - Progressive complexity with Mermaid diagrams
 - Technical deep-dive into each file
@@ -46,36 +52,42 @@ This document defines the clear content hierarchy for the docs-site to prevent d
 ### 3. Code Examples (Canonical Patterns)
 
 **BUILD.bazel patterns:**
+
 - **Owner:** `/examples/basic/` - Canonical Rust component pattern
 - **Owner:** `/examples/calculator/` - Error handling pattern
 - **Owner:** Language-specific examples - Language-specific patterns
 
 **References:**
+
 - Tutorial pages link to examples instead of duplicating BUILD.bazel code
 - Rule reference shows usage patterns, examples show complete implementations
 
 **WIT interface examples:**
+
 - **Owner:** `/tutorials/code-explained.mdx` - Detailed WIT explanations
 - **References:** Other pages link to detailed explanations rather than re-explaining
 
 ### 4. Advanced Topics (Specialized Ownership)
 
 **Component Composition:**
+
 - **Owner:** `/composition/wac/` - Complete WAC composition guide
 - **References:** Getting started mentions composition, links to dedicated guide
 
 **Performance Optimization:**
+
 - **Owner:** `/production/performance/` - Wizer and optimization techniques
 - **References:** Other pages mention performance, link to dedicated guide
 
 **Security & Signing:**
+
 - **Owner:** `/security/component-signing.mdx` - Complete security guide
 - **References:** Brief mentions in other pages, links for details
 
 ### 5. Language-Specific Content
 
 **Rust:** `/languages/rust/`
-**Go:** `/languages/go/`  
+**Go:** `/languages/go/`
 **C++:** `/languages/cpp/`
 **JavaScript:** `/languages/javascript/`
 
@@ -84,10 +96,12 @@ This document defines the clear content hierarchy for the docs-site to prevent d
 ### 6. Reference Documentation
 
 **Rule Reference:** `/reference/rules.mdx`
+
 - **Owner:** Complete API documentation for all rules
 - **Pattern:** Examples show usage, reference shows complete API
 
 **Troubleshooting:** `/troubleshooting/common-issues.mdx`
+
 - **Owner:** All error messages and solutions
 - **Pattern:** Other pages reference troubleshooting for specific issues
 
@@ -96,14 +110,16 @@ This document defines the clear content hierarchy for the docs-site to prevent d
 ### ✅ Good Patterns
 
 1. **Provide minimal context + link to canonical source**
+
    ```markdown
    For complete installation instructions, see the [Installation Guide](/installation/).
-   
+
    Quick setup for Rust:
    [minimal code example]
    ```
 
 2. **Use approach grids for different learning paths**
+
    ```html
    <div class="approach-grid">
      <div class="approach-card">
@@ -115,6 +131,7 @@ This document defines the clear content hierarchy for the docs-site to prevent d
    ```
 
 3. **Reference examples instead of duplicating BUILD.bazel**
+
    ```markdown
    For the complete BUILD.bazel pattern, see the [basic example](/examples/basic/).
    ```
@@ -126,7 +143,7 @@ This document defines the clear content hierarchy for the docs-site to prevent d
    - ✅ Provide minimal setup + link to installation guide
 
 2. **Re-explaining WIT syntax**
-   - ❌ Explain WIT syntax on every tutorial page  
+   - ❌ Explain WIT syntax on every tutorial page
    - ✅ Link to detailed explanation in code-explained tutorial
 
 3. **Duplicating BUILD.bazel examples**
@@ -165,6 +182,7 @@ Before publishing content changes:
 ## Maintenance
 
 This hierarchy should be reviewed quarterly to:
+
 - Identify new duplication that has crept in
 - Update reference patterns as content evolves
 - Ensure learning paths remain clear and progressive

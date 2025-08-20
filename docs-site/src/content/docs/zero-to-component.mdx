@@ -39,7 +39,7 @@ cd rules_wasm_component/examples/basic
 
 **What's in here?** Just 3 simple files:
 - `hello.wit` - The interface (what your component does)
-- `src/lib.rs` - The implementation (7 lines of Rust)  
+- `src/lib.rs` - The implementation (7 lines of Rust)
 - `BUILD.bazel` - The build config (tells Bazel how to build it)
 
 **Want to understand each file?** → [Code Explained Line by Line](/tutorials/code-explained/)
@@ -71,7 +71,7 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/hell
 
 # Expected output:
 # package hello:component@0.1.0;
-# 
+#
 # world hello {
 #     export hello: func(name: string) -> string;
 # }
@@ -93,13 +93,13 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/hell
 → [Code Explained Line by Line](/tutorials/code-explained/) - Deep dive into every line of code
 
 ### 💻 **Want to try different languages?**
-→ [Go Components](/languages/go/) - Build the same thing with TinyGo  
-→ [C++ Components](/languages/cpp/) - Try native C++ development  
+→ [Go Components](/languages/go/) - Build the same thing with TinyGo
+→ [C++ Components](/languages/cpp/) - Try native C++ development
 → [JavaScript Components](/languages/javascript/) - Use ComponentizeJS
 
 ### 🏗️ **Want to build something more complex?**
-→ [Multi-Language Composition](/examples/multi-language-composition/) - Combine Rust, Go, and JavaScript components  
-→ [Microservices Architecture](/examples/microservices-architecture/) - Service composition patterns  
+→ [Multi-Language Composition](/examples/multi-language-composition/) - Combine Rust, Go, and JavaScript components
+→ [Microservices Architecture](/examples/microservices-architecture/) - Service composition patterns
 → [OCI Publishing](/examples/oci-publishing/) - Deploy to container registries
 
 ### 🐛 **Something not working?**
@@ -121,6 +121,6 @@ This is the future of software development - and you just took your first step i
 
 ---
 
-**⏱️ Total time**: Under 2 minutes  
-**🎯 Result**: Working WebAssembly component  
+**⏱️ Total time**: Under 2 minutes
+**🎯 Result**: Working WebAssembly component
 **🧠 Knowledge gained**: Foundation for building modern, portable software

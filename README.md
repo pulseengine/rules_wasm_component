@@ -5,7 +5,7 @@ Modern Bazel rules for building WebAssembly components across multiple languages
 ## Why Use This?
 
 - **Multi-language**: Build components from Rust, Go, C++, JavaScript
-- **Production Ready**: OCI publishing, signing, composition, optimization  
+- **Production Ready**: OCI publishing, signing, composition, optimization
 - **Bazel Native**: Hermetic builds, caching, cross-platform support
 
 ## Installation
@@ -21,7 +21,7 @@ bazel_dep(name = "rules_wasm_component", version = "1.0.0")
 ```starlark
 # Build a component from Rust
 rust_wasm_component_bindgen(
-    name = "hello_component", 
+    name = "hello_component",
     srcs = ["src/lib.rs"],
     wit = ":hello_interfaces",
 )
@@ -32,7 +32,7 @@ rust_wasm_component_bindgen(
 📚 **[Complete Documentation →](https://github.com/pulseengine/rules_wasm_component/tree/main/docs-site)**
 
 - **[Zero to Component in 2 Minutes](/docs-site/src/content/docs/zero-to-component.mdx)** - Fastest way to get started
-- **[Language Guides](/docs-site/src/content/docs/languages/)** - Rust, Go, C++, JavaScript tutorials  
+- **[Language Guides](/docs-site/src/content/docs/languages/)** - Rust, Go, C++, JavaScript tutorials
 - **[Production Deployment](/docs-site/src/content/docs/production/)** - OCI publishing, signing, optimization
 - **[Examples](examples/)** - Working examples from basic to advanced
 

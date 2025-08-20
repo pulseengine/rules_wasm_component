@@ -1,8 +1,0 @@
-package test:consumer@1.0.0;
-
-world test-world {
-    export test-api: interface {
-        test-foundation: func() -> string;
-        test-math: func(a: f64, b: f64) -> f64;
-    }
-}
