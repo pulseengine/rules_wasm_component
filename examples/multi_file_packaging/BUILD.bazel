@@ -26,7 +26,7 @@ wit_library(
     name = "web_service_interfaces",
     package_name = "example:web-service@0.1.0",
     srcs = ["wit/web_service.wit"],
-    world = "multi-file-service",
+    world = "service",
 )
 
 # Generate keys for signing examples
@@ -353,7 +353,7 @@ genrule(
     cp $(location :production_config) service/
     cp $(location :response_template) service/
     cp $(location :api_schema) service/
-    cp $(location :service_documentation) service/
+    cp $(locations :service_documentation) service/
     tar -cf $@ service/
     """,
 )

@@ -52,6 +52,6 @@ interface web-service {
 }
 
 /// World for multi-file packaging examples
-world multi-file-service {
+world service {
     export web-service;
 }
