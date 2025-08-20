@@ -17,11 +17,7 @@ def _wkg_fetch_impl(ctx):
     config_content = ""
     if ctx.attr.registry:
         config_content = """
-[registry]
-default = "{registry}"
-
-[registries."{registry}"]
-url = "{registry}"
+default_registry = "{registry}"
 """.format(registry = ctx.attr.registry)
 
     config_file = None
@@ -154,11 +150,7 @@ def _wkg_lock_impl(ctx):
     config_content = ""
     if ctx.attr.registry:
         config_content = """
-[registry]
-default = "{registry}"
-
-[registries."{registry}"]
-url = "{registry}"
+default_registry = "{registry}"
 """.format(registry = ctx.attr.registry)
 
     config_file = None
@@ -248,11 +240,7 @@ version = "{version}"
     config_content = ""
     if ctx.attr.registry:
         config_content = """
-[registry]
-default = "{registry}"
-
-[registries."{registry}"]
-url = "{registry}"
+default_registry = "{registry}"
 """.format(registry = ctx.attr.registry)
 
     config_file = None
