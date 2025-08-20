@@ -1,0 +1,172 @@
+---
+title: Learning Path
+description: A progressive guide through WebAssembly component development
+---
+
+# Learning Path
+
+This guide provides a structured path through our documentation, from complete beginner to advanced WebAssembly component developer. Follow the path that matches your experience level and goals.
+
+## 🚀 Path 1: Complete Beginner 
+*"I'm new to WebAssembly and want to see it working quickly"*
+
+### Step 1: Get Something Working Fast ⚡
+**Goal**: See a working component in under 2 minutes
+- **[Zero to Component in 2 Minutes](/zero-to-component/)** 
+- **Time**: 2 minutes
+- **What you'll get**: A working WebAssembly component + basic understanding
+
+### Step 2: Understand What You Built 🧠
+**Goal**: Understand every line of code
+- **[Code Explained Line by Line](/tutorials/code-explained/)**
+- **Time**: 10 minutes  
+- **What you'll learn**: Deep understanding of WIT, BUILD.bazel, and Rust code
+
+### Step 3: Build Your Own 🔨
+**Goal**: Create your first component from scratch
+- **[First Component](/first-component/)**
+- **Time**: 15 minutes
+- **What you'll learn**: Project setup, troubleshooting, testing
+
+### Step 4: Handle Problems 🐛
+**Goal**: Fix common issues confidently
+- **[Common Issues & Solutions](/troubleshooting/common-issues/)**
+- **Time**: 5 minutes reading (save for when needed)
+- **What you'll learn**: Debugging skills, common pitfalls
+
+**🎓 Graduation**: You can now build basic WebAssembly components!
+
+---
+
+## 💻 Path 2: Experienced Developer
+*"I know programming but am new to WebAssembly/Bazel"*
+
+### Step 1: Quick Start + Concepts ⚡
+**Goal**: Get oriented with WebAssembly components
+- **[Quick Start](/getting-started/)** - Full overview
+- **[Architecture Overview](/architecture/overview/)** - Understand the ecosystem
+- **Time**: 15 minutes
+
+### Step 2: Complete Tutorial 🎯
+**Goal**: Build something substantial with explanations
+- **[Guided Rust Walkthrough](/tutorials/rust-guided-walkthrough/)**
+- **Time**: 30 minutes
+- **What you'll learn**: Complete development workflow, best practices
+
+### Step 3: Try Different Languages 🌍
+**Goal**: See how components work across languages
+- **[Go Components](/languages/go/)** - TinyGo approach
+- **[C++ Components](/languages/cpp/)** - Native development
+- **[JavaScript Components](/languages/javascript/)** - Web ecosystem
+- **Time**: 15 minutes each
+
+### Step 4: Advanced Features 🚀
+**Goal**: Learn production-ready features
+- **[Component Composition](/composition/wac/)** - Multi-component systems
+- **[Performance Optimization](/production/performance/)** - Wizer pre-initialization
+- **Time**: 20 minutes each
+
+**🎓 Graduation**: You can build production WebAssembly systems!
+
+---
+
+## 🏗️ Path 3: Building Real Applications
+*"I want to build something for production"*
+
+### Step 1: Choose Your Stack 🎯
+**Goal**: Pick the right language and approach
+
+**For Web Applications:**
+- **[JavaScript Components](/languages/javascript/)** - Best for web integration
+- **[WAC Composition](/composition/wac/)** - Frontend + backend components
+
+**For System Services:**
+- **[Rust Components](/languages/rust/)** - Best performance and ecosystem
+- **[Go Components](/languages/go/)** - Familiar syntax, good concurrency
+
+**For Legacy Integration:**
+- **[C++ Components](/languages/cpp/)** - Port existing C/C++ code
+
+### Step 2: Study Real Examples 📚
+**Goal**: See complete implementations
+- **[Calculator (C++)](/examples/calculator/)** - Error handling patterns
+- **[HTTP Service (Go)](/examples/http-service/)** - Web service architecture  
+- **[Multi-Language System](/examples/multi-language/)** - Polyglot composition
+- **Time**: 10 minutes each
+
+### Step 3: Production Setup 🏭
+**Goal**: Deploy securely and efficiently
+- **[Toolchain Configuration](/guides/toolchain-configuration/)** - CI/CD setup
+- **[Component Signing](/security/component-signing/)** - Security practices
+- **[OCI Publishing](/production/publishing/)** - Distribution strategy
+- **Time**: 30 minutes total
+
+### Step 4: Advanced Architecture 🎨
+**Goal**: Design scalable systems
+- **[WRPC Communication](/reference/rules/#rpc-communication)** - Remote procedure calls
+- **[WAC + OCI Integration](/composition/wac-oci-integration/)** - Distributed components
+- **[Performance Optimization](/production/performance/)** - Production tuning
+- **Time**: 45 minutes total
+
+**🎓 Graduation**: You can architect and deploy WebAssembly component systems!
+
+---
+
+## 🔬 Path 4: Advanced Developer/Contributor
+*"I want to extend the toolchain or contribute"*
+
+### Step 1: Understand the Architecture 🏗️
+**Goal**: Deep understanding of the build system
+- **[Development Workflow](/workflow/development-flow/)** - Internal processes
+- **[Toolchain Configuration](/guides/toolchain-configuration/)** - Advanced customization
+- **[Migration Guide](/guides/migration/)** - Bazel best practices
+
+### Step 2: Master All Rules 📖
+**Goal**: Complete reference knowledge
+- **[Rule Reference](/reference/rules/)** - All 31 rules and providers
+- **[Advanced Examples](/examples/advanced-examples/)** - Complex scenarios
+- Study the source code in `/examples`
+
+### Step 3: Extended Features 🚀
+**Goal**: Use cutting-edge capabilities
+- **[Multi-Profile Builds](/guides/multi-profile-builds/)** - Advanced build configurations
+- **[External WIT Dependencies](/guides/external-wit-dependencies/)** - WASI ecosystem
+- **[Enterprise Security](/security/)** - Advanced security patterns
+
+**🎓 Graduation**: You can extend and contribute to the ecosystem!
+
+---
+
+## 📚 Reference Materials
+
+### Quick References
+- **[Rule Reference](/reference/rules/)** - Complete rule documentation
+- **[Common Issues](/troubleshooting/common-issues/)** - Debug guide
+- **[Installation](/installation/)** - Setup instructions
+
+### Example Library
+- **[Basic Examples](/examples/basic-examples/)** - Simple patterns
+- **[Intermediate Examples](/examples/intermediate-examples/)** - Common use cases  
+- **[Advanced Examples](/examples/advanced-examples/)** - Complex scenarios
+
+### Language-Specific Guides
+- **[Rust](/languages/rust/)** - Best practices, patterns, optimization
+- **[Go](/languages/go/)** - TinyGo specifics, WASI Preview 2
+- **[C++](/languages/cpp/)** - WASI SDK, native development
+- **[JavaScript](/languages/javascript/)** - ComponentizeJS, npm integration
+
+---
+
+## 🎯 Choose Your Next Step
+
+**New to WebAssembly?** → Start with [Zero to Component in 2 Minutes](/zero-to-component/)
+
+**Want to understand the code?** → Read [Code Explained Line by Line](/tutorials/code-explained/)
+
+**Ready to build something real?** → Try [Calculator Example](/examples/calculator/)
+
+**Need help with an error?** → Check [Common Issues](/troubleshooting/common-issues/)
+
+**Want to see all capabilities?** → Browse [Rule Reference](/reference/rules/)
+
+Remember: The best way to learn is by building! Start with something simple, get it working, then gradually add complexity. 🚀

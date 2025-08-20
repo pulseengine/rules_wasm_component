@@ -158,7 +158,8 @@ def rust_wasm_component_bindgen(
     and user implementation code.
 
     Generated targets:
-    - {name}_bindings: A rust_library containing WIT bindings with minimal runtime
+    - {name}_bindings_host: Host-platform rust_library for host applications
+    - {name}_bindings: WASM-platform rust_library for WASM components  
     - {name}: The final WASM component that depends on the bindings
 
     Args:
@@ -180,10 +181,14 @@ def rust_wasm_component_bindgen(
             profiles = ["debug", "release"],
         )
 
-        # In src/lib.rs:
+        # In WASM component src/lib.rs:
         use my_component_bindings::exports::my_interface::{Guest};
-        struct MyComponent;
-        impl Guest for MyComponent { ... }
+        
+        # In host application BUILD.bazel:
+        rust_binary(
+            name = "host_app",
+            deps = [":my_component_bindings_host"],  # Use host bindings
+        )
     """
 
     # Generate WIT bindings
@@ -213,7 +218,7 @@ def rust_wasm_component_bindgen(
         srcs = [":" + wrapper_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        visibility = ["//visibility:private"],
+        visibility = visibility,  # Make host bindings publicly available
     )
 
     # Create a WASM-transitioned version of the bindings library

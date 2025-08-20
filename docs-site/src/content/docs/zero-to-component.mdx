@@ -1,0 +1,169 @@
+---
+title: Zero to Component in 2 Minutes
+description: The fastest way to get your first WebAssembly component working
+---
+
+# Zero to Component in 2 Minutes
+
+**Goal**: Get a working WebAssembly component in under 2 minutes, with minimal setup and maximum success.
+
+This ultra-quick start guide gets you from nothing to a working component as fast as possible. Once you see it working, you can dive deeper into the concepts.
+
+## Prerequisites Check ✅
+
+You only need **one** tool installed:
+
+```bash
+# Check if you have bazelisk (recommended) or bazel
+bazelisk version || bazel version
+```
+
+**Don't have it?** Install bazelisk in 30 seconds:
+```bash
+# macOS
+brew install bazelisk
+
+# Linux/Windows with npm
+npm install -g @bazel/bazelisk
+
+# Or download binary from: https://github.com/bazelbuild/bazelisk/releases
+```
+
+## Step 1: Get the Code (30 seconds)
+
+```bash
+# Clone and enter the basic example
+git clone https://github.com/pulseengine/rules_wasm_component.git
+cd rules_wasm_component/examples/basic
+```
+
+**What's in here?** Just 3 simple files:
+- `hello.wit` - The interface (what your component does)
+- `src/lib.rs` - The implementation (7 lines of Rust)  
+- `BUILD.bazel` - The build config (tells Bazel how to build it)
+
+## Step 2: Build Your Component (60 seconds)
+
+```bash
+# Build the component (first run downloads tools automatically)
+bazelisk build //:hello_component
+
+# ✅ Success looks like:
+# INFO: Build completed successfully, X total actions
+```
+
+**What just happened?** Bazel automatically:
+- Downloaded Rust toolchain + WebAssembly tools
+- Compiled your 7-line Rust code to WebAssembly
+- Created `hello_component.wasm` - your finished component!
+
+## Step 3: See It Work (30 seconds)
+
+```bash
+# Look at what was created
+ls bazel-bin/
+# You should see: hello_component.wasm
+
+# Check the component interface
+bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/hello_component.wasm
+
+# Expected output:
+# package hello:component@0.1.0;
+# 
+# world hello {
+#     export hello: func(name: string) -> string;
+# }
+```
+
+**🎉 Congratulations!** You just built a WebAssembly component that:
+- Exports a `hello` function that takes a string and returns a string
+- Can be called from any language (JavaScript, Python, Go, etc.)
+- Runs in a secure sandbox with no access to your system
+- Works on any platform that supports WebAssembly
+
+## What You Just Built
+
+Let's quickly understand the 3 files that made this magic happen:
+
+### The Interface (`hello.wit`)
+```wit
+package hello:component@0.1.0;
+
+world hello {
+    export hello: func(name: string) -> string;
+}
+```
+**This says**: "My component exports one function called `hello` that takes a string parameter and returns a string."
+
+### The Implementation (`src/lib.rs`)
+```rust
+wit_bindgen::generate!();
+
+struct Component;
+
+impl Guest for Component {
+    fn hello(name: String) -> String {
+        format!("Hello, {}!", name)
+    }
+}
+
+export!(Component);
+```
+**This says**: "Here's my Rust code that implements the `hello` function - it just adds 'Hello, ' to whatever name you give it."
+
+### The Build Config (`BUILD.bazel`)
+```python
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+
+wit_library(
+    name = "hello_interfaces",
+    srcs = ["hello.wit"],
+    package_name = "hello:component@0.1.0",
+)
+
+rust_wasm_component_bindgen(
+    name = "hello_component",
+    srcs = ["src/lib.rs"],
+    wit = ":hello_interfaces",
+)
+```
+**This says**: "Bazel, please take my WIT interface and Rust code, and build me a WebAssembly component."
+
+## Next Steps (Pick Your Adventure)
+
+### 🚀 **Want to understand what you just did?**
+→ [Understanding Your First Component](/first-component/) - Deep dive into the concepts
+
+### 💻 **Want to try different languages?**
+→ [Go Components](/languages/go/) - Build the same thing with TinyGo  
+→ [C++ Components](/languages/cpp/) - Try native C++ development  
+→ [JavaScript Components](/languages/javascript/) - Use ComponentizeJS
+
+### 🏗️ **Want to build something more complex?**
+→ [Calculator Example](/examples/calculator/) - Error handling and multiple functions  
+→ [HTTP Service](/examples/http-service/) - Web service component  
+→ [Component Composition](/composition/wac/) - Combine multiple components
+
+### 🐛 **Something not working?**
+→ [Troubleshooting Guide](/troubleshooting/) - Common issues and solutions
+
+### 📚 **Want the full tutorial?**
+→ [Guided Rust Tutorial](/tutorials/rust-guided-walkthrough/) - Complete step-by-step explanation
+
+## Why This Matters
+
+You just experienced the **Component Model revolution**:
+
+1. **Write once, run anywhere**: Your component works on any platform
+2. **Language freedom**: The same interface could be implemented in Go, C++, JavaScript, etc.
+3. **Secure by default**: Components can't access your filesystem or network unless explicitly allowed
+4. **Composable**: You can connect multiple components together like LEGO blocks
+
+This is the future of software development - and you just took your first step into it! 🎊
+
+---
+
+**⏱️ Total time**: Under 2 minutes  
+**🎯 Result**: Working WebAssembly component  
+**🧠 Knowledge gained**: Foundation for building modern, portable software

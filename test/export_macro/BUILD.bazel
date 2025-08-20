@@ -32,5 +32,5 @@ rust_binary(
     name = "macro_accessibility_test",
     srcs = ["macro_test.rs"],
     edition = "2021",
-    deps = [":test_component_bindings"],
+    deps = [":test_component_bindings_host"],  # Use host bindings for host application
 )

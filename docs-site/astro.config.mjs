@@ -48,6 +48,8 @@ export default defineConfig({
 				{
 					label: 'Getting Started',
 					items: [
+						{ label: 'Learning Path', slug: 'learning-path' },
+						{ label: 'Zero to Component in 2 Minutes', slug: 'zero-to-component' },
 						{ label: 'Quick Start', slug: 'getting-started' },
 						{ label: 'Installation', slug: 'installation' },
 						{ label: 'First Component', slug: 'first-component' },
@@ -63,6 +65,7 @@ export default defineConfig({
 				{
 					label: 'Tutorials',
 					items: [
+						{ label: 'Code Explained Line by Line', slug: 'tutorials/code-explained' },
 						{ label: 'Guided Rust Walkthrough', slug: 'tutorials/rust-guided-walkthrough' },
 						{ label: 'Guided Go (TinyGo) Walkthrough', slug: 'tutorials/go-guided-walkthrough' },
 					],
@@ -123,6 +126,7 @@ export default defineConfig({
 				{
 					label: 'Troubleshooting',
 					items: [
+						{ label: 'Common Issues & Solutions', slug: 'troubleshooting/common-issues' },
 						{ label: 'Export Macro Visibility', slug: 'troubleshooting/export-macro-visibility' },
 					],
 				},
