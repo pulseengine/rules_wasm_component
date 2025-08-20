@@ -31,24 +31,19 @@ def _cpp_component_impl(ctx):
     dep_includes = []
 
     for dep in ctx.attr.deps:
-        if CcInfo in dep:
-            # Use proper CcInfo provider for header and library information
-            cc_info = dep[CcInfo]
-            dep_headers.extend(cc_info.compilation_context.headers.to_list())
-            dep_includes.extend(cc_info.compilation_context.includes.to_list())
-
-            # Extract static libraries from linking context
-            for linker_input in cc_info.linking_context.linker_inputs.to_list():
-                for library in linker_input.libraries:
-                    if library.static_library:
-                        dep_libraries.append(library.static_library)
-        elif DefaultInfo in dep:
-            # Fallback for non-CcInfo dependencies (e.g., legacy rules)
+        # Always check DefaultInfo first for direct file access (simpler and more reliable)
+        if DefaultInfo in dep:
             for file in dep[DefaultInfo].files.to_list():
                 if file.extension in ["h", "hpp", "hh", "hxx"]:
                     dep_headers.append(file)
                 elif file.extension == "a":
                     dep_libraries.append(file)
+        
+        # Also extract headers and includes from CcInfo for proper transitive dependencies
+        if CcInfo in dep:
+            cc_info = dep[CcInfo]
+            dep_headers.extend(cc_info.compilation_context.headers.to_list())
+            dep_includes.extend(cc_info.compilation_context.includes.to_list())
 
     # Generate bindings directory
     bindings_dir = ctx.actions.declare_directory(ctx.attr.name + "_bindings")
@@ -467,6 +462,7 @@ def _cc_component_library_impl(ctx):
         # Optimization
         if ctx.attr.optimize:
             compile_args.add("-O3")
+            compile_args.add("-flto")  # Enable LTO for compatibility with cpp_component
         else:
             compile_args.add("-O0")
             compile_args.add("-g")
@@ -563,10 +559,22 @@ def _cc_component_library_impl(ctx):
         includes = depset([h.dirname for h in ctx.files.hdrs] + ctx.attr.includes, transitive = [depset(transitive_includes)]),
     )
 
-    # Create CcInfo provider with compilation context only
-    # Note: We don't create linking context since we're using custom WASM toolchain
+    # Create linking context for the static library
+    # For cross-package linking, we need to provide the library through the linking context
+    # Use a simpler approach that works with our custom WASM toolchain
+    linker_input = cc_common.create_linker_input(
+        owner = ctx.label,
+        user_link_flags = [library.path],  # Pass library as link flag
+    )
+    
+    linking_context = cc_common.create_linking_context(
+        linker_inputs = depset([linker_input], transitive = transitive_libraries),
+    )
+
+    # Create CcInfo provider with both compilation and linking contexts
     cc_info = CcInfo(
         compilation_context = compilation_context,
+        linking_context = linking_context,
     )
 
     return [
