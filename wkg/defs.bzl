@@ -340,8 +340,7 @@ def _wkg_registry_config_impl(ctx):
     # Default registry configuration
     if ctx.attr.default_registry:
         config_content += """
-[registry]
-default = "{}"
+default_registry = "{}"
 """.format(ctx.attr.default_registry)
 
     # Individual registry configurations
