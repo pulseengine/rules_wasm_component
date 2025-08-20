@@ -17,24 +17,13 @@ We'll create a simple "Hello World" WebAssembly component that:
 
 **End Goal:** A `.wasm` component file that other programs can import and use.
 
-## Pipeline Overview - Where We're Going
+## Pipeline Overview
 
-Before diving in, let's see the complete journey:
+**The journey:** `hello.wit` → `wit_library` → `rust_wasm_component_bindgen` → `hello_component.wasm`
 
 ```mermaid
-graph TD
-    A[hello.wit Interface] --> B[wit_library Rule]
-    B --> C[rust_wasm_component_bindgen Rule]
-    C --> D[Generated Rust Bindings]
-    D --> E[Our Rust Implementation]
-    E --> F[Rust Compiler - WebAssembly Target]
-    F --> G[Core WebAssembly Module]
-    G --> H[wasm-tools component new]
-    H --> I[Final Component hello_component.wasm]
-
-    style A fill:#e1f5fe
-    style I fill:#f3e5f5
-    style D fill:#fff3e0
+flowchart LR
+    A[📄 hello.wit] --> B[🔧 Bazel Rules] --> C[🦀 Your Rust Code] --> D[📦 hello_component.wasm]
 ```
 
 Now let's walk through each step:

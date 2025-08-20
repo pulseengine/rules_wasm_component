@@ -171,10 +171,12 @@
 
 /* Mermaid diagram improvements */
 .mermaid {
-  min-height: 400px !important;
+  min-height: 200px !important;
+  max-height: 300px !important;
   width: 100% !important;
   cursor: pointer;
   transition: transform 0.2s ease;
+  margin: 1rem 0 !important;
 }
 
 .mermaid:hover {
@@ -233,7 +235,8 @@
 .mermaid svg {
   max-width: 100% !important;
   height: auto !important;
-  min-height: 400px !important;
+  min-height: 200px !important;
+  max-height: 300px !important;
 }
 
 /* Better styling for flowcharts */
@@ -264,7 +267,8 @@
   }
 
   .mermaid {
-    min-height: 300px !important;
+    min-height: 150px !important;
+    max-height: 250px !important;
   }
 
   .diagram-modal .mermaid {

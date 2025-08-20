@@ -18,23 +18,13 @@ We'll create a calculator WebAssembly component that:
 
 **End Goal:** A `.wasm` component that other programs can import for mathematical operations.
 
-## Pipeline Overview - The TinyGo Journey
+## Pipeline Overview
+
+**The TinyGo journey:** `calculator.wit` → `wit_library` → `go_wasm_component` → `calculator_component.wasm`
 
 ```mermaid
-graph TD
-    A[calculator.wit Interface] --> B[wit_library Rule]
-    B --> C[go_wit_bindgen Rule]
-    C --> D[Generated Go Bindings]
-    D --> E[Our Go Implementation]
-    E --> F[TinyGo Compiler - WASI Preview 2]
-    F --> G[Core WebAssembly Module]
-    G --> H[wasm-tools component new]
-    H --> I[Final Component calculator_component.wasm]
-
-    style A fill:#e1f5fe
-    style I fill:#f3e5f5
-    style D fill:#fff3e0
-    style F fill:#e8f5e8
+flowchart LR
+    A[📊 calculator.wit] --> B[🔧 Bazel Rules] --> C[🐹 Your Go Code] --> D[📦 calculator_component.wasm]
 ```
 
 **Key Difference from Rust:** TinyGo has native WASI Preview 2 support, making the pipeline more direct.
