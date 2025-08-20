@@ -46,13 +46,12 @@ def _wit_bindgen_impl(ctx):
     # For Rust, configure based on generation mode
     if ctx.attr.language == "rust":
         if ctx.attr.generation_mode == "native-guest":
-            # Generate native-side bindings using wasmtime
-            cmd_args.extend(["--generate", "host"])
-            # Use wasmtime component model APIs for native applications
-            cmd_args.extend(["--runtime-path", "wasmtime::component"])
+            # Native-guest mode: Use std runtime for native execution (no WebAssembly)
+            cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
         else:
             # Default guest mode - generate component implementation bindings
             cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
+
             # Make the export macro public so it can be used from separate crates
             cmd_args.append("--pub-export-macro")
 

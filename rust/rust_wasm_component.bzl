@@ -186,7 +186,21 @@ def rust_wasm_component(
 
         # Add wit-bindgen generated code if specified
         all_srcs = list(srcs)
-        all_deps = list(deps)
+
+        # Create separate dependency lists for host and WASM targets
+        # Host targets need _bindings_host, WASM targets need _bindings
+        host_deps = []
+        wasm_deps = []
+
+        for dep in deps:
+            if dep.endswith("_bindings"):
+                # This is a WIT bindings dependency, use appropriate version
+                host_deps.append(dep + "_host")
+                wasm_deps.append(dep)
+            else:
+                # Regular dependency, use for both
+                host_deps.append(dep)
+                wasm_deps.append(dep)
 
         # Generate WIT bindings before building the rust library
         if wit:
@@ -206,7 +220,22 @@ def rust_wasm_component(
             name = host_library_name,
             srcs = all_srcs,
             crate_root = crate_root,
-            deps = all_deps,
+            deps = host_deps,
+            edition = edition,
+            crate_features = crate_features,
+            rustc_flags = profile_rustc_flags,
+            visibility = ["//visibility:private"],
+            tags = ["wasm_component"],  # Tag to identify WASM components
+            **filtered_kwargs
+        )
+
+        # Create a separate WASM library with correct dependencies
+        wasm_library_base_name = rust_library_name + "_wasm_base"
+        rust_shared_library(
+            name = wasm_library_base_name,
+            srcs = all_srcs,
+            crate_root = crate_root,
+            deps = wasm_deps,
             edition = edition,
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags,
@@ -218,7 +247,7 @@ def rust_wasm_component(
         # Apply WASM transition to get actual WASM module
         _wasm_rust_shared_library(
             name = rust_library_name,
-            target = ":" + host_library_name,
+            target = ":" + wasm_library_base_name,
         )
 
         # Convert to component for this profile
