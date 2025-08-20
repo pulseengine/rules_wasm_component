@@ -1,32 +1,48 @@
-// API Gateway implementation for microservices architecture
-use gateway::microservices::exports::wasi::http::incoming_handler::{
-    Guest, IncomingRequest, ResponseOutparam,
+// Simplified API Gateway implementation for microservices architecture
+
+// Import the generated WIT bindings
+use api_gateway_bindings::exports::gateway::microservices::routing::{
+    Guest, RouteRequest, RouteResponse, RouteRule, ServiceEndpoint,
 };
 
+// Component implementation
 struct ApiGateway;
 
 impl Guest for ApiGateway {
-    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
-        // Simplified API Gateway implementation
-        println!("API Gateway: Processing request");
+    fn discover_services() -> Vec<ServiceEndpoint> {
+        vec![
+            ServiceEndpoint {
+                name: "user-service".to_string(),
+                version: "v1.0.0".to_string(),
+                health_status: "healthy".to_string(),
+                load: 0.5,
+                endpoints: vec!["http://user-service:8080".to_string()],
+            },
+            ServiceEndpoint {
+                name: "product-service".to_string(),
+                version: "v1.2.0".to_string(),
+                health_status: "healthy".to_string(),
+                load: 0.3,
+                endpoints: vec!["http://product-service:8080".to_string()],
+            },
+        ]
+    }
 
-        // In a real implementation, this would:
-        // 1. Authenticate the request
-        // 2. Route to appropriate microservice
-        // 3. Apply rate limiting
-        // 4. Handle load balancing
-        // 5. Collect metrics
+    fn register_service(endpoint: ServiceEndpoint) {
+        println!("Registering service: {}", endpoint.name);
+    }
 
-        let response_body =
-            r#"{"status": "API Gateway Active", "services": ["user", "product", "order"]}"#;
-        send_response(response_out, 200, response_body);
+    fn route(request: RouteRequest, _rules: Vec<RouteRule>) -> RouteResponse {
+        println!("Routing request: {} {}", request.method, request.path);
+        RouteResponse {
+            status: 200,
+            headers: vec![("content-type".to_string(), "application/json".to_string())],
+            body: Some(b"Hello from API Gateway".to_vec()),
+            service: "api-gateway".to_string(),
+            duration_ms: 10,
+        }
     }
 }
 
-fn send_response(response_out: ResponseOutparam, status: u32, body: &str) {
-    // Simplified response - in reality would use WASI HTTP APIs
-    println!("Gateway Response: {} - {}", status, body);
-}
-
-// Export the component
-gateway::microservices::export!(ApiGateway with_types_in gateway::microservices);
+// Export the component implementation
+api_gateway_bindings::export!(ApiGateway with_types_in api_gateway_bindings);
