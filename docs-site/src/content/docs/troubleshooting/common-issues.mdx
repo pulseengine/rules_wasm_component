@@ -7,7 +7,7 @@ description: Quick fixes for the most frequent problems when building WebAssembl
 
 This guide helps you quickly fix the most common problems when building WebAssembly components. Issues are organized by symptom to help you find solutions fast.
 
-## 🚨 Build Failures
+## Build Failures
 
 ### "rules_wasm_component not found" or "No such package"
 
@@ -130,9 +130,38 @@ cat hello.wit  # Look for syntax errors
 bazel build //:hello_interfaces  # Should build successfully
 ```
 
+### "Target triple mismatch" with bindings
+
+**Symptom**:
+```
+error[E0461]: couldn't find crate 'my_component_bindings' with expected target triple aarch64-apple-darwin
+note: the following crate versions were found:
+      crate 'my_component_bindings', target triple wasm32-wasip2
+```
+
+**Cause**: You're using WASM-platform bindings (`my_component_bindings`) in a host application that expects host-platform target triples.
+
+**Solution**: Use host-platform bindings for host applications:
+
+```python
+# ❌ Wrong: Host application using WASM bindings
+rust_binary(
+    name = "test_runner",
+    deps = [":my_component_bindings"],  # wasm32-wasip2 target
+)
+
+# ✅ Correct: Host application using host bindings
+rust_binary(
+    name = "test_runner", 
+    deps = [":my_component_bindings_host"],  # aarch64-apple-darwin target
+)
+```
+
+**Learn more**: [Host vs WASM Bindings Guide](/guides/host-vs-wasm-bindings/)
+
 ---
 
-## 🔧 Runtime Issues
+## Runtime Issues
 
 ### "Component doesn't export expected functions"
 

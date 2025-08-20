@@ -119,7 +119,7 @@ wasm_toolchain.register(
 )
 ```
 
-> **💡 Need advanced configuration?** See the [Toolchain Configuration Guide](/guides/toolchain-configuration/) for strategies, version management, CI/CD setup, and corporate environments.
+> **Note**: Need advanced configuration? See the [Toolchain Configuration Guide](/guides/toolchain-configuration/) for strategies, version management, CI/CD setup, and corporate environments.
 
 ## Language-Specific Setup
 

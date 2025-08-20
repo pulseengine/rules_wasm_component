@@ -1,0 +1,319 @@
+---
+title: Host vs WASM Bindings
+description: Understanding when to use host-platform vs WASM-platform bindings for different development scenarios
+---
+
+# Host vs WASM Bindings
+
+When you generate WIT bindings with `rust_wasm_component_bindgen`, you actually get **two different versions** of the same bindings compiled for different platforms. Understanding when to use each one is crucial for building effective WebAssembly component ecosystems.
+
+## The Two Binding Types
+
+```mermaid
+flowchart LR
+    A[WIT Interface] --> B[Generated Rust Code]
+    B --> C[Host Bindings<br/>{name}_bindings_host]
+    B --> D[WASM Bindings<br/>{name}_bindings]
+    
+    C --> E[Host Applications<br/>rust_binary, rust_test]
+    D --> F[WASM Components<br/>Component Implementation]
+    
+    style C fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
+    style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style E fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
+    style F fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+```
+
+### Host Bindings (`{name}_bindings_host`)
+
+**Target Platform**: Your development machine (e.g., `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`)  
+**Runtime**: Native execution, no WebAssembly runtime required  
+**Purpose**: Development tools, testing, benchmarking, host applications
+
+### WASM Bindings (`{name}_bindings`)
+
+**Target Platform**: WebAssembly (`wasm32-wasip2`)  
+**Runtime**: WebAssembly runtime (wasmtime, web browsers, etc.)  
+**Purpose**: Actual component implementations that run as WebAssembly
+
+## Key Insight: Same Source, Different Targets
+
+Both binding types are generated from **identical WIT-derived Rust source code**. The only difference is the compilation target:
+
+```rust
+// Same generated Rust code from WIT
+wit_bindgen::generate!({
+    path: "interfaces.wit",
+    world: "my-world",
+});
+
+// Compiled for two different targets:
+// 1. Host Platform   (aarch64-apple-darwin) → {name}_bindings_host
+// 2. WASM Platform   (wasm32-wasip2)        → {name}_bindings
+```
+
+## When to Use Host Bindings
+
+Use `{name}_bindings_host` for:
+
+### ✅ Test Applications
+```python
+rust_test(
+    name = "component_integration_test",
+    srcs = ["tests/integration.rs"],
+    deps = [":calculator_bindings_host"],  # Host bindings for tests
+)
+```
+
+### ✅ Benchmarking Tools
+```python
+rust_binary(
+    name = "component_benchmark",
+    srcs = ["bench/benchmark.rs"],
+    deps = [":calculator_bindings_host"],  # Host bindings for benchmarks
+)
+```
+
+### ✅ Development Utilities
+```python
+rust_binary(
+    name = "schema_validator",
+    srcs = ["tools/validate.rs"],
+    deps = [":calculator_bindings_host"],  # Host bindings for tooling
+)
+```
+
+### ✅ Mock Implementations
+```rust
+// In your test file
+use calculator_bindings_host::exports::calculator::math::Guest;
+
+struct MockCalculator;
+impl Guest for MockCalculator {
+    fn add(a: i32, b: i32) -> i32 {
+        a + b  // Simple mock implementation for testing
+    }
+}
+```
+
+## When to Use WASM Bindings
+
+Use `{name}_bindings` for:
+
+### ✅ Component Implementations
+```rust
+// Component source code (src/lib.rs)
+use calculator_bindings::exports::calculator::math::Guest;
+
+struct Calculator;
+impl Guest for Calculator {
+    fn add(a: i32, b: i32) -> i32 {
+        a + b
+    }
+}
+
+// Export the component
+calculator_bindings::export!(Calculator with_types_in calculator_bindings);
+```
+
+This is automatically handled by `rust_wasm_component_bindgen`:
+```python
+rust_wasm_component_bindgen(
+    name = "calculator",
+    srcs = ["src/lib.rs"],         # Uses calculator_bindings (WASM)
+    wit = ":calculator_interfaces",
+)
+```
+
+## Capabilities and Limitations
+
+### Host Bindings Can Do
+
+- ✅ **Run natively** on your development machine
+- ✅ **Access component interfaces** and type definitions
+- ✅ **Import and use** WIT-generated traits and types
+- ✅ **Create mock implementations** for testing
+- ✅ **Build development tools** that understand component interfaces
+- ✅ **Serialize/deserialize** component data types
+
+### Host Bindings Cannot Do
+
+- ❌ **Run as WebAssembly components** in WASM runtimes
+- ❌ **Export component functions** to other languages
+- ❌ **Participate in WAC compositions** or component graphs
+- ❌ **Use WASI Preview 2** or component model features
+- ❌ **Be called by** JavaScript, Python, or other host languages
+
+### WASM Bindings Can Do
+
+- ✅ **Run in WebAssembly runtimes** (wasmtime, browsers, etc.)
+- ✅ **Export component functions** to any language
+- ✅ **Participate in component compositions** via WAC
+- ✅ **Use WASI Preview 2** filesystem, networking, etc.
+- ✅ **Be distributed** via OCI registries
+- ✅ **Provide secure sandboxing** and portability
+
+### WASM Bindings Cannot Do
+
+- ❌ **Run natively** on host platforms
+- ❌ **Be used directly** in host applications
+- ❌ **Access host system resources** outside WASI
+
+## Common Error and Solution
+
+### The Error
+```bash
+error[E0461]: couldn't find crate 'my_component_bindings' with expected target triple aarch64-apple-darwin
+
+note: the following crate versions were found:
+      crate 'my_component_bindings', target triple wasm32-wasip2
+```
+
+### The Problem
+You're trying to use WASM-platform bindings (`my_component_bindings`) in a host application that expects host-platform target triples.
+
+### The Solution
+Use host-platform bindings instead:
+
+```python
+# ❌ Wrong: Host application using WASM bindings
+rust_binary(
+    name = "test_runner",
+    deps = [":my_component_bindings"],  # wasm32-wasip2 target
+)
+
+# ✅ Correct: Host application using host bindings
+rust_binary(
+    name = "test_runner", 
+    deps = [":my_component_bindings_host"],  # aarch64-apple-darwin target
+)
+```
+
+## Complete Example
+
+Here's a complete example showing both binding types in action:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+# WIT interface definition
+wit_library(
+    name = "calculator_interfaces",
+    srcs = ["calculator.wit"],
+    package_name = "example:calculator@1.0.0",
+)
+
+# Component with bindings (creates both host and WASM bindings)
+rust_wasm_component_bindgen(
+    name = "calculator_component",
+    srcs = ["src/lib.rs"],            # Uses calculator_component_bindings (WASM)
+    wit = ":calculator_interfaces",
+)
+
+# Host application using host bindings
+rust_binary(
+    name = "calculator_cli",
+    srcs = ["tools/cli.rs"],
+    deps = [":calculator_component_bindings_host"],  # Host bindings
+)
+
+# Test using host bindings
+rust_test(
+    name = "calculator_test",
+    srcs = ["tests/integration.rs"],
+    deps = [":calculator_component_bindings_host"],  # Host bindings
+)
+```
+
+```rust title="src/lib.rs (Component Implementation)"
+// Component uses WASM bindings automatically
+use calculator_component_bindings::exports::example::calculator::math::Guest;
+
+struct Calculator;
+impl Guest for Calculator {
+    fn add(a: i32, b: i32) -> i32 { a + b }
+    fn multiply(a: i32, b: i32) -> i32 { a * b }
+}
+
+calculator_component_bindings::export!(Calculator with_types_in calculator_component_bindings);
+```
+
+```rust title="tools/cli.rs (Host Application)"
+// Host application uses host bindings
+use calculator_component_bindings_host::exports::example::calculator::math::Guest;
+
+struct MockCalculator;
+impl Guest for MockCalculator {
+    fn add(a: i32, b: i32) -> i32 { a + b }
+    fn multiply(a: i32, b: i32) -> i32 { a * b }
+}
+
+fn main() {
+    println!("Calculator CLI using host bindings");
+    let calc = MockCalculator;
+    println!("2 + 3 = {}", calc.add(2, 3));
+}
+```
+
+```rust title="tests/integration.rs (Host Test)"
+// Test uses host bindings for native execution
+use calculator_component_bindings_host::exports::example::calculator::math::Guest;
+
+struct TestCalculator;
+impl Guest for TestCalculator {
+    fn add(a: i32, b: i32) -> i32 { a + b }
+    fn multiply(a: i32, b: i32) -> i32 { a * b }
+}
+
+#[test]
+fn test_calculator_interface() {
+    let calc = TestCalculator;
+    assert_eq!(calc.add(2, 3), 5);
+    assert_eq!(calc.multiply(4, 5), 20);
+}
+```
+
+## Best Practices
+
+### 1. Choose the Right Binding Type
+- **Host bindings** for development tools, tests, benchmarks
+- **WASM bindings** for component implementations (handled automatically)
+
+### 2. Naming Convention
+- Host bindings: `{name}_bindings_host`
+- WASM bindings: `{name}_bindings`
+- Component: `{name}`
+
+### 3. Testing Strategy
+```python
+# Test the component interface with host bindings
+rust_test(
+    name = "interface_test",
+    deps = [":component_bindings_host"],
+)
+
+# Test the actual component with wasmtime
+rust_wasm_component_test(
+    name = "component_test", 
+    component = ":component",
+)
+```
+
+### 4. Development Workflow
+1. **Design**: Define WIT interfaces
+2. **Implement**: Create component with WASM bindings
+3. **Test**: Build test tools with host bindings
+4. **Deploy**: Distribute WASM components
+
+## Summary
+
+Host and WASM bindings enable a rich development ecosystem around WebAssembly components:
+
+- **Host bindings** provide native access to component interfaces for development tools
+- **WASM bindings** enable actual component execution in WebAssembly runtimes
+- **Both are generated** from the same WIT interfaces, ensuring consistency
+- **Choose based on context**: host applications use host bindings, components use WASM bindings
+
+This dual binding architecture resolves target triple mismatches while enabling powerful tooling and testing capabilities for WebAssembly component development.

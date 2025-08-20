@@ -11,10 +11,10 @@ We'll examine three files and watch how they connect together to form a complete
 
 ```mermaid
 flowchart LR
-    A["📄 hello.wit<br/>Interface Definition"] 
-    B["⚙️ BUILD.bazel<br/>Build Configuration"]
-    C["🦀 src/lib.rs<br/>Rust Implementation"]
-    D["📦 hello_component.wasm<br/>Final Component"]
+    A[📄 hello.wit]
+    B[⚙️ BUILD.bazel]
+    C[🦀 src/lib.rs]
+    D[📦 hello_component.wasm]
     
     A --> B
     B --> C
@@ -94,12 +94,12 @@ Now we have our interface defined! Here's what exists so far:
 
 ```mermaid
 flowchart LR
-    A["📄 hello.wit<br/>✅ Interface Defined"] 
-    A1["📋 Package<br/>hello-component v0.1.0<br/>World: hello<br/>Exports: hello func"]
+    A[📄 hello.wit ✅]
+    A1[📋 Package Definition]
     
-    B["⚙️ BUILD.bazel<br/>⏳ Not yet processed"]
-    C["🦀 src/lib.rs<br/>⏳ Not yet processed"] 
-    D["📦 hello_component.wasm<br/>⏳ Not yet built"]
+    B[⚙️ BUILD.bazel ⏳]
+    C[🦀 src/lib.rs ⏳] 
+    D[📦 hello_component.wasm ⏳]
     
     A --> A1
     A1 -.-> B
@@ -201,12 +201,12 @@ Now Bazel knows how to process our WIT file! The first connection is made:
 
 ```mermaid
 flowchart LR
-    A["📄 hello.wit<br/>✅ Interface Defined"]
-    B1["📚 wit_library<br/>✅ hello_interfaces<br/>✅ Links to hello.wit"]
+    A[📄 hello.wit ✅]
+    B1[📚 wit_library ✅]
     
-    B2["🔧 rust_wasm_component_bindgen<br/>⏳ Not yet configured"]
-    C["🦀 src/lib.rs<br/>⏳ Not yet processed"]
-    D["📦 hello_component.wasm<br/>⏳ Not yet built"]
+    B2[🔧 rust_component_bindgen ⏳]
+    C[🦀 src/lib.rs ⏳]
+    D[📦 hello_component.wasm ⏳]
     
     A --> B1
     B1 -.-> B2
@@ -276,12 +276,12 @@ Now we have the complete build configuration! All the connections are defined:
 
 ```mermaid
 flowchart LR
-    A["📄 hello.wit<br/>✅ Interface Defined"]
-    B1["📚 wit_library<br/>✅ hello_interfaces"]
-    B2["🔧 rust_wasm_component_bindgen<br/>✅ hello_component<br/>✅ Links WIT + Rust"]
+    A[📄 hello.wit ✅]
+    B1[📚 wit_library ✅]
+    B2[🔧 rust_component_bindgen ✅]
     
-    C["🦀 src/lib.rs<br/>⏳ Implementation needed"]
-    D["📦 hello_component.wasm<br/>⏳ Ready to build"]
+    C[🦀 src/lib.rs ⏳]
+    D[📦 hello_component.wasm ⏳]
     
     A --> B1
     B1 --> B2
@@ -327,14 +327,14 @@ The magic happens! The macro generates the connection between WIT and Rust:
 
 ```mermaid
 flowchart LR
-    A["📄 hello.wit"]
-    B["🔧 BUILD.bazel"]
+    A[📄 hello.wit ✅]
+    B[🔧 BUILD.bazel ✅]
     
-    C1["✨ wit_bindgen::generate!<br/>✅ Generated bindings"]
-    C2["🎯 Guest trait<br/>✅ fn hello(String) -> String"]
-    C3["🏗️ Component struct<br/>⏳ Needs implementation"]
+    C1[✨ wit_bindgen ✅]
+    C2[🎯 Guest trait ✅]
+    C3[🏗️ Component struct ⏳]
     
-    D["📦 hello_component.wasm<br/>⏳ Almost ready"]
+    D[📦 hello_component.wasm ⏳]
     
     A --> B
     B --> C1
@@ -435,14 +435,14 @@ export!(Component);
 
 ```mermaid
 flowchart LR
-    A["📄 hello.wit<br/>✅ Interface Contract"]
-    B["🔧 BUILD.bazel<br/>✅ Build Pipeline"]
+    A[📄 hello.wit ✅]
+    B[🔧 BUILD.bazel ✅]
     
-    C["✨ Generated Bindings<br/>✅ Guest trait"]
-    D["🏗️ Component Implementation<br/>✅ hello() function"]
-    E["📤 export!(Component)<br/>✅ WASM export"]
+    C[✨ Generated Bindings ✅]
+    D[🏗️ Implementation ✅]
+    E[📤 export! ✅]
     
-    F["📦 hello_component.wasm<br/>🎉 READY TO USE!"]
+    F[📦 hello_component.wasm 🎉]
     
     A --> B
     B --> C

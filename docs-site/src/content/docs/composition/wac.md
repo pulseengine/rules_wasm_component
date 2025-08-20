@@ -90,6 +90,8 @@ wac_compose(
 )
 ```
 
+> **📋 Rule Reference:** For complete details on composition rule attributes, see [`wac_compose`](/reference/rules/#wac_compose) and [`wac_remote_compose`](/reference/rules/#wac_remote_compose).
+
 ### Component Interface Definitions
 
 Define interfaces that allow composition:

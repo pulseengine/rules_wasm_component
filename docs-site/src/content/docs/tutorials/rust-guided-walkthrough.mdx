@@ -101,76 +101,26 @@ world hello-world {
 **Why:** Orchestrates the entire pipeline automatically
 **Pipeline Stage:** Build system coordination
 
-```python title="examples/basic/BUILD.bazel"
-"""Basic example of building a WASM component"""
+For the complete BUILD.bazel example, see the [basic example](/examples/basic/) which shows the standard pattern used across all Rust components.
 
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen", "rust_wasm_component_test")
+### The BUILD.bazel File Orchestrates Three Key Steps:
 
-package(default_visibility = ["//visibility:public"])
+1. **[`wit_library()`](/reference/rules/#wit_library)** - Processes and validates your WIT interface files
+2. **[`rust_wasm_component_bindgen()`](/reference/rules/#rust_wasm_component_bindgen)** - Generates Rust bindings and compiles to WebAssembly 
+3. **[`rust_wasm_component_test()`](/reference/rules/#rust_wasm_component_test)** - Creates tests to verify your component works
 
-# Define WIT interfaces
-wit_library(
-    name = "hello_interfaces",
-    package_name = "hello:interfaces",
-    srcs = ["wit/hello.wit"],
-    world = "hello",
-)
-
-# Build Rust WASM component with automatic WIT binding generation
-rust_wasm_component_bindgen(
-    name = "hello_component",
-    srcs = ["src/lib.rs"],
-    profiles = ["release"],  # Build release profile
-    wit = ":hello_interfaces",
-)
-
-# Test the component
-rust_wasm_component_test(
-    name = "hello_component_test",
-    component = ":hello_component",
-)
-```
-
-### Breaking This Down:
-
-```python
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
-```
-**What happens:** Import the Bazel rules we need
-**Why:** These rules know how to handle WIT files and Rust components
-
-```python
-wit_library(
-    name = "hello_interfaces",
-    srcs = ["wit/hello.wit"],
-    package_name = "hello:interfaces@0.1.0",
-    world = "hello-world",
-)
-```
-**What happens:** Process the WIT file and validate it
-**Pipeline step:** WIT Interface Definition → Validated Interface
-**Generated output:** Internal Bazel representation of the interface
-
-```python
-rust_wasm_component_bindgen(
-    name = "hello_component",
-    srcs = ["src/lib.rs"],
-    wit = ":hello_interfaces",
-    world = "hello-world",
-)
-```
-**What happens:** Generate Rust bindings + compile to WebAssembly component
-**Pipeline step:** Multiple stages in one rule:
-1. Generate Rust traits/types from WIT
-2. Compile your Rust code with these bindings
-3. Create WebAssembly core module
-4. Wrap as Component Model component
+**What happens behind the scenes:**
+- **Stage 1:** WIT Interface Definition → Validated Interface (Internal Bazel representation)
+- **Stage 2:** Multiple stages in one rule:
+  1. Generate Rust traits/types from WIT
+  2. Compile your Rust code with these bindings  
+  3. Create WebAssembly core module
+  4. Wrap as Component Model component
+- **Stage 3:** Test framework integration
 
 **Generated files:**
-- Rust bindings (in Bazel cache)
-- `hello_component.wasm` (final component)
+- Rust bindings (cached by Bazel)
+- `hello_component.wasm` (your final component)
 
 ### Why Bazel?
 - **Hermetic builds:** Same result every time, anywhere

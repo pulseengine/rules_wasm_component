@@ -232,6 +232,8 @@ Builds a Rust WebAssembly component with WIT binding generation. Compiles Rust s
 - `{name}_bindings`: WASM-platform rust_library for WASM components
 - `{name}`: The final WASM component
 
+> **📖 Deep Dive:** For detailed guidance on when to use host vs WASM bindings, see [Host vs WASM Bindings Guide](/guides/host-vs-wasm-bindings/).
+
 **Load from:**
 ```python
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
@@ -285,13 +287,15 @@ rust_binary(
     deps = [":my_component_bindings_host"],  # Host bindings for host app
 )
 
-# The component implementation uses WASM bindings
+# The component implementation uses WASM bindings automatically
 rust_wasm_component_bindgen(
     name = "my_component",
     srcs = ["src/lib.rs"],  # Uses my_component_bindings (WASM platform)
     wit = ":my_interfaces",
 )
 ```
+
+> **📖 Complete Guide:** See [Host vs WASM Bindings](/guides/host-vs-wasm-bindings/) for detailed examples and use cases.
 
 ### rust_wasm_component_test
 
