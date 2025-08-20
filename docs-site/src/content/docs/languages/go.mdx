@@ -47,7 +47,7 @@ import CodeFromFile from '@components/CodeFromFile.astro';
 
 ### Build Configuration
 
-**This tells Bazel how to build your Go code into a WebAssembly component.** The `go_wasm_component` rule automatically handles TinyGo compilation, WIT binding generation, and component packaging:
+**This tells Bazel how to build your Go code into a WebAssembly component.** The [`go_wasm_component`](/reference/rules/#go_wasm_component) rule automatically handles TinyGo compilation, WIT binding generation, and component packaging:
 
 <CodeFromFile file="examples/go_component/BUILD.bazel" title="examples/go_component/BUILD.bazel" lines="40-60" />
 

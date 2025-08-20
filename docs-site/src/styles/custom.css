@@ -87,6 +87,57 @@
   color: var(--sl-color-accent);
 }
 
+/* Approach selection grid */
+.approach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.approach-card {
+  padding: 1.5rem;
+  border: 2px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+  background: var(--sl-color-bg-nav);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.approach-card:hover {
+  border-color: var(--sl-color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.approach-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--sl-color-accent);
+  font-size: 1.1rem;
+}
+
+.approach-card p {
+  margin-bottom: 1rem;
+  color: var(--sl-color-gray-2);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.approach-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--sl-color-accent);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.approach-card a:hover {
+  color: var(--sl-color-accent-high);
+}
+
 /* Performance indicators */
 .perf-indicator {
   display: inline-flex;

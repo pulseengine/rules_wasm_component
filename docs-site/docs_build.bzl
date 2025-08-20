@@ -56,7 +56,7 @@ def _docs_build_impl(ctx):
         # Install dependencies using hermetic npm (from PATH via tools)
         npm install --no-audit --no-fund
 
-        # Build documentation site
+        # Build documentation site (rule docs should be pre-generated)
         npm run build
 
         # Return to execution root and create output file there

@@ -23,7 +23,7 @@ const SCHEMA_GENERATOR_TARGET = '//tools/generate_schemas:generate_schemas';
  * Generate fresh schema JSON from Bazel
  */
 function generateSchemaJson() {
-    console.log('🔧 Generating fresh rule schemas from Bazel...');
+    console.log('Generating fresh rule schemas from Bazel...');
 
     try {
         const result = execSync(`cd "${REPO_ROOT}" && bazel run ${SCHEMA_GENERATOR_TARGET}`, {
@@ -33,7 +33,7 @@ function generateSchemaJson() {
 
         return JSON.parse(result);
     } catch (error) {
-        console.error('❌ Failed to generate schemas:', error.message);
+        console.error('Failed to generate schemas:', error.message);
 
         // Fallback: try to use existing schema file
         const fallbackPath = path.join(REPO_ROOT, 'docs/rule_schemas.json');
@@ -252,12 +252,12 @@ function generateRuleReference(schemas) {
  * Main execution
  */
 function main() {
-    console.log('📚 Generating Rule Reference Documentation...');
+    console.log('Generating Rule Reference Documentation...');
 
     try {
         // Generate schema JSON
         const schemas = generateSchemaJson();
-        console.log(`✅ Loaded ${Object.keys(schemas).length} rule definitions`);
+        console.log(`Loaded ${Object.keys(schemas).length} rule definitions`);
 
         // Generate markdown
         const markdown = generateRuleReference(schemas);
@@ -271,11 +271,11 @@ function main() {
         const outputPath = path.join(DOCS_OUTPUT_DIR, 'rules.mdx');
         fs.writeFileSync(outputPath, markdown, 'utf-8');
 
-        console.log(`📖 Generated rule reference: ${outputPath}`);
-        console.log(`📊 Documented ${Object.keys(schemas).length} rules and providers`);
+        console.log(`Generated rule reference: ${outputPath}`);
+        console.log(`Documented ${Object.keys(schemas).length} rules and providers`);
 
     } catch (error) {
-        console.error('❌ Error generating documentation:', error.message);
+        console.error('Error generating documentation:', error.message);
         process.exit(1);
     }
 }

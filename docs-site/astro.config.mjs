@@ -82,6 +82,7 @@ export default defineConfig({
 				{
 					label: 'Guides',
 					items: [
+						{ label: 'Host vs WASM Bindings', slug: 'guides/host-vs-wasm-bindings' },
 						{ label: 'Advanced Features', slug: 'guides/advanced-features' },
 						{ label: 'Migration Guide', slug: 'guides/migration' },
 						{ label: 'Toolchain Configuration', slug: 'guides/toolchain-configuration' },

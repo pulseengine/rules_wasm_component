@@ -82,15 +82,15 @@ wasm_toolchain.register(
 
 **Pros:**
 
-- ⚡ **Fast builds** - No compilation required
+- **Fast builds** - No compilation required
 - ✅ **Reproducible** - Same binaries across all environments
 - 🔒 **Hermetic** - No system dependencies
-- 🌍 **Cross-platform** - Works on all supported platforms
+- **Cross-platform** - Works on all supported platforms
 
 **Cons:**
 
-- 📦 **Limited versions** - Only published releases available
-- 🌐 **Network dependency** - Initial download required
+- **Limited versions** - Only published releases available
+- **Network dependency** - Initial download required
 
 #### `"build"` - Latest Features
 
@@ -107,15 +107,15 @@ wasm_toolchain.register(
 
 **Pros:**
 
-- 🚀 **Latest features** - Access to unreleased functionality
-- 🔧 **Customizable** - Can apply patches or modifications
-- 📈 **Up-to-date** - Always current with upstream
+- **Latest features** - Access to unreleased functionality
+- **Customizable** - Can apply patches or modifications
+- **Up-to-date** - Always current with upstream
 
 **Cons:**
 
-- 🐌 **Slow builds** - Requires Rust compilation
+- **Slow builds** - Requires Rust compilation
 - ⚠️ **Less stable** - Development versions may have issues
-- 🛠️ **Build dependencies** - Requires Rust toolchain
+- **Build dependencies** - Requires Rust toolchain
 
 #### `"hybrid"` - Best of Both Worlds
 
@@ -130,14 +130,14 @@ wasm_toolchain.register(
 
 **Pros:**
 
-- 🚀 **Fast** - Combines git repositories with genrules
+- **Fast** - Combines git repositories with genrules
 - ✅ **Bazel-native** - Uses repository rules properly
-- 🎯 **Balanced** - Good performance and flexibility
+- **Balanced** - Good performance and flexibility
 
 **Cons:**
 
-- 🔄 **Complex** - More sophisticated build process
-- 📊 **Limited toolchains** - Only available for wasm_toolchain
+- **Complex** - More sophisticated build process
+- **Limited toolchains** - Only available for wasm_toolchain
 
 #### `"npm"` - JavaScript Ecosystem
 
@@ -153,14 +153,14 @@ jco.register(
 
 **Pros:**
 
-- 🟢 **Node.js integration** - Natural for JS projects
-- 📦 **npm ecosystem** - Standard package management
-- 🔄 **Version control** - npm's semantic versioning
+- **Node.js integration** - Natural for JS projects
+- **npm ecosystem** - Standard package management
+- **Version control** - npm's semantic versioning
 
 **Cons:**
 
-- 🟢 **Node.js required** - System dependency
-- 📁 **JCO only** - Limited to JavaScript Component Tools
+- **Node.js required** - System dependency
+- **JCO only** - Limited to JavaScript Component Tools
 
 #### `"cargo"` - Rust Ecosystem
 
@@ -176,25 +176,25 @@ wizer.register(
 
 **Pros:**
 
-- 🦀 **Rust native** - Uses cargo install
-- 🔧 **Flexible** - Can install with specific features
-- 📦 **Version pinning** - Exact version control
+- **Rust native** - Uses cargo install
+- **Flexible** - Can install with specific features
+- **Version pinning** - Exact version control
 
 **Cons:**
 
-- 🦀 **Rust required** - System dependency
-- 🐌 **Compilation time** - Builds from source
-- 🎯 **Wizer only** - Limited to Wizer toolchain
+- **Rust required** - System dependency
+- **Compilation time** - Builds from source
+- **Wizer only** - Limited to Wizer toolchain
 
 ## Performance Comparison
 
 | Strategy | Initial Build | Incremental | Disk Usage | Network | Use Case |
 |----------|---------------|-------------|------------|---------|----------|
-| download | ⚡ Fast (30s) | ⚡ Fast | 💾 Small | 🌐 One-time | **Production** |
-| build | 🐌 Slow (5-10m) | 🚀 Medium | 💾💾 Large | 🌐 One-time | **Development** |
-| hybrid | 🚀 Medium (2m) | ⚡ Fast | 💾 Medium | 🌐 One-time | **Best balance** |
-| npm | ⚡ Fast (1m) | ⚡ Fast | 💾 Small | 🌐 Per package | **JS projects** |
-| cargo | 🐌 Slow (3-5m) | 🚀 Medium | 💾💾 Large | 🌐 One-time | **Rust projects** |
+| download | Fast (30s) | Fast | Small | One-time | **Production** |
+| build | Slow (5-10m) | Medium | Large | One-time | **Development** |
+| hybrid | Medium (2m) | Fast | Medium | One-time | **Best balance** |
+| npm | Fast (1m) | Fast | Small | Per package | **JS projects** |
+| cargo | Slow (3-5m) | Medium | Large | One-time | **Rust projects** |
 
 ## Version Management
 

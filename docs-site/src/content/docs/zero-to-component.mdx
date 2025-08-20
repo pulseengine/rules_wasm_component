@@ -9,7 +9,7 @@ description: The fastest way to get your first WebAssembly component working
 
 This ultra-quick start guide gets you from nothing to a working component as fast as possible. Once you see it working, you can dive deeper into the concepts.
 
-## Prerequisites Check ✅
+## Prerequisites Check
 
 You only need **one** tool installed:
 
@@ -41,6 +41,8 @@ cd rules_wasm_component/examples/basic
 - `hello.wit` - The interface (what your component does)
 - `src/lib.rs` - The implementation (7 lines of Rust)  
 - `BUILD.bazel` - The build config (tells Bazel how to build it)
+
+**Want to understand each file?** → [Code Explained Line by Line](/tutorials/code-explained/)
 
 ## Step 2: Build Your Component (60 seconds)
 
@@ -83,52 +85,7 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/hell
 
 ## What You Just Built
 
-Let's quickly understand the 3 files that made this magic happen:
-
-### The Interface (`hello.wit`)
-```wit
-package hello:component@0.1.0;
-
-world hello {
-    export hello: func(name: string) -> string;
-}
-```
-**This says**: "My component exports one function called `hello` that takes a string parameter and returns a string."
-
-### The Implementation (`src/lib.rs`)
-```rust
-wit_bindgen::generate!();
-
-struct Component;
-
-impl Guest for Component {
-    fn hello(name: String) -> String {
-        format!("Hello, {}!", name)
-    }
-}
-
-export!(Component);
-```
-**This says**: "Here's my Rust code that implements the `hello` function - it just adds 'Hello, ' to whatever name you give it."
-
-### The Build Config (`BUILD.bazel`)
-```python
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
-
-wit_library(
-    name = "hello_interfaces",
-    srcs = ["hello.wit"],
-    package_name = "hello:component@0.1.0",
-)
-
-rust_wasm_component_bindgen(
-    name = "hello_component",
-    srcs = ["src/lib.rs"],
-    wit = ":hello_interfaces",
-)
-```
-**This says**: "Bazel, please take my WIT interface and Rust code, and build me a WebAssembly component."
+**🎉 Congratulations!** You built a WebAssembly component with 3 working files. For detailed explanations of each file and line of code, see [Code Explained Line by Line](/tutorials/code-explained/).
 
 ## Next Steps (Pick Your Adventure)
 
