@@ -1,0 +1,11 @@
+/// Simple test interface to debug binding issues
+package example:simple-test@0.1.0;
+
+interface service {
+    /// Process a simple request
+    process: func(input: string) -> string;
+}
+
+world simple-test {
+    export service;
+}

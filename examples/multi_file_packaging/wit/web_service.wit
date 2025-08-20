@@ -1,0 +1,57 @@
+// Multi-file packaging example WIT interface  
+package example:web-service@0.1.0;
+
+/// Web service interface for demonstrating multi-file packaging strategies
+interface web-service {
+    /// Request options for processing
+    record request-options {
+        /// Output format preference  
+        format: format-type,
+        /// Whether to include timestamp in response
+        include-timestamp: bool,
+        /// Optional template override
+        template-name: option<string>,
+    }
+    
+    /// Supported output formats
+    enum format-type {
+        /// HTML response using templates
+        html,
+        /// JSON response with structured data
+        json,
+        /// Plain text response
+        text,
+    }
+    
+    /// Service configuration information
+    record service-config {
+        /// Service environment (development, staging, production)
+        environment: string,
+        /// Maximum number of concurrent connections
+        max-connections: u32,
+        /// Request timeout in seconds
+        timeout-seconds: u32,
+        /// Enabled feature flags
+        features: list<string>,
+    }
+    
+    /// Process a web request with embedded resources
+    process-request: func(input: string, options: request-options) -> string;
+    
+    /// Get current service configuration (from embedded config file)
+    get-config: func() -> service-config;
+    
+    /// Validate input against embedded schema
+    validate-input: func(input: string) -> bool;
+    
+    /// Render response using embedded template
+    render-template: func(template-name: string, data: string) -> string;
+    
+    /// Get service health status
+    health-check: func() -> string;
+}
+
+/// World for multi-file packaging examples
+world multi-file-service {
+    export web-service;
+}

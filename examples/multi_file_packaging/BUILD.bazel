@@ -1,0 +1,534 @@
+"""Multi-file component packaging examples.
+
+This package demonstrates four approaches to packaging WebAssembly components
+with additional files:
+
+1. Embedded Resources - Files built directly into the component
+2. OCI Image Layers - Multi-layer container-style packaging  
+3. Bundle Archives - Pre-packaged archives with component plus files
+4. Sidecar Artifacts - Separate OCI artifacts for different file types
+
+Each approach has different trade-offs for complexity, performance, and security.
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+# Bundle archive approach uses genrule instead of rules_pkg for simplicity
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_image", "wasm_component_publish")
+load("@rules_wasm_component//wkg:oci_signing.bzl", "wasm_component_signed_oci_image")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
+
+package(default_visibility = ["//visibility:public"])
+
+# Common WIT interfaces for all examples
+wit_library(
+    name = "web_service_interfaces",
+    package_name = "example:web-service@0.1.0",
+    srcs = ["wit/web_service.wit"],
+    world = "multi-file-service",
+)
+
+# Generate keys for signing examples
+wasm_keygen(
+    name = "example_keys",
+    public_key_name = "example.public",
+    secret_key_name = "example.secret",
+    openssh_format = False,
+)
+
+# =============================================================================
+# Example 1: Embedded Resources (Recommended)
+# =============================================================================
+
+# Configuration files to embed
+genrule(
+    name = "production_config",
+    outs = ["production.json"],
+    cmd = 'echo \'{"environment":"production","max_connections":1000,"timeout_seconds":30,"features":{"logging":true,"metrics":true,"tracing":false}}\' > $@',
+)
+
+# HTML template to embed  
+genrule(
+    name = "response_template",
+    outs = ["response.html"],
+    cmd = 'echo \'<html><head><title>{{title}}</title></head><body><h1>{{title}}</h1><p>Status: {{status}}</p><p>{{data}}</p><p>{{timestamp}}</p></body></html>\' > $@',
+)
+
+# API schema to embed
+genrule(
+    name = "api_schema",
+    outs = ["api.json"],
+    cmd = 'echo \'{"openapi":"3.0.0","info":{"title":"Web Service API","version":"1.0.0"}}\' > $@',
+)
+
+# Simple WIT library to debug binding issues
+wit_library(
+    name = "simple_test_interfaces",
+    package_name = "example:simple-test@0.1.0", 
+    srcs = ["wit/simple_test.wit"],
+    world = "simple-test",
+)
+
+# Simple test component to debug binding issues
+rust_wasm_component_bindgen(
+    name = "simple_embedded_test_component", 
+    srcs = ["src/simple_embedded_test.rs"],
+    wit = ":simple_test_interfaces",
+)
+
+# Component with embedded resources
+rust_wasm_component_bindgen(
+    name = "embedded_service_component",
+    srcs = ["src/embedded_service.rs"],
+    wit = ":web_service_interfaces",
+    # Files are embedded via include_str!/include_bytes! in source
+    data = [
+        ":production_config",
+        ":response_template", 
+        ":api_schema",
+    ],
+)
+
+# Signed embedded resource component
+wasm_component_signed_oci_image(
+    name = "embedded_service_signed",
+    component = ":embedded_service_component",
+    sign_component = True,
+    component_signing_keys = ":example_keys",
+    registry = "localhost:5000",
+    namespace = "examples",
+    package_name = "embedded-service",
+    tag = "v1.0.0",
+    description = "Web service with embedded configuration and templates",
+    annotations = [
+        "org.opencontainers.image.title=Embedded Resource Service",
+        "com.example.packaging.type=embedded-resources",
+        "com.example.files.config=embedded",
+        "com.example.files.templates=embedded",
+    ],
+)
+
+# =============================================================================
+# Example 2: OCI Image Layers (Advanced)
+# =============================================================================
+
+# Base component without embedded files
+rust_wasm_component_bindgen(
+    name = "layered_service_component",
+    srcs = ["src/layered_service.rs"], 
+    wit = ":web_service_interfaces",
+)
+
+# Large asset files for separate layer
+genrule(
+    name = "large_assets",
+    outs = [
+        "assets/logo.png",
+        "assets/banner.jpg", 
+        "assets/styles.css",
+        "assets/app.js",
+    ],
+    cmd = """
+    mkdir -p assets
+    
+    # Create dummy image files (would be real assets in practice)
+    echo "PNG placeholder data" > assets/logo.png
+    echo "JPEG placeholder data" > assets/banner.jpg
+    
+    # CSS file
+    cat > assets/styles.css << 'EOF'
+/* Production styles */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px;
+    border-bottom: 2px solid #eee;
+}
+EOF
+    
+    # JavaScript file
+    cat > assets/app.js << 'EOF'
+// Production JavaScript
+class WebServiceApp {
+    constructor() {
+        this.apiUrl = '/api/v1';
+        this.initialized = false;
+    }
+    
+    async initialize() {
+        console.log('Initializing Web Service App...');
+        await this.loadConfiguration();
+        this.setupEventListeners();
+        this.initialized = true;
+    }
+    
+    async loadConfiguration() {
+        try {
+            const response = await fetch(this.apiUrl + '/config');
+            this.config = await response.json();
+        } catch (error) {
+            console.error('Failed to load configuration:', error);
+        }
+    }
+    
+    setupEventListeners() {
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, app ready');
+        });
+    }
+}
+
+// Initialize app
+const app = new WebServiceApp();
+app.initialize();
+EOF
+    """,
+)
+
+# Multi-layer OCI component with signing
+wasm_component_signed_oci_image(
+    name = "layered_service_signed",
+    component = ":layered_service_component",
+    
+    # Component-level signing
+    sign_component = True,
+    component_signing_keys = ":example_keys",
+    
+    # OCI image-level signing (currently disabled due to placeholder keys)
+    sign_oci_image = False,  # Would use real cosign keys in production
+    
+    registry = "localhost:5000",
+    namespace = "examples", 
+    package_name = "layered-service",
+    tag = "v1.0.0",
+    description = "Web service with layered assets and configuration",
+    annotations = [
+        "org.opencontainers.image.title=Multi-Layer Service",
+        "com.example.packaging.type=oci-layers",
+        "com.example.files.assets=layered",
+        "com.example.layers.count=2",
+    ],
+)
+
+# =============================================================================
+# Example 3: Bundle Archives
+# =============================================================================
+
+# Component for bundling
+rust_wasm_component_bindgen(
+    name = "bundled_service_component",
+    srcs = ["src/bundled_service.rs"],
+    wit = ":web_service_interfaces",
+)
+
+# Documentation files for bundle
+genrule(
+    name = "service_documentation",
+    outs = [
+        "docs/README.md",
+        "docs/API.md",
+        "docs/DEPLOYMENT.md",
+    ],
+    cmd = """
+    mkdir -p docs
+    
+    cat > docs/README.md << 'EOF'
+# Web Service Component
+
+This is a WebAssembly component that provides web service functionality
+with embedded configuration, templates, and comprehensive documentation.
+
+## Features
+
+- RESTful API endpoints
+- HTML template rendering
+- JSON configuration management
+- Comprehensive logging and metrics
+
+## Usage
+
+See API.md for detailed API documentation.
+See DEPLOYMENT.md for deployment instructions.
+EOF
+
+    cat > docs/API.md << 'EOF'
+# API Documentation
+
+## Endpoints
+
+### POST /process
+
+Process a web request with the given input.
+
+**Request Body:**
+```json
+{
+  "input": "string",
+  "options": {
+    "format": "html|json",
+    "timestamp": true
+  }
+}
+```
+
+**Response:**
+- Content-Type: text/html or application/json
+- Body: Processed response based on input and options
+
+## Configuration
+
+The service reads configuration from embedded production.json file.
+Configuration includes connection limits, timeouts, and feature flags.
+EOF
+
+    cat > docs/DEPLOYMENT.md << 'EOF'
+# Deployment Guide
+
+## Prerequisites
+
+- OCI registry access
+- Component runtime (wasmtime, wasmer, etc.)
+- Network access for external dependencies
+
+## Steps
+
+1. Pull component from registry:
+   ```bash
+   wkg oci pull registry.example.com/examples/bundled-service:v1.0.0
+   ```
+
+2. Verify component signature:
+   ```bash
+   wasmsign2 verify bundled-service.wasm --public-key example.public
+   ```
+
+3. Run component:
+   ```bash
+   wasmtime run bundled-service.wasm
+   ```
+
+## Bundle Contents
+
+This component bundle includes:
+- WebAssembly component binary
+- Configuration files
+- HTML templates  
+- API schemas
+- Complete documentation
+EOF
+    """,
+)
+
+# Create component bundle using genrule
+genrule(
+    name = "service_bundle",
+    srcs = [
+        ":bundled_service_component",
+        ":production_config",
+        ":response_template",
+        ":api_schema", 
+        ":service_documentation",
+    ],
+    outs = ["service_bundle.tar"],
+    cmd = """
+    mkdir -p service
+    cp $(location :bundled_service_component) service/
+    cp $(location :production_config) service/
+    cp $(location :response_template) service/
+    cp $(location :api_schema) service/
+    cp $(location :service_documentation) service/
+    tar -cf $@ service/
+    """,
+)
+
+# Bundle deployment (treating archive as component)
+wasm_component_oci_image(
+    name = "bundled_service_image",
+    component = ":service_bundle",  # Archive as component
+    registry = "localhost:5000",
+    namespace = "examples",
+    package_name = "bundled-service",
+    tag = "v1.0.0",
+    description = "Complete service bundle with documentation and config",
+    annotations = [
+        "org.opencontainers.image.title=Service Bundle",
+        "com.example.packaging.type=bundle-archive",
+        "com.example.bundle.format=tar",
+        "com.example.files.docs=bundled",
+    ],
+)
+
+# =============================================================================
+# Example 4: Sidecar Artifacts Pattern  
+# =============================================================================
+
+# Main component
+rust_wasm_component_bindgen(
+    name = "sidecar_service_component",
+    srcs = ["src/sidecar_service.rs"],
+    wit = ":web_service_interfaces",
+)
+
+# Main component deployment
+wasm_component_oci_image(
+    name = "sidecar_core_service",
+    component = ":sidecar_service_component",
+    registry = "localhost:5000",
+    namespace = "examples",
+    package_name = "sidecar-service",
+    tag = "v1.0.0",
+    description = "Core service component (sidecar pattern)",
+    annotations = [
+        "org.opencontainers.image.title=Sidecar Core Service",
+        "com.example.packaging.type=sidecar-artifacts",
+        "com.example.sidecar.role=core-component",
+    ],
+)
+
+# Configuration sidecar (would use oci_image in real implementation)
+genrule(
+    name = "config_sidecar_placeholder",
+    outs = ["config_sidecar_manifest.json"],
+    cmd = """
+    cat > $@ << 'EOF'
+{
+  "apiVersion": "v1",
+  "kind": "ConfigurationSidecar",
+  "metadata": {
+    "name": "sidecar-service-config",
+    "version": "v1.0.0"
+  },
+  "spec": {
+    "files": [
+      {"path": "/etc/service/config.json", "source": "production.json"},
+      {"path": "/etc/service/templates/", "source": "templates/"}
+    ],
+    "mountPath": "/etc/service"
+  }
+}
+EOF
+    """,
+)
+
+# Assets sidecar (would use oci_image in real implementation)
+genrule(
+    name = "assets_sidecar_placeholder",
+    outs = ["assets_sidecar_manifest.json"],
+    cmd = """
+    cat > $@ << 'EOF'
+{
+  "apiVersion": "v1", 
+  "kind": "AssetsSidecar",
+  "metadata": {
+    "name": "sidecar-service-assets",
+    "version": "v1.0.0"
+  },
+  "spec": {
+    "files": [
+      {"path": "/var/www/static/", "source": "assets/"}
+    ],
+    "mountPath": "/var/www"
+  }
+}
+EOF
+    """,
+)
+
+# Coordinated deployment manifest
+genrule(
+    name = "sidecar_deployment_manifest",
+    srcs = [
+        ":config_sidecar_placeholder",
+        ":assets_sidecar_placeholder",
+    ],
+    outs = ["sidecar_deployment.yaml"],
+    cmd = """
+    cat > $@ << 'EOF'
+apiVersion: v1
+kind: ServiceDeployment
+metadata:
+  name: sidecar-service
+  version: v1.0.0
+spec:
+  artifacts:
+    - name: core-component
+      type: wasm-component
+      repository: localhost:5000/examples/sidecar-service
+      tag: v1.0.0
+      signature: sha256:placeholder-component-hash
+      
+    - name: configuration
+      type: config-files
+      repository: localhost:5000/examples/sidecar-service-config  
+      tag: v1.0.0
+      signature: sha256:placeholder-config-hash
+      mountPath: /etc/service/
+      
+    - name: assets
+      type: static-files
+      repository: localhost:5000/examples/sidecar-service-assets
+      tag: v1.0.0  
+      signature: sha256:placeholder-assets-hash
+      mountPath: /var/www/
+      
+  coordination:
+    healthCheck: /health
+    readinessProbe: /ready
+    dependencies:
+      - configuration
+      - assets
+EOF
+    """,
+)
+
+# =============================================================================
+# Tests and Verification
+# =============================================================================
+
+# Build test to verify all approaches compile
+build_test(
+    name = "test_all_packaging_approaches",
+    targets = [
+        ":embedded_service_signed",
+        ":layered_service_signed",
+        ":bundled_service_image",
+        ":sidecar_core_service",
+        ":sidecar_deployment_manifest",
+    ],
+)
+
+# Test suite for all multi-file packaging examples
+test_suite(
+    name = "multi_file_packaging_tests",
+    tests = [
+        ":test_all_packaging_approaches",
+    ],
+)
+
+# Example builds for documentation
+filegroup(
+    name = "all_examples",
+    srcs = [
+        ":embedded_service_signed",
+        ":layered_service_signed", 
+        ":bundled_service_image",
+        ":sidecar_core_service",
+    ],
+)

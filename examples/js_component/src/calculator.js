@@ -1,19 +1,19 @@
 // JavaScript calculator component
-import { Operation, CalculationResult } from "./types.js";
+// Remove ES6 import to avoid module resolution issues with componentize-js
 
-export function add(a, b) {
+function add(a, b) {
   return a + b;
 }
 
-export function subtract(a, b) {
+function subtract(a, b) {
   return a - b;
 }
 
-export function multiply(a, b) {
+function multiply(a, b) {
   return a * b;
 }
 
-export function divide(a, b) {
+function divide(a, b) {
   if (b === 0) {
     return {
       success: false,
@@ -29,7 +29,7 @@ export function divide(a, b) {
   };
 }
 
-export function calculate(operation) {
+function calculate(operation) {
   try {
     let result;
 
@@ -67,10 +67,20 @@ export function calculate(operation) {
   }
 }
 
-export function getCalculatorInfo() {
+function getCalculatorInfo() {
   return {
     name: "JavaScript Calculator Component",
     version: "1.0.0",
     supportedOperations: ["add", "subtract", "multiply", "divide"],
   };
 }
+
+// Export the calc interface as expected by the WIT world
+export const calc = {
+  add,
+  subtract,
+  multiply,
+  divide,
+  calculate,
+  getCalculatorInfo,
+};

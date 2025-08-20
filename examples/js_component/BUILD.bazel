@@ -19,9 +19,7 @@ js_component(
         "src/utils.js",
     ],
     entry_point = "index.js",
-    npm_dependencies = {
-        "lodash": "^4.17.21",
-    },
+    package_json = "package.json",
     optimize = True,
     wit = "wit/hello.wit",
 )

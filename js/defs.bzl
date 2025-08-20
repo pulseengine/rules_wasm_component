@@ -89,11 +89,11 @@ def _js_component_impl(ctx):
         "# Run jco componentize from workspace with correct module resolution",
     ])
 
-    # Build jco command - use absolute path for entry point for proper module resolution
+    # Build jco command - use relative path for entry point for proper ES6 module resolution
     jco_cmd_parts = [
         "\"$ORIGINAL_DIR/{}\"".format(jco.path),  # jco binary path
         "componentize",
-        "\"$WORK_DIR/{}\"".format(ctx.attr.entry_point),  # Absolute path to entry point in workspace
+        "\"{}\"".format(ctx.attr.entry_point),  # Relative path to entry point in workspace
         "--wit \"$ORIGINAL_DIR/{}\"".format(wit_file.path),  # Absolute path to WIT file
         "--out \"$ORIGINAL_DIR/{}\"".format(component_wasm.path),  # Absolute path to output
     ]

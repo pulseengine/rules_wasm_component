@@ -1,0 +1,609 @@
+---
+title: Multi-File Component Packaging
+description: Strategies for packaging WebAssembly components with additional files, configurations, and assets for production deployment
+---
+
+# Multi-File Component Packaging
+
+## Beyond Single-File Components
+
+**Most real-world applications need more than just a WebAssembly component** - they need configuration files, static assets, documentation, and multiple related components working together. This guide shows you how to package these additional files effectively while maintaining security and performance.
+
+**What makes multi-file packaging challenging:**
+- **Distribution complexity** - How do you ship multiple files as a cohesive unit?
+- **Security coordination** - How do you sign and verify packages with multiple files?
+- **Runtime access** - How does your component access the additional files at runtime?
+- **Version management** - How do you keep files synchronized across deployments?
+- **Performance impact** - How do you avoid bloated packages that slow deployment?
+
+**The multi-file challenge:** WebAssembly components are designed as single-file artifacts, but production applications are multi-file by nature. This guide shows you four proven approaches to bridge this gap effectively.
+
+## Packaging Strategies Overview
+
+**Think of packaging like choosing the right shipping container** for your goods. Each approach has different trade-offs for complexity, performance, and flexibility.
+
+Learn how to package WebAssembly components with additional files, configurations, and assets using four proven strategies: embedded resources, OCI layers, bundle archives, and sidecar artifacts.
+
+## Four Proven Approaches
+
+Multi-file packaging offers several strategies:
+
+- **Embedded Resources** - Files built directly into the component (recommended)
+- **OCI Image Layers** - Traditional container-style multi-layer packaging  
+- **Bundle Archives** - Pre-packaged archives with component plus files
+- **Sidecar Artifacts** - Separate OCI artifacts for different file types
+
+## Strategy Comparison
+
+| Approach | Best For | Complexity | Performance | Security |
+|----------|----------|------------|-------------|----------|
+| **Embedded Resources** | Config files, small assets | Low | Excellent | Simple |
+| **OCI Image Layers** | Large assets, dynamic files | Medium | Good | Complex |  
+| **Bundle Archives** | Related file collections | Medium | Good | Medium |
+| **Sidecar Artifacts** | Independent file lifecycles | High | Variable | Complex |
+
+## 1. Embedded Resources (Recommended)
+
+**The simplest and most performant approach** - embed files directly into your WebAssembly component at build time. Perfect for configuration files, templates, small assets, and any files that don't change independently of your component.
+
+**When to use embedded resources:**
+- **Configuration files** that ship with your component
+- **Templates and schemas** your component needs at runtime  
+- **Small static assets** like icons or default data
+- **Documentation** that should travel with the component
+- **Files under 1MB total** (keeps component size reasonable)
+
+### Basic Embedding with Rust
+
+```rust title="src/lib.rs"
+// Embed files at compile time
+const CONFIG: &str = include_str!("../config/production.json");
+const SCHEMA: &[u8] = include_bytes!("../schemas/api.json");
+const TEMPLATE: &str = include_str!("../templates/response.html");
+
+#[cfg(target_arch = "wasm32")]
+impl Guest for Component {
+    fn process_request(input: String) -> String {
+        // Parse the embedded configuration
+        let config: Config = serde_json::from_str(CONFIG)
+            .expect("Invalid embedded config");
+        
+        // Use embedded template
+        let response = TEMPLATE.replace("{{data}}", &input);
+        
+        // Validate against embedded schema
+        validate_response(&response, SCHEMA);
+        
+        response
+    }
+}
+```
+
+### Build Configuration
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+
+rust_wasm_component_bindgen(
+    name = "web_service_component",
+    srcs = [
+        "src/lib.rs",
+        "src/config.rs",
+    ],
+    wit = ":web_service_interfaces",
+    # Files are embedded via include_str!/include_bytes! in source
+    data = [
+        "config/production.json",
+        "schemas/api.json", 
+        "templates/response.html",
+    ],
+)
+```
+
+### Advanced Embedding with Build-Time Generation
+
+```python title="BUILD.bazel"
+# Generate config from templates
+genrule(
+    name = "production_config",
+    srcs = ["config/template.json"],
+    outs = ["config/production.json"],
+    cmd = """
+    sed 's/{{ENVIRONMENT}}/production/g' $< > $@
+    """,
+)
+
+rust_wasm_component_bindgen(
+    name = "configured_component", 
+    srcs = ["src/lib.rs"],
+    wit = ":interfaces",
+    data = [":production_config"],
+)
+```
+
+**Benefits of embedded resources:**
+- ✅ **Single artifact** - No coordination between multiple files
+- ✅ **Fast deployment** - Everything loads together
+- ✅ **Simple security** - Component signature covers all files
+- ✅ **No runtime dependencies** - Files always available
+
+**Limitations:**
+- ❌ **Rebuild required** for file changes
+- ❌ **Size bloat** for large files
+- ❌ **No dynamic updates** without redeployment
+
+## 2. OCI Image Layers (Advanced)
+
+**Use traditional container patterns** when you need large files, dynamic content, or want to separate concerns into different layers. This approach creates proper OCI images with multiple layers.
+
+**When to use OCI layers:**
+- **Large static assets** (>1MB) that would bloat the component
+- **Dynamic content** that updates independently
+- **Shared files** used by multiple components
+- **Enterprise environments** that prefer container-style deployment
+
+### Enhanced OCI Integration
+
+```python title="BUILD.bazel"
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_tarball")
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_image")
+
+# Create base layer with component
+wasm_component_oci_image(
+    name = "base_component_layer",
+    component = ":my_component",
+    registry = "registry.example.com",
+    namespace = "apps",
+)
+
+# Create additional file layers
+genrule(
+    name = "assets_layer",
+    srcs = ["//assets:all"],
+    outs = ["assets.tar"],
+    cmd = "tar -cf $@ -C $(location //assets:all)/../.. assets/",
+)
+
+genrule(
+    name = "config_layer", 
+    srcs = [":production_configs"],
+    outs = ["config.tar"],
+    cmd = "tar -cf $@ -C $(dirname $(location :production_configs)) config/",
+)
+
+# Compose into multi-layer OCI image
+oci_image(
+    name = "multi_layer_component",
+    base = ":base_component_layer",
+    tars = [
+        ":assets_layer", 
+        ":config_layer",
+    ],
+    env = {
+        "COMPONENT_CONFIG_PATH": "/etc/component/config.json",
+        "COMPONENT_ASSETS_PATH": "/var/lib/component/assets",
+    },
+)
+```
+
+### Runtime File Access via WASI
+
+```rust title="src/lib.rs"
+use std::fs;
+
+#[cfg(target_arch = "wasm32")]
+impl Guest for Component {
+    fn initialize() -> String {
+        // Read configuration from layer
+        let config_path = std::env::var("COMPONENT_CONFIG_PATH")
+            .unwrap_or("/etc/component/config.json".to_string());
+        
+        let config_content = fs::read_to_string(config_path)
+            .expect("Failed to read configuration");
+        
+        // Access assets from layer
+        let assets_path = std::env::var("COMPONENT_ASSETS_PATH")
+            .unwrap_or("/var/lib/component/assets".to_string());
+            
+        let asset_files = fs::read_dir(assets_path)
+            .expect("Failed to access assets directory");
+            
+        "Component initialized with layered files".to_string()
+    }
+}
+```
+
+**Benefits of OCI layers:**
+- ✅ **Large file support** - No component size limitations
+- ✅ **Independent updates** - Update files without rebuilding component
+- ✅ **Shared layers** - Reuse common files across components
+- ✅ **Standard tooling** - Works with existing OCI ecosystem
+
+**Limitations:**
+- ❌ **Complex deployment** - Multiple artifacts to coordinate
+- ❌ **Runtime dependencies** - WASI filesystem access required
+- ❌ **Security complexity** - Multiple signatures to verify
+
+## 3. Bundle Archives
+
+**Pre-package everything into a single archive** that gets distributed as the component artifact. Good for collections of related files that should be versioned together.
+
+**When to use bundle archives:**
+- **Document collections** that belong together
+- **Multi-component systems** that should deploy as a unit
+- **Legacy integration** where you need specific archive formats
+- **Offline deployment** scenarios requiring self-contained packages
+
+### Bundle Creation
+
+```python title="BUILD.bazel"
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+# Create component bundle with all files
+pkg_tar(
+    name = "component_bundle_tar",
+    srcs = [
+        ":my_component",
+        "//config:production_files",
+        "//docs:api_documentation", 
+        "//schemas:validation_schemas",
+    ],
+    package_dir = "/component",
+    strip_prefix = "/",
+)
+
+# Convert to distributable format
+wasm_component_oci_image(
+    name = "bundled_component",
+    component = ":component_bundle_tar",  # Archive as component
+    package_name = "bundled-service",
+    description = "Service component with embedded documentation and config",
+)
+```
+
+### Bundle Extraction at Runtime
+
+```rust title="src/lib.rs"
+use tar::Archive;
+use std::io::Cursor;
+
+// Embedded bundle data
+const BUNDLE_DATA: &[u8] = include_bytes!("../bundle.tar");
+
+#[cfg(target_arch = "wasm32")]
+impl Guest for Component {
+    fn extract_and_initialize() -> String {
+        // Extract bundle at runtime
+        let cursor = Cursor::new(BUNDLE_DATA);
+        let mut archive = Archive::new(cursor);
+        
+        // Process files from bundle
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            let path = entry.path().unwrap();
+            
+            match path.to_str() {
+                Some("config/app.json") => {
+                    let mut config_content = String::new();
+                    entry.read_to_string(&mut config_content).unwrap();
+                    // Use configuration
+                },
+                Some(p) if p.starts_with("docs/") => {
+                    // Process documentation files
+                },
+                _ => {} // Skip other files
+            }
+        }
+        
+        "Bundle extracted and processed".to_string()
+    }
+}
+```
+
+**Benefits of bundle archives:**
+- ✅ **Single distribution** - Everything in one artifact
+- ✅ **Version coherence** - All files versioned together
+- ✅ **Format flexibility** - Support tar, zip, or custom formats
+- ✅ **Offline friendly** - Self-contained deployment
+
+**Limitations:**
+- ❌ **Extraction overhead** - Runtime unpacking required
+- ❌ **Memory usage** - Full bundle loaded into memory
+- ❌ **Update granularity** - Must update entire bundle for any change
+
+## 4. Sidecar Artifacts Pattern
+
+**Distribute different file types as separate OCI artifacts** that get coordinated during deployment. Best for complex systems where different teams manage different file types.
+
+**When to use sidecar artifacts:**
+- **Large shared assets** managed by different teams
+- **Independent lifecycles** for configuration vs code
+- **Compliance requirements** for separate artifact signatures
+- **Multi-tenant systems** with customer-specific files
+
+### Sidecar Artifact Publishing
+
+```python title="BUILD.bazel"
+# Main component artifact
+wasm_component_oci_image(
+    name = "core_component",
+    component = ":business_logic",
+    package_name = "core-service", 
+    tag = "v1.2.0",
+)
+
+# Configuration sidecar
+oci_image(
+    name = "config_sidecar",
+    base = "@distroless_base",
+    files = {
+        "/etc/app/": "//config:production_configs",
+    },
+    annotations = [
+        "org.opencontainers.image.title=Service Configuration",
+        "com.example.artifact.type=configuration",
+    ],
+)
+
+# Assets sidecar  
+oci_image(
+    name = "assets_sidecar",
+    base = "@distroless_base", 
+    files = {
+        "/var/www/": "//assets:web_assets",
+    },
+    annotations = [
+        "org.opencontainers.image.title=Web Assets",
+        "com.example.artifact.type=static-assets",
+    ],
+)
+
+# Publish all sidecars
+wasm_component_publish(
+    name = "publish_core",
+    oci_image = ":core_component",
+    registry_config = ":production_registry",
+)
+
+oci_push(
+    name = "publish_config",
+    image = ":config_sidecar",
+    repository = "registry.example.com/apps/core-service-config",
+    tag = "v1.2.0",
+)
+
+oci_push(
+    name = "publish_assets", 
+    image = ":assets_sidecar",
+    repository = "registry.example.com/apps/core-service-assets",
+    tag = "v1.2.0",
+)
+```
+
+### Coordination Manifest
+
+```yaml title="deployment/service-manifest.yaml"
+# Deployment coordination file
+apiVersion: v1
+kind: ServiceManifest
+metadata:
+  name: core-service
+  version: v1.2.0
+spec:
+  artifacts:
+    - name: component
+      type: wasm-component
+      repository: registry.example.com/apps/core-service
+      tag: v1.2.0
+      signature: sha256:abc123...
+      
+    - name: configuration  
+      type: config-files
+      repository: registry.example.com/apps/core-service-config
+      tag: v1.2.0
+      signature: sha256:def456...
+      mountPath: /etc/app/
+      
+    - name: assets
+      type: static-files  
+      repository: registry.example.com/apps/core-service-assets
+      tag: v1.2.0
+      signature: sha256:ghi789...
+      mountPath: /var/www/
+```
+
+**Benefits of sidecar artifacts:**
+- ✅ **Independent lifecycles** - Update files without touching code
+- ✅ **Team separation** - Different teams manage different artifacts  
+- ✅ **Granular security** - Separate signatures for each artifact type
+- ✅ **Flexible composition** - Mix and match artifacts for different deployments
+
+**Limitations:**
+- ❌ **Coordination complexity** - Multiple artifacts to manage
+- ❌ **Deployment overhead** - More moving parts in production
+- ❌ **Version drift risk** - Artifacts can get out of sync
+
+## Security Considerations
+
+### Signing Multi-File Packages
+
+**Each packaging approach has different security implications** that affect how you sign and verify your packages:
+
+#### Embedded Resources
+```python title="BUILD.bazel"
+# Single signature covers component + embedded files
+wasm_component_signed_oci_image(
+    name = "signed_embedded_component",
+    component = ":component_with_embedded_files",
+    sign_component = True,
+    component_signing_keys = ":component_keys",
+    # Embedded files are automatically included in component signature
+)
+```
+
+#### OCI Image Layers
+```python title="BUILD.bazel"  
+# Dual signing: component signature + OCI manifest signature
+wasm_component_signed_oci_image(
+    name = "signed_layered_component",
+    component = ":base_component",
+    additional_layers = [":config_layer", ":assets_layer"],
+    
+    # Sign the WASM component
+    sign_component = True,
+    component_signing_keys = ":component_keys",
+    
+    # Sign the complete OCI image (including layers)
+    sign_oci_image = True,
+    oci_signing_key = ":oci_keys",
+)
+```
+
+#### Sidecar Artifacts
+```python title="BUILD.bazel"
+# Each artifact signed independently
+wasm_component_signed_oci_image(
+    name = "signed_core_component",
+    component = ":core_service", 
+    sign_component = True,
+    component_signing_keys = ":component_keys",
+)
+
+cosign_sign(
+    name = "signed_config_sidecar",
+    image = ":config_sidecar",
+    key = ":config_signing_key",
+)
+
+cosign_sign(
+    name = "signed_assets_sidecar", 
+    image = ":assets_sidecar",
+    key = ":assets_signing_key",
+)
+```
+
+### Verification Best Practices
+
+**Always verify signatures for all artifacts** in your deployment pipeline:
+
+```bash title="deployment/verify.sh"
+#!/bin/bash
+# Verify component signature
+wasmsign2 verify component.wasm --public-key component.pub
+
+# Verify OCI image signatures  
+cosign verify registry.example.com/apps/service:v1.0.0 --key cosign.pub
+
+# Verify sidecar signatures
+cosign verify registry.example.com/apps/service-config:v1.0.0 --key config.pub
+cosign verify registry.example.com/apps/service-assets:v1.0.0 --key assets.pub
+```
+
+## Performance Guidelines
+
+### Size Optimization
+
+**Keep your packages lean** for faster deployment and better performance:
+
+| Package Type | Recommended Size | Maximum Size | Optimization Strategy |
+|--------------|------------------|--------------|----------------------|
+| **Embedded Resources** | < 100KB | < 1MB | Compress files, use binary formats |
+| **OCI Layers** | < 10MB per layer | < 100MB | Layer sharing, delta compression |
+| **Bundle Archives** | < 5MB | < 50MB | Selective inclusion, compression |
+| **Sidecar Artifacts** | Variable | < 100MB | Granular splitting, caching |
+
+### Build-Time Optimization
+
+```python title="BUILD.bazel"
+# Optimize embedded resources
+genrule(
+    name = "optimized_config",
+    srcs = ["config/template.json"],
+    outs = ["config/optimized.json"],
+    cmd = """
+    # Remove comments and whitespace
+    jq -c . < $< > $@
+    """,
+)
+
+# Compress large assets
+genrule(
+    name = "compressed_assets",
+    srcs = ["//assets:large_files"],
+    outs = ["assets.tar.gz"],
+    cmd = "tar czf $@ $(SRCS)",
+)
+```
+
+## Migration Strategies
+
+### From Single-File to Multi-File
+
+**Gradual migration approach** to avoid breaking existing deployments:
+
+```python title="BUILD.bazel"
+# Phase 1: Embedded resources (minimal change)
+rust_wasm_component_bindgen(
+    name = "component_v1", 
+    srcs = ["src/lib.rs"],
+    wit = ":interfaces",
+    # Add embedded files gradually
+    data = ["config/basic.json"],
+)
+
+# Phase 2: Add more files as needed
+rust_wasm_component_bindgen(
+    name = "component_v2",
+    srcs = ["src/lib.rs"],
+    wit = ":interfaces", 
+    data = [
+        "config/basic.json",
+        "templates/response.html",
+        "schemas/api.json",
+    ],
+)
+
+# Phase 3: Move to OCI layers for large files
+wasm_component_oci_image(
+    name = "component_v3",
+    component = ":component_v2",
+    additional_layers = [":large_assets_layer"],
+)
+```
+
+## Best Practices Summary
+
+### Choose the Right Approach
+
+1. **Start with embedded resources** for most use cases
+2. **Use OCI layers** only when files are large or update independently  
+3. **Consider bundle archives** for document collections
+4. **Use sidecar artifacts** only for complex multi-team scenarios
+
+### Security Guidelines
+
+1. **Always sign your packages** regardless of packaging approach
+2. **Verify all signatures** in your deployment pipeline
+3. **Use separate keys** for different artifact types when using sidecars
+4. **Audit your file contents** before embedding or packaging
+
+### Performance Guidelines
+
+1. **Keep embedded resources under 1MB total**
+2. **Use compression** for text files and archives
+3. **Share common layers** across OCI images
+4. **Monitor package sizes** and deployment times
+
+### Operational Guidelines
+
+1. **Version everything together** when using embedded resources
+2. **Use semantic versioning** for independent artifact lifecycles
+3. **Automate verification** in your CI/CD pipeline
+4. **Monitor package sizes** and optimize regularly
+
+---
+
+**Next Steps:**
+- Try the [embedded resources example](../examples/multi-language#embedded-resources) 
+- Learn about [OCI signing](../security/oci-signing) for multi-layer packages
+- Explore [production deployment](../production/deployment-guide) patterns

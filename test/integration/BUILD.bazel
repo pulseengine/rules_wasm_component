@@ -87,7 +87,8 @@ wac_compose(
 
         let service-a = new test:service-a { ... };
         let service-b = new test:service-b {
-            storage: service-a,
+            storage: service-a.storage,
+            ...
         };
 
         export service-b as main;

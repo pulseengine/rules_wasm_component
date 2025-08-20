@@ -101,17 +101,20 @@ jobs:
 
       - name: Build All Targets
         run: |
-          # Build core working targets, exclude incomplete/problematic examples
-          # Using explicit inclusions to avoid JavaScript component issues
+          # Build core working targets including JavaScript components
           bazel build --keep_going -- \
             //examples/go_component/... \
             //examples/basic/... \
             //examples/simple_module/... \
             //examples/cli_tool_example/... \
             //examples/cpp_component/... \
+            //examples/js_component:simple_js_component \
+            //examples/js_component:hello_js_component \
+            //examples/js_component:calc_js_component \
             //rust/... \
             //go/... \
             //cpp/... \
+            //js/... \
             //wasm/... \
             //wit/... \
             //tools/... \
@@ -126,7 +129,7 @@ jobs:
             -//tools/ssh_keygen:ssh_keygen_test \
 
       - name: Run Tests
-        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/wkg/unit:smoke
+        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/wkg/unit:smoke //test/js:test_hello_js_component_provides_info //test/js:test_calc_js_component_provides_info //test/js:test_npm_dependencies_installation
 
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
@@ -194,9 +197,13 @@ jobs:
             //examples/simple_module/... \
             //examples/cli_tool_example/... \
             //examples/cpp_component/... \
+            //examples/js_component:simple_js_component \
+            //examples/js_component:hello_js_component \
+            //examples/js_component:calc_js_component \
             //rust/... \
             //go/... \
             //cpp/... \
+            //js/... \
             //wasm/... \
             //wit/... \
             //tools/... \
@@ -217,7 +224,7 @@ jobs:
             -//test/integration:service_b_component_wasm_lib_release_host \
 
       - name: Run Tests
-        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests
+        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/js:test_hello_js_component_provides_info //test/js:test_calc_js_component_provides_info //test/js:test_npm_dependencies_installation
 
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
