@@ -82,7 +82,7 @@ export default defineConfig({
 				{
 					label: 'Guides',
 					items: [
-						{ label: 'Native vs Guest Bindings', slug: 'guides/host-vs-wasm-bindings' },
+						{ label: 'Guest vs Native-Guest Bindings', slug: 'guides/guest-vs-native-guest-bindings' },
 						{ label: 'Advanced Features', slug: 'guides/advanced-features' },
 						{ label: 'Migration Guide', slug: 'guides/migration' },
 						{ label: 'Toolchain Configuration', slug: 'guides/toolchain-configuration' },

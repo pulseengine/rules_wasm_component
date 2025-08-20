@@ -447,6 +447,225 @@ wasm_component_oci_publish(
 - **Container signature**: Verifies the OCI packaging, metadata, and distribution integrity
 - **Supply chain security**: Protects against attacks at both the component and distribution levels
 
+## Multi-File Package Signing
+
+**When your component includes additional files** (configuration, assets, documentation), you need to consider how signatures protect all files in your package. Different packaging strategies require different signing approaches.
+
+### Embedded Resources Signing
+
+**Files embedded directly in the component are automatically protected** by the component signature:
+
+```python
+rust_wasm_component_bindgen(
+    name = "component_with_config",
+    srcs = ["src/lib.rs"],
+    wit = ":interfaces",
+    # These files are embedded at build time
+    data = [
+        "config/production.json",
+        "templates/response.html",
+        "schemas/api.json",
+    ],
+)
+
+# Single signature covers component + all embedded files
+wasm_sign(
+    name = "signed_component_with_embedded_files",
+    component = ":component_with_config", 
+    keys = ":production_keys",
+    # Embedded files are automatically included in signature verification
+)
+```
+
+**Security guarantee:** Any modification to embedded files breaks the component signature.
+
+### OCI Layer Signing
+
+**Multi-layer OCI images require dual-layer signing** to protect both the component and additional file layers:
+
+```python
+load("@rules_wasm_component//wkg:oci_signing.bzl", "wasm_component_signed_oci_image")
+
+wasm_component_signed_oci_image(
+    name = "secure_multi_layer_component",
+    component = ":base_component",
+    
+    # Layer 1: Component-level signing (protects WASM binary)
+    sign_component = True,
+    component_signing_keys = ":component_keys",
+    
+    # Layer 2: OCI image signing (protects all layers + manifest)
+    sign_oci_image = True,  
+    oci_signing_key = ":oci_keys",
+    oci_signing_method = "cosign",
+    
+    # Additional file layers protected by OCI signature
+    annotations = [
+        "com.example.files.config=embedded",
+        "com.example.files.assets=layered",
+    ],
+)
+```
+
+**Security guarantee:** Component signature protects the WASM binary, OCI signature protects the complete image including all layers.
+
+### Sidecar Artifact Signing
+
+**Independent artifacts require independent signatures** with coordinated verification:
+
+```python
+# Main component signature
+wasm_sign(
+    name = "signed_core_component",
+    component = ":core_service",
+    keys = ":component_keys",
+)
+
+# Configuration artifact signature (separate key/team)
+cosign_sign(
+    name = "signed_config_artifact",
+    image = ":config_oci_image", 
+    key = ":config_team_key",
+)
+
+# Assets artifact signature (separate key/team)  
+cosign_sign(
+    name = "signed_assets_artifact",
+    image = ":assets_oci_image",
+    key = ":assets_team_key", 
+)
+```
+
+**Deployment verification for sidecars:**
+
+```bash title="verify-all-artifacts.sh"
+#!/bin/bash
+set -e
+
+# Verify component signature
+echo "Verifying component signature..."
+wasmsign2 verify component.wasm --public-key component.pub
+
+# Verify configuration artifact
+echo "Verifying configuration artifact..."
+cosign verify registry.io/my-org/service-config:v1.0.0 --key config.pub
+
+# Verify assets artifact  
+echo "Verifying assets artifact..."
+cosign verify registry.io/my-org/service-assets:v1.0.0 --key assets.pub
+
+echo "All artifacts verified successfully!"
+```
+
+### Bundle Archive Signing
+
+**Pre-packaged bundles get single signature coverage** for the entire archive:
+
+```python
+# Create bundle with all files
+pkg_tar(
+    name = "component_bundle",
+    srcs = [
+        ":my_component",
+        "//config:all_configs",
+        "//docs:api_docs",
+    ],
+)
+
+# Sign the complete bundle
+wasm_sign(
+    name = "signed_bundle",
+    component = ":component_bundle",  # Archive treated as component
+    keys = ":bundle_signing_keys",
+    # Single signature covers all bundled files
+)
+```
+
+**Security guarantee:** Bundle signature protects all files in the archive, but requires extraction for verification of individual files.
+
+### Multi-File Verification Best Practices
+
+**Always verify signatures for all artifacts** in your deployment pipeline:
+
+```python title="BUILD.bazel"
+# Verification test for multi-file packages
+sh_test(
+    name = "verify_all_signatures",
+    srcs = ["verify-signatures.sh"],
+    data = [
+        ":signed_component",
+        ":component_public_keys",
+        ":oci_public_keys",
+    ],
+    deps = ["@wasmsign2_binary", "@cosign_binary"],
+)
+```
+
+```bash title="verify-signatures.sh"
+#!/bin/bash
+# Comprehensive signature verification
+
+echo "=== Component Signature Verification ==="
+wasmsign2 verify component.wasm --public-key component.pub
+if [ $? -eq 0 ]; then
+    echo "✅ Component signature valid"
+else
+    echo "❌ Component signature invalid"
+    exit 1
+fi
+
+echo "=== OCI Image Signature Verification ==="
+cosign verify registry.io/my-org/service:v1.0.0 --key oci.pub
+if [ $? -eq 0 ]; then
+    echo "✅ OCI image signature valid"
+else
+    echo "❌ OCI image signature invalid"  
+    exit 1
+fi
+
+echo "=== All signatures verified successfully! ==="
+```
+
+### Key Management for Multi-File Packages
+
+**Different packaging approaches require different key management strategies:**
+
+| Package Type | Key Strategy | Verification Complexity |
+|--------------|--------------|------------------------|
+| **Embedded Resources** | Single component key | Simple - one signature |
+| **OCI Layers** | Component + OCI keys | Medium - two signatures |
+| **Bundle Archives** | Single bundle key | Simple - one signature |
+| **Sidecar Artifacts** | Multiple artifact keys | Complex - multiple signatures |
+
+**Recommended key separation:**
+
+```python title="BUILD.bazel"
+# Component team keys
+wasm_keygen(
+    name = "component_team_keys",
+    openssh_format = True,
+    comment = "Component development team",
+)
+
+# Infrastructure team keys (for OCI signing)
+wasm_keygen(
+    name = "infrastructure_team_keys", 
+    openssh_format = True,
+    comment = "Infrastructure/deployment team",
+)
+
+# Configuration team keys (for config sidecars)
+wasm_keygen(
+    name = "config_team_keys",
+    openssh_format = True,
+    comment = "Configuration management team",
+)
+```
+
+**Security principle:** Use the minimum number of keys necessary while maintaining team separation and responsibility boundaries.
+
+For more details on packaging strategies, see the [Multi-File Packaging Guide](../guides/multi-file-packaging).
+
 ### Publishing Signed Components
 
 ```python
