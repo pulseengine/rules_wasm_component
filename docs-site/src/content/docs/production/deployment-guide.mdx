@@ -292,6 +292,223 @@ genrule(
 )
 ```
 
+### Multi-File Package Deployment
+
+**Components with additional files require coordinated deployment** of multiple artifacts. Choose the deployment strategy that matches your packaging approach:
+
+#### Embedded Resources Deployment
+
+**Simplest deployment** - embedded files travel with the component automatically:
+
+```python title="BUILD.bazel"
+# Component with embedded configuration
+rust_wasm_component_bindgen(
+    name = "service_with_config",
+    srcs = ["src/lib.rs"],
+    wit = ":service_interfaces",
+    # Configuration embedded at build time
+    data = [
+        "config/production.json",
+        "templates/responses.html",
+    ],
+)
+
+# Single artifact deployment
+wasm_component_oci_publish(
+    name = "deploy_embedded_service",
+    component = ":service_with_config",
+    registry = "registry.company.com",
+    namespace = "production",
+    component_name = "embedded-service",
+    tag = "v1.0.0",
+    # All files automatically included
+)
+```
+
+#### Multi-Layer OCI Deployment
+
+**Coordinated deployment** of component plus file layers:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wkg:oci_signing.bzl", "wasm_component_signed_oci_image")
+
+# Multi-layer deployment with dual signing
+wasm_component_signed_oci_image(
+    name = "deploy_layered_service",
+    component = ":base_service",
+    
+    # Component layer signing
+    sign_component = True,
+    component_signing_keys = ":component_keys",
+    
+    # Complete OCI image signing (protects all layers)
+    sign_oci_image = True,
+    oci_signing_key = ":oci_keys",
+    
+    # Registry configuration
+    registry = "registry.company.com",
+    namespace = "production",
+    package_name = "layered-service",
+    tag = "v1.0.0",
+    
+    # Deployment metadata
+    annotations = [
+        "org.opencontainers.image.title=Multi-Layer Service",
+        "com.company.deployment.type=layered",
+        "com.company.config.version=v1.0.0",
+    ],
+)
+```
+
+#### Sidecar Artifacts Deployment
+
+**Coordinated multi-artifact deployment** with version synchronization:
+
+```python title="BUILD.bazel"
+# Main service deployment
+wasm_component_oci_publish(
+    name = "deploy_core_service",
+    component = ":core_service_signed",
+    registry = "registry.company.com",
+    namespace = "production",
+    component_name = "core-service",
+    tag = "v1.0.0",
+)
+
+# Configuration sidecar deployment
+oci_push(
+    name = "deploy_service_config",
+    image = ":config_sidecar_signed",
+    repository = "registry.company.com/production/core-service-config",
+    tag = "v1.0.0",
+)
+
+# Assets sidecar deployment
+oci_push(
+    name = "deploy_service_assets",
+    image = ":assets_sidecar_signed", 
+    repository = "registry.company.com/production/core-service-assets",
+    tag = "v1.0.0",
+)
+
+# Coordinated deployment of all artifacts
+genrule(
+    name = "deploy_complete_service",
+    srcs = [],
+    outs = ["deployment_manifest.yaml"],
+    cmd = """
+        # Deploy main component
+        bazel run :deploy_core_service
+        
+        # Deploy configuration sidecar
+        bazel run :deploy_service_config
+        
+        # Deploy assets sidecar  
+        bazel run :deploy_service_assets
+        
+        # Generate deployment manifest
+        cat > $@ << 'EOF'
+        apiVersion: v1
+        kind: ServiceDeployment
+        metadata:
+          name: core-service
+          version: v1.0.0
+        spec:
+          artifacts:
+            - name: component
+              repository: registry.company.com/production/core-service
+              tag: v1.0.0
+            - name: configuration
+              repository: registry.company.com/production/core-service-config  
+              tag: v1.0.0
+            - name: assets
+              repository: registry.company.com/production/core-service-assets
+              tag: v1.0.0
+        EOF
+    """,
+    tools = [
+        ":deploy_core_service",
+        ":deploy_service_config", 
+        ":deploy_service_assets",
+    ],
+)
+```
+
+#### Multi-File Verification Pipeline
+
+**Comprehensive verification** for multi-artifact deployments:
+
+```python title="BUILD.bazel"
+# Verification test suite for multi-file deployment
+sh_test(
+    name = "verify_multi_file_deployment",
+    srcs = ["verify-deployment.sh"],
+    data = [
+        "//keys:production_public_keys",
+        "//keys:oci_public_keys",
+    ],
+    deps = ["@wasmsign2_binary", "@cosign_binary"],
+)
+```
+
+```bash title="verify-deployment.sh"
+#!/bin/bash
+set -e
+
+REGISTRY="registry.company.com/production"
+VERSION="v1.0.0"
+
+echo "=== Verifying Multi-File Service Deployment ==="
+
+# Pull and verify main component
+echo "Verifying core service component..."
+wkg oci pull "${REGISTRY}/core-service:${VERSION}" --output core-service.wasm
+wasmsign2 verify core-service.wasm --public-key production.pub
+echo "✅ Core service verified"
+
+# Verify configuration sidecar
+echo "Verifying configuration sidecar..."
+cosign verify "${REGISTRY}/core-service-config:${VERSION}" --key config.pub
+echo "✅ Configuration sidecar verified"
+
+# Verify assets sidecar
+echo "Verifying assets sidecar..."
+cosign verify "${REGISTRY}/core-service-assets:${VERSION}" --key assets.pub
+echo "✅ Assets sidecar verified"
+
+echo "=== All artifacts verified successfully! ==="
+```
+
+#### Production Deployment Patterns
+
+**Choose deployment complexity based on your needs:**
+
+| Complexity | Approach | Best For | Deployment Overhead |
+|------------|----------|----------|-------------------|
+| **Simple** | Embedded Resources | Small configs, single team | Minimal |
+| **Medium** | Multi-Layer OCI | Shared files, moderate complexity | Low |
+| **Complex** | Sidecar Artifacts | Large files, multi-team | High |
+
+**Deployment decision matrix:**
+
+```mermaid
+graph TD
+    A[Need Additional Files?] --> B{File Size?}
+    B -->|< 1MB| C[Embedded Resources]
+    B -->|> 1MB| D{Update Frequency?}
+    D -->|Same as Component| E[Multi-Layer OCI]
+    D -->|Independent| F{Team Ownership?}
+    F -->|Single Team| G[Multi-Layer OCI]
+    F -->|Multiple Teams| H[Sidecar Artifacts]
+    
+    C --> I[Simple Deployment]
+    E --> J[Medium Deployment]
+    G --> J
+    H --> K[Complex Deployment]
+```
+
+For detailed packaging strategies, see the [Multi-File Packaging Guide](../guides/multi-file-packaging).
+
 ---
 
 ## Phase 4: WAC Composition for Production

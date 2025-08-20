@@ -92,7 +92,7 @@ rust_test(
 rust_binary(
     name = "component_benchmark",
     srcs = ["bench/benchmark.rs"],
-    deps = [":calculator_bindings_host"],  # Native bindings for benchmarks
+    deps = [":calculator_bindings_host"],  # Native-guest bindings for benchmarks
 )
 ```
 
@@ -101,13 +101,13 @@ rust_binary(
 rust_binary(
     name = "schema_validator",
     srcs = ["tools/validate.rs"],
-    deps = [":calculator_bindings_host"],  # Native bindings for tooling
+    deps = [":calculator_bindings_host"],  # Native-guest bindings for tooling
 )
 ```
 
 ### Mock Implementations
 ```rust
-// In your test file - runs natively, not in WebAssembly
+// Native-guest test - runs natively, understands component interfaces
 use calculator_bindings_host::exports::calculator::math::Guest;
 
 struct MockCalculator;
@@ -118,9 +118,9 @@ impl Guest for MockCalculator {
 }
 ```
 
-## When to Use Guest Component Bindings
+## When to Use Guest Bindings
 
-Use `{name}_bindings` for:
+Use `{name}_bindings` for guest components:
 
 ### Guest Component Implementations
 ```rust
@@ -149,7 +149,7 @@ rust_wasm_component_bindgen(
 
 ## Capabilities and Limitations
 
-### Native Platform Bindings Can Do
+### Native-Guest Bindings Can Do
 
 - **Run natively** on your development machine
 - **Access component interfaces** and type definitions
@@ -158,7 +158,7 @@ rust_wasm_component_bindgen(
 - **Build development tools** that understand component interfaces
 - **Serialize/deserialize** component data types
 
-### Native Platform Bindings Cannot Do
+### Native-Guest Bindings Cannot Do
 
 - **Run as WebAssembly components** in host runtimes like wasmtime
 - **Export component functions** to other languages via WebAssembly
@@ -166,7 +166,7 @@ rust_wasm_component_bindgen(
 - **Use WASI Preview 2** or component model features
 - **Be executed by host runtimes** as guest components
 
-### Guest Component Bindings Can Do
+### Guest Bindings Can Do
 
 - **Run in host runtimes** (wasmtime, browsers, etc.)
 - **Export component functions** to any language via WebAssembly
@@ -175,7 +175,7 @@ rust_wasm_component_bindgen(
 - **Be distributed** via OCI registries
 - **Provide secure sandboxing** and portability
 
-### Guest Component Bindings Cannot Do
+### Guest Bindings Cannot Do
 
 - **Run natively** on native platforms
 - **Be used directly** in native applications
@@ -195,7 +195,7 @@ note: the following crate versions were found:
 You're trying to use guest component bindings (`my_component_bindings`) in a native application that expects native platform target triples.
 
 ### The Solution
-Use native platform bindings instead:
+Use native-guest bindings instead:
 
 ```python
 # ❌ Wrong: Native application using guest bindings
@@ -204,7 +204,7 @@ rust_binary(
     deps = [":my_component_bindings"],  # wasm32-wasip2 target
 )
 
-# ✅ Correct: Native application using native bindings
+# ✅ Correct: Native application using native-guest bindings
 rust_binary(
     name = "test_runner",
     deps = [":my_component_bindings_host"],  # aarch64-apple-darwin target
@@ -227,30 +227,30 @@ wit_library(
     package_name = "example:calculator@1.0.0",
 )
 
-# Component with bindings (creates both host and WASM bindings)
+# Component with bindings (creates both native-guest and guest bindings)
 rust_wasm_component_bindgen(
     name = "calculator_component",
-    srcs = ["src/lib.rs"],            # Uses calculator_component_bindings (WASM)
+    srcs = ["src/lib.rs"],            # Uses calculator_component_bindings (guest)
     wit = ":calculator_interfaces",
 )
 
-# Host application using host bindings
+# Native-guest application using native-guest bindings
 rust_binary(
     name = "calculator_cli",
     srcs = ["tools/cli.rs"],
-    deps = [":calculator_component_bindings_host"],  # Host bindings
+    deps = [":calculator_component_bindings_host"],  # Native-guest bindings
 )
 
-# Test using host bindings
+# Test using native-guest bindings
 rust_test(
     name = "calculator_test",
     srcs = ["tests/integration.rs"],
-    deps = [":calculator_component_bindings_host"],  # Host bindings
+    deps = [":calculator_component_bindings_host"],  # Native-guest bindings
 )
 ```
 
-```rust title="src/lib.rs (Component Implementation)"
-// Component uses WASM bindings automatically
+```rust title="src/lib.rs (Guest Component Implementation)"
+// Component uses guest bindings automatically
 use calculator_component_bindings::exports::example::calculator::math::Guest;
 
 struct Calculator;
@@ -262,8 +262,8 @@ impl Guest for Calculator {
 calculator_component_bindings::export!(Calculator with_types_in calculator_component_bindings);
 ```
 
-```rust title="tools/cli.rs (Host Application)"
-// Host application uses host bindings
+```rust title="tools/cli.rs (Native-Guest Application)"
+// Native-guest application uses native-guest bindings
 use calculator_component_bindings_host::exports::example::calculator::math::Guest;
 
 struct MockCalculator;
@@ -273,14 +273,14 @@ impl Guest for MockCalculator {
 }
 
 fn main() {
-    println!("Calculator CLI using host bindings");
+    println!("Calculator CLI using native-guest bindings");
     let calc = MockCalculator;
     println!("2 + 3 = {}", calc.add(2, 3));
 }
 ```
 
-```rust title="tests/integration.rs (Host Test)"
-// Test uses host bindings for native execution
+```rust title="tests/integration.rs (Native-Guest Test)"
+// Test uses native-guest bindings for native execution
 use calculator_component_bindings_host::exports::example::calculator::math::Guest;
 
 struct TestCalculator;
@@ -300,17 +300,17 @@ fn test_calculator_interface() {
 ## Best Practices
 
 ### 1. Choose the Right Binding Type
-- **Host bindings** for development tools, tests, benchmarks
-- **WASM bindings** for component implementations (handled automatically)
+- **Native-guest bindings** for development tools, tests, benchmarks
+- **Guest bindings** for component implementations (handled automatically)
 
 ### 2. Naming Convention
-- Host bindings: `{name}_bindings_host`
-- WASM bindings: `{name}_bindings`
+- Native-guest bindings: `{name}_bindings_host`
+- Guest bindings: `{name}_bindings`
 - Component: `{name}`
 
 ### 3. Testing Strategy
 ```python
-# Test the component interface with host bindings
+# Test the component interface with native-guest bindings
 rust_test(
     name = "interface_test",
     deps = [":component_bindings_host"],
@@ -326,18 +326,18 @@ rust_wasm_component_test(
 ### 4. Development Workflow
 1. **Design**: Define WIT interfaces
 2. **Implement**: Create guest components with guest bindings
-3. **Test**: Build test tools with native bindings
+3. **Test**: Build test tools with native-guest bindings
 4. **Deploy**: Distribute guest components to host runtimes
 
 ## Summary
 
-Native and guest bindings enable a rich development ecosystem around WebAssembly components:
+Guest and native-guest bindings enable a rich development ecosystem around WebAssembly components:
 
-- **Native platform bindings** provide native access to component interfaces for development tools
-- **Guest component bindings** enable actual component execution in WebAssembly host runtimes
+- **Native-guest bindings** provide native access to component interfaces for development tools
+- **Guest bindings** enable actual component execution in WebAssembly host runtimes
 - **Both are generated** from the same WIT interfaces, ensuring consistency
-- **Choose based on context**: native applications use native bindings, guest components use guest bindings
+- **Choose based on context**: native applications use native-guest bindings, guest components use guest bindings
 
 This dual binding architecture resolves target triple mismatches while enabling powerful tooling and testing capabilities for WebAssembly component development.
 
-> **Key Takeaway**: Don't confuse our "host bindings" (native platform) with the WebAssembly Component Model "host runtime" (wasmtime). They serve different purposes in the ecosystem.
+> **Key Takeaway**: Don't confuse our "native-guest bindings" with the WebAssembly Component Model "host runtime" (wasmtime). Native-guest bindings are for native applications, host runtimes are separate executables that run guest components.
