@@ -185,6 +185,9 @@ EOF
 )
 
 # Documentation build validation using build_test
+# NOTE: This generates a deprecation warning due to bazel_skylib issue #579:
+# https://github.com/bazelbuild/bazel-skylib/issues/579
+# Warning will be resolved when bazel_skylib fixes their Windows constraint usage
 build_test(
     name = "docs_build_test",
     targets = [
