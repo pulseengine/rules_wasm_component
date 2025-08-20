@@ -43,12 +43,18 @@ def _wit_bindgen_impl(ctx):
     if ctx.attr.options:
         cmd_args.extend(ctx.attr.options)
 
-    # For Rust, use a custom runtime path to avoid dependency on wit_bindgen crate
+    # For Rust, configure based on generation mode
     if ctx.attr.language == "rust":
-        cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
-
-        # Make the export macro public so it can be used from separate crates
-        cmd_args.append("--pub-export-macro")
+        if ctx.attr.generation_mode == "native-guest":
+            # Generate native-side bindings using wasmtime
+            cmd_args.extend(["--generate", "host"])
+            # Use wasmtime component model APIs for native applications
+            cmd_args.extend(["--runtime-path", "wasmtime::component"])
+        else:
+            # Default guest mode - generate component implementation bindings
+            cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
+            # Make the export macro public so it can be used from separate crates
+            cmd_args.append("--pub-export-macro")
 
     # Note: we'll run wit-bindgen from the deps directory to resolve packages
 
@@ -196,6 +202,11 @@ wit_bindgen = rule(
         ),
         "options": attr.string_list(
             doc = "Additional options to pass to wit-bindgen",
+        ),
+        "generation_mode": attr.string(
+            values = ["guest", "native-guest"],
+            default = "guest",
+            doc = "Generation mode: 'guest' for WASM component implementation, 'native-guest' for native application bindings",
         ),
     },
     toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],

@@ -1,0 +1,157 @@
+"""Example demonstrating OCI image signing for WebAssembly components.
+
+This example shows how to use dual-layer security:
+1. WASM component signing with wasmsign2
+2. OCI image signing with cosign
+
+Prerequisites:
+- Local OCI registry running on localhost:5000
+- cosign key pair generated
+"""
+
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//wkg:oci_signing.bzl", 
+     "wasm_component_signed_oci_image", 
+     "wasm_component_secure_publish",
+     "wasm_component_verify_signatures")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
+
+# Basic component for signing demo
+wit_library(
+    name = "greeting_interfaces",
+    package_name = "example:greeting@1.0.0",
+    srcs = ["greeting.wit"],
+)
+
+rust_wasm_component_bindgen(
+    name = "greeting_component",
+    srcs = ["src/lib.rs"],
+    wit = ":greeting_interfaces",
+)
+
+# Generate keys for dual-layer signing
+wasm_keygen(
+    name = "component_signing_keys",
+    public_key_name = "oci-signing-demo.public",
+    secret_key_name = "oci-signing-demo.secret", 
+    openssh_format = False,  # wasmsign2 uses its own format
+)
+
+# Note: In production, you would generate cosign keys externally:
+# cosign generate-key-pair --output-key-prefix oci-signing-demo
+# For this example, we'll use a placeholder
+genrule(
+    name = "cosign_key_placeholder",
+    outs = ["cosign.key"],
+    cmd = """
+    echo "# Placeholder cosign key" > $@
+    echo "# In production, generate with: cosign generate-key-pair" >> $@
+    """,
+)
+
+# Create signed OCI image with both security layers
+wasm_component_signed_oci_image(
+    name = "secure_greeting_image",
+    component = ":greeting_component",
+    
+    # Component-level signing (wasmsign2)
+    sign_component = True,
+    component_signing_keys = ":component_signing_keys",
+    signature_type = "embedded",
+    
+    # OCI image-level signing (cosign) - disabled for now due to placeholder key
+    sign_oci_image = False,  # TODO: Enable when we have real cosign keys
+    oci_signing_key = ":cosign_key_placeholder",
+    oci_signing_method = "cosign",
+    
+    # Registry configuration
+    registry = "localhost:5000",
+    namespace = "examples", 
+    package_name = "secure-greeting",
+    tag = "dual-signed-v1.0.0",
+    
+    # Metadata
+    description = "Example component with dual-layer security",
+    authors = ["security-team@example.com"],
+    license = "Apache-2.0",
+    annotations = [
+        "org.opencontainers.image.title=Secure Greeting Component",
+        "com.example.security.level=high",
+        "com.example.signing.method=dual-layer",
+    ],
+)
+
+# Publish the secure image
+wasm_component_secure_publish(
+    name = "publish_secure_greeting",
+    signed_oci_image = ":secure_greeting_image",
+    dry_run = False,
+)
+
+# Verification example (placeholder implementation)
+wasm_component_verify_signatures(
+    name = "verify_secure_greeting",
+    oci_image_ref = "localhost:5000/examples/secure-greeting:dual-signed-v1.0.0",
+    component_public_key = ":component_signing_keys",  # TODO: Extract public key
+    oci_public_key = ":cosign_key_placeholder",
+)
+
+# Comparison targets showing different security levels
+
+# 1. No signing (baseline)
+wasm_component_signed_oci_image(
+    name = "unsecured_greeting_image",
+    component = ":greeting_component",
+    registry = "localhost:5000",
+    namespace = "examples",
+    package_name = "unsecured-greeting", 
+    tag = "no-signing-v1.0.0",
+    description = "Example component with no security",
+)
+
+# 2. Component signing only
+wasm_component_signed_oci_image(
+    name = "component_signed_greeting_image", 
+    component = ":greeting_component",
+    sign_component = True,
+    component_signing_keys = ":component_signing_keys",
+    registry = "localhost:5000",
+    namespace = "examples",
+    package_name = "component-signed-greeting",
+    tag = "component-only-v1.0.0", 
+    description = "Example component with WASM-level signing only",
+)
+
+# 3. Full dual-layer signing (when cosign keys are available)
+# wasm_component_signed_oci_image(
+#     name = "fully_secure_greeting_image",
+#     component = ":greeting_component", 
+#     sign_component = True,
+#     component_signing_keys = ":component_signing_keys",
+#     sign_oci_image = True,
+#     oci_signing_key = ":real_cosign_key",  # When available
+#     registry = "localhost:5000", 
+#     namespace = "examples",
+#     package_name = "fully-secure-greeting",
+#     tag = "dual-signed-v1.0.0",
+#     description = "Example component with full dual-layer security",
+# )
+
+# Test suite for all security levels
+test_suite(
+    name = "oci_signing_tests",
+    tests = [
+        ":verify_secure_greeting",
+    ],
+)
+
+# Build all examples
+filegroup(
+    name = "all_examples",
+    srcs = [
+        ":unsecured_greeting_image",
+        ":component_signed_greeting_image", 
+        ":secure_greeting_image",
+    ],
+)

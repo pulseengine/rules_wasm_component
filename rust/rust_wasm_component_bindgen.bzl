@@ -9,8 +9,24 @@ def _generate_wrapper_impl(ctx):
     """Generate a wrapper that includes both bindings and runtime shim"""
     out_file = ctx.actions.declare_file(ctx.label.name + ".rs")
 
-    # Create wrapper content
-    wrapper_content = """// Generated wrapper for WIT bindings
+    # Create wrapper content based on mode
+    if ctx.attr.mode == "native-guest":
+        # Native-guest wrapper uses wasmtime APIs
+        wrapper_content = """// Generated wrapper for native-guest WIT bindings
+
+// Suppress clippy warnings for generated code
+#![allow(clippy::all)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
+// Re-export wasmtime component types for generated bindings
+pub use wasmtime::component::{Component, Engine, Linker, Store};
+
+// Generated bindings follow:
+"""
+    else:
+        # Guest wrapper uses WASM component runtime stubs
+        wrapper_content = """// Generated wrapper for guest WIT bindings
 
 // Suppress clippy warnings for generated code
 #![allow(clippy::all)]
@@ -88,6 +104,11 @@ _generate_wrapper = rule(
         "bindgen": attr.label(
             allow_single_file = [".rs"],
             doc = "Generated WIT bindings file",
+        ),
+        "mode": attr.string(
+            values = ["guest", "native-guest"],
+            default = "guest",
+            doc = "Generation mode: 'guest' for WASM component, 'native-guest' for native application",
         ),
     },
 )
@@ -191,20 +212,43 @@ def rust_wasm_component_bindgen(
         )
     """
 
-    # Generate WIT bindings
-    bindgen_target = name + "_wit_bindgen_gen"
+    # Generate separate WIT bindings for guest and native-guest modes
+    bindgen_guest_target = name + "_wit_bindgen_guest"
+    bindgen_native_guest_target = name + "_wit_bindgen_native_guest"
+    
+    # Guest mode bindings for WASM component implementation
     wit_bindgen(
-        name = bindgen_target,
+        name = bindgen_guest_target,
         wit = wit,
         language = "rust",
+        generation_mode = "guest",
+        visibility = ["//visibility:private"],
+    )
+    
+    # Native-guest mode bindings for native applications
+    wit_bindgen(
+        name = bindgen_native_guest_target,
+        wit = wit,
+        language = "rust",
+        generation_mode = "native-guest",
         visibility = ["//visibility:private"],
     )
 
-    # Create a wrapper that includes both the generated bindings and the shim
-    wrapper_target = name + "_wrapper"
+    # Create separate wrappers for guest and native-guest bindings
+    wrapper_guest_target = name + "_wrapper_guest"
+    wrapper_native_guest_target = name + "_wrapper_native_guest"
+    
     _generate_wrapper(
-        name = wrapper_target,
-        bindgen = ":" + bindgen_target,
+        name = wrapper_guest_target,
+        bindgen = ":" + bindgen_guest_target,
+        mode = "guest",
+        visibility = ["//visibility:private"],
+    )
+    
+    _generate_wrapper(
+        name = wrapper_native_guest_target,
+        bindgen = ":" + bindgen_native_guest_target,
+        mode = "native-guest",
         visibility = ["//visibility:private"],
     )
 
@@ -212,19 +256,30 @@ def rust_wasm_component_bindgen(
     bindings_lib = name + "_bindings"
     bindings_lib_host = bindings_lib + "_host"
 
-    # Create the bindings library for host platform first
+    # Create the bindings library for native platform (host) using native-guest wrapper
     rust_library(
         name = bindings_lib_host,
-        srcs = [":" + wrapper_target],
+        srcs = [":" + wrapper_native_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        visibility = visibility,  # Make host bindings publicly available
+        visibility = visibility,  # Make native bindings publicly available
+        deps = ["@crates_host//:wasmtime"],  # Add wasmtime dependency for native-guest bindings
     )
 
-    # Create a WASM-transitioned version of the bindings library
+    # Create a separate WASM bindings library using guest wrapper
+    bindings_lib_wasm_base = bindings_lib + "_wasm_base"
+    rust_library(
+        name = bindings_lib_wasm_base,
+        srcs = [":" + wrapper_guest_target],
+        crate_name = name.replace("-", "_") + "_bindings",
+        edition = "2021",
+        visibility = ["//visibility:private"],
+    )
+    
+    # Create a WASM-transitioned version of the WASM bindings library
     _wasm_rust_library(
         name = bindings_lib,
-        target = ":" + bindings_lib_host,
+        target = ":" + bindings_lib_wasm_base,
         visibility = ["//visibility:private"],
     )
 
