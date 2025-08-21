@@ -384,11 +384,10 @@ def rust_wasm_component_bindgen(
         visibility = ["//visibility:private"],
     )
 
-    # Create an alias to the WASM bindings library
-    # TODO: Fix _wasm_rust_library_bindgen provider forwarding and re-enable transition
-    native.alias(
+    # Create a WASM-transitioned version of the WASM bindings library
+    _wasm_rust_library_bindgen(
         name = bindings_lib,
-        actual = ":" + bindings_lib_wasm_base,
+        target = ":" + bindings_lib_wasm_base,
         visibility = ["//visibility:private"],
     )
 
