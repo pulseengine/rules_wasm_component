@@ -5,6 +5,51 @@ load("//wit:wit_bindgen.bzl", "wit_bindgen")
 load(":rust_wasm_component.bzl", "rust_wasm_component")
 load(":transitions.bzl", "wasm_transition")
 
+def _wasm_rust_library_bindgen_impl(ctx):
+    """Implementation that forwards a rust_library with WASM transition applied"""
+    target_info = ctx.attr.target[0]
+
+    # Collect providers to forward
+    providers = []
+
+    # Forward DefaultInfo (always needed)
+    if DefaultInfo in target_info:
+        providers.append(target_info[DefaultInfo])
+
+    # Forward CcInfo if present (Rust libraries often provide this)
+    if CcInfo in target_info:
+        providers.append(target_info[CcInfo])
+
+    # Forward Rust-specific providers using the correct rust_common API
+    if rust_common.crate_info in target_info:
+        providers.append(target_info[rust_common.crate_info])
+
+    if rust_common.dep_info in target_info:
+        providers.append(target_info[rust_common.dep_info])
+
+    # Handle test crate case
+    if rust_common.test_crate_info in target_info:
+        providers.append(target_info[rust_common.test_crate_info])
+
+    # Forward other common providers
+    if hasattr(target_info, "instrumented_files"):
+        providers.append(target_info.instrumented_files)
+
+    return providers
+
+_wasm_rust_library_bindgen = rule(
+    implementation = _wasm_rust_library_bindgen_impl,
+    attrs = {
+        "target": attr.label(
+            cfg = wasm_transition,
+            doc = "rust_library target to build for WASM",
+        ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
+    },
+)
+
 def _generate_wrapper_impl(ctx):
     """Generate a wrapper that includes both bindings and runtime shim"""
     out_file = ctx.actions.declare_file(ctx.label.name + ".rs")
@@ -133,15 +178,21 @@ pub mod wit_bindgen {
         content = wrapper_content + "\n",
     )
 
-    # Concatenate files - simple approach without filtering that could break exports
+    # Concatenate files with careful filtering to avoid symbol conflicts
     filter_cmd = """
-        cat {} > {}
-        cat {} >> {}
+        cat {wrapper} > {output}
+        # Filter out conflicting export statements based on mode
+        if grep -q "native-guest" {wrapper}; then
+            # For native-guest mode, filter out the generated export pub use that conflicts with our macro
+            grep -v '^pub(crate) use __export_.*_impl as export;$' {bindgen} >> {output} || cat {bindgen} >> {output}
+        else
+            # For guest mode, include all bindings
+            cat {bindgen} >> {output}
+        fi
     """.format(
-        temp_wrapper.path,
-        out_file.path,
-        ctx.file.bindgen.path,
-        out_file.path,
+        wrapper = temp_wrapper.path,
+        output = out_file.path,
+        bindgen = ctx.file.bindgen.path,
     )
 
     ctx.actions.run_shell(
@@ -323,12 +374,20 @@ def rust_wasm_component_bindgen(
         # For now, providing compilation-compatible stubs
     )
 
-    # Create the WASM bindings library that will be transitioned together with the main component
+    # Create a separate WASM bindings library using guest wrapper
+    bindings_lib_wasm_base = bindings_lib + "_wasm_base"
     rust_library(
-        name = bindings_lib,
+        name = bindings_lib_wasm_base,
         srcs = [":" + wrapper_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
+        visibility = ["//visibility:private"],
+    )
+
+    # Create a WASM-transitioned version of the WASM bindings library
+    _wasm_rust_library_bindgen(
+        name = bindings_lib,
+        target = ":" + bindings_lib_wasm_base,
         visibility = ["//visibility:private"],
     )
 

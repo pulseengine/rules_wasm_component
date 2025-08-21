@@ -1,10 +1,13 @@
-// Mobile App implementation for cross-platform applications
-use mobile::app::exports::device::{BatteryStatus, DeviceInfo, Location, SensorReading};
-use mobile::app::exports::mobile_ui::{Gesture, HapticFeedback, ScreenInfo, TouchEvent};
+// Mobile App implementation for cross-platform applications  
+#[cfg(target_arch = "wasm32")]
+use mobile_app_bindings::exports::device::{BatteryStatus, DeviceInfo, Location, SensorReading};
+#[cfg(target_arch = "wasm32")]
+use mobile_app_bindings::exports::mobile_ui::{Gesture, HapticFeedback, ScreenInfo, TouchEvent};
 
 struct MobileApp;
 
-impl mobile::app::exports::mobile_ui::Guest for MobileApp {
+#[cfg(target_arch = "wasm32")]
+impl mobile_app_bindings::exports::mobile_ui::Guest for MobileApp {
     fn handle_touch(event: TouchEvent) -> Gesture {
         // Simplified touch handling
         println!(
@@ -34,7 +37,8 @@ impl mobile::app::exports::mobile_ui::Guest for MobileApp {
     }
 }
 
-impl mobile::app::exports::device::Guest for MobileApp {
+#[cfg(target_arch = "wasm32")]
+impl mobile_app_bindings::exports::device::Guest for MobileApp {
     fn get_device_info() -> DeviceInfo {
         DeviceInfo {
             platform: "ios".to_string(),
@@ -99,4 +103,5 @@ impl mobile::app::exports::device::Guest for MobileApp {
 }
 
 // Export the component
-mobile::app::export!(MobileApp with_types_in mobile::app);
+#[cfg(target_arch = "wasm32")]
+mobile_app_bindings::export!(MobileApp with_types_in mobile_app_bindings);

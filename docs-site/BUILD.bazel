@@ -213,7 +213,7 @@ copy_file(
     out = "docs_deployment.tar.gz",
 )
 
-# Fallback deployment (for testing without full toolchain)
+# Fallback deployment (for testing without full toolchain) - cross-platform compatible
 genrule(
     name = "fallback_deployment",
     srcs = [
@@ -222,8 +222,10 @@ genrule(
     ],
     outs = ["docs_fallback.tar.gz"],
     cmd = """
-    # Create tar directly with transform to add directory prefix
-    tar -czf $@ --transform 's|^|fallback_dist/|' --transform 's|.*placeholder_fallback|fallback_dist/index.html|' $(location :placeholder_fallback)
+    # Create cross-platform tar archive without GNU-specific transforms
+    mkdir -p fallback_dist
+    cp $(location :placeholder_fallback) fallback_dist/index.html
+    tar -czf $@ fallback_dist/
     """,
     message = "Creating fallback documentation deployment",
 )
