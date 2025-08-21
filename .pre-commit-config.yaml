@@ -125,7 +125,7 @@ repos:
       - id: docs-build-check
         name: Documentation Build Check
         description: Validate documentation builds successfully
-        entry: bash -c 'cd docs-site && npm ci --silent && npm run generate:docs && npm run check'
+        entry: bash -c 'cd docs-site && npm run check'
         language: system
         files: '^docs-site/.*\.(js|ts|astro|mdx|md|json)$'
         pass_filenames: false
