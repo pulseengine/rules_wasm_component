@@ -133,24 +133,12 @@ pub mod wit_bindgen {
         content = wrapper_content + "\n",
     )
 
-    # Concatenate files but filter out conflicting exports to avoid symbol conflicts
+    # Concatenate files - simple approach without filtering that could break exports
     filter_cmd = """
         cat {} > {}
-        # Filter out problematic export-related lines for native-guest mode
-        if grep -q "native-guest" {}; then
-            # For native-guest mode, filter out the generated export macro and pub use
-            grep -v '^pub(crate) use __export_.*as export;$' {} | \
-            grep -v '^macro_rules! export' | \
-            grep -v '^pub use __export_.*_cabi;$' >> {} || true
-        else
-            # For guest mode, only filter out duplicate cabi exports
-            grep -v '^pub use __export_.*_cabi;$' {} >> {} || true
-        fi
+        cat {} >> {}
     """.format(
         temp_wrapper.path,
-        out_file.path,
-        temp_wrapper.path,
-        ctx.file.bindgen.path,
         out_file.path,
         ctx.file.bindgen.path,
         out_file.path,
