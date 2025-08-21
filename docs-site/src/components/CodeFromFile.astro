@@ -57,7 +57,7 @@ try {
   }
 
 } catch (e) {
-  error = `Error reading file ${file}: ${e.message}`;
+  error = `Error reading file ${file}: ${e instanceof Error ? e.message : String(e)}`;
   content = error;
 }
 

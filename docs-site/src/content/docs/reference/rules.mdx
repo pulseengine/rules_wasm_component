@@ -23,6 +23,7 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
   - [rust_wasm_component_test](#rust_wasm_component_test)
 - [Go Component Rules](#go-component-rules)
   - [go_wasm_component](#go_wasm_component)
+  - [go_wasm_component_test](#go_wasm_component_test)
   - [go_wit_bindgen](#go_wit_bindgen)
 - [JavaScript Component Rules](#javascript-component-rules)
   - [jco_transpile](#jco_transpile)
@@ -33,7 +34,9 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
   - [cpp_component](#cpp_component)
   - [cpp_wit_bindgen](#cpp_wit_bindgen)
 - [Composition Rules](#composition-rules)
+  - [wac_bundle](#wac_bundle)
   - [wac_compose](#wac_compose)
+  - [wac_plug](#wac_plug)
   - [wac_remote_compose](#wac_remote_compose)
 - [RPC & Communication](#rpc-communication)
   - [wrpc_bindgen](#wrpc_bindgen)
@@ -331,6 +334,33 @@ go_wasm_component(
 )
 ```
 
+### go_wasm_component_test
+
+Tests a Go WebAssembly component built with TinyGo. Performs comprehensive validation including component format verification, TinyGo-specific pattern checks, and WASI Preview 2 compatibility testing.
+
+**Load from:**
+```python
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component_test")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `component` | Label | ✅ | Go WASM component to test |
+| `name` | String | ✅ | A unique name for this target |
+
+**Examples:**
+
+Test a TinyGo WebAssembly component
+
+```python
+go_wasm_component_test(
+    name = "calculator_component_test",
+    component = ":calculator_component",
+)
+```
+
 ### go_wit_bindgen
 
 Legacy compatibility function for Go WIT binding generation. **DEPRECATED**: WIT binding generation is now handled automatically by go_wasm_component rule. This function exists for backward compatibility with existing examples and creates a placeholder genrule. For new code, use go_wasm_component directly with wit and world attributes.
@@ -560,6 +590,37 @@ cpp_wit_bindgen(
 
 ## Composition Rules
 
+### wac_bundle
+
+Bundle WASM components without composition, suitable for WASI components. Collects multiple components into a single bundle directory without creating a composed component.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wac:defs.bzl", "wac_bundle")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `components` | label_keyed_string_dict | ✅ | Map of component targets to their names in the bundle |
+| `name` | String | ✅ | A unique name for this target |
+
+**Examples:**
+
+Bundle multiple WASI components
+
+```python
+wac_bundle(
+    name = "service_bundle",
+    components = {
+        ":auth_service": "auth",
+        ":data_service": "data",
+        ":api_service": "api",
+    },
+)
+```
+
 ### wac_compose
 
 Composes multiple WebAssembly components into a single application using WAC (WebAssembly Composition) format.
@@ -595,6 +656,38 @@ wac_compose(
         let b = new comp_b {};
         export a;
     ''',
+)
+```
+
+### wac_plug
+
+Plug component exports into component imports using WAC. Automatically connects component exports to imports through WAC's plug functionality.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wac:defs.bzl", "wac_plug")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `plugs` | List of Labels | ✅ | The plug components that export functions |
+| `socket` | Label | ✅ | The socket component that imports functions |
+
+**Examples:**
+
+Connect exports to imports automatically
+
+```python
+wac_plug(
+    name = "connected_app",
+    socket = ":main_component",
+    plugs = [
+        ":auth_plugin",
+        ":storage_plugin",
+    ],
 )
 ```
 

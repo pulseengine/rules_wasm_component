@@ -1,4 +1,4 @@
-// Mobile App implementation for cross-platform applications  
+// Mobile App implementation for cross-platform applications
 #[cfg(target_arch = "wasm32")]
 use mobile_app_bindings::exports::device::{BatteryStatus, DeviceInfo, Location, SensorReading};
 #[cfg(target_arch = "wasm32")]

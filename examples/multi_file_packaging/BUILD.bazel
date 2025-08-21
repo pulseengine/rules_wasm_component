@@ -4,7 +4,7 @@ This package demonstrates four approaches to packaging WebAssembly components
 with additional files:
 
 1. Embedded Resources - Files built directly into the component
-2. OCI Image Layers - Multi-layer container-style packaging  
+2. OCI Image Layers - Multi-layer container-style packaging
 3. Bundle Archives - Pre-packaged archives with component plus files
 4. Sidecar Artifacts - Separate OCI artifacts for different file types
 
@@ -13,6 +13,7 @@ Each approach has different trade-offs for complexity, performance, and security
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
 # Bundle archive approach uses genrule instead of rules_pkg for simplicity
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
@@ -33,9 +34,9 @@ wit_library(
 # Generate keys for signing examples
 wasm_keygen(
     name = "example_keys",
+    openssh_format = False,
     public_key_name = "example.public",
     secret_key_name = "example.secret",
-    openssh_format = False,
 )
 
 # =============================================================================
@@ -49,11 +50,11 @@ genrule(
     cmd = 'echo \'{"environment":"production","max_connections":1000,"timeout_seconds":30,"features":{"logging":true,"metrics":true,"tracing":false}}\' > $@',
 )
 
-# HTML template to embed  
+# HTML template to embed
 genrule(
     name = "response_template",
     outs = ["response.html"],
-    cmd = 'echo \'<html><head><title>{{title}}</title></head><body><h1>{{title}}</h1><p>Status: {{status}}</p><p>{{data}}</p><p>{{timestamp}}</p></body></html>\' > $@',
+    cmd = "echo '<html><head><title>{{title}}</title></head><body><h1>{{title}}</h1><p>Status: {{status}}</p><p>{{data}}</p><p>{{timestamp}}</p></body></html>' > $@",
 )
 
 # API schema to embed
@@ -66,14 +67,14 @@ genrule(
 # Simple WIT library to debug binding issues
 wit_library(
     name = "simple_test_interfaces",
-    package_name = "example:simple-test@0.1.0", 
+    package_name = "example:simple-test@0.1.0",
     srcs = ["wit/simple_test.wit"],
     world = "simple-test",
 )
 
 # Simple test component to debug binding issues
 rust_wasm_component_bindgen(
-    name = "simple_embedded_test_component", 
+    name = "simple_embedded_test_component",
     srcs = ["src/simple_embedded_test.rs"],
     wit = ":simple_test_interfaces",
 )
@@ -96,32 +97,32 @@ rust_wasm_component_bindgen(
 rust_wasm_component_bindgen(
     name = "embedded_service_component",
     srcs = ["src/embedded_service.rs"],
-    wit = ":web_service_interfaces",
     # Files are embedded via include_str!/include_bytes! in source
     data = [
-        ":production_config",
-        ":response_template", 
         ":api_schema",
+        ":production_config",
+        ":response_template",
     ],
+    wit = ":web_service_interfaces",
 )
 
 # Signed embedded resource component
 wasm_component_signed_oci_image(
     name = "embedded_service_signed",
-    component = ":embedded_service_component",
-    sign_component = True,
-    component_signing_keys = ":example_keys",
-    registry = "localhost:5000",
-    namespace = "examples",
     package_name = "embedded-service",
-    tag = "v1.0.0",
-    description = "Web service with embedded configuration and templates",
     annotations = [
         "org.opencontainers.image.title=Embedded Resource Service",
         "com.example.packaging.type=embedded-resources",
         "com.example.files.config=embedded",
         "com.example.files.templates=embedded",
     ],
+    component = ":embedded_service_component",
+    component_signing_keys = ":example_keys",
+    description = "Web service with embedded configuration and templates",
+    namespace = "examples",
+    registry = "localhost:5000",
+    sign_component = True,
+    tag = "v1.0.0",
 )
 
 # =============================================================================
@@ -131,7 +132,7 @@ wasm_component_signed_oci_image(
 # Base component without embedded files
 rust_wasm_component_bindgen(
     name = "layered_service_component",
-    srcs = ["src/layered_service.rs"], 
+    srcs = ["src/layered_service.rs"],
     wit = ":web_service_interfaces",
 )
 
@@ -222,36 +223,35 @@ write_file(
 filegroup(
     name = "large_assets",
     srcs = [
-        ":logo_png",
-        ":banner_jpg", 
-        ":styles_css",
         ":app_js",
+        ":banner_jpg",
+        ":logo_png",
+        ":styles_css",
     ],
 )
 
 # Multi-layer OCI component with signing
 wasm_component_signed_oci_image(
     name = "layered_service_signed",
-    component = ":layered_service_component",
-    
-    # Component-level signing
-    sign_component = True,
-    component_signing_keys = ":example_keys",
-    
-    # OCI image-level signing (currently disabled due to placeholder keys)
-    sign_oci_image = False,  # Would use real cosign keys in production
-    
-    registry = "localhost:5000",
-    namespace = "examples", 
     package_name = "layered-service",
-    tag = "v1.0.0",
-    description = "Web service with layered assets and configuration",
     annotations = [
         "org.opencontainers.image.title=Multi-Layer Service",
         "com.example.packaging.type=oci-layers",
         "com.example.files.assets=layered",
         "com.example.layers.count=2",
     ],
+    component = ":layered_service_component",
+    component_signing_keys = ":example_keys",
+    description = "Web service with layered assets and configuration",
+    namespace = "examples",
+    registry = "localhost:5000",
+
+    # Component-level signing
+    sign_component = True,
+
+    # OCI image-level signing (currently disabled due to placeholder keys)
+    sign_oci_image = False,  # Would use real cosign keys in production
+    tag = "v1.0.0",
 )
 
 # =============================================================================
@@ -367,9 +367,9 @@ write_file(
 filegroup(
     name = "service_documentation",
     srcs = [
-        ":readme_md",
         ":api_md",
         ":deployment_md",
+        ":readme_md",
     ],
 )
 
@@ -380,7 +380,7 @@ genrule(
         ":bundled_service_component",
         ":production_config",
         ":response_template",
-        ":api_schema", 
+        ":api_schema",
         ":service_documentation",
     ],
     outs = ["service_bundle.tar"],
@@ -399,22 +399,22 @@ genrule(
 # Bundle deployment (treating archive as component)
 wasm_component_oci_image(
     name = "bundled_service_image",
-    component = ":service_bundle",  # Archive as component
-    registry = "localhost:5000",
-    namespace = "examples",
     package_name = "bundled-service",
-    tag = "v1.0.0",
-    description = "Complete service bundle with documentation and config",
     annotations = [
         "org.opencontainers.image.title=Service Bundle",
         "com.example.packaging.type=bundle-archive",
         "com.example.bundle.format=tar",
         "com.example.files.docs=bundled",
     ],
+    component = ":service_bundle",  # Archive as component
+    description = "Complete service bundle with documentation and config",
+    namespace = "examples",
+    registry = "localhost:5000",
+    tag = "v1.0.0",
 )
 
 # =============================================================================
-# Example 4: Sidecar Artifacts Pattern  
+# Example 4: Sidecar Artifacts Pattern
 # =============================================================================
 
 # Main component
@@ -427,17 +427,17 @@ rust_wasm_component_bindgen(
 # Main component deployment
 wasm_component_oci_image(
     name = "sidecar_core_service",
-    component = ":sidecar_service_component",
-    registry = "localhost:5000",
-    namespace = "examples",
     package_name = "sidecar-service",
-    tag = "v1.0.0",
-    description = "Core service component (sidecar pattern)",
     annotations = [
         "org.opencontainers.image.title=Sidecar Core Service",
         "com.example.packaging.type=sidecar-artifacts",
         "com.example.sidecar.role=core-component",
     ],
+    component = ":sidecar_service_component",
+    description = "Core service component (sidecar pattern)",
+    namespace = "examples",
+    registry = "localhost:5000",
+    tag = "v1.0.0",
 )
 
 # Configuration sidecar (would use oci_image in real implementation)
@@ -472,7 +472,7 @@ genrule(
     cmd = """
     cat > $@ << 'EOF'
 {
-  "apiVersion": "v1", 
+  "apiVersion": "v1",
   "kind": "AssetsSidecar",
   "metadata": {
     "name": "sidecar-service-assets",
@@ -511,21 +511,21 @@ spec:
       repository: localhost:5000/examples/sidecar-service
       tag: v1.0.0
       signature: sha256:placeholder-component-hash
-      
+
     - name: configuration
       type: config-files
-      repository: localhost:5000/examples/sidecar-service-config  
+      repository: localhost:5000/examples/sidecar-service-config
       tag: v1.0.0
       signature: sha256:placeholder-config-hash
       mountPath: /etc/service/
-      
+
     - name: assets
       type: static-files
       repository: localhost:5000/examples/sidecar-service-assets
-      tag: v1.0.0  
+      tag: v1.0.0
       signature: sha256:placeholder-assets-hash
       mountPath: /var/www/
-      
+
   coordination:
     healthCheck: /health
     readinessProbe: /ready
@@ -564,9 +564,9 @@ test_suite(
 filegroup(
     name = "all_examples",
     srcs = [
-        ":embedded_service_signed",
-        ":layered_service_signed", 
         ":bundled_service_image",
+        ":embedded_service_signed",
+        ":layered_service_signed",
         ":sidecar_core_service",
     ],
 )

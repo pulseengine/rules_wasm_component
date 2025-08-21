@@ -336,21 +336,21 @@ load("@rules_wasm_component//wkg:oci_signing.bzl", "wasm_component_signed_oci_im
 wasm_component_signed_oci_image(
     name = "deploy_layered_service",
     component = ":base_service",
-    
+
     # Component layer signing
     sign_component = True,
     component_signing_keys = ":component_keys",
-    
+
     # Complete OCI image signing (protects all layers)
     sign_oci_image = True,
     oci_signing_key = ":oci_keys",
-    
+
     # Registry configuration
     registry = "registry.company.com",
     namespace = "production",
     package_name = "layered-service",
     tag = "v1.0.0",
-    
+
     # Deployment metadata
     annotations = [
         "org.opencontainers.image.title=Multi-Layer Service",
@@ -386,7 +386,7 @@ oci_push(
 # Assets sidecar deployment
 oci_push(
     name = "deploy_service_assets",
-    image = ":assets_sidecar_signed", 
+    image = ":assets_sidecar_signed",
     repository = "registry.company.com/production/core-service-assets",
     tag = "v1.0.0",
 )
@@ -399,13 +399,13 @@ genrule(
     cmd = """
         # Deploy main component
         bazel run :deploy_core_service
-        
+
         # Deploy configuration sidecar
         bazel run :deploy_service_config
-        
-        # Deploy assets sidecar  
+
+        # Deploy assets sidecar
         bazel run :deploy_service_assets
-        
+
         # Generate deployment manifest
         cat > $@ << 'EOF'
         apiVersion: v1
@@ -419,7 +419,7 @@ genrule(
               repository: registry.company.com/production/core-service
               tag: v1.0.0
             - name: configuration
-              repository: registry.company.com/production/core-service-config  
+              repository: registry.company.com/production/core-service-config
               tag: v1.0.0
             - name: assets
               repository: registry.company.com/production/core-service-assets
@@ -428,7 +428,7 @@ genrule(
     """,
     tools = [
         ":deploy_core_service",
-        ":deploy_service_config", 
+        ":deploy_service_config",
         ":deploy_service_assets",
     ],
 )
@@ -500,7 +500,7 @@ graph TD
     D -->|Independent| F{Team Ownership?}
     F -->|Single Team| G[Multi-Layer OCI]
     F -->|Multiple Teams| H[Sidecar Artifacts]
-    
+
     C --> I[Simple Deployment]
     E --> J[Medium Deployment]
     G --> J

@@ -15,7 +15,7 @@ impl Component {
             docs_available: std::env::var("DOCS_SIDECAR_ENDPOINT").is_ok(),
         }
     }
-    
+
     /// Get configuration from sidecar (simulated)
     fn get_sidecar_config() -> String {
         if std::env::var("CONFIG_SIDECAR_ENDPOINT").is_ok() {
@@ -39,23 +39,36 @@ impl Guest for Component {
     fn process(input: String) -> String {
         let status = Self::check_sidecar_status();
         let config = Self::get_sidecar_config();
-        
+
         if status.config_available && status.assets_available {
-            format!("Sidecar Service (full): {} | Config: {} | Sidecars: Config✓ Assets✓ Docs{}",
-                   input,
-                   config,
-                   if status.docs_available { "✓" } else { "✗" })
+            format!(
+                "Sidecar Service (full): {} | Config: {} | Sidecars: Config✓ Assets✓ Docs{}",
+                input,
+                config,
+                if status.docs_available { "✓" } else { "✗" }
+            )
         } else if status.config_available || status.assets_available {
-            format!("Sidecar Service (partial): {} | Config: {} | Available: {}{}{}",
-                   input,
-                   config,
-                   if status.config_available { "Config " } else { "" },
-                   if status.assets_available { "Assets " } else { "" },
-                   if status.docs_available { "Docs" } else { "" })
+            format!(
+                "Sidecar Service (partial): {} | Config: {} | Available: {}{}{}",
+                input,
+                config,
+                if status.config_available {
+                    "Config "
+                } else {
+                    ""
+                },
+                if status.assets_available {
+                    "Assets "
+                } else {
+                    ""
+                },
+                if status.docs_available { "Docs" } else { "" }
+            )
         } else {
-            format!("Sidecar Service (standalone): {} | Config: {} | No sidecars detected",
-                   input,
-                   config)
+            format!(
+                "Sidecar Service (standalone): {} | Config: {} | No sidecars detected",
+                input, config
+            )
         }
     }
 }
