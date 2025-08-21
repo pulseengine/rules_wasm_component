@@ -1,49 +1,116 @@
-// Web Frontend implementation for microservices applications
-use frontend::web::exports::wasi::http::incoming_handler::{
-    Guest, IncomingRequest, ResponseOutparam,
+// Web Frontend implementation for microservices applications  
+#[cfg(target_arch = "wasm32")]
+use web_frontend_bindings::exports::frontend::web::{
+    ui::{Guest as UiGuest, UserAction, UiState, UiEvent},
+    state_management::{Guest as StateGuest, CacheEntry, StateUpdate},
+    analytics::{Guest as AnalyticsGuest, PageView, UserEvent as AnalyticsEvent, PerformanceMetric},
+    pwa::{Guest as PwaGuest, PushNotification, SyncTask, OfflineCapability},
 };
 
 struct WebFrontend;
 
-impl Guest for WebFrontend {
-    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
-        // Simplified web frontend implementation
-        println!("Web Frontend: Serving request");
+#[cfg(target_arch = "wasm32")]
+impl UiGuest for WebFrontend {
+    fn handle_user_action(action: UserAction, state: UiState) -> UiState {
+        println!("Frontend: Handling user action '{}' on element '{}'", 
+                action.action_type, action.element_id);
+        
+        // Update state based on action
+        UiState {
+            current_page: match action.action_type.as_str() {
+                "navigate" => action.data.unwrap_or_else(|| state.current_page),
+                _ => state.current_page,
+            },
+            user_context: state.user_context,
+            session_data: state.session_data,
+            preferences: state.preferences,
+        }
+    }
 
-        // In a real implementation, this would:
-        // 1. Serve static assets (HTML, CSS, JS)
-        // 2. Handle SPA routing
-        // 3. Proxy API calls to backend services
-        // 4. Manage user sessions
-        // 5. Handle real-time updates
-
-        let html_response = r#"
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Microservices Web App</title>
-</head>
-<body>
-    <h1>Welcome to Microservices Platform</h1>
-    <div id="app">
-        <p>Frontend connected to microservices backend</p>
-        <ul>
-            <li>User Service: Connected</li>
-            <li>Product Service: Connected</li>
-            <li>Order Service: Connected</li>
-        </ul>
-    </div>
-</body>
-</html>"#;
-
-        send_html_response(response_out, 200, html_response);
+    fn emit_ui_event(event: UiEvent) {
+        println!("Frontend: Emitting UI event '{}' on target '{}'", 
+                event.event_type, event.target);
     }
 }
 
-fn send_html_response(response_out: ResponseOutparam, status: u32, body: &str) {
-    // Simplified response - in reality would use WASI HTTP APIs with proper headers
-    println!("Frontend Response: {} - HTML content served", status);
+#[cfg(target_arch = "wasm32")]
+impl StateGuest for WebFrontend {
+    fn get_state(path: String) -> Option<String> {
+        println!("Frontend: Getting state for path '{}'", path);
+        Some(format!("{{\"path\": \"{}\", \"value\": \"example\"}}", path))
+    }
+
+    fn set_state(update: StateUpdate) {
+        println!("Frontend: Setting state at '{}' to '{}'", update.path, update.value);
+    }
+
+    fn clear_state(path: String) {
+        println!("Frontend: Clearing state at '{}'", path);
+    }
+
+    fn cache_get(key: String) -> Option<CacheEntry> {
+        println!("Frontend: Getting cache entry for key '{}'", key);
+        Some(CacheEntry {
+            key: key.clone(),
+            value: "cached_value".to_string(),
+            expires_at: None,
+            tags: vec!["frontend".to_string()],
+        })
+    }
+
+    fn cache_set(entry: CacheEntry) {
+        println!("Frontend: Setting cache entry for key '{}'", entry.key);
+    }
+
+    fn cache_invalidate(key: String) {
+        println!("Frontend: Invalidating cache key '{}'", key);
+    }
+
+    fn cache_invalidate_by_tags(tags: Vec<String>) {
+        println!("Frontend: Invalidating cache by tags: {:?}", tags);
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl AnalyticsGuest for WebFrontend {
+    fn track_page_view(view: PageView) {
+        println!("Frontend: Tracking page view for '{}'", view.page);
+    }
+
+    fn track_event(event: AnalyticsEvent) {
+        println!("Frontend: Tracking event '{}'", event.event_name);
+    }
+
+    fn track_performance(metric: PerformanceMetric) {
+        println!("Frontend: Tracking performance metric '{}': {} {}", 
+                metric.metric_name, metric.value, metric.unit);
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl PwaGuest for WebFrontend {
+    fn show_notification(notification: PushNotification) {
+        println!("Frontend: Showing notification '{}'", notification.title);
+    }
+
+    fn schedule_sync(task: SyncTask) {
+        println!("Frontend: Scheduling sync task '{}'", task.task_id);
+    }
+
+    fn configure_offline(config: OfflineCapability) {
+        println!("Frontend: Configuring offline mode with strategy '{}'", config.cache_strategy);
+    }
+
+    fn check_for_updates() -> bool {
+        println!("Frontend: Checking for updates");
+        false
+    }
+
+    fn install_update() {
+        println!("Frontend: Installing update");
+    }
 }
 
 // Export the component
-frontend::web::export!(WebFrontend with_types_in frontend::web);
+#[cfg(target_arch = "wasm32")]
+web_frontend_bindings::export!(WebFrontend with_types_in web_frontend_bindings);

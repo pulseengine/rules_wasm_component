@@ -103,14 +103,24 @@ rust_wasm_component_bindgen(
 ### Advanced Embedding with Build-Time Generation
 
 ```python title="BUILD.bazel"
-# Generate config from templates
-genrule(
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
+# Generate config using Bazel Skylib for cross-platform compatibility
+write_file(
     name = "production_config",
-    srcs = ["config/template.json"],
-    outs = ["config/production.json"],
-    cmd = """
-    sed 's/{{ENVIRONMENT}}/production/g' $< > $@
-    """,
+    out = "config/production.json",
+    content = [
+        '{',
+        '  "environment": "production",',
+        '  "max_connections": 1000,',
+        '  "timeout_seconds": 30,',
+        '  "features": {',
+        '    "logging": true,',
+        '    "metrics": true,',
+        '    "tracing": false',
+        '  }',
+        '}',
+    ],
 )
 
 rust_wasm_component_bindgen(
@@ -515,23 +525,26 @@ cosign verify registry.example.com/apps/service-assets:v1.0.0 --key assets.pub
 ### Build-Time Optimization
 
 ```python title="BUILD.bazel"
-# Optimize embedded resources
-genrule(
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+
+# Generate optimized config using Bazel Skylib
+write_file(
     name = "optimized_config",
-    srcs = ["config/template.json"],
-    outs = ["config/optimized.json"],
-    cmd = """
-    # Remove comments and whitespace
-    jq -c . < $< > $@
-    """,
+    out = "config/optimized.json",
+    content = [
+        # Minified JSON without whitespace for production
+        '{"environment":"production","max_connections":1000,"timeout_seconds":30,"features":{"logging":true,"metrics":true,"tracing":false}}',
+    ],
 )
 
-# Compress large assets
+# Use appropriate tool for compression if needed
 genrule(
     name = "compressed_assets",
     srcs = ["//assets:large_files"],
     outs = ["assets.tar.gz"],
     cmd = "tar czf $@ $(SRCS)",
+    # Note: For simple file copying, prefer copy_file for cross-platform compatibility
 )
 ```
 
@@ -586,6 +599,40 @@ wasm_component_oci_image(
 2. **Verify all signatures** in your deployment pipeline
 3. **Use separate keys** for different artifact types when using sidecars
 4. **Audit your file contents** before embedding or packaging
+
+### Cross-Platform Build Guidelines
+
+For maximum compatibility across Windows, macOS, and Linux:
+
+```python title="BUILD.bazel"
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+
+# ✅ PREFERRED: Use Bazel Skylib for file operations
+write_file(
+    name = "config_file",
+    out = "config.json",
+    content = ["{ \"setting\": \"value\" }"],
+)
+
+copy_file(
+    name = "asset_copy",
+    src = "input.png",
+    out = "assets/logo.png",
+)
+
+# ❌ AVOID: Shell-dependent genrules
+# genrule(
+#     name = "bad_example",
+#     cmd = "mkdir -p output && cp input.txt output/",  # Won't work on Windows
+# )
+```
+
+**Benefits of Bazel Skylib approach:**
+- ✅ **Cross-platform** - Works on Windows, macOS, Linux
+- ✅ **Hermetic** - No dependency on system shell or tools
+- ✅ **Cacheable** - Better incremental build performance
+- ✅ **Maintainable** - Declarative content definition
 
 ### Performance Guidelines
 

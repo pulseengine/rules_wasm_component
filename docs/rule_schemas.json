@@ -1,4 +1,78 @@
 {
+  "WacCompositionInfo": {
+    "name": "WacCompositionInfo",
+    "type": "provider",
+    "description": "Provider that contains information about a WAC composition of multiple components.",
+    "fields": {
+      "components": {
+        "type": "dict",
+        "description": "Dictionary of component name to WasmComponentInfo"
+      },
+      "composed_wasm": {
+        "type": "File",
+        "description": "The composed WASM file"
+      },
+      "composition_wit": {
+        "type": "File",
+        "description": "WIT file describing the composition"
+      },
+      "connections": {
+        "type": "string_list",
+        "description": "List of inter-component connections"
+      },
+      "instantiations": {
+        "type": "string_list",
+        "description": "List of component instantiations"
+      }
+    },
+    "examples": [
+      {
+        "title": "Using WacCompositionInfo",
+        "description": "Access composition metadata",
+        "code": "def _my_rule_impl(ctx):\n    composition_info = ctx.attr.composition[WacCompositionInfo]\n    composed_wasm = composition_info.composed_wasm\n    components = composition_info.components\n    # Use composition_info..."
+      }
+    ],
+    "load_from": ""
+  },
+  "WasmComponentInfo": {
+    "name": "WasmComponentInfo",
+    "type": "provider",
+    "description": "Provider that contains information about a compiled WebAssembly component.",
+    "fields": {
+      "component_type": {
+        "type": "string",
+        "description": "Type of component (module or component)"
+      },
+      "exports": {
+        "type": "string_list",
+        "description": "List of exported interfaces"
+      },
+      "imports": {
+        "type": "string_list",
+        "description": "List of imported interfaces"
+      },
+      "metadata": {
+        "type": "dict",
+        "description": "Component metadata dictionary"
+      },
+      "wasm_file": {
+        "type": "File",
+        "description": "The compiled WASM component file"
+      },
+      "wit_info": {
+        "type": "WitInfo",
+        "description": "WitInfo provider from the component's interfaces"
+      }
+    },
+    "examples": [
+      {
+        "title": "Using WasmComponentInfo",
+        "description": "Access component metadata",
+        "code": "def _my_rule_impl(ctx):\n    component_info = ctx.attr.component[WasmComponentInfo]\n    wasm_file = component_info.wasm_file\n    exports = component_info.exports\n    # Use component_info..."
+      }
+    ],
+    "load_from": ""
+  },
   "WitInfo": {
     "name": "WitInfo",
     "type": "provider",
@@ -34,6 +108,378 @@
     ],
     "load_from": ""
   },
+  "cc_component_library": {
+    "name": "cc_component_library",
+    "type": "rule",
+    "description": "Creates a static library for use in WebAssembly components. Compiles C/C++ source files into a static library that can be linked into WebAssembly components.",
+    "attributes": {
+      "copts": {
+        "type": "string_list",
+        "required": false,
+        "description": "Additional compiler options"
+      },
+      "cxx_std": {
+        "type": "string",
+        "required": false,
+        "description": "C++ standard (e.g., c++17, c++20, c++23)"
+      },
+      "defines": {
+        "type": "string_list",
+        "required": false,
+        "description": "Preprocessor definitions"
+      },
+      "deps": {
+        "type": "label_list",
+        "required": false,
+        "description": "Dependencies (other cc_component_library targets)"
+      },
+      "enable_exceptions": {
+        "type": "bool",
+        "required": false,
+        "description": "Enable C++ exceptions (increases binary size)"
+      },
+      "hdrs": {
+        "type": "label_list",
+        "required": false,
+        "description": "C/C++ header files"
+      },
+      "includes": {
+        "type": "string_list",
+        "required": false,
+        "description": "Additional include directories"
+      },
+      "language": {
+        "type": "string",
+        "required": false,
+        "default": "'cpp'",
+        "description": "Language variant (c or cpp)",
+        "allowed_values": [
+          "c",
+          "cpp"
+        ]
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "optimize": {
+        "type": "bool",
+        "required": false,
+        "default": "True",
+        "description": "Enable optimizations"
+      },
+      "srcs": {
+        "type": "label_list",
+        "required": true,
+        "description": "C/C++ source files"
+      }
+    },
+    "examples": [
+      {
+        "title": "C++ library",
+        "description": "Create a static library for components",
+        "code": "cc_component_library(\n    name = \"math_utils\",\n    srcs = [\"math.cpp\", \"algorithms.cpp\"],\n    hdrs = [\"math.h\", \"algorithms.h\"],\n    language = \"cpp\",\n    cxx_std = \"c++20\",\n    optimize = True,\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//cpp:defs.bzl"
+  },
+  "cpp_component": {
+    "name": "cpp_component",
+    "type": "rule",
+    "description": "Builds a C++ WebAssembly component using WASI SDK. Compiles C++ source code into a WASM component with Preview2 support.",
+    "attributes": {
+      "deps": {
+        "type": "label_list",
+        "required": false,
+        "description": "C++ dependencies"
+      },
+      "hdrs": {
+        "type": "label_list",
+        "required": false,
+        "description": "C++ header files"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "srcs": {
+        "type": "label_list",
+        "required": true,
+        "description": "C++ source files"
+      },
+      "wit": {
+        "type": "label",
+        "required": false,
+        "description": "WIT library for component interfaces"
+      }
+    },
+    "examples": [
+      {
+        "title": "C++ component",
+        "description": "C++ WebAssembly component",
+        "code": "cpp_component(\n    name = \"calculator_cpp\",\n    srcs = [\"calculator.cpp\"],\n    hdrs = [\"calculator.h\"],\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//cpp:defs.bzl"
+  },
+  "cpp_wit_bindgen": {
+    "name": "cpp_wit_bindgen",
+    "type": "rule",
+    "description": "Generates C/C++ bindings from WIT interface definitions. Creates header and source files for WebAssembly component development.",
+    "attributes": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "string_encoding": {
+        "type": "string",
+        "required": false,
+        "description": "String encoding to use in generated bindings",
+        "allowed_values": [
+          "utf8",
+          "utf16",
+          "compact-utf16"
+        ]
+      },
+      "stubs_only": {
+        "type": "bool",
+        "required": false,
+        "description": "Generate only stub functions without implementation"
+      },
+      "wit": {
+        "type": "label",
+        "required": true,
+        "description": "WIT interface definition file"
+      },
+      "world": {
+        "type": "string",
+        "required": false,
+        "description": "WIT world to generate bindings for"
+      }
+    },
+    "examples": [
+      {
+        "title": "C++ bindings",
+        "description": "Generate C++ bindings from WIT",
+        "code": "cpp_wit_bindgen(\n    name = \"calculator_bindings\",\n    wit = \"calculator.wit\",\n    world = \"calculator\",\n    string_encoding = \"utf8\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//cpp:defs.bzl"
+  },
+  "go_wasm_component": {
+    "name": "go_wasm_component",
+    "type": "rule",
+    "description": "Builds a Go WebAssembly component using TinyGo. Compiles Go source code into a WASM component with WASI Preview 2 support.",
+    "attributes": {
+      "adapter": {
+        "type": "label",
+        "required": false,
+        "description": "Optional WASI adapter"
+      },
+      "go_mod": {
+        "type": "label",
+        "required": false,
+        "description": "go.mod file for dependency management"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "optimization": {
+        "type": "string",
+        "required": false,
+        "default": "'release'",
+        "description": "Build optimization level",
+        "allowed_values": [
+          "debug",
+          "release"
+        ]
+      },
+      "srcs": {
+        "type": "label_list",
+        "required": true,
+        "description": "Go source files"
+      },
+      "world": {
+        "type": "string",
+        "required": false,
+        "description": "WIT world for the component"
+      }
+    },
+    "examples": [
+      {
+        "title": "Basic Go component",
+        "description": "Simple Go WASM component with TinyGo",
+        "code": "go_wasm_component(\n    name = \"calculator_component\",\n    srcs = [\"calculator.go\", \"main.go\"],\n    go_mod = \"go.mod\",\n    optimization = \"release\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//go:defs.bzl"
+  },
+  "go_wit_bindgen": {
+    "name": "go_wit_bindgen",
+    "type": "rule",
+    "description": "Legacy compatibility function for Go WIT binding generation. **DEPRECATED**: WIT binding generation is now handled automatically by go_wasm_component rule. This function exists for backward compatibility with existing examples and creates a placeholder genrule. For new code, use go_wasm_component directly with wit and world attributes.",
+    "attributes": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      }
+    },
+    "examples": [
+      {
+        "title": "Legacy compatibility",
+        "description": "Placeholder for backward compatibility (use go_wasm_component instead)",
+        "code": "// DEPRECATED: Use go_wasm_component instead\ngo_wit_bindgen(\n    name = \"calculator_bindings\",\n)\n\n// RECOMMENDED: Use go_wasm_component directly\ngo_wasm_component(\n    name = \"calculator_component\",\n    srcs = [\"calculator.go\"],\n    wit = \":calculator_wit\",\n    world = \"calculator\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//go:defs.bzl"
+  },
+  "jco_transpile": {
+    "name": "jco_transpile",
+    "type": "rule",
+    "description": "Transpiles WebAssembly components to JavaScript using jco (JavaScript Component Tools). Converts WASM components into JavaScript modules.",
+    "attributes": {
+      "component": {
+        "type": "label",
+        "required": true,
+        "description": "WebAssembly component to transpile"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "options": {
+        "type": "string_list",
+        "required": false,
+        "description": "Additional jco options"
+      }
+    },
+    "examples": [
+      {
+        "title": "Transpile component",
+        "description": "Convert WASM component to JavaScript",
+        "code": "jco_transpile(\n    name = \"calculator_js_bindings\",\n    component = \":calculator_component\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//js:defs.bzl"
+  },
+  "js_component": {
+    "name": "js_component",
+    "type": "rule",
+    "description": "Builds a JavaScript WebAssembly component using ComponentizeJS. Transpiles JavaScript/TypeScript source code into a WASM component.",
+    "attributes": {
+      "entry_point": {
+        "type": "string",
+        "required": false,
+        "default": "index.js",
+        "description": "Main entry point file"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "package_json": {
+        "type": "label",
+        "required": false,
+        "description": "package.json file (auto-generated if not provided)"
+      },
+      "srcs": {
+        "type": "label_list",
+        "required": true,
+        "description": "JavaScript/TypeScript source files"
+      },
+      "wit": {
+        "type": "label",
+        "required": true,
+        "description": "WIT library for the component interfaces"
+      }
+    },
+    "examples": [
+      {
+        "title": "JS component",
+        "description": "JavaScript WebAssembly component",
+        "code": "js_component(\n    name = \"calculator_js\",\n    srcs = [\"src/calculator.js\"],\n    wit = \":calculator_wit\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//js:defs.bzl"
+  },
+  "npm_install": {
+    "name": "npm_install",
+    "type": "rule",
+    "description": "Installs NPM dependencies for JavaScript components. Runs npm install to fetch dependencies specified in package.json, making them available for JavaScript component builds.",
+    "attributes": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "package_json": {
+        "type": "label",
+        "required": true,
+        "description": "package.json file with dependencies"
+      }
+    },
+    "examples": [
+      {
+        "title": "Install NPM deps",
+        "description": "Install NPM dependencies",
+        "code": "npm_install(\n    name = \"npm_deps\",\n    package_json = \"package.json\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//js:defs.bzl"
+  },
+  "rust_wasm_component": {
+    "name": "rust_wasm_component",
+    "type": "rule",
+    "description": "Builds a Rust WebAssembly component. Compiles Rust source code into a WASM component using the Rust toolchain.",
+    "attributes": {
+      "adapter": {
+        "type": "label",
+        "required": false,
+        "description": "Optional WASI adapter"
+      },
+      "crate_features": {
+        "type": "string_list",
+        "required": false,
+        "description": "Rust crate features"
+      },
+      "deps": {
+        "type": "label_list",
+        "required": false,
+        "description": "Rust dependencies (crates)"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "rustc_flags": {
+        "type": "string_list",
+        "required": false,
+        "description": "Additional rustc flags"
+      },
+      "srcs": {
+        "type": "label_list",
+        "required": true,
+        "description": "Rust source files"
+      }
+    },
+    "examples": [
+      {
+        "title": "Basic Rust component",
+        "description": "Simple Rust WASM component",
+        "code": "rust_wasm_component(\n    name = \"my_component\",\n    srcs = [\"src/lib.rs\"],\n    deps = [\"@crates//:serde\"],\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//rust:defs.bzl"
+  },
   "rust_wasm_component_bindgen": {
     "name": "rust_wasm_component_bindgen",
     "type": "rule",
@@ -54,7 +500,11 @@
         "required": false,
         "default": "['release']",
         "description": "Build profiles to generate",
-        "allowed_values": ["debug", "release", "custom"]
+        "allowed_values": [
+          "debug",
+          "release",
+          "custom"
+        ]
       },
       "srcs": {
         "type": "label_list",
@@ -77,6 +527,31 @@
         "title": "Multi-profile component",
         "description": "Component built with multiple optimization profiles",
         "code": "rust_wasm_component_bindgen(\n    name = \"my_component\",\n    srcs = [\"src/lib.rs\"],\n    wit = \":my_interfaces\",\n    profiles = [\"debug\", \"release\"],\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//rust:defs.bzl"
+  },
+  "rust_wasm_component_test": {
+    "name": "rust_wasm_component_test",
+    "type": "rule",
+    "description": "Tests a Rust WASM component using wasmtime runtime. Provides automated testing for WebAssembly components.",
+    "attributes": {
+      "component": {
+        "type": "label",
+        "required": true,
+        "description": "WASM component to test"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      }
+    },
+    "examples": [
+      {
+        "title": "Component test",
+        "description": "Test a WASM component",
+        "code": "rust_wasm_component_test(\n    name = \"my_component_test\",\n    component = \":my_component\",\n)"
       }
     ],
     "load_from": "@rules_wasm_component//rust:defs.bzl"
@@ -122,6 +597,358 @@
     ],
     "load_from": "@rules_wasm_component//wac:defs.bzl"
   },
+  "wac_remote_compose": {
+    "name": "wac_remote_compose",
+    "type": "rule",
+    "description": "Composes WebAssembly components including remote components from OCI registries. Enables distributed component architecture.",
+    "attributes": {
+      "composition_file": {
+        "type": "label",
+        "required": false,
+        "description": "WAC composition file"
+      },
+      "local_components": {
+        "type": "string_dict",
+        "required": false,
+        "description": "Local component targets"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "registry_config": {
+        "type": "label",
+        "required": false,
+        "description": "Registry configuration for OCI access"
+      },
+      "remote_components": {
+        "type": "string_dict",
+        "required": false,
+        "description": "Remote OCI component references"
+      }
+    },
+    "examples": [
+      {
+        "title": "Remote composition",
+        "description": "Compose local and remote components",
+        "code": "wac_remote_compose(\n    name = \"distributed_app\",\n    local_components = {\n        \":frontend\": \"frontend\",\n    },\n    remote_components = {\n        \"ghcr.io/org/backend:v1.0.0\": \"backend\",\n    },\n    composition_file = \"app.wac\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wac:defs.bzl"
+  },
+  "wasm_component_from_oci": {
+    "name": "wasm_component_from_oci",
+    "type": "rule",
+    "description": "Downloads WebAssembly components from OCI registries. Enables using remote components from container registries in builds.",
+    "attributes": {
+      "component_name": {
+        "type": "string",
+        "required": true,
+        "description": "Component name"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "namespace": {
+        "type": "string",
+        "required": true,
+        "description": "Registry namespace"
+      },
+      "registry": {
+        "type": "string",
+        "required": true,
+        "description": "Registry hostname"
+      },
+      "registry_config": {
+        "type": "label",
+        "required": false,
+        "description": "Registry configuration"
+      },
+      "tag": {
+        "type": "string",
+        "required": false,
+        "default": "'latest'",
+        "description": "Component tag or version"
+      }
+    },
+    "examples": [
+      {
+        "title": "Download component",
+        "description": "Pull component from OCI registry",
+        "code": "wasm_component_from_oci(\n    name = \"auth_service\",\n    registry = \"ghcr.io\",\n    namespace = \"my-org\",\n    component_name = \"auth-service\",\n    tag = \"v1.0.0\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wkg:defs.bzl"
+  },
+  "wasm_component_new": {
+    "name": "wasm_component_new",
+    "type": "rule",
+    "description": "Creates a WebAssembly component from a core WASM module using wasm-tools component new. Wraps core modules into the component model.",
+    "attributes": {
+      "adapter": {
+        "type": "label",
+        "required": false,
+        "description": "WASI adapter to use"
+      },
+      "module": {
+        "type": "label",
+        "required": true,
+        "description": "Core WASM module to wrap"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      }
+    },
+    "examples": [
+      {
+        "title": "Wrap module",
+        "description": "Convert core WASM module to component",
+        "code": "wasm_component_new(\n    name = \"my_component\",\n    module = \":my_module\",\n    adapter = \"//wasm/adapters:wasi_snapshot_preview1\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wasm:defs.bzl"
+  },
+  "wasm_component_wizer_library": {
+    "name": "wasm_component_wizer_library",
+    "type": "rule",
+    "description": "Pre-initializes a WebAssembly component using Wizer library for improved startup performance. Executes initialization functions at build time to reduce runtime overhead.",
+    "attributes": {
+      "allow_wasi": {
+        "type": "bool",
+        "required": false,
+        "default": "True",
+        "description": "Allow WASI calls during initialization"
+      },
+      "component": {
+        "type": "label",
+        "required": true,
+        "description": "Input WebAssembly component to pre-initialize"
+      },
+      "init_function_name": {
+        "type": "string",
+        "required": false,
+        "default": "'wizer.initialize'",
+        "description": "Name of the initialization function to call"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "verbose": {
+        "type": "bool",
+        "required": false,
+        "description": "Enable verbose output"
+      }
+    },
+    "examples": [
+      {
+        "title": "Wizer optimization",
+        "description": "Pre-initialize a WebAssembly component",
+        "code": "wasm_component_wizer_library(\n    name = \"optimized_component\",\n    component = \":my_component\",\n    init_function_name = \"wizer.initialize\",\n    allow_wasi = True,\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wasm:wasm_component_wizer_library.bzl"
+  },
+  "wasm_keygen": {
+    "name": "wasm_keygen",
+    "type": "rule",
+    "description": "Generates cryptographic keys for WebAssembly component signing using wasmsign2. Creates key pairs for secure component distribution.",
+    "attributes": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "openssh_format": {
+        "type": "bool",
+        "required": false,
+        "description": "Generate keys in OpenSSH format"
+      }
+    },
+    "examples": [
+      {
+        "title": "Generate keys",
+        "description": "Create signing keys",
+        "code": "wasm_keygen(\n    name = \"production_keys\",\n    openssh_format = True,\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wasm:defs.bzl"
+  },
+  "wasm_sign": {
+    "name": "wasm_sign",
+    "type": "rule",
+    "description": "Signs WebAssembly components using wasmsign2 for secure deployment. Provides cryptographic signatures for component integrity.",
+    "attributes": {
+      "component": {
+        "type": "label",
+        "required": false,
+        "description": "WebAssembly component to sign (alternative to wasm_file)"
+      },
+      "detached": {
+        "type": "bool",
+        "required": false,
+        "default": "False",
+        "description": "Create detached signature file"
+      },
+      "keys": {
+        "type": "label",
+        "required": false,
+        "description": "Key pair from wasm_keygen or ssh_keygen"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "openssh_format": {
+        "type": "bool",
+        "required": false,
+        "default": "False",
+        "description": "Use OpenSSH key format (when not using keys attribute)"
+      },
+      "secret_key": {
+        "type": "label",
+        "required": false,
+        "description": "Secret key file (alternative to keys)"
+      },
+      "wasm_file": {
+        "type": "label",
+        "required": false,
+        "description": "WASM file to sign (alternative to component)"
+      }
+    },
+    "examples": [
+      {
+        "title": "Sign component",
+        "description": "Sign a WebAssembly component with embedded signature",
+        "code": "wasm_sign(\n    name = \"signed_component\",\n    component = \":my_component\",\n    keys = \":signing_keys\",\n    detached = false,\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wasm:defs.bzl"
+  },
+  "wasm_validate": {
+    "name": "wasm_validate",
+    "type": "rule",
+    "description": "Validates WebAssembly components and modules using wasm-tools validate. Ensures WASM files are well-formed.",
+    "attributes": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "wasm": {
+        "type": "label",
+        "required": true,
+        "description": "WASM file to validate"
+      }
+    },
+    "examples": [
+      {
+        "title": "Validate component",
+        "description": "Validate a WASM component",
+        "code": "wasm_validate(\n    name = \"validate_component\",\n    wasm = \":my_component\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wasm:defs.bzl"
+  },
+  "wasm_verify": {
+    "name": "wasm_verify",
+    "type": "rule",
+    "description": "Verifies signatures of signed WebAssembly components using wasmsign2. Validates component authenticity and integrity.",
+    "attributes": {
+      "github_account": {
+        "type": "string",
+        "required": false,
+        "description": "GitHub account for key verification"
+      },
+      "keys": {
+        "type": "label",
+        "required": false,
+        "description": "Public key from key pair"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "signed_component": {
+        "type": "label",
+        "required": false,
+        "description": "Signed component to verify"
+      },
+      "split_regex": {
+        "type": "string",
+        "required": false,
+        "description": "Regular expression for partial verification"
+      },
+      "wasm_file": {
+        "type": "label",
+        "required": false,
+        "description": "WASM file to verify (alternative to signed_component)"
+      }
+    },
+    "examples": [
+      {
+        "title": "Verify component",
+        "description": "Verify a signed WebAssembly component",
+        "code": "wasm_verify(\n    name = \"verify_component\",\n    signed_component = \":signed_component\",\n    keys = \":signing_keys\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wasm:defs.bzl"
+  },
+  "wit_bindgen": {
+    "name": "wit_bindgen",
+    "type": "rule",
+    "description": "Generates language bindings from WIT files using wit-bindgen tool. Creates bindings for various target languages from WebAssembly Interface Types.",
+    "attributes": {
+      "language": {
+        "type": "string",
+        "required": true,
+        "description": "Target language for binding generation",
+        "allowed_values": [
+          "rust",
+          "c",
+          "go",
+          "python",
+          "js"
+        ]
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "options": {
+        "type": "string_list",
+        "required": false,
+        "description": "Additional options for wit-bindgen"
+      },
+      "wit": {
+        "type": "label",
+        "required": true,
+        "description": "WIT library to generate bindings for"
+      },
+      "world": {
+        "type": "string",
+        "required": false,
+        "description": "Specific world to generate bindings for"
+      }
+    },
+    "examples": [
+      {
+        "title": "Rust bindings",
+        "description": "Generate Rust bindings from WIT",
+        "code": "wit_bindgen(\n    name = \"rust_bindings\",\n    wit = \":my_interfaces\",\n    language = \"rust\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wit:defs.bzl"
+  },
   "wit_deps_check": {
     "name": "wit_deps_check",
     "type": "rule",
@@ -145,7 +972,7 @@
         "code": "wit_deps_check(\n    name = \"check_deps\",\n    wit_file = \"consumer.wit\",\n)"
       }
     ],
-    "load_from": "@rules_wasm_component//wit:wit_deps_check.bzl"
+    "load_from": "@rules_wasm_component//wit:defs.bzl"
   },
   "wit_library": {
     "name": "wit_library",
@@ -192,9 +1019,196 @@
       {
         "title": "WIT library with dependencies",
         "description": "WIT library that imports from another package",
-        "code": "wit_library(\n    name = \"consumer_interfaces\",\n    package_name = \"consumer:app@1.0.0\", \n    srcs = [\"consumer.wit\"],\n    deps = [\"//external:lib_interfaces\"],\n)"
+        "code": "wit_library(\n    name = \"consumer_interfaces\",\n    package_name = \"consumer:app@1.0.0\",\n    srcs = [\"consumer.wit\"],\n    deps = [\"//external:lib_interfaces\"],\n)"
       }
     ],
     "load_from": "@rules_wasm_component//wit:defs.bzl"
+  },
+  "wit_markdown": {
+    "name": "wit_markdown",
+    "type": "rule",
+    "description": "Generates markdown documentation from WIT files. Creates human-readable documentation from WebAssembly Interface Types.",
+    "attributes": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "wit": {
+        "type": "label",
+        "required": true,
+        "description": "WIT library to generate documentation for"
+      }
+    },
+    "examples": [
+      {
+        "title": "Generate docs",
+        "description": "Create markdown documentation from WIT",
+        "code": "wit_markdown(\n    name = \"api_docs\",\n    wit = \":my_interfaces\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wit:defs.bzl"
+  },
+  "wkg_registry_config": {
+    "name": "wkg_registry_config",
+    "type": "rule",
+    "description": "Configures WebAssembly component registries for OCI distribution. Sets up authentication and registry endpoints for component publishing and retrieval.",
+    "attributes": {
+      "cache_dir": {
+        "type": "string",
+        "required": false,
+        "description": "Directory for caching components"
+      },
+      "default_registry": {
+        "type": "string",
+        "required": false,
+        "description": "Default registry to use"
+      },
+      "enable_mirror_fallback": {
+        "type": "bool",
+        "required": false,
+        "description": "Enable fallback to mirror registries"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "registries": {
+        "type": "string_list",
+        "required": true,
+        "description": "List of registry configurations"
+      }
+    },
+    "examples": [
+      {
+        "title": "Registry setup",
+        "description": "Configure multiple component registries",
+        "code": "wkg_registry_config(\n    name = \"production_registries\",\n    registries = [\n        \"github|ghcr.io|oci|env|GITHUB_TOKEN\",\n        \"docker|docker.io|oci|env|DOCKER_TOKEN\",\n    ],\n    default_registry = \"github\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wkg:defs.bzl"
+  },
+  "wrpc_bindgen": {
+    "name": "wrpc_bindgen",
+    "type": "rule",
+    "description": "Generates language bindings for wrpc (WebAssembly Component RPC) from WIT interfaces. Creates client and server stubs for remote component communication.",
+    "attributes": {
+      "language": {
+        "type": "string",
+        "required": false,
+        "default": "'rust'",
+        "description": "Target language for bindings",
+        "allowed_values": [
+          "rust",
+          "go"
+        ]
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "wit": {
+        "type": "label",
+        "required": true,
+        "description": "WIT file defining the interface"
+      },
+      "world": {
+        "type": "string",
+        "required": true,
+        "description": "WIT world to generate bindings for"
+      }
+    },
+    "examples": [
+      {
+        "title": "RPC bindings",
+        "description": "Generate Rust RPC bindings from WIT",
+        "code": "wrpc_bindgen(\n    name = \"api_bindings\",\n    wit = \"api.wit\",\n    world = \"api-world\",\n    language = \"rust\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wrpc:defs.bzl"
+  },
+  "wrpc_invoke": {
+    "name": "wrpc_invoke",
+    "type": "rule",
+    "description": "Invokes functions on remote WebAssembly components via wrpc. Creates executable scripts to call remote component functions.",
+    "attributes": {
+      "address": {
+        "type": "string",
+        "required": false,
+        "default": "'localhost:8080'",
+        "description": "Address of the remote component"
+      },
+      "function": {
+        "type": "string",
+        "required": true,
+        "description": "Function to invoke on remote component"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "transport": {
+        "type": "string",
+        "required": false,
+        "default": "'tcp'",
+        "description": "Transport protocol",
+        "allowed_values": [
+          "tcp",
+          "nats"
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Invoke function",
+        "description": "Invoke a function on remote component",
+        "code": "wrpc_invoke(\n    name = \"call_api\",\n    function = \"process-data\",\n    transport = \"tcp\",\n    address = \"localhost:8080\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wrpc:defs.bzl"
+  },
+  "wrpc_serve": {
+    "name": "wrpc_serve",
+    "type": "rule",
+    "description": "Serves a WebAssembly component via wrpc for remote procedure calls. Creates executable scripts to run components as RPC servers.",
+    "attributes": {
+      "address": {
+        "type": "string",
+        "required": false,
+        "default": "'0.0.0.0:8080'",
+        "description": "Address to bind server to"
+      },
+      "component": {
+        "type": "label",
+        "required": true,
+        "description": "WebAssembly component to serve"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "A unique name for this target"
+      },
+      "transport": {
+        "type": "string",
+        "required": false,
+        "default": "'tcp'",
+        "description": "Transport protocol",
+        "allowed_values": [
+          "tcp",
+          "nats"
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Serve component",
+        "description": "Serve a component as RPC server",
+        "code": "wrpc_serve(\n    name = \"api_server\",\n    component = \":my_component\",\n    transport = \"tcp\",\n    address = \"0.0.0.0:8080\",\n)"
+      }
+    ],
+    "load_from": "@rules_wasm_component//wrpc:defs.bzl"
   }
 }
