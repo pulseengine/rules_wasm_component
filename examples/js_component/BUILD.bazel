@@ -19,8 +19,8 @@ js_component(
         "src/utils.js",
     ],
     entry_point = "index.js",
-    package_json = "package.json",
     optimize = True,
+    package_json = "package.json",
     wit = "wit/hello.wit",
 )
 

@@ -29,7 +29,7 @@ Learn how to package WebAssembly components with additional files, configuration
 Multi-file packaging offers several strategies:
 
 - **Embedded Resources** - Files built directly into the component (recommended)
-- **OCI Image Layers** - Traditional container-style multi-layer packaging  
+- **OCI Image Layers** - Traditional container-style multi-layer packaging
 - **Bundle Archives** - Pre-packaged archives with component plus files
 - **Sidecar Artifacts** - Separate OCI artifacts for different file types
 
@@ -38,7 +38,7 @@ Multi-file packaging offers several strategies:
 | Approach | Best For | Complexity | Performance | Security |
 |----------|----------|------------|-------------|----------|
 | **Embedded Resources** | Config files, small assets | Low | Excellent | Simple |
-| **OCI Image Layers** | Large assets, dynamic files | Medium | Good | Complex |  
+| **OCI Image Layers** | Large assets, dynamic files | Medium | Good | Complex |
 | **Bundle Archives** | Related file collections | Medium | Good | Medium |
 | **Sidecar Artifacts** | Independent file lifecycles | High | Variable | Complex |
 
@@ -48,7 +48,7 @@ Multi-file packaging offers several strategies:
 
 **When to use embedded resources:**
 - **Configuration files** that ship with your component
-- **Templates and schemas** your component needs at runtime  
+- **Templates and schemas** your component needs at runtime
 - **Small static assets** like icons or default data
 - **Documentation** that should travel with the component
 - **Files under 1MB total** (keeps component size reasonable)
@@ -67,13 +67,13 @@ impl Guest for Component {
         // Parse the embedded configuration
         let config: Config = serde_json::from_str(CONFIG)
             .expect("Invalid embedded config");
-        
+
         // Use embedded template
         let response = TEMPLATE.replace("{{data}}", &input);
-        
+
         // Validate against embedded schema
         validate_response(&response, SCHEMA);
-        
+
         response
     }
 }
@@ -94,7 +94,7 @@ rust_wasm_component_bindgen(
     # Files are embedded via include_str!/include_bytes! in source
     data = [
         "config/production.json",
-        "schemas/api.json", 
+        "schemas/api.json",
         "templates/response.html",
     ],
 )
@@ -124,7 +124,7 @@ write_file(
 )
 
 rust_wasm_component_bindgen(
-    name = "configured_component", 
+    name = "configured_component",
     srcs = ["src/lib.rs"],
     wit = ":interfaces",
     data = [":production_config"],
@@ -175,7 +175,7 @@ genrule(
 )
 
 genrule(
-    name = "config_layer", 
+    name = "config_layer",
     srcs = [":production_configs"],
     outs = ["config.tar"],
     cmd = "tar -cf $@ -C $(dirname $(location :production_configs)) config/",
@@ -186,7 +186,7 @@ oci_image(
     name = "multi_layer_component",
     base = ":base_component_layer",
     tars = [
-        ":assets_layer", 
+        ":assets_layer",
         ":config_layer",
     ],
     env = {
@@ -207,17 +207,17 @@ impl Guest for Component {
         // Read configuration from layer
         let config_path = std::env::var("COMPONENT_CONFIG_PATH")
             .unwrap_or("/etc/component/config.json".to_string());
-        
+
         let config_content = fs::read_to_string(config_path)
             .expect("Failed to read configuration");
-        
+
         // Access assets from layer
         let assets_path = std::env::var("COMPONENT_ASSETS_PATH")
             .unwrap_or("/var/lib/component/assets".to_string());
-            
+
         let asset_files = fs::read_dir(assets_path)
             .expect("Failed to access assets directory");
-            
+
         "Component initialized with layered files".to_string()
     }
 }
@@ -255,7 +255,7 @@ pkg_tar(
     srcs = [
         ":my_component",
         "//config:production_files",
-        "//docs:api_documentation", 
+        "//docs:api_documentation",
         "//schemas:validation_schemas",
     ],
     package_dir = "/component",
@@ -286,12 +286,12 @@ impl Guest for Component {
         // Extract bundle at runtime
         let cursor = Cursor::new(BUNDLE_DATA);
         let mut archive = Archive::new(cursor);
-        
+
         // Process files from bundle
         for entry in archive.entries().unwrap() {
             let mut entry = entry.unwrap();
             let path = entry.path().unwrap();
-            
+
             match path.to_str() {
                 Some("config/app.json") => {
                     let mut config_content = String::new();
@@ -304,7 +304,7 @@ impl Guest for Component {
                 _ => {} // Skip other files
             }
         }
-        
+
         "Bundle extracted and processed".to_string()
     }
 }
@@ -338,7 +338,7 @@ impl Guest for Component {
 wasm_component_oci_image(
     name = "core_component",
     component = ":business_logic",
-    package_name = "core-service", 
+    package_name = "core-service",
     tag = "v1.2.0",
 )
 
@@ -355,10 +355,10 @@ oci_image(
     ],
 )
 
-# Assets sidecar  
+# Assets sidecar
 oci_image(
     name = "assets_sidecar",
-    base = "@distroless_base", 
+    base = "@distroless_base",
     files = {
         "/var/www/": "//assets:web_assets",
     },
@@ -383,7 +383,7 @@ oci_push(
 )
 
 oci_push(
-    name = "publish_assets", 
+    name = "publish_assets",
     image = ":assets_sidecar",
     repository = "registry.example.com/apps/core-service-assets",
     tag = "v1.2.0",
@@ -406,16 +406,16 @@ spec:
       repository: registry.example.com/apps/core-service
       tag: v1.2.0
       signature: sha256:abc123...
-      
-    - name: configuration  
+
+    - name: configuration
       type: config-files
       repository: registry.example.com/apps/core-service-config
       tag: v1.2.0
       signature: sha256:def456...
       mountPath: /etc/app/
-      
+
     - name: assets
-      type: static-files  
+      type: static-files
       repository: registry.example.com/apps/core-service-assets
       tag: v1.2.0
       signature: sha256:ghi789...
@@ -424,7 +424,7 @@ spec:
 
 **Benefits of sidecar artifacts:**
 - ✅ **Independent lifecycles** - Update files without touching code
-- ✅ **Team separation** - Different teams manage different artifacts  
+- ✅ **Team separation** - Different teams manage different artifacts
 - ✅ **Granular security** - Separate signatures for each artifact type
 - ✅ **Flexible composition** - Mix and match artifacts for different deployments
 
@@ -452,17 +452,17 @@ wasm_component_signed_oci_image(
 ```
 
 #### OCI Image Layers
-```python title="BUILD.bazel"  
+```python title="BUILD.bazel"
 # Dual signing: component signature + OCI manifest signature
 wasm_component_signed_oci_image(
     name = "signed_layered_component",
     component = ":base_component",
     additional_layers = [":config_layer", ":assets_layer"],
-    
+
     # Sign the WASM component
     sign_component = True,
     component_signing_keys = ":component_keys",
-    
+
     # Sign the complete OCI image (including layers)
     sign_oci_image = True,
     oci_signing_key = ":oci_keys",
@@ -474,7 +474,7 @@ wasm_component_signed_oci_image(
 # Each artifact signed independently
 wasm_component_signed_oci_image(
     name = "signed_core_component",
-    component = ":core_service", 
+    component = ":core_service",
     sign_component = True,
     component_signing_keys = ":component_keys",
 )
@@ -486,7 +486,7 @@ cosign_sign(
 )
 
 cosign_sign(
-    name = "signed_assets_sidecar", 
+    name = "signed_assets_sidecar",
     image = ":assets_sidecar",
     key = ":assets_signing_key",
 )
@@ -501,7 +501,7 @@ cosign_sign(
 # Verify component signature
 wasmsign2 verify component.wasm --public-key component.pub
 
-# Verify OCI image signatures  
+# Verify OCI image signatures
 cosign verify registry.example.com/apps/service:v1.0.0 --key cosign.pub
 
 # Verify sidecar signatures
@@ -557,7 +557,7 @@ genrule(
 ```python title="BUILD.bazel"
 # Phase 1: Embedded resources (minimal change)
 rust_wasm_component_bindgen(
-    name = "component_v1", 
+    name = "component_v1",
     srcs = ["src/lib.rs"],
     wit = ":interfaces",
     # Add embedded files gradually
@@ -568,7 +568,7 @@ rust_wasm_component_bindgen(
 rust_wasm_component_bindgen(
     name = "component_v2",
     srcs = ["src/lib.rs"],
-    wit = ":interfaces", 
+    wit = ":interfaces",
     data = [
         "config/basic.json",
         "templates/response.html",
@@ -589,7 +589,7 @@ wasm_component_oci_image(
 ### Choose the Right Approach
 
 1. **Start with embedded resources** for most use cases
-2. **Use OCI layers** only when files are large or update independently  
+2. **Use OCI layers** only when files are large or update independently
 3. **Consider bundle archives** for document collections
 4. **Use sidecar artifacts** only for complex multi-team scenarios
 
@@ -651,6 +651,6 @@ copy_file(
 ---
 
 **Next Steps:**
-- Try the [embedded resources example](../examples/multi-language#embedded-resources) 
+- Try the [embedded resources example](../examples/multi-language#embedded-resources)
 - Learn about [OCI signing](../security/oci-signing) for multi-layer packages
 - Explore [production deployment](../production/deployment-guide) patterns

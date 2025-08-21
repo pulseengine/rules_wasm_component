@@ -18,6 +18,7 @@ bazel run //examples/multi_file_packaging:embedded_service_signed
 ## 📦 Packaging Approaches
 
 ### 1. **Embedded Resources** (Recommended)
+
 - **Files**: Built directly into the component at compile time
 - **Access**: Via `include_str!()` and `include_bytes!()` macros
 - **Best for**: Configuration files, small templates, schemas under 1MB
@@ -31,6 +32,7 @@ const TEMPLATE: &str = include_str!("../templates/response.html");
 ```
 
 ### 2. **OCI Image Layers** (Advanced)
+
 - **Files**: Separate container layers accessed via WASI filesystem
 - **Access**: Via `std::fs` APIs with mounted paths
 - **Best for**: Large assets, shared files, independent updates
@@ -44,6 +46,7 @@ let template = std::fs::read_to_string("/etc/templates/response.html")?;
 ```
 
 ### 3. **Bundle Archives**
+
 - **Files**: Pre-packaged tar/zip archive with component
 - **Access**: Runtime extraction and parsing
 - **Best for**: Document collections, related file sets
@@ -57,6 +60,7 @@ let archive = Archive::new(Cursor::new(bundle_data));
 ```
 
 ### 4. **Sidecar Artifacts** (Complex)
+
 - **Files**: Separate OCI artifacts with coordinated deployment
 - **Access**: Service discovery, shared volumes, or APIs
 - **Best for**: Multi-team ownership, independent lifecycles
@@ -77,7 +81,7 @@ let config = fetch_from_sidecar(&config_endpoint).await?;
 # Embedded resources approach
 bazel build //examples/multi_file_packaging:embedded_service_signed
 
-# Multi-layer OCI approach  
+# Multi-layer OCI approach
 bazel build //examples/multi_file_packaging:layered_service_signed
 
 # Bundle archive approach
@@ -95,7 +99,7 @@ Each example produces different artifacts:
 bazel-bin/examples/multi_file_packaging/
 ├── embedded_service_signed_oci_image_oci.wasm          # Embedded: Single file
 ├── embedded_service_signed_oci_image_oci_metadata.json
-├── layered_service_signed_oci_image_oci.wasm           # Layered: Component + layers  
+├── layered_service_signed_oci_image_oci.wasm           # Layered: Component + layers
 ├── layered_service_signed_oci_image_oci_metadata.json
 ├── bundled_service_image_oci.wasm                      # Bundle: Archive artifact
 ├── bundled_service_image_oci_metadata.json
@@ -140,6 +144,7 @@ ls bazel-bin/examples/multi_file_packaging/
 ### Adding Files to Embedded Approach
 
 1. **Add file to BUILD.bazel**:
+
 ```python
 genrule(
     name = "my_config",
@@ -149,6 +154,7 @@ genrule(
 ```
 
 2. **Reference in component data**:
+
 ```python
 rust_wasm_component_bindgen(
     name = "my_component",
@@ -158,6 +164,7 @@ rust_wasm_component_bindgen(
 ```
 
 3. **Embed in Rust code**:
+
 ```rust
 const MY_CONFIG: &str = include_str!("../config/my_config.json");
 ```
@@ -165,6 +172,7 @@ const MY_CONFIG: &str = include_str!("../config/my_config.json");
 ### Adding Layers to OCI Approach
 
 1. **Create file layer**:
+
 ```python
 genrule(
     name = "assets_layer",
@@ -175,6 +183,7 @@ genrule(
 ```
 
 2. **Add to OCI image**:
+
 ```python
 wasm_component_signed_oci_image(
     name = "layered_component",

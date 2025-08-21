@@ -232,7 +232,7 @@ def rust_wasm_component(
         # Create a separate WASM library that uses base dependencies (not transitioned yet)
         # The transition will be applied to both this target and its dependencies together
         wasm_library_base_name = rust_library_name + "_wasm_base"
-        
+
         # For the base target, use dependencies that haven't been transitioned yet
         wasm_base_deps = []
         for dep in deps:
@@ -242,7 +242,7 @@ def rust_wasm_component(
             else:
                 # Regular dependency, use as-is
                 wasm_base_deps.append(dep)
-        
+
         rust_shared_library(
             name = wasm_library_base_name,
             srcs = all_srcs,

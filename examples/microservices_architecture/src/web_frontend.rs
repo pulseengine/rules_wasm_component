@@ -1,10 +1,12 @@
-// Web Frontend implementation for microservices applications  
+// Web Frontend implementation for microservices applications
 #[cfg(target_arch = "wasm32")]
 use web_frontend_bindings::exports::frontend::web::{
-    ui::{Guest as UiGuest, UserAction, UiState, UiEvent},
-    state_management::{Guest as StateGuest, CacheEntry, StateUpdate},
-    analytics::{Guest as AnalyticsGuest, PageView, UserEvent as AnalyticsEvent, PerformanceMetric},
-    pwa::{Guest as PwaGuest, PushNotification, SyncTask, OfflineCapability},
+    analytics::{
+        Guest as AnalyticsGuest, PageView, PerformanceMetric, UserEvent as AnalyticsEvent,
+    },
+    pwa::{Guest as PwaGuest, OfflineCapability, PushNotification, SyncTask},
+    state_management::{CacheEntry, Guest as StateGuest, StateUpdate},
+    ui::{Guest as UiGuest, UiEvent, UiState, UserAction},
 };
 
 struct WebFrontend;
@@ -12,9 +14,11 @@ struct WebFrontend;
 #[cfg(target_arch = "wasm32")]
 impl UiGuest for WebFrontend {
     fn handle_user_action(action: UserAction, state: UiState) -> UiState {
-        println!("Frontend: Handling user action '{}' on element '{}'", 
-                action.action_type, action.element_id);
-        
+        println!(
+            "Frontend: Handling user action '{}' on element '{}'",
+            action.action_type, action.element_id
+        );
+
         // Update state based on action
         UiState {
             current_page: match action.action_type.as_str() {
@@ -28,8 +32,10 @@ impl UiGuest for WebFrontend {
     }
 
     fn emit_ui_event(event: UiEvent) {
-        println!("Frontend: Emitting UI event '{}' on target '{}'", 
-                event.event_type, event.target);
+        println!(
+            "Frontend: Emitting UI event '{}' on target '{}'",
+            event.event_type, event.target
+        );
     }
 }
 
@@ -37,11 +43,17 @@ impl UiGuest for WebFrontend {
 impl StateGuest for WebFrontend {
     fn get_state(path: String) -> Option<String> {
         println!("Frontend: Getting state for path '{}'", path);
-        Some(format!("{{\"path\": \"{}\", \"value\": \"example\"}}", path))
+        Some(format!(
+            "{{\"path\": \"{}\", \"value\": \"example\"}}",
+            path
+        ))
     }
 
     fn set_state(update: StateUpdate) {
-        println!("Frontend: Setting state at '{}' to '{}'", update.path, update.value);
+        println!(
+            "Frontend: Setting state at '{}' to '{}'",
+            update.path, update.value
+        );
     }
 
     fn clear_state(path: String) {
@@ -82,8 +94,10 @@ impl AnalyticsGuest for WebFrontend {
     }
 
     fn track_performance(metric: PerformanceMetric) {
-        println!("Frontend: Tracking performance metric '{}': {} {}", 
-                metric.metric_name, metric.value, metric.unit);
+        println!(
+            "Frontend: Tracking performance metric '{}': {} {}",
+            metric.metric_name, metric.value, metric.unit
+        );
     }
 }
 
@@ -98,7 +112,10 @@ impl PwaGuest for WebFrontend {
     }
 
     fn configure_offline(config: OfflineCapability) {
-        println!("Frontend: Configuring offline mode with strategy '{}'", config.cache_strategy);
+        println!(
+            "Frontend: Configuring offline mode with strategy '{}'",
+            config.cache_strategy
+        );
     }
 
     fn check_for_updates() -> bool {

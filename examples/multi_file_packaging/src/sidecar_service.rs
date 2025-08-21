@@ -1,5 +1,5 @@
 //! Sidecar Artifacts Example
-//! 
+//!
 //! This example demonstrates a component designed to work with separate
 //! sidecar artifacts that provide configuration, assets, and other files
 //! through external coordination mechanisms.
@@ -18,10 +18,10 @@ impl Component {
         // - Mounted volumes from sidecar containers
         // - Shared memory or message queues
         // - Environment variables indicating sidecar presence
-        
+
         let config_endpoint = std::env::var("CONFIG_SIDECAR_ENDPOINT");
         let assets_endpoint = std::env::var("ASSETS_SIDECAR_ENDPOINT");
-        
+
         SidecarStatus {
             config_available: config_endpoint.is_ok(),
             config_endpoint: config_endpoint.unwrap_or("not-configured".to_string()),
@@ -30,11 +30,11 @@ impl Component {
             documentation_available: std::env::var("DOCS_SIDECAR_ENDPOINT").is_ok(),
         }
     }
-    
+
     /// Get configuration from config sidecar
     fn get_config_from_sidecar() -> Result<serde_json::Value, String> {
         let status = Self::check_sidecar_availability();
-        
+
         if !status.config_available {
             return Ok(serde_json::json!({
                 "environment": "standalone",
@@ -46,12 +46,12 @@ impl Component {
                 "sidecar_mode": false
             }));
         }
-        
+
         // In a real implementation, this would:
         // 1. Make HTTP request to config sidecar
         // 2. Read from shared volume
         // 3. Use inter-process communication
-        
+
         // Simulated config from sidecar
         Ok(serde_json::json!({
             "environment": "production",
@@ -67,18 +67,18 @@ impl Component {
             "config_source": "sidecar-artifact"
         }))
     }
-    
+
     /// Get template from assets sidecar
     fn get_template_from_sidecar(template_name: &str) -> Result<String, String> {
         let status = Self::check_sidecar_availability();
-        
+
         if !status.assets_available {
             return Ok(format!(
                 "<html><body><h1>Standalone Mode</h1><p>Template: {}</p><p>{{{{data}}}}</p></body></html>",
                 template_name
             ));
         }
-        
+
         // In a real implementation, this would fetch from assets sidecar
         Ok(r#"<!DOCTYPE html>
 <html>
@@ -121,35 +121,37 @@ struct SidecarStatus {
 
 #[cfg(target_arch = "wasm32")]
 impl Guest for Component {
-    fn process_request(input: String, options: web_service_component_bindings::RequestOptions) -> String {
+    fn process_request(
+        input: String,
+        options: web_service_component_bindings::RequestOptions,
+    ) -> String {
         let config = Self::get_config_from_sidecar()
             .unwrap_or_else(|_| serde_json::json!({"environment": "error"}));
-        
+
         let timestamp = if options.include_timestamp {
             format!("{}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC"))
         } else {
             "N/A".to_string()
         };
-        
+
         match options.format {
             web_service_component_bindings::FormatType::Html => {
                 let template_name = options.template_name.unwrap_or("response".to_string());
                 match Self::get_template_from_sidecar(&template_name) {
-                    Ok(template) => {
-                        template
-                            .replace("{{title}}", "Sidecar Service Response")
-                            .replace("{{status}}", "Success")
-                            .replace("{{data}}", &input)
-                            .replace("{{timestamp}}", &timestamp)
-                    },
+                    Ok(template) => template
+                        .replace("{{title}}", "Sidecar Service Response")
+                        .replace("{{status}}", "Success")
+                        .replace("{{data}}", &input)
+                        .replace("{{timestamp}}", &timestamp),
                     Err(e) => {
                         format!("<html><body><h1>Sidecar Error</h1><p>{}</p><p>Data: {}</p></body></html>", e, input)
                     }
                 }
-            },
+            }
             web_service_component_bindings::FormatType::Json => {
                 let sidecar_status = Self::check_sidecar_availability();
-                format!(r#"{{
+                format!(
+                    r#"{{
                     "status": "success",
                     "data": "{}",
                     "timestamp": "{}",
@@ -160,82 +162,94 @@ impl Guest for Component {
                         "assets_available": {},
                         "docs_available": {}
                     }}
-                }}"#, 
-                input, 
-                timestamp,
-                config["environment"].as_str().unwrap_or("unknown"),
-                sidecar_status.config_available,
-                sidecar_status.assets_available,
-                sidecar_status.documentation_available
+                }}"#,
+                    input,
+                    timestamp,
+                    config["environment"].as_str().unwrap_or("unknown"),
+                    sidecar_status.config_available,
+                    sidecar_status.assets_available,
+                    sidecar_status.documentation_available
                 )
-            },
+            }
             web_service_component_bindings::FormatType::Text => {
-                format!("Status: Success (Sidecar)\nData: {}\nTimestamp: {}\nSidecars Active: {}", 
-                       input, timestamp, 
-                       if Self::check_sidecar_availability().config_available { "Yes" } else { "No" })
+                format!(
+                    "Status: Success (Sidecar)\nData: {}\nTimestamp: {}\nSidecars Active: {}",
+                    input,
+                    timestamp,
+                    if Self::check_sidecar_availability().config_available {
+                        "Yes"
+                    } else {
+                        "No"
+                    }
+                )
             }
         }
     }
-    
+
     fn get_config() -> web_service_component_bindings::ServiceConfig {
-        let config = Self::get_config_from_sidecar()
-            .unwrap_or_else(|_| serde_json::json!({
+        let config = Self::get_config_from_sidecar().unwrap_or_else(|_| {
+            serde_json::json!({
                 "environment": "fallback",
                 "max_connections": 50,
                 "timeout_seconds": 15,
                 "features": {"fallback": true}
-            }));
-        
-        let features = config["features"].as_object()
+            })
+        });
+
+        let features = config["features"]
+            .as_object()
             .map(|obj| obj.keys().cloned().collect())
             .unwrap_or_else(|| vec!["standalone".to_string()]);
-        
+
         web_service_component_bindings::ServiceConfig {
-            environment: config["environment"].as_str().unwrap_or("unknown").to_string(),
+            environment: config["environment"]
+                .as_str()
+                .unwrap_or("unknown")
+                .to_string(),
             max_connections: config["max_connections"].as_u64().unwrap_or(100) as u32,
             timeout_seconds: config["timeout_seconds"].as_u64().unwrap_or(30) as u32,
             features,
         }
     }
-    
+
     fn validate_input(input: String) -> bool {
         // For sidecar approach, validation logic could come from config sidecar
         let config = Self::get_config_from_sidecar().unwrap_or_default();
-        
+
         // Check if validation is enabled in sidecar config
-        let validation_enabled = config["features"]["validation"]
-            .as_bool()
-            .unwrap_or(true);
-        
+        let validation_enabled = config["features"]["validation"].as_bool().unwrap_or(true);
+
         if !validation_enabled {
             return true;
         }
-        
+
         // Basic validation
         !input.trim().is_empty() && input.len() <= 10000
     }
-    
+
     fn render_template(template_name: String, data: String) -> String {
         match Self::get_template_from_sidecar(&template_name) {
-            Ok(template) => {
-                template
-                    .replace("{{title}}", &format!("Sidecar Template: {}", template_name))
-                    .replace("{{status}}", "Rendered")
-                    .replace("{{data}}", &data)
-                    .replace("{{timestamp}}", &format!("{}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")))
-            },
+            Ok(template) => template
+                .replace("{{title}}", &format!("Sidecar Template: {}", template_name))
+                .replace("{{status}}", "Rendered")
+                .replace("{{data}}", &data)
+                .replace(
+                    "{{timestamp}}",
+                    &format!("{}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")),
+                ),
             Err(e) => {
-                format!("<html><body><h1>Sidecar Template Error</h1><p>Template: {}</p><p>Error: {}</p><p>Data: {}</p></body></html>", 
+                format!("<html><body><h1>Sidecar Template Error</h1><p>Template: {}</p><p>Error: {}</p><p>Data: {}</p></body></html>",
                        template_name, e, data)
             }
         }
     }
-    
+
     fn health_check() -> String {
         let sidecar_status = Self::check_sidecar_availability();
         let config = Self::get_config_from_sidecar().unwrap_or_default();
-        
-        format!(r#"{{
+
+        format!(
+            r#"{{
             "status": "{}",
             "service": "sidecar-service",
             "architecture": "sidecar-pattern",
@@ -261,18 +275,22 @@ impl Guest for Component {
                 "deployment_manifest": "sidecar_deployment.yaml"
             }},
             "environment": "{}"
-        }}"#, 
-        if sidecar_status.config_available && sidecar_status.assets_available { "healthy" } else { "degraded" },
-        sidecar_status.config_available,
-        sidecar_status.config_endpoint,
-        sidecar_status.config_available,
-        sidecar_status.assets_available,
-        sidecar_status.assets_endpoint,
-        sidecar_status.assets_available,
-        sidecar_status.documentation_available,
-        std::env::var("SERVICE_DISCOVERY_MODE").unwrap_or("environment-variables".to_string()),
-        config["sidecar_mode"].as_bool().unwrap_or(false),
-        config["environment"].as_str().unwrap_or("unknown")
+        }}"#,
+            if sidecar_status.config_available && sidecar_status.assets_available {
+                "healthy"
+            } else {
+                "degraded"
+            },
+            sidecar_status.config_available,
+            sidecar_status.config_endpoint,
+            sidecar_status.config_available,
+            sidecar_status.assets_available,
+            sidecar_status.assets_endpoint,
+            sidecar_status.assets_available,
+            sidecar_status.documentation_available,
+            std::env::var("SERVICE_DISCOVERY_MODE").unwrap_or("environment-variables".to_string()),
+            config["sidecar_mode"].as_bool().unwrap_or(false),
+            config["environment"].as_str().unwrap_or("unknown")
         )
     }
 }
@@ -285,27 +303,50 @@ web_service_component_bindings::export!(Component with_types_in web_service_comp
 mod serde_json {
     pub struct Value;
     impl Value {
-        pub fn as_str(&self) -> Option<&str> { Some("mock") }
-        pub fn as_u64(&self) -> Option<u64> { Some(100) }
-        pub fn as_bool(&self) -> Option<bool> { Some(true) }
-        pub fn as_object(&self) -> Option<&std::collections::HashMap<String, Value>> { None }
-        pub fn get(&self, _key: &str) -> Option<&Value> { Some(self) }
+        pub fn as_str(&self) -> Option<&str> {
+            Some("mock")
+        }
+        pub fn as_u64(&self) -> Option<u64> {
+            Some(100)
+        }
+        pub fn as_bool(&self) -> Option<bool> {
+            Some(true)
+        }
+        pub fn as_object(&self) -> Option<&std::collections::HashMap<String, Value>> {
+            None
+        }
+        pub fn get(&self, _key: &str) -> Option<&Value> {
+            Some(self)
+        }
     }
     impl Default for Value {
-        fn default() -> Self { Value }
+        fn default() -> Self {
+            Value
+        }
     }
-    pub fn from_str<T>(_s: &str) -> Result<T, ()> where T: Default { Ok(T::default()) }
-    pub fn json(_val: serde_json::Value) -> serde_json::Value { serde_json::Value }
+    pub fn from_str<T>(_s: &str) -> Result<T, ()>
+    where
+        T: Default,
+    {
+        Ok(T::default())
+    }
+    pub fn json(_val: serde_json::Value) -> serde_json::Value {
+        serde_json::Value
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 mod chrono {
     pub struct DateTime;
     impl DateTime {
-        pub fn format(&self, _fmt: &str) -> String { "2024-01-01 12:00:00 UTC".to_string() }
+        pub fn format(&self, _fmt: &str) -> String {
+            "2024-01-01 12:00:00 UTC".to_string()
+        }
     }
     pub struct Utc;
     impl Utc {
-        pub fn now() -> DateTime { DateTime }
+        pub fn now() -> DateTime {
+            DateTime
+        }
     }
 }

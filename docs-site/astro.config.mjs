@@ -22,8 +22,6 @@ export default defineConfig({
 			description: 'Modern Bazel rules for building and composing WebAssembly components',
 			expressiveCode: {
 				themes: ['github-dark', 'github-light'],
-				// Map languages for better syntax highlighting
-				langs: ['python', 'rust', 'go', 'javascript', 'typescript', 'bash', 'yaml', 'json', 'dockerfile'],
 				// Use Python grammar for Starlark since Starlark syntax is a subset of Python
 				shiki: {
 					langAlias: {

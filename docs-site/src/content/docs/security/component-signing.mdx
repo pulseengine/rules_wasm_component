@@ -471,7 +471,7 @@ rust_wasm_component_bindgen(
 # Single signature covers component + all embedded files
 wasm_sign(
     name = "signed_component_with_embedded_files",
-    component = ":component_with_config", 
+    component = ":component_with_config",
     keys = ":production_keys",
     # Embedded files are automatically included in signature verification
 )
@@ -489,16 +489,16 @@ load("@rules_wasm_component//wkg:oci_signing.bzl", "wasm_component_signed_oci_im
 wasm_component_signed_oci_image(
     name = "secure_multi_layer_component",
     component = ":base_component",
-    
+
     # Layer 1: Component-level signing (protects WASM binary)
     sign_component = True,
     component_signing_keys = ":component_keys",
-    
+
     # Layer 2: OCI image signing (protects all layers + manifest)
-    sign_oci_image = True,  
+    sign_oci_image = True,
     oci_signing_key = ":oci_keys",
     oci_signing_method = "cosign",
-    
+
     # Additional file layers protected by OCI signature
     annotations = [
         "com.example.files.config=embedded",
@@ -524,15 +524,15 @@ wasm_sign(
 # Configuration artifact signature (separate key/team)
 cosign_sign(
     name = "signed_config_artifact",
-    image = ":config_oci_image", 
+    image = ":config_oci_image",
     key = ":config_team_key",
 )
 
-# Assets artifact signature (separate key/team)  
+# Assets artifact signature (separate key/team)
 cosign_sign(
     name = "signed_assets_artifact",
     image = ":assets_oci_image",
-    key = ":assets_team_key", 
+    key = ":assets_team_key",
 )
 ```
 
@@ -550,7 +550,7 @@ wasmsign2 verify component.wasm --public-key component.pub
 echo "Verifying configuration artifact..."
 cosign verify registry.io/my-org/service-config:v1.0.0 --key config.pub
 
-# Verify assets artifact  
+# Verify assets artifact
 echo "Verifying assets artifact..."
 cosign verify registry.io/my-org/service-assets:v1.0.0 --key assets.pub
 
@@ -619,7 +619,7 @@ cosign verify registry.io/my-org/service:v1.0.0 --key oci.pub
 if [ $? -eq 0 ]; then
     echo "✅ OCI image signature valid"
 else
-    echo "❌ OCI image signature invalid"  
+    echo "❌ OCI image signature invalid"
     exit 1
 fi
 
@@ -649,7 +649,7 @@ wasm_keygen(
 
 # Infrastructure team keys (for OCI signing)
 wasm_keygen(
-    name = "infrastructure_team_keys", 
+    name = "infrastructure_team_keys",
     openssh_format = True,
     comment = "Infrastructure/deployment team",
 )
