@@ -335,20 +335,12 @@ def rust_wasm_component_bindgen(
         # For now, providing compilation-compatible stubs
     )
 
-    # Create a separate WASM bindings library using guest wrapper
-    bindings_lib_wasm_base = bindings_lib + "_wasm_base"
+    # Create the WASM bindings library that will be transitioned together with the main component
     rust_library(
-        name = bindings_lib_wasm_base,
+        name = bindings_lib,
         srcs = [":" + wrapper_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        visibility = ["//visibility:private"],
-    )
-
-    # Create a WASM-transitioned version of the WASM bindings library
-    _wasm_rust_library(
-        name = bindings_lib,
-        target = ":" + bindings_lib_wasm_base,
         visibility = ["//visibility:private"],
     )
 

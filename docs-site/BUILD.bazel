@@ -7,6 +7,7 @@ This BUILD file demonstrates the same hermetic approach used for JavaScript comp
 """
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load(":docs_build.bzl", "docs_build")
 
 package(default_visibility = ["//visibility:public"])
@@ -205,19 +206,11 @@ test_suite(
     ],
 )
 
-# Production deployment bundle with full Astro site
-genrule(
+# Production deployment bundle with full Astro site - using Bazel Skylib copy_file for cross-platform compatibility
+copy_file(
     name = "deployment_bundle",
-    srcs = [
-        ":docs_site",
-        ":docs_validation",
-    ],
-    outs = ["docs_deployment.tar.gz"],
-    cmd = """
-    # The docs_site is already a tar.gz archive, so just copy it
-    cp $(location :docs_site) $@
-    """,
-    message = "Creating production documentation deployment bundle",
+    src = ":docs_site",
+    out = "docs_deployment.tar.gz",
 )
 
 # Fallback deployment (for testing without full toolchain)
@@ -229,9 +222,8 @@ genrule(
     ],
     outs = ["docs_fallback.tar.gz"],
     cmd = """
-    mkdir -p fallback_dist
-    cp $(location :placeholder_fallback) fallback_dist/index.html
-    tar -czf $@ fallback_dist/
+    # Create tar directly with transform to add directory prefix
+    tar -czf $@ --transform 's|^|fallback_dist/|' --transform 's|.*placeholder_fallback|fallback_dist/index.html|' $(location :placeholder_fallback)
     """,
     message = "Creating fallback documentation deployment",
 )

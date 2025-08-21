@@ -12,6 +12,7 @@ Each approach has different trade-offs for complexity, performance, and security
 """
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 # Bundle archive approach uses genrule instead of rules_pkg for simplicity
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
@@ -77,6 +78,20 @@ rust_wasm_component_bindgen(
     wit = ":simple_test_interfaces",
 )
 
+# Simple layered test component demonstrating file access from layers
+rust_wasm_component_bindgen(
+    name = "simple_layered_test_component",
+    srcs = ["src/simple_layered_test.rs"],
+    wit = ":simple_test_interfaces",
+)
+
+# Simple bundled test component demonstrating bundle extraction approach
+rust_wasm_component_bindgen(
+    name = "simple_bundled_test_component",
+    srcs = ["src/simple_bundled_test.rs"],
+    wit = ":simple_test_interfaces",
+)
+
 # Component with embedded resources
 rust_wasm_component_bindgen(
     name = "embedded_service_component",
@@ -120,86 +135,98 @@ rust_wasm_component_bindgen(
     wit = ":web_service_interfaces",
 )
 
-# Large asset files for separate layer
-genrule(
-    name = "large_assets",
-    outs = [
-        "assets/logo.png",
-        "assets/banner.jpg", 
-        "assets/styles.css",
-        "assets/app.js",
+# Large asset files for separate layer - using Bazel Skylib write_file for cross-platform compatibility
+write_file(
+    name = "logo_png",
+    out = "assets/logo.png",
+    content = ["PNG placeholder data"],
+)
+
+write_file(
+    name = "banner_jpg",
+    out = "assets/banner.jpg",
+    content = ["JPEG placeholder data"],
+)
+
+write_file(
+    name = "styles_css",
+    out = "assets/styles.css",
+    content = [
+        "/* Production styles */",
+        "body {",
+        "    font-family: 'Helvetica Neue', Arial, sans-serif;",
+        "    line-height: 1.6;",
+        "    color: #333;",
+        "    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);",
+        "}",
+        "",
+        ".container {",
+        "    max-width: 1200px;",
+        "    margin: 0 auto;",
+        "    padding: 20px;",
+        "    background: white;",
+        "    border-radius: 10px;",
+        "    box-shadow: 0 10px 30px rgba(0,0,0,0.1);",
+        "}",
+        "",
+        ".header {",
+        "    text-align: center;",
+        "    margin-bottom: 40px;",
+        "    padding: 20px;",
+        "    border-bottom: 2px solid #eee;",
+        "}",
     ],
-    cmd = """
-    mkdir -p assets
-    
-    # Create dummy image files (would be real assets in practice)
-    echo "PNG placeholder data" > assets/logo.png
-    echo "JPEG placeholder data" > assets/banner.jpg
-    
-    # CSS file
-    cat > assets/styles.css << 'EOF'
-/* Production styles */
-body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    line-height: 1.6;
-    color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+)
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
+write_file(
+    name = "app_js",
+    out = "assets/app.js",
+    content = [
+        "// Production JavaScript",
+        "class WebServiceApp {",
+        "    constructor() {",
+        "        this.apiUrl = '/api/v1';",
+        "        this.initialized = false;",
+        "    }",
+        "    ",
+        "    async initialize() {",
+        "        console.log('Initializing Web Service App...');",
+        "        await this.loadConfiguration();",
+        "        this.setupEventListeners();",
+        "        this.initialized = true;",
+        "    }",
+        "    ",
+        "    async loadConfiguration() {",
+        "        try {",
+        "            const response = await fetch(this.apiUrl + '/config');",
+        "            this.config = await response.json();",
+        "        } catch (error) {",
+        "            console.error('Failed to load configuration:', error);",
+        "        }",
+        "    }",
+        "    ",
+        "    setupEventListeners() {",
+        "        document.addEventListener('DOMContentLoaded', () => {",
+        "            console.log('DOM loaded, app ready');",
+        "        });",
+        "    }",
+        "}",
+        "",
+        "// Initialize app",
+        "const app = new WebServiceApp();",
+        "app.initialize();",
+    ],
+)
 
-.header {
-    text-align: center;
-    margin-bottom: 40px;
-    padding: 20px;
-    border-bottom: 2px solid #eee;
-}
-EOF
-    
-    # JavaScript file
-    cat > assets/app.js << 'EOF'
-// Production JavaScript
-class WebServiceApp {
-    constructor() {
-        this.apiUrl = '/api/v1';
-        this.initialized = false;
-    }
-    
-    async initialize() {
-        console.log('Initializing Web Service App...');
-        await this.loadConfiguration();
-        this.setupEventListeners();
-        this.initialized = true;
-    }
-    
-    async loadConfiguration() {
-        try {
-            const response = await fetch(this.apiUrl + '/config');
-            this.config = await response.json();
-        } catch (error) {
-            console.error('Failed to load configuration:', error);
-        }
-    }
-    
-    setupEventListeners() {
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM loaded, app ready');
-        });
-    }
-}
-
-// Initialize app
-const app = new WebServiceApp();
-app.initialize();
-EOF
-    """,
+# Group all large assets together
+filegroup(
+    name = "large_assets",
+    srcs = [
+        ":logo_png",
+        ":banner_jpg", 
+        ":styles_css",
+        ":app_js",
+    ],
 )
 
 # Multi-layer OCI component with signing
@@ -238,102 +265,112 @@ rust_wasm_component_bindgen(
     wit = ":web_service_interfaces",
 )
 
-# Documentation files for bundle
-genrule(
-    name = "service_documentation",
-    outs = [
-        "docs/README.md",
-        "docs/API.md",
-        "docs/DEPLOYMENT.md",
+# Documentation files for bundle - using Bazel Skylib write_file for cross-platform compatibility
+write_file(
+    name = "readme_md",
+    out = "docs/README.md",
+    content = [
+        "# Web Service Component",
+        "",
+        "This is a WebAssembly component that provides web service functionality",
+        "with embedded configuration, templates, and comprehensive documentation.",
+        "",
+        "## Features",
+        "",
+        "- RESTful API endpoints",
+        "- HTML template rendering",
+        "- JSON configuration management",
+        "- Comprehensive logging and metrics",
+        "",
+        "## Usage",
+        "",
+        "See API.md for detailed API documentation.",
+        "See DEPLOYMENT.md for deployment instructions.",
     ],
-    cmd = """
-    mkdir -p docs
-    
-    cat > docs/README.md << 'EOF'
-# Web Service Component
+)
 
-This is a WebAssembly component that provides web service functionality
-with embedded configuration, templates, and comprehensive documentation.
+write_file(
+    name = "api_md",
+    out = "docs/API.md",
+    content = [
+        "# API Documentation",
+        "",
+        "## Endpoints",
+        "",
+        "### POST /process",
+        "",
+        "Process a web request with the given input.",
+        "",
+        "**Request Body:**",
+        "```json",
+        "{",
+        '  "input": "string",',
+        '  "options": {',
+        '    "format": "html|json",',
+        '    "timestamp": true',
+        "  }",
+        "}",
+        "```",
+        "",
+        "**Response:**",
+        "- Content-Type: text/html or application/json",
+        "- Body: Processed response based on input and options",
+        "",
+        "## Configuration",
+        "",
+        "The service reads configuration from embedded production.json file.",
+        "Configuration includes connection limits, timeouts, and feature flags.",
+    ],
+)
 
-## Features
+write_file(
+    name = "deployment_md",
+    out = "docs/DEPLOYMENT.md",
+    content = [
+        "# Deployment Guide",
+        "",
+        "## Prerequisites",
+        "",
+        "- OCI registry access",
+        "- Component runtime (wasmtime, wasmer, etc.)",
+        "- Network access for external dependencies",
+        "",
+        "## Steps",
+        "",
+        "1. Pull component from registry:",
+        "   ```bash",
+        "   wkg oci pull registry.example.com/examples/bundled-service:v1.0.0",
+        "   ```",
+        "",
+        "2. Verify component signature:",
+        "   ```bash",
+        "   wasmsign2 verify bundled-service.wasm --public-key example.public",
+        "   ```",
+        "",
+        "3. Run component:",
+        "   ```bash",
+        "   wasmtime run bundled-service.wasm",
+        "   ```",
+        "",
+        "## Bundle Contents",
+        "",
+        "This component bundle includes:",
+        "- WebAssembly component binary",
+        "- Configuration files",
+        "- HTML templates",
+        "- API schemas",
+        "- Complete documentation",
+    ],
+)
 
-- RESTful API endpoints
-- HTML template rendering
-- JSON configuration management
-- Comprehensive logging and metrics
-
-## Usage
-
-See API.md for detailed API documentation.
-See DEPLOYMENT.md for deployment instructions.
-EOF
-
-    cat > docs/API.md << 'EOF'
-# API Documentation
-
-## Endpoints
-
-### POST /process
-
-Process a web request with the given input.
-
-**Request Body:**
-```json
-{
-  "input": "string",
-  "options": {
-    "format": "html|json",
-    "timestamp": true
-  }
-}
-```
-
-**Response:**
-- Content-Type: text/html or application/json
-- Body: Processed response based on input and options
-
-## Configuration
-
-The service reads configuration from embedded production.json file.
-Configuration includes connection limits, timeouts, and feature flags.
-EOF
-
-    cat > docs/DEPLOYMENT.md << 'EOF'
-# Deployment Guide
-
-## Prerequisites
-
-- OCI registry access
-- Component runtime (wasmtime, wasmer, etc.)
-- Network access for external dependencies
-
-## Steps
-
-1. Pull component from registry:
-   ```bash
-   wkg oci pull registry.example.com/examples/bundled-service:v1.0.0
-   ```
-
-2. Verify component signature:
-   ```bash
-   wasmsign2 verify bundled-service.wasm --public-key example.public
-   ```
-
-3. Run component:
-   ```bash
-   wasmtime run bundled-service.wasm
-   ```
-
-## Bundle Contents
-
-This component bundle includes:
-- WebAssembly component binary
-- Configuration files
-- HTML templates  
-- API schemas
-- Complete documentation
-EOF
-    """,
+# Group all documentation files together
+filegroup(
+    name = "service_documentation",
+    srcs = [
+        ":readme_md",
+        ":api_md",
+        ":deployment_md",
+    ],
 )
 
 # Create component bundle using genrule
@@ -348,13 +385,14 @@ genrule(
     ],
     outs = ["service_bundle.tar"],
     cmd = """
-    mkdir -p service
-    cp $(location :bundled_service_component) service/
-    cp $(location :production_config) service/
-    cp $(location :response_template) service/
-    cp $(location :api_schema) service/
-    cp $(locations :service_documentation) service/
-    tar -cf $@ service/
+    # Create tar archive directly without mkdir/cp - use tar's transform to add directory prefix
+    tar -cf $@ \
+        --transform 's|^|service/|' \
+        $(location :bundled_service_component) \
+        $(location :production_config) \
+        $(location :response_template) \
+        $(location :api_schema) \
+        $(locations :service_documentation)
     """,
 )
 

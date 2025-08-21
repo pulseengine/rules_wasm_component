@@ -8,7 +8,7 @@ load(":transitions.bzl", "wasm_transition")
 
 def _wasm_rust_shared_library_impl(ctx):
     """Implementation that forwards a rust_shared_library with WASM transition applied"""
-    target_info = ctx.attr.target[0]
+    target_info = ctx.attr.target
 
     # Forward DefaultInfo and RustInfo
     providers = [target_info[DefaultInfo]]
@@ -21,9 +21,9 @@ def _wasm_rust_shared_library_impl(ctx):
 
 _wasm_rust_shared_library = rule(
     implementation = _wasm_rust_shared_library_impl,
+    cfg = wasm_transition,
     attrs = {
         "target": attr.label(
-            cfg = wasm_transition,
             doc = "rust_shared_library target to build for WASM",
         ),
         "_allowlist_function_transition": attr.label(
