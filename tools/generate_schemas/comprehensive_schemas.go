@@ -178,6 +178,22 @@ func generateComprehensiveSchemas() map[string]RuleSchema {
 )`},
 			},
 		},
+		"go_wasm_component_test": {
+			Name:        "go_wasm_component_test",
+			Type:        "rule",
+			Description: "Tests a Go WebAssembly component built with TinyGo. Performs comprehensive validation including component format verification, TinyGo-specific pattern checks, and WASI Preview 2 compatibility testing.",
+			LoadFrom:    "@rules_wasm_component//go:defs.bzl",
+			Attributes: map[string]Attribute{
+				"name":      {"string", true, nil, "A unique name for this target", nil},
+				"component": {"label", true, nil, "Go WASM component to test", nil},
+			},
+			Examples: []Example{
+				{"Component testing", "Test a TinyGo WebAssembly component", `go_wasm_component_test(
+    name = "calculator_component_test",
+    component = ":calculator_component",
+)`},
+			},
+		},
 		"go_wit_bindgen": {
 			Name:        "go_wit_bindgen",
 			Type:        "rule",
@@ -385,6 +401,47 @@ go_wasm_component(
         "ghcr.io/org/backend:v1.0.0": "backend",
     },
     composition_file = "app.wac",
+)`},
+			},
+		},
+		"wac_bundle": {
+			Name:        "wac_bundle",
+			Type:        "rule",
+			Description: "Bundle WASM components without composition, suitable for WASI components. Collects multiple components into a single bundle directory without creating a composed component.",
+			LoadFrom:    "@rules_wasm_component//wac:defs.bzl",
+			Attributes: map[string]Attribute{
+				"name":       {"string", true, nil, "A unique name for this target", nil},
+				"components": {"label_keyed_string_dict", true, nil, "Map of component targets to their names in the bundle", nil},
+			},
+			Examples: []Example{
+				{"Component bundle", "Bundle multiple WASI components", `wac_bundle(
+    name = "service_bundle",
+    components = {
+        ":auth_service": "auth",
+        ":data_service": "data",
+        ":api_service": "api",
+    },
+)`},
+			},
+		},
+		"wac_plug": {
+			Name:        "wac_plug",
+			Type:        "rule",
+			Description: "Plug component exports into component imports using WAC. Automatically connects component exports to imports through WAC's plug functionality.",
+			LoadFrom:    "@rules_wasm_component//wac:defs.bzl",
+			Attributes: map[string]Attribute{
+				"name":   {"string", true, nil, "A unique name for this target", nil},
+				"socket": {"label", true, nil, "The socket component that imports functions", nil},
+				"plugs":  {"label_list", true, nil, "The plug components that export functions", nil},
+			},
+			Examples: []Example{
+				{"Component plugging", "Connect exports to imports automatically", `wac_plug(
+    name = "connected_app",
+    socket = ":main_component",
+    plugs = [
+        ":auth_plugin",
+        ":storage_plugin",
+    ],
 )`},
 			},
 		},

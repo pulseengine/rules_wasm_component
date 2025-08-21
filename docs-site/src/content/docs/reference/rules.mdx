@@ -227,13 +227,6 @@ rust_wasm_component(
 
 Builds a Rust WebAssembly component with WIT binding generation. Compiles Rust source code into a WASM component and generates language bindings from WIT interfaces.
 
-**Generated Targets:**
-- `{name}_bindings_host`: Native platform rust_library for native applications (e.g., test runners, benchmarks)
-- `{name}_bindings`: Guest component rust_library for WebAssembly components
-- `{name}`: The final guest component
-
-> **📖 Deep Dive:** For detailed guidance on when to use native vs guest bindings, see [Native vs Guest Bindings Guide](/guides/host-vs-wasm-bindings/).
-
 **Load from:**
 ```python
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
@@ -275,27 +268,6 @@ rust_wasm_component_bindgen(
     profiles = ["debug", "release"],
 )
 ```
-
-#### Native applications using component bindings
-
-When building native applications that need to use component bindings (e.g., for testing or benchmarking), use the `*_bindings_host` target:
-
-```python
-rust_binary(
-    name = "component_test_runner",
-    srcs = ["tests/runner.rs"],
-    deps = [":my_component_bindings_host"],  # Native bindings for native app
-)
-
-# The component implementation uses guest bindings automatically
-rust_wasm_component_bindgen(
-    name = "my_component",
-    srcs = ["src/lib.rs"],  # Uses my_component_bindings (guest platform)
-    wit = ":my_interfaces",
-)
-```
-
-> **📖 Complete Guide:** See [Native vs Guest Bindings](/guides/host-vs-wasm-bindings/) for detailed examples and use cases.
 
 ### rust_wasm_component_test
 
