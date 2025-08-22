@@ -2,12 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-wit_bindgen::generate!({
-    world: "user-service"
-});
+// Use the generated bindings from rust_wasm_component_bindgen
+use user_service_bindings::exports::user::service::user_service::Guest;
 
 // Re-export the generated WIT types
-pub use exports::example::user_service::user_service::*;
+pub use user_service_bindings::exports::user::service::user_service::*;
 
 /// Rust User Service Component
 ///
@@ -488,4 +487,4 @@ impl GuestUserService for UserServiceImpl {
 }
 
 // Export the component
-export!(UserService with_types_in UserService);
+user_service_bindings::export!(UserService with_types_in user_service_bindings);
