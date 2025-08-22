@@ -340,7 +340,7 @@ tinygo_toolchain_repository = repository_rule(
             default = "0.38.0",
         ),
     },
-    environ = ["PATH"],
+    # Remove environ to prevent system PATH inheritance
 )
 
 def _tinygo_toolchain_impl(ctx):

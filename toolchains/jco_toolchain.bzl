@@ -173,7 +173,7 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
     # Set up environment so npm can find node binary
     node_dir = str(node_binary.dirname)
     npm_env = {
-        "PATH": node_dir + ":" + repository_ctx.os.environ.get("PATH", ""),
+        "PATH": node_dir,  # Only hermetic node directory, no system PATH inheritance
         "NODE_PATH": "",  # Clear any existing NODE_PATH
     }
 
