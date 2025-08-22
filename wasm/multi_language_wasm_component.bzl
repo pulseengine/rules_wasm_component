@@ -196,8 +196,8 @@ def _create_simple_composition(ctx, wasm_tools, components, manifest, output):
 
     if len(components) == 1:
         # Single component - just copy it
-        ctx.actions.run_shell(
-            command = "cp \"$1\" \"$2\"",
+        ctx.actions.run(
+            executable = "cp",
             arguments = [components[0].path, output.path],
             inputs = components + [manifest],
             outputs = [output],

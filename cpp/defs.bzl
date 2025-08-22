@@ -425,10 +425,26 @@ def _cc_component_library_impl(ctx):
     # Collect dependency headers
     dep_headers = []
     for dep in ctx.attr.deps:
+        # Check DefaultInfo first for direct file access (cc_component_library outputs)
         if DefaultInfo in dep:
             for file in dep[DefaultInfo].files.to_list():
                 if file.extension in ["h", "hpp", "hh", "hxx"]:
                     dep_headers.append(file)
+
+        # For CcInfo dependencies (external libraries), don't copy headers to workspace
+        # since they already provide proper include paths. Only copy headers from
+        # DefaultInfo (our own cc_component_library targets that need cross-package staging)
+        # if CcInfo in dep:
+        #     cc_info = dep[CcInfo]
+        #     dep_headers.extend(cc_info.compilation_context.headers.to_list())
+
+    # Set up workspace with proper header staging (CRITICAL FIX for issue #38)
+    work_dir = setup_cpp_workspace_action(
+        ctx,
+        sources = ctx.files.srcs,
+        headers = ctx.files.hdrs,
+        dep_headers = dep_headers,
+    )
 
     # Compile source files to object files
     object_files = []
@@ -479,9 +495,8 @@ def _cc_component_library_impl(ctx):
             if ctx.attr.cxx_std:
                 compile_args.add("-std=" + ctx.attr.cxx_std)
 
-        # Include directories
-        for hdr in ctx.files.hdrs:
-            compile_args.add("-I" + hdr.dirname)
+        # Include directories - CRITICAL FIX: Use workspace directory for proper header staging
+        compile_args.add("-I" + work_dir.path)  # Workspace with staged headers
 
         # Add C++ standard library paths for wasm32-wasip2 target
         if ctx.attr.language == "cpp":
@@ -504,6 +519,19 @@ def _cc_component_library_impl(ctx):
         # Add dependency header directories
         for dep_hdr in dep_headers:
             compile_args.add("-I" + dep_hdr.dirname)
+        
+        # Add include paths from CcInfo dependencies (external libraries)
+        for dep in ctx.attr.deps:
+            if CcInfo in dep:
+                cc_info = dep[CcInfo]
+                # Add both direct includes and system includes
+                for include_path in cc_info.compilation_context.includes.to_list():
+                    compile_args.add("-I" + include_path)
+                for include_path in cc_info.compilation_context.system_includes.to_list():
+                    compile_args.add("-I" + include_path)
+                # Also add quote includes if available
+                for include_path in cc_info.compilation_context.quote_includes.to_list():
+                    compile_args.add("-I" + include_path)
 
         # Defines
         for define in ctx.attr.defines:
@@ -513,14 +541,21 @@ def _cc_component_library_impl(ctx):
         for opt in ctx.attr.copts:
             compile_args.add(opt)
 
-        # Output and input
+        # Output and input - CRITICAL FIX: Use source file from workspace
         compile_args.add("-o", obj_file.path)
-        compile_args.add(src.path)
+        compile_args.add(work_dir.path + "/" + src.basename)
+
+        # Add external dependency headers to inputs
+        all_inputs = [work_dir] + sysroot_files.files.to_list()
+        for dep in ctx.attr.deps:
+            if CcInfo in dep:
+                cc_info = dep[CcInfo]
+                all_inputs.extend(cc_info.compilation_context.headers.to_list())
 
         ctx.actions.run(
             executable = clang,
             arguments = [compile_args],
-            inputs = [src] + sysroot_files.files.to_list() + ctx.files.hdrs + dep_headers,
+            inputs = all_inputs,
             outputs = [obj_file],
             mnemonic = "CompileCppObject",
             progress_message = "Compiling {} for component library".format(src.basename),

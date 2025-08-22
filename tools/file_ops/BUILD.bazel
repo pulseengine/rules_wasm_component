@@ -1,0 +1,22 @@
+"""Hermetic file operations tool for Bazel rules_wasm_component"""
+
+load("@rules_go//go:def.bzl", "go_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Hermetic file operations binary
+# Following @aspect_bazel_lib pattern for cross-platform file operations
+go_binary(
+    name = "file_ops",
+    srcs = ["main.go"],
+    # Let Go build for the current platform (hermetic via rules_go toolchain)
+    pure = "on",
+    visibility = ["//visibility:public"],
+)
+
+# Export for easy access in toolchains
+alias(
+    name = "file_ops_binary",
+    actual = ":file_ops",
+    visibility = ["//visibility:public"],
+)
