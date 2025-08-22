@@ -5,7 +5,7 @@ This demonstrates a component that exports custom interfaces for other
 components to use - perfect for the high-level rust_wasm_component_bindgen rule.
 */
 
-use processor_component_bindings::exports::example::processor::file_ops::Guest;
+use file_processor_component_bindings::exports::example::processor::file_ops::Guest;
 
 /// Component that exports file processing functions for other components
 struct FileProcessor;
@@ -35,7 +35,7 @@ impl Guest for FileProcessor {
 }
 
 // Export the component for other components to use
-processor_component_bindings::export!(FileProcessor with_types_in processor_component_bindings);
+file_processor_component_bindings::export!(FileProcessor with_types_in file_processor_component_bindings);
 
 /*
 This component demonstrates rust_wasm_component_bindgen usage:
