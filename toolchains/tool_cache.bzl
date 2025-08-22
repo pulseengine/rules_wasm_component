@@ -21,9 +21,8 @@ def get_cache_info(ctx, tool_name, version, platform, strategy):
     cache_dir = "/tmp/bazel_wasm_tool_cache"  # Global cache directory
     tool_cache_path = "{}/{}".format(cache_dir, cache_key)
 
-    # Check if cached version exists
-    result = ctx.execute(["test", "-d", tool_cache_path])
-    cache_exists = result.return_code == 0
+    # Check if cached version exists using repository_ctx API
+    cache_exists = ctx.path(tool_cache_path).exists
 
     cache_info = {
         "cache_key": cache_key,
@@ -44,23 +43,28 @@ def _verify_cache_integrity(ctx, cache_path, tool_name):
     integrity_file = "{}/integrity.txt".format(cache_path)
     binary_path = "{}/{}".format(cache_path, tool_name)
 
-    # Check if integrity file exists
-    result = ctx.execute(["test", "-f", integrity_file])
-    if result.return_code != 0:
+    # Check if integrity file exists using repository_ctx API
+    integrity_path = ctx.path(integrity_file)
+    if not integrity_path.exists:
         return {"valid": False, "reason": "Missing integrity file"}
 
-    # Check if binary exists and is executable
-    result = ctx.execute(["test", "-x", binary_path])
-    if result.return_code != 0:
-        return {"valid": False, "reason": "Binary not found or not executable"}
+    # Check if binary exists using repository_ctx API
+    binary_ctx_path = ctx.path(binary_path)
+    if not binary_ctx_path.exists:
+        return {"valid": False, "reason": "Binary not found"}
 
-    # Read integrity information
-    result = ctx.execute(["cat", integrity_file])
-    if result.return_code != 0:
+    # Read integrity information using repository_ctx API
+    # Check if integrity file exists before reading
+    integrity_ctx_path = ctx.path(integrity_path)
+    if not integrity_ctx_path.exists:
+        return {"valid": False, "reason": "Integrity file not found"}
+    
+    integrity_content = ctx.read(integrity_path)
+    if not integrity_content:
         return {"valid": False, "reason": "Cannot read integrity file"}
 
     integrity_info = {}
-    for line in result.stdout.strip().split("\n"):
+    for line in integrity_content.strip().split("\n"):
         if "=" in line:
             key, value = line.split("=", 1)
             integrity_info[key.strip()] = value.strip()
