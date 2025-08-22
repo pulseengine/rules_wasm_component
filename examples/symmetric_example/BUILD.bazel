@@ -18,8 +18,8 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "traditional_component",
     srcs = ["src/traditional.rs"],
-    wit = ":symmetric_interfaces",
     symmetric = False,  # Traditional approach
+    wit = ":symmetric_interfaces",
 )
 
 # Symmetric approach: same source code for both native and WASM
@@ -36,8 +36,8 @@ rust_wasm_component_bindgen(
 rust_binary(
     name = "traditional_host",
     srcs = ["src/traditional_host.rs"],
-    deps = [":traditional_component_bindings_host"],
     edition = "2021",
+    deps = [":traditional_component_bindings_host"],
 )
 
 # Example native binary that can use the same symmetric component code

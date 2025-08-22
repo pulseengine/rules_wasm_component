@@ -179,30 +179,78 @@ pub mod wit_bindgen {
         content = wrapper_content + "\n",
     )
 
-    # Concatenate files with careful filtering to avoid symbol conflicts
-    filter_cmd = """
-        cat {wrapper} > {output}
-        # Filter out conflicting export statements based on mode
-        if grep -q "native-guest" {wrapper}; then
-            # For native-guest mode, filter out the generated export pub use that conflicts with our macro
-            grep -v '^pub(crate) use __export_.*_impl as export;$' {bindgen} >> {output} || cat {bindgen} >> {output}
-        else
-            # For guest mode, include all bindings
-            cat {bindgen} >> {output}
-        fi
-    """.format(
-        wrapper = temp_wrapper.path,
-        output = out_file.path,
-        bindgen = ctx.file.bindgen.path,
-    )
+    # Create filtered content based on mode
+    if ctx.attr.mode == "native-guest":
+        # Read bindgen file and filter out conflicting exports
+        filter_script = ctx.actions.declare_file(ctx.label.name + "_filter.py")
+        filter_content = """#!/usr/bin/env python3
+import sys
 
-    ctx.actions.run_shell(
-        command = filter_cmd,
-        inputs = [temp_wrapper, ctx.file.bindgen],
-        outputs = [out_file],
-        mnemonic = "ConcatWitWrapper",
-        progress_message = "Concatenating wrapper for {}".format(ctx.label),
-    )
+# Read wrapper content
+with open(sys.argv[1], 'r') as f:
+    wrapper_content = f.read()
+
+# Read bindgen content
+with open(sys.argv[2], 'r') as f:
+    bindgen_content = f.read()
+
+# Filter out conflicting export statements for native-guest mode
+filtered_lines = []
+for line in bindgen_content.split('\\n'):
+    # Skip lines that start with pub(crate) use __export_ and end with _impl as export;
+    if not (line.strip().startswith('pub(crate) use __export_') and line.strip().endswith('_impl as export;')):
+        filtered_lines.append(line)
+
+# Write combined content
+with open(sys.argv[3], 'w') as f:
+    f.write(wrapper_content)
+    f.write('\\n'.join(filtered_lines))
+"""
+        ctx.actions.write(
+            output = filter_script,
+            content = filter_content,
+            is_executable = True,
+        )
+
+        ctx.actions.run(
+            executable = filter_script,
+            arguments = [temp_wrapper.path, ctx.file.bindgen.path, out_file.path],
+            inputs = [temp_wrapper, ctx.file.bindgen, filter_script],
+            outputs = [out_file],
+            mnemonic = "FilterWitWrapper",
+            progress_message = "Filtering wrapper for {}".format(ctx.label),
+        )
+    else:
+        # For guest mode, simple concatenation
+        concat_script = ctx.actions.declare_file(ctx.label.name + "_concat.py")
+        concat_content = """#!/usr/bin/env python3
+import sys
+
+# Read and concatenate files
+with open(sys.argv[1], 'r') as f:
+    wrapper_content = f.read()
+
+with open(sys.argv[2], 'r') as f:
+    bindgen_content = f.read()
+
+with open(sys.argv[3], 'w') as f:
+    f.write(wrapper_content)
+    f.write(bindgen_content)
+"""
+        ctx.actions.write(
+            output = concat_script,
+            content = concat_content,
+            is_executable = True,
+        )
+
+        ctx.actions.run(
+            executable = concat_script,
+            arguments = [temp_wrapper.path, ctx.file.bindgen.path, out_file.path],
+            inputs = [temp_wrapper, ctx.file.bindgen, concat_script],
+            outputs = [out_file],
+            mnemonic = "ConcatWitWrapper",
+            progress_message = "Concatenating wrapper for {}".format(ctx.label),
+        )
 
     return [DefaultInfo(files = depset([out_file]))]
 
@@ -322,7 +370,7 @@ def rust_wasm_component_bindgen(
             name = "host_app",
             deps = [":my_component_bindings_host"],  # Use host bindings
         )
-        
+
         # Symmetric example (same source code for native and WASM):
         rust_wasm_component_bindgen(
             name = "my_symmetric_component",
@@ -337,7 +385,7 @@ def rust_wasm_component_bindgen(
     if symmetric:
         # Symmetric mode: Generate symmetric bindings for both native and WASM from same source
         bindgen_symmetric_target = name + "_wit_bindgen_symmetric"
-        
+
         symmetric_wit_bindgen(
             name = bindgen_symmetric_target,
             wit = wit,
@@ -345,7 +393,7 @@ def rust_wasm_component_bindgen(
             invert_direction = invert_direction,
             visibility = ["//visibility:private"],
         )
-        
+
         # For symmetric mode, we'll create feature-based compilation
         bindgen_guest_target = bindgen_symmetric_target
         bindgen_native_guest_target = bindgen_symmetric_target

@@ -49,6 +49,7 @@ def _symmetric_wit_bindgen_impl(ctx):
         cmd_args.extend(["--symmetric"])
         if ctx.attr.invert_direction:
             cmd_args.extend(["--invert-direction"])
+
         # Use symmetric runtime path
         cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
 
@@ -161,7 +162,7 @@ symmetric_wit_bindgen = rule(
     Example:
         symmetric_wit_bindgen(
             name = "my_symmetric_bindings",
-            wit = ":my_interfaces", 
+            wit = ":my_interfaces",
             language = "rust",
         )
     """,

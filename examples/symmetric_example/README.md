@@ -5,12 +5,14 @@ This example demonstrates the difference between traditional WIT bindings and sy
 ## Overview
 
 ### Traditional Approach (Official wit-bindgen)
+
 - **Guest bindings**: Used by WASM component implementations
 - **Native-guest bindings**: Used by host applications to call WASM components
 - **Separate code paths**: Different APIs for component and host sides
 - **Runtime dependency**: Requires wasmtime or similar for component execution
 
 ### Symmetric Approach (cpetig's fork)
+
 - **Unified bindings**: Same source code runs natively and as WASM component
 - **Feature-based compilation**: Use cargo features to switch between modes
 - **Direct execution**: Native mode runs without WASM overhead
@@ -39,29 +41,33 @@ symmetric_example/
 │   └── symmetric.wit          # WIT interface definition
 └── src/
     ├── symmetric.rs           # Symmetric component implementation
-    ├── traditional.rs         # Traditional component implementation  
+    ├── traditional.rs         # Traditional component implementation
     ├── symmetric_host.rs      # Host using symmetric bindings
     └── traditional_host.rs    # Host using traditional bindings
 ```
 
 ## Building and Running
 
-### Build all examples:
+### Build all examples
+
 ```bash
 bazel build //examples/symmetric_example:all
 ```
 
-### Run traditional host:
+### Run traditional host
+
 ```bash
 bazel run //examples/symmetric_example:traditional_host
 ```
 
-### Run symmetric host:
+### Run symmetric host
+
 ```bash
 bazel run //examples/symmetric_example:symmetric_host
 ```
 
-### Test compilation:
+### Test compilation
+
 ```bash
 bazel test //examples/symmetric_example:test_symmetric_compilation
 ```
@@ -71,6 +77,7 @@ bazel test //examples/symmetric_example:test_symmetric_compilation
 ### Component Implementation
 
 **Traditional (`traditional.rs`):**
+
 ```rust
 #[cfg(target_arch = "wasm32")]
 use traditional_component_bindings::exports::...;
@@ -83,6 +90,7 @@ traditional_component_bindings::export!(Calculator with_types_in traditional_com
 ```
 
 **Symmetric (`symmetric.rs`):**
+
 ```rust
 use symmetric_component_bindings::exports::...;
 
@@ -100,24 +108,28 @@ pub fn main() {
 ### Host Usage
 
 **Traditional:**
+
 - Requires wasmtime runtime
 - Component loading and instantiation
 - Indirect function calls through runtime
 
 **Symmetric:**
+
 - Direct function calls
 - No runtime overhead
 - Same API as component implementation
 
 ## Use Cases
 
-### When to use Traditional:
+### When to use Traditional
+
 - Need strong isolation between host and component
 - Multiple component instances
 - Dynamic component loading
 - Security boundaries important
 
-### When to use Symmetric:
+### When to use Symmetric
+
 - Performance-critical applications
 - Unified development workflow
 - Testing component logic without WASM overhead
