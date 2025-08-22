@@ -38,6 +38,10 @@ build --jobs=auto
 build --local_resources=memory=HOST_RAM*.8
 build --local_resources=cpu=HOST_CPUS*.8
 
+# Environment isolation for hermetic builds
+build --action_env=WASI_SDK_PATH=
+build --incompatible_strict_action_env
+
 # Clippy configuration - only enable with --config=clippy
 build:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
 build:clippy --output_groups=+clippy_checks
