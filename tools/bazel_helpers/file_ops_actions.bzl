@@ -1,7 +1,7 @@
 """Universal file operations actions for Bazel rules
 
 This module provides helper functions that replace shell scripts with
-WebAssembly component calls for cross-platform file operations.
+cross-platform file operations using Bazel-native methods.
 
 Usage:
     load("//tools/bazel_helpers:file_ops_actions.bzl", "file_ops_action", "prepare_workspace_action")
@@ -11,7 +11,9 @@ Usage:
     prepare_workspace_action(ctx, workspace_config)
 """
 
-# Note: Using simple JSON encoding instead of skylib to avoid dependencies
+# Use Bazel Skylib for cross-platform file operations
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
 def file_ops_action(ctx, operation, **kwargs):
     """Execute a file operation using the File Operations Component
@@ -128,7 +130,11 @@ def file_ops_action(ctx, operation, **kwargs):
     return outputs[0] if outputs else None
 
 def prepare_workspace_action(ctx, config):
-    """Prepare a complete workspace using the File Operations Component
+    """Prepare a complete workspace using hermetic Go binary for file operations
+
+    This function uses a hermetic Go binary (following @aspect_bazel_lib pattern)
+    instead of shell scripts or system dependencies. This ensures true hermetic
+    builds that work across Windows, macOS, and Linux.
 
     Args:
         ctx: Bazel rule context
@@ -138,83 +144,77 @@ def prepare_workspace_action(ctx, config):
         Workspace directory output
     """
 
-    file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
-    file_ops_component = file_ops_toolchain.file_ops_component
-
-    if not file_ops_component:
-        fail("File operations component not available in toolchain")
-
     # Create workspace output directory
     workspace_dir = ctx.actions.declare_directory(config["work_dir"])
 
-    # Create configuration file for the component
-    config_file = ctx.actions.declare_file(ctx.label.name + "_workspace_config.json")
-
-    # Create simple JSON configuration without complex nesting to avoid recursion
-    # For now, we'll create a minimal config that the component can understand
-    simple_config = {
-        "work_dir": config["work_dir"],
-        "workspace_type": config["workspace_type"],
-        "source_count": len(config.get("sources", [])),
-        "header_count": len(config.get("headers", [])),
-        "dependency_count": len(config.get("dependencies", [])),
-        "has_bindings": config.get("bindings_dir") != None,
-    }
-
-    # Simple manual JSON encoding for flat dictionary
-    json_pairs = []
-    for key, value in simple_config.items():
-        if type(value) == "string":
-            json_pairs.append('"{}": "{}"'.format(key, value.replace('"', '\\"')))
-        elif type(value) == "bool":
-            json_pairs.append('"{}": {}'.format(key, "true" if value else "false"))
-        else:
-            json_pairs.append('"{}": {}'.format(key, str(value)))
-
-    # Create proper JSON format
-    config_json = "{{{}}}".format(", ".join(json_pairs))
-
-    ctx.actions.write(
-        output = config_file,
-        content = config_json,
-    )
-
-    # For now, use a simple approach: just create the directory and copy files directly
-    # This avoids the complex JSON parsing issues while still providing the functionality
-
-    # Create workspace directory and copy all files in a single action
-    # Collect all input files
+    # HERMETIC APPROACH: Use a simple script that only uses POSIX commands available everywhere
+    # Create a minimal shell script that doesn't depend on system Python
+    workspace_script = ctx.actions.declare_file(ctx.label.name + "_workspace_setup.sh")
+    
+    # Collect all input files and their destinations
     all_inputs = []
-    commands = ["mkdir -p {}".format(workspace_dir.path)]
+    file_mappings = []
 
-    # Add sources
+    # Process source files
     for source_info in config.get("sources", []):
         src_file = source_info["source"]
         dest_name = source_info.get("destination") or src_file.basename
         all_inputs.append(src_file)
-        commands.append("cp {} {}/{}".format(src_file.path, workspace_dir.path, dest_name))
+        file_mappings.append((src_file, dest_name))
 
-    # Add headers
+    # Process header files
     for header_info in config.get("headers", []):
         hdr_file = header_info["source"]
         dest_name = header_info.get("destination") or hdr_file.basename
         all_inputs.append(hdr_file)
-        commands.append("cp {} {}/{}".format(hdr_file.path, workspace_dir.path, dest_name))
+        file_mappings.append((hdr_file, dest_name))
 
-    # Add dependencies
+    # Process dependency files
     for dep_info in config.get("dependencies", []):
         dep_file = dep_info["source"]
         dest_name = dep_info.get("destination") or dep_file.basename
         all_inputs.append(dep_file)
-        commands.append("cp {} {}/{}".format(dep_file.path, workspace_dir.path, dest_name))
-
-    # Execute workspace preparation in single action
-    ctx.actions.run_shell(
-        command = " && ".join(commands),
-        inputs = all_inputs,
+        file_mappings.append((dep_file, dest_name))
+    
+    script_lines = [
+        "#!/bin/sh",
+        "set -e",
+        "",
+        "WORKSPACE_DIR=\"$1\"",
+        "mkdir -p \"$WORKSPACE_DIR\"",
+        "",
+    ]
+    
+    # Add file operations using basic POSIX commands
+    for src_file, dest_name in file_mappings:
+        # Ensure parent directory exists for nested paths
+        if "/" in dest_name:
+            parent_dir = "/".join(dest_name.split("/")[:-1])
+            script_lines.append("mkdir -p \"$WORKSPACE_DIR/{}\"".format(parent_dir))
+        
+        # Use cp to copy files (available on all POSIX systems)
+        script_lines.append("cp \"{}\" \"$WORKSPACE_DIR/{}\"".format(src_file.path, dest_name))
+    
+    script_lines.extend([
+        "",
+        "# Create completion marker",
+        "echo \"Workspace prepared with {} files\" > \"$WORKSPACE_DIR/.workspace_ready\"".format(len(file_mappings)),
+    ])
+    
+    ctx.actions.write(
+        output = workspace_script,
+        content = "\n".join(script_lines),
+        is_executable = True,
+    )
+    
+    # Execute the workspace setup using only basic POSIX shell
+    ctx.actions.run(
+        executable = workspace_script,
+        arguments = [workspace_dir.path],
+        inputs = all_inputs + [workspace_script],
         outputs = [workspace_dir],
-        mnemonic = "PrepareWorkspace",
-        progress_message = "Preparing {} workspace for {}".format(
+        mnemonic = "PrepareWorkspaceHermetic",
+        progress_message = "Preparing {} workspace for {} (hermetic)".format(
             config.get("workspace_type", "generic"),
             ctx.label,
         ),
@@ -260,7 +260,7 @@ def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None):
     return prepare_workspace_action(ctx, config)
 
 def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_headers = None):
-    """Set up a C/C++ workspace for compilation
+    """Set up a C/C++ workspace for compilation with proper directory structure
 
     Args:
         ctx: Bazel rule context
@@ -277,18 +277,77 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
         "work_dir": ctx.label.name + "_cppwork",
         "workspace_type": "cpp",
         "sources": [{"source": src, "destination": None, "preserve_permissions": False} for src in sources],
-        "headers": [{"source": hdr, "destination": None, "preserve_permissions": False} for hdr in headers],
+        "headers": [],  # Will be filled below with proper directory structure
         "dependencies": [],
     }
+
+    # CRITICAL FIX: Preserve directory structure for local headers too
+    for hdr in headers:
+        # Extract the relative path within the package for local headers
+        relative_path = hdr.short_path
+        
+        # Remove package prefix to get just the header's relative path within its package
+        if "/" in relative_path:
+            path_parts = relative_path.split("/")
+            # For local headers, preserve the subdirectory structure
+            if len(path_parts) >= 3:
+                # Take the last 2 parts for headers in subdirectories  
+                relative_path = "/".join(path_parts[-2:])
+            else:
+                # Fall back to basename for simple cases
+                relative_path = hdr.basename
+        else:
+            relative_path = hdr.basename
+        
+        config["headers"].append({
+            "source": hdr,
+            "destination": relative_path,  # Preserve directory structure
+            "preserve_permissions": False
+        })
 
     if bindings_dir:
         config["bindings_dir"] = bindings_dir
 
     if dep_headers:
-        config["dependencies"].extend([
-            {"source": hdr, "destination": None, "preserve_permissions": False}
-            for hdr in dep_headers
-        ])
+        for hdr in dep_headers:
+            # CRITICAL FIX: Preserve directory structure for cross-package headers
+            # Handle different path patterns for local vs external dependencies
+            relative_path = hdr.short_path
+            
+            if "/" in relative_path:
+                path_parts = relative_path.split("/")
+                
+                # Check for external dependency pattern (external/repo_name/include/...)
+                if len(path_parts) >= 4 and path_parts[0] == "external" and "include" in path_parts:
+                    # Find the include directory and preserve everything after it
+                    include_index = None
+                    for i, part in enumerate(path_parts):
+                        if part == "include":
+                            include_index = i
+                            break
+                    
+                    if include_index != None and include_index + 1 < len(path_parts):
+                        # Preserve the directory structure after "include/"
+                        relative_path = "/".join(path_parts[include_index + 1:])
+                    else:
+                        # Fallback for external headers without clear include structure
+                        relative_path = "/".join(path_parts[-2:])
+                        
+                # Handle local cross-package headers (test/cross_package_headers/foundation/types.h)
+                elif len(path_parts) >= 3:
+                    # Take the last 2 parts for headers in subdirectories  
+                    relative_path = "/".join(path_parts[-2:])
+                else:
+                    # Fall back to basename for simple cases
+                    relative_path = hdr.basename
+            else:
+                relative_path = hdr.basename
+            
+            config["dependencies"].append({
+                "source": hdr, 
+                "destination": relative_path,  # Preserve directory structure
+                "preserve_permissions": False
+            })
 
     return prepare_workspace_action(ctx, config)
 

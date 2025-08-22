@@ -1,0 +1,41 @@
+// Symmetric WIT interface demonstrating symmetric patterns
+package example:symmetric@0.1.0;
+
+world symmetric {
+    // Export interface that components must implement
+    export calculator: interface {
+        // Simple arithmetic operations
+        add: func(a: s32, b: s32) -> s32;
+        multiply: func(a: s32, b: s32) -> s32;
+        
+        // Operation with more complex types
+        calculate-stats: func(numbers: list<s32>) -> stats;
+    }
+    
+    // Import interface that components can use
+    import logger: interface {
+        log: func(level: log-level, message: string);
+        log-calculation: func(operation: string, result: s32);
+    }
+}
+
+interface calculator {
+    // Statistics result type
+    record stats {
+        sum: s32,
+        count: u32,
+        average: f64,
+        min: s32,
+        max: s32,
+    }
+}
+
+interface logger {
+    // Log level enum
+    enum log-level {
+        debug,
+        info,
+        warn,
+        error,
+    }
+}

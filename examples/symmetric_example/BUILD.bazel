@@ -1,0 +1,62 @@
+"""Symmetric WIT bindings example demonstrating cpetig's fork functionality"""
+
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# WIT interface for symmetric component
+wit_library(
+    name = "symmetric_interfaces",
+    package_name = "example:symmetric@0.1.0",
+    srcs = ["wit/symmetric.wit"],
+    world = "symmetric",
+)
+
+# Traditional approach: separate guest and native-guest bindings
+rust_wasm_component_bindgen(
+    name = "traditional_component",
+    srcs = ["src/traditional.rs"],
+    wit = ":symmetric_interfaces",
+    symmetric = False,  # Traditional approach
+)
+
+# Symmetric approach: same source code for both native and WASM
+# NOTE: This requires symmetric wit-bindgen toolchain setup in MODULE.bazel
+# rust_wasm_component_bindgen(
+#     name = "symmetric_component",
+#     srcs = ["src/symmetric.rs"],
+#     wit = ":symmetric_interfaces",
+#     symmetric = True,  # Enable symmetric mode (requires cpetig's fork)
+#     invert_direction = False,  # Standard direction
+# )
+
+# Example native binary using traditional host bindings
+rust_binary(
+    name = "traditional_host",
+    srcs = ["src/traditional_host.rs"],
+    deps = [":traditional_component_bindings_host"],
+    edition = "2021",
+)
+
+# Example native binary that can use the same symmetric component code
+# NOTE: Requires symmetric component above
+# rust_binary(
+#     name = "symmetric_host",
+#     srcs = ["src/symmetric_host.rs"],
+#     deps = [":symmetric_component_bindings_host"],
+#     edition = "2021",
+#     # This binary can use the exact same component logic as the WASM version
+# )
+
+# Build test to verify traditional approach compiles
+genrule(
+    name = "test_symmetric_compilation",
+    srcs = [
+        ":traditional_component",
+        ":traditional_host",
+    ],
+    outs = ["test_result.txt"],
+    cmd = "echo 'Traditional examples compiled successfully' > $@",
+)

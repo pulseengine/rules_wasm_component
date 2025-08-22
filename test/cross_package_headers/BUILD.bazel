@@ -1,0 +1,56 @@
+"""Cross-package C++ header dependency test
+
+This test reproduces the issue described in #38 where cross-package C++ headers
+are not properly staged in the compilation workspace, causing "file not found" errors.
+
+Test Structure:
+- foundation_lib: Provides foundation/types.h header in a separate package
+- consumer_component: Uses the foundation header via #include "foundation/types.h"
+"""
+
+load("@rules_wasm_component//cpp:defs.bzl", "cc_component_library", "cpp_component")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+# Foundation library with headers in subdirectory + external dependencies
+cc_component_library(
+    name = "foundation_lib", 
+    hdrs = [
+        "foundation/types.h",
+        "foundation/utils.h",
+    ],
+    srcs = [
+        "foundation/types.cpp", 
+        "foundation/utils.cpp",
+    ],
+    deps = [
+        "@fmt//:fmt",
+        "@nlohmann_json//:json",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Consumer WIT interface
+wit_library(
+    name = "consumer_interface",
+    package_name = "test:consumer@1.0.0",
+    srcs = ["consumer.wit"],
+)
+
+# Consumer component that depends on foundation headers
+cpp_component(
+    name = "consumer_component",
+    srcs = ["src/consumer.cpp"],
+    wit = ":consumer_interface",
+    deps = [":foundation_lib"],  # Cross-package dependency
+)
+
+# Build test to verify cross-package header staging works for WebAssembly components
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+build_test(
+    name = "cross_package_header_build_test",
+    targets = [
+        ":foundation_lib",      # Library with headers in subdirectories
+        ":consumer_component",  # Component using cross-package headers
+    ],
+)

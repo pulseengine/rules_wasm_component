@@ -2,6 +2,7 @@
 
 load("@rules_rust//rust:defs.bzl", "rust_common", "rust_library")
 load("//wit:wit_bindgen.bzl", "wit_bindgen")
+load("//wit:symmetric_wit_bindgen.bzl", "symmetric_wit_bindgen")
 load(":rust_wasm_component.bzl", "rust_wasm_component")
 load(":transitions.bzl", "wasm_transition")
 
@@ -277,6 +278,8 @@ def rust_wasm_component_bindgen(
         rustc_flags = [],
         profiles = ["release"],
         visibility = None,
+        symmetric = False,
+        invert_direction = False,
         **kwargs):
     """
     Builds a Rust WebAssembly component with automatic WIT binding generation.
@@ -299,6 +302,8 @@ def rust_wasm_component_bindgen(
         rustc_flags: Additional rustc flags
         profiles: List of build profiles (e.g. ["debug", "release"])
         visibility: Target visibility
+        symmetric: Enable symmetric mode for same source code to run natively and as WASM (requires cpetig's fork)
+        invert_direction: Invert direction for symmetric interfaces (only used with symmetric=True)
         **kwargs: Additional arguments passed to rust_wasm_component
 
     Example:
@@ -317,29 +322,55 @@ def rust_wasm_component_bindgen(
             name = "host_app",
             deps = [":my_component_bindings_host"],  # Use host bindings
         )
+        
+        # Symmetric example (same source code for native and WASM):
+        rust_wasm_component_bindgen(
+            name = "my_symmetric_component",
+            srcs = ["src/lib.rs"],
+            wit = "//wit:my_interfaces",
+            symmetric = True,
+            # Component code can now be compiled for both native and WASM execution
+        )
     """
 
-    # Generate separate WIT bindings for guest and native-guest modes
-    bindgen_guest_target = name + "_wit_bindgen_guest"
-    bindgen_native_guest_target = name + "_wit_bindgen_native_guest"
+    # Generate WIT bindings based on symmetric flag
+    if symmetric:
+        # Symmetric mode: Generate symmetric bindings for both native and WASM from same source
+        bindgen_symmetric_target = name + "_wit_bindgen_symmetric"
+        
+        symmetric_wit_bindgen(
+            name = bindgen_symmetric_target,
+            wit = wit,
+            language = "rust",
+            invert_direction = invert_direction,
+            visibility = ["//visibility:private"],
+        )
+        
+        # For symmetric mode, we'll create feature-based compilation
+        bindgen_guest_target = bindgen_symmetric_target
+        bindgen_native_guest_target = bindgen_symmetric_target
+    else:
+        # Traditional mode: Generate separate guest and native-guest bindings
+        bindgen_guest_target = name + "_wit_bindgen_guest"
+        bindgen_native_guest_target = name + "_wit_bindgen_native_guest"
 
-    # Guest mode bindings for WASM component implementation
-    wit_bindgen(
-        name = bindgen_guest_target,
-        wit = wit,
-        language = "rust",
-        generation_mode = "guest",
-        visibility = ["//visibility:private"],
-    )
+        # Guest mode bindings for WASM component implementation
+        wit_bindgen(
+            name = bindgen_guest_target,
+            wit = wit,
+            language = "rust",
+            generation_mode = "guest",
+            visibility = ["//visibility:private"],
+        )
 
-    # Native-guest mode bindings for native applications
-    wit_bindgen(
-        name = bindgen_native_guest_target,
-        wit = wit,
-        language = "rust",
-        generation_mode = "native-guest",
-        visibility = ["//visibility:private"],
-    )
+        # Native-guest mode bindings for native applications
+        wit_bindgen(
+            name = bindgen_native_guest_target,
+            wit = wit,
+            language = "rust",
+            generation_mode = "native-guest",
+            visibility = ["//visibility:private"],
+        )
 
     # Create separate wrappers for guest and native-guest bindings
     wrapper_guest_target = name + "_wrapper_guest"

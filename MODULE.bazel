@@ -30,6 +30,10 @@ bazel_dep(name = "rules_oci", version = "1.8.0")
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.7.1", dev_dependency = True)
 
+# Test dependencies for cross-package C++ header examples
+bazel_dep(name = "fmt", version = "11.0.2")
+bazel_dep(name = "nlohmann_json", version = "3.11.3")
+
 # Note: SSH key generation now uses hermetic WebAssembly component (tools/ssh_keygen)
 
 # Rust toolchain setup

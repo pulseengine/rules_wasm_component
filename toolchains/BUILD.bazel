@@ -70,6 +70,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for symmetric wit-bindgen (both official and cpetig's fork)
+toolchain_type(
+    name = "symmetric_wit_bindgen_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for toolchain implementation
 bzl_library(
     name = "wasm_toolchain",
@@ -158,6 +164,17 @@ bzl_library(
     name = "wasm_tools_component_toolchain",
     srcs = ["wasm_tools_component_toolchain.bzl"],
     visibility = ["//visibility:public"],
+)
+
+# Bzl library for symmetric wit-bindgen toolchain implementation
+bzl_library(
+    name = "symmetric_wit_bindgen_toolchain",
+    srcs = ["symmetric_wit_bindgen_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":diagnostics",
+        ":tool_cache",
+    ],
 )
 
 # Note: C++ toolchain configuration has been moved to @wasi_sdk repository
