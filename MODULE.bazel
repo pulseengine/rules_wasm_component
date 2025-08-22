@@ -34,6 +34,11 @@ bazel_dep(name = "stardoc", version = "0.7.1", dev_dependency = True)
 bazel_dep(name = "fmt", version = "11.0.2")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 
+# Real-world C++ library examples for comprehensive testing
+bazel_dep(name = "abseil-cpp", version = "20250814.0")
+bazel_dep(name = "catch2", version = "3.8.1")
+bazel_dep(name = "spdlog", version = "1.12.0")
+
 # Note: SSH key generation now uses hermetic WebAssembly component (tools/ssh_keygen)
 
 # Rust toolchain setup
