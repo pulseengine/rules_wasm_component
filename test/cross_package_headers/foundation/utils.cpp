@@ -9,7 +9,7 @@ bool is_valid_point(const Point& p) {
 }
 
 bool is_valid_rectangle(const Rectangle& rect) {
-    return is_valid_point(rect.top_left) && 
+    return is_valid_point(rect.top_left) &&
            is_valid_point(rect.bottom_right) &&
            rect.bottom_right.x > rect.top_left.x &&
            rect.bottom_right.y > rect.top_left.y;
@@ -27,7 +27,7 @@ std::string point_to_string(const Point& p) {
 }
 
 std::string rectangle_to_string(const Rectangle& rect) {
-    return fmt::format("Rectangle(({},{}) -> ({},{}))", 
+    return fmt::format("Rectangle(({},{}) -> ({},{}))",
                       rect.top_left.x, rect.top_left.y,
                       rect.bottom_right.x, rect.bottom_right.y);
 }
@@ -84,19 +84,19 @@ std::string get_config_as_json() {
             {"nlohmann_json", "3.11.3"}
         }}
     };
-    
+
     return config.dump(2);  // Pretty-printed JSON
 }
 
 bool load_config_from_json(const std::string& json_str) {
     try {
         auto config = nlohmann::json::parse(json_str);
-        
+
         // Validate required fields
         if (!config.contains("name") || !config.contains("version")) {
             return false;
         }
-        
+
         // Could update internal configuration here
         return true;
     } catch (const nlohmann::json::exception& e) {

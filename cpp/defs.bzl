@@ -39,11 +39,15 @@ def _cpp_component_impl(ctx):
                 elif file.extension == "a":
                     dep_libraries.append(file)
 
-        # Also extract headers and includes from CcInfo for proper transitive dependencies
+        # Extract includes from CcInfo for proper transitive dependencies
+        # but DON'T copy external headers to workspace (they use original paths)
         if CcInfo in dep:
             cc_info = dep[CcInfo]
-            dep_headers.extend(cc_info.compilation_context.headers.to_list())
+
+            # Add all types of include paths (direct, system, and quote includes)
             dep_includes.extend(cc_info.compilation_context.includes.to_list())
+            dep_includes.extend(cc_info.compilation_context.system_includes.to_list())
+            dep_includes.extend(cc_info.compilation_context.quote_includes.to_list())
 
     # Generate bindings directory
     bindings_dir = ctx.actions.declare_directory(ctx.attr.name + "_bindings")
@@ -183,10 +187,17 @@ def _cpp_component_impl(ctx):
     for lib in dep_libraries:
         compile_args.add(lib.path)
 
+    # Add external dependency headers to inputs (from CcInfo)
+    external_headers = []
+    for dep in ctx.attr.deps:
+        if CcInfo in dep:
+            cc_info = dep[CcInfo]
+            external_headers.extend(cc_info.compilation_context.headers.to_list())
+
     ctx.actions.run(
         executable = clang,
         arguments = [compile_args],
-        inputs = [work_dir] + sysroot_files.files.to_list() + dep_libraries + dep_headers,
+        inputs = [work_dir] + sysroot_files.files.to_list() + dep_libraries + dep_headers + external_headers,
         outputs = [wasm_binary],
         mnemonic = "CompileCppWasm",
         progress_message = "Compiling C/C++ to WASM for %s" % ctx.label,
@@ -519,16 +530,18 @@ def _cc_component_library_impl(ctx):
         # Add dependency header directories
         for dep_hdr in dep_headers:
             compile_args.add("-I" + dep_hdr.dirname)
-        
+
         # Add include paths from CcInfo dependencies (external libraries)
         for dep in ctx.attr.deps:
             if CcInfo in dep:
                 cc_info = dep[CcInfo]
+
                 # Add both direct includes and system includes
                 for include_path in cc_info.compilation_context.includes.to_list():
                     compile_args.add("-I" + include_path)
                 for include_path in cc_info.compilation_context.system_includes.to_list():
                     compile_args.add("-I" + include_path)
+
                 # Also add quote includes if available
                 for include_path in cc_info.compilation_context.quote_includes.to_list():
                     compile_args.add("-I" + include_path)

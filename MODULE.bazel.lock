@@ -176,7 +176,7 @@
   "moduleExtensions": {
     "//toolchains:extensions.bzl%wasm_tool_repositories": {
       "general": {
-        "bzlTransitiveDigest": "G0b6xDvvB5kgePXFX+QUVWQtC6jIbLEsLjQ7YILJkTA=",
+        "bzlTransitiveDigest": "cX02hfQi3+OLLpdNYP+14QE9F8IAK8unP1wJUj9gzig=",
         "usagesDigest": "clQqyOwvm/I5edLjq5P4LnONWTjXO0N1AnoQTVKRaOY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

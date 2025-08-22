@@ -150,7 +150,7 @@ def prepare_workspace_action(ctx, config):
     # HERMETIC APPROACH: Use a simple script that only uses POSIX commands available everywhere
     # Create a minimal shell script that doesn't depend on system Python
     workspace_script = ctx.actions.declare_file(ctx.label.name + "_workspace_setup.sh")
-    
+
     # Collect all input files and their destinations
     all_inputs = []
     file_mappings = []
@@ -175,7 +175,7 @@ def prepare_workspace_action(ctx, config):
         dest_name = dep_info.get("destination") or dep_file.basename
         all_inputs.append(dep_file)
         file_mappings.append((dep_file, dest_name))
-    
+
     script_lines = [
         "#!/bin/sh",
         "set -e",
@@ -184,29 +184,29 @@ def prepare_workspace_action(ctx, config):
         "mkdir -p \"$WORKSPACE_DIR\"",
         "",
     ]
-    
+
     # Add file operations using basic POSIX commands
     for src_file, dest_name in file_mappings:
         # Ensure parent directory exists for nested paths
         if "/" in dest_name:
             parent_dir = "/".join(dest_name.split("/")[:-1])
             script_lines.append("mkdir -p \"$WORKSPACE_DIR/{}\"".format(parent_dir))
-        
+
         # Use cp to copy files (available on all POSIX systems)
         script_lines.append("cp \"{}\" \"$WORKSPACE_DIR/{}\"".format(src_file.path, dest_name))
-    
+
     script_lines.extend([
         "",
         "# Create completion marker",
         "echo \"Workspace prepared with {} files\" > \"$WORKSPACE_DIR/.workspace_ready\"".format(len(file_mappings)),
     ])
-    
+
     ctx.actions.write(
         output = workspace_script,
         content = "\n".join(script_lines),
         is_executable = True,
     )
-    
+
     # Execute the workspace setup using only basic POSIX shell
     ctx.actions.run(
         executable = workspace_script,
@@ -285,24 +285,25 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
     for hdr in headers:
         # Extract the relative path within the package for local headers
         relative_path = hdr.short_path
-        
+
         # Remove package prefix to get just the header's relative path within its package
         if "/" in relative_path:
             path_parts = relative_path.split("/")
+
             # For local headers, preserve the subdirectory structure
             if len(path_parts) >= 3:
-                # Take the last 2 parts for headers in subdirectories  
+                # Take the last 2 parts for headers in subdirectories
                 relative_path = "/".join(path_parts[-2:])
             else:
                 # Fall back to basename for simple cases
                 relative_path = hdr.basename
         else:
             relative_path = hdr.basename
-        
+
         config["headers"].append({
             "source": hdr,
             "destination": relative_path,  # Preserve directory structure
-            "preserve_permissions": False
+            "preserve_permissions": False,
         })
 
     if bindings_dir:
@@ -313,10 +314,10 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
             # CRITICAL FIX: Preserve directory structure for cross-package headers
             # Handle different path patterns for local vs external dependencies
             relative_path = hdr.short_path
-            
+
             if "/" in relative_path:
                 path_parts = relative_path.split("/")
-                
+
                 # Check for external dependency pattern (external/repo_name/include/...)
                 if len(path_parts) >= 4 and path_parts[0] == "external" and "include" in path_parts:
                     # Find the include directory and preserve everything after it
@@ -325,28 +326,28 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
                         if part == "include":
                             include_index = i
                             break
-                    
+
                     if include_index != None and include_index + 1 < len(path_parts):
                         # Preserve the directory structure after "include/"
                         relative_path = "/".join(path_parts[include_index + 1:])
                     else:
                         # Fallback for external headers without clear include structure
                         relative_path = "/".join(path_parts[-2:])
-                        
-                # Handle local cross-package headers (test/cross_package_headers/foundation/types.h)
+
+                    # Handle local cross-package headers (test/cross_package_headers/foundation/types.h)
                 elif len(path_parts) >= 3:
-                    # Take the last 2 parts for headers in subdirectories  
+                    # Take the last 2 parts for headers in subdirectories
                     relative_path = "/".join(path_parts[-2:])
                 else:
                     # Fall back to basename for simple cases
                     relative_path = hdr.basename
             else:
                 relative_path = hdr.basename
-            
+
             config["dependencies"].append({
-                "source": hdr, 
+                "source": hdr,
                 "destination": relative_path,  # Preserve directory structure
-                "preserve_permissions": False
+                "preserve_permissions": False,
             })
 
     return prepare_workspace_action(ctx, config)

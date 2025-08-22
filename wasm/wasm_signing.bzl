@@ -303,36 +303,98 @@ def _wasm_verify_impl(ctx):
     if signature_file:
         inputs.append(signature_file)
 
-    # Run verification directly
-    ctx.actions.run_shell(
-        command = """
-            echo "=== WASM Signature Verification Report ===" > {}
-            echo "Component: {}" >> {}
-            echo "Date: $(date)" >> {}
-            echo "" >> {}
+    # Create verification script for better error handling and cross-platform compatibility
+    verify_script = ctx.actions.declare_file(ctx.label.name + "_verify.py")
+    script_content = '''#!/usr/bin/env python3
+import subprocess
+import sys
+import datetime
 
-            if {} {} >> {} 2>&1; then
-                echo "✅ Signature verification PASSED" >> {}
-                echo "VERIFICATION_SUCCESS" > {}.status
-            else
-                echo "❌ Signature verification FAILED" >> {}
-                echo "VERIFICATION_FAILED" > {}.status
-            fi
-        """.format(
-            verification_log.path,
-            input_wasm.short_path,
-            verification_log.path,
-            verification_log.path,
-            verification_log.path,
-            wasmsign2.path,
-            " ".join(verify_cmd_args),
-            verification_log.path,
-            verification_log.path,
-            verification_log.path,
-            verification_log.path,
-            verification_log.path,
-        ),
-        inputs = inputs,
+def main():
+    wasmsign2_path = sys.argv[1]
+    log_path = sys.argv[2]
+    component_path = sys.argv[3]
+    verify_args = sys.argv[4:]
+
+    # Create verification report header
+    report_lines = [
+        "=== WASM Signature Verification Report ===",
+        f"Component: {component_path}",
+        f"Date: {datetime.datetime.now().isoformat()}",
+        f"Verification Command: {wasmsign2_path} {' '.join(verify_args)}",
+        ""
+    ]
+
+    try:
+        # Run verification command
+        result = subprocess.run(
+            [wasmsign2_path] + verify_args,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        # Add verification output to report
+        if result.stdout:
+            report_lines.extend([
+                "=== Verification Output ===",
+                result.stdout,
+                ""
+            ])
+
+        if result.stderr:
+            report_lines.extend([
+                "=== Error Output ===",
+                result.stderr,
+                ""
+            ])
+
+        # Add result
+        if result.returncode == 0:
+            report_lines.append("✅ Signature verification PASSED")
+            status = "VERIFICATION_SUCCESS"
+        else:
+            report_lines.append("❌ Signature verification FAILED")
+            status = "VERIFICATION_FAILED"
+
+    except subprocess.TimeoutExpired:
+        report_lines.extend([
+            "❌ Signature verification TIMED OUT",
+            "Verification process exceeded 60 second timeout"
+        ])
+        status = "VERIFICATION_TIMEOUT"
+    except Exception as e:
+        report_lines.extend([
+            "❌ Signature verification ERROR",
+            f"Error: {str(e)}"
+        ])
+        status = "VERIFICATION_ERROR"
+
+    # Write verification log
+    with open(log_path, 'w') as f:
+        f.write('\\n'.join(report_lines))
+
+    # Write status file for programmatic access
+    with open(log_path + '.status', 'w') as f:
+        f.write(status)
+
+    print(f"Verification complete: {status}")
+
+if __name__ == "__main__":
+    main()
+'''
+
+    ctx.actions.write(
+        output = verify_script,
+        content = script_content,
+        is_executable = True,
+    )
+
+    # Run verification using the structured script
+    ctx.actions.run(
+        executable = verify_script,
+        arguments = [wasmsign2.path, verification_log.path, input_wasm.short_path] + verify_cmd_args,
+        inputs = inputs + [verify_script],
         outputs = [verification_log],
         tools = [wasmsign2],
         mnemonic = "WasmVerify",

@@ -13,20 +13,20 @@ load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 # Foundation library with headers in subdirectory + external dependencies
 cc_component_library(
-    name = "foundation_lib", 
+    name = "foundation_lib",
+    srcs = [
+        "foundation/types.cpp",
+        "foundation/utils.cpp",
+    ],
     hdrs = [
         "foundation/types.h",
         "foundation/utils.h",
     ],
-    srcs = [
-        "foundation/types.cpp", 
-        "foundation/utils.cpp",
-    ],
+    visibility = ["//visibility:public"],
     deps = [
-        "@fmt//:fmt",
+        "@fmt",
         "@nlohmann_json//:json",
     ],
-    visibility = ["//visibility:public"],
 )
 
 # Consumer WIT interface
@@ -50,7 +50,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 build_test(
     name = "cross_package_header_build_test",
     targets = [
-        ":foundation_lib",      # Library with headers in subdirectories
+        ":foundation_lib",  # Library with headers in subdirectories
         ":consumer_component",  # Component using cross-package headers
     ],
 )
