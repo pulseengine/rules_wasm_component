@@ -296,11 +296,20 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         "TMPDIR": temp_cache_dir.path,
         "PATH": path_env,
     }
-
-    # Prepare inputs - no wrapper script needed!
-    inputs = [go_module_files, tinygo, wasm_tools]
+    
+    # Add explicit GOROOT if Go binary is available
     if go_binary:
-        inputs.append(go_binary)
+        # Set GOROOT to help TinyGo find the Go installation
+        go_root = go_binary.dirname + "/.."  # Go binary is in bin/, so parent is GOROOT
+        env["GOROOT"] = go_root
+        print("DEBUG: Set GOROOT to: %s" % go_root)
+
+    # Prepare inputs and tools - no wrapper script needed!
+    inputs = [go_module_files, tinygo, wasm_tools]
+    tools = []
+    if go_binary:
+        # Go binary should be a tool (executable) not just an input
+        tools.append(go_binary)
     if wasm_opt_binary:
         inputs.append(wasm_opt_binary)
 
@@ -325,6 +334,7 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         executable = tinygo,
         arguments = tinygo_args,
         inputs = inputs,
+        tools = tools,
         outputs = [wasm_module, temp_cache_dir],
         mnemonic = "TinyGoCompile",
         progress_message = "Compiling %s with TinyGo" % ctx.attr.name,
