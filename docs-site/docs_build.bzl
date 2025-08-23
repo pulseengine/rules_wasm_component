@@ -70,6 +70,19 @@ def main():
         # Resolve npm binary to absolute path before changing directory
         npm_abs_path = os.path.abspath(npm_binary)
         
+        # Set up PATH to include hermetic node binary for npm subprocesses
+        node_bin_dir = os.path.dirname(npm_abs_path)
+        current_path = os.environ.get("PATH", "")
+        hermetic_path = f"{node_bin_dir}:{current_path}" if current_path else node_bin_dir
+        
+        # Set up minimal hermetic environment for npm
+        npm_env = {
+            "PATH": hermetic_path,
+            "NODE_PATH": "",  # Clear any existing NODE_PATH
+            "npm_config_cache": os.path.join(work_dir, ".npm-cache"),
+            "npm_config_progress": "false",
+        }
+        
         # Change to workspace for npm operations
         original_cwd = os.getcwd()
         os.chdir(work_dir)
@@ -81,7 +94,8 @@ def main():
                 [npm_abs_path, "install", "--no-audit", "--no-fund"],
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=300,  # 5 minute timeout
+                env=npm_env
             )
 
             if result.returncode != 0:
@@ -96,7 +110,8 @@ def main():
                 [npm_abs_path, "run", "build"],
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=300,  # 5 minute timeout
+                env=npm_env
             )
 
             if result.returncode != 0:
@@ -158,7 +173,6 @@ if __name__ == "__main__":
         execution_requirements = {
             "local": "1",  # npm install needs network
         },
-        use_default_shell_env = True,
     )
 
     return [
