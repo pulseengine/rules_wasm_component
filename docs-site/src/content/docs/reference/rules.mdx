@@ -21,6 +21,7 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
   - [rust_wasm_component](#rust_wasm_component)
   - [rust_wasm_component_bindgen](#rust_wasm_component_bindgen)
   - [rust_wasm_component_test](#rust_wasm_component_test)
+  - [rust_wasm_component_wizer](#rust_wasm_component_wizer)
 - [Go Component Rules](#go-component-rules)
   - [go_wasm_component](#go_wasm_component)
   - [go_wasm_component_test](#go_wasm_component_test)
@@ -296,6 +297,45 @@ Test a WASM component
 rust_wasm_component_test(
     name = "my_component_test",
     component = ":my_component",
+)
+```
+
+### rust_wasm_component_wizer
+
+Builds a Rust WebAssembly component with Wizer pre-initialization. Provides 1.35-6x startup performance improvements by running initialization code at build time.
+
+**Load from:**
+```python
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_wizer")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `adapter` | Label | ❌ | Optional WASI adapter |
+| `crate_features` | List of Strings | ❌ | Cargo features to enable |
+| `crate_root` | Label | ❌ | Crate root file (defaults to src/lib.rs) |
+| `deps` | List of Labels | ❌ | Rust dependencies |
+| `edition` | String<br/>*Default: '2021'*<br/>*Values: 2015, 2018, 2021* | ❌ | Rust edition |
+| `init_function_name` | String<br/>*Default: 'wizer.initialize'* | ❌ | Name of the Wizer initialization function |
+| `name` | String | ✅ | A unique name for this target |
+| `profiles` | List of Strings<br/>*Values: debug, release* | ❌ | Build profiles (debug, release) |
+| `rustc_flags` | List of Strings | ❌ | Additional rustc flags |
+| `srcs` | List of Labels | ✅ | Rust source files |
+| `wit` | Label | ❌ | WIT library for binding generation |
+
+**Examples:**
+
+Rust component with pre-initialization
+
+```python
+rust_wasm_component_wizer(
+    name = "optimized_component",
+    srcs = ["src/lib.rs"],
+    wit = "//interfaces:calculator",
+    init_function_name = "wizer.initialize",
+    profiles = ["release"],
 )
 ```
 
