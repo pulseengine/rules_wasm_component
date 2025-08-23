@@ -554,11 +554,34 @@ def _download_wasmsign2(repository_ctx):
 
     print("Using modernized wasmsign2 from @wasmsign2_src git repository")
 
-    # wasmsign2 is now handled by git_repository + Bazel rust_binary build
-    # The actual binary is built by @wasmsign2_src//:wasmsign2_bazel and referenced
-    # via wasmsign2_binary filegroup in BUILD.wasmsign2
-    print("wasmsign2 will be built from @wasmsign2_src using Bazel-native rust_binary")
-    print("Security functionality fully maintained via proper Bazel dependency management")
+    # Create wasmsign2 wrapper that executes the Bazel-built binary
+    # This approach maintains full security functionality via proper dependency management
+    repository_ctx.file("wasmsign2", """#!/bin/bash
+# wasmsign2 wrapper that executes the Bazel-native rust_binary
+# This ensures proper dependency resolution through @wasmsign2_crates
+
+set -euo pipefail
+
+# Get the directory where this script is located (toolchain repository)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Use relative path to find the wasmsign2_bazel binary built by Bazel
+# The actual binary will be built by @wasmsign2_src//:wasmsign2_bazel
+WASMSIGN2_BINARY="${SCRIPT_DIR}/../wasmsign2_src/bazel-bin/wasmsign2_bazel"
+
+# If the binary doesn't exist, try to build it
+if [[ ! -f "$WASMSIGN2_BINARY" ]]; then
+    echo "Building wasmsign2 using Bazel-native approach..." >&2
+    cd "${SCRIPT_DIR}/.."
+    bazel build @wasmsign2_src//:wasmsign2_bazel >&2
+fi
+
+# Execute the built binary with all arguments
+exec "$WASMSIGN2_BINARY" "$@"
+""", executable = True)
+    
+    print("Created wasmsign2 wrapper for Bazel-native rust_binary build")
+    print("Security functionality fully maintained via proper dependency management")
 
 def _setup_bazel_native_tools(repository_ctx):
     """Setup tools using Bazel-native rust_binary builds instead of cargo"""

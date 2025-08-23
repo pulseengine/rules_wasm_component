@@ -28,6 +28,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tempfile = "3.0"
 async-trait = "0.1"
 wstd = "0.5.3"  # WebAssembly standard library for WASI Preview 2
+wit-bindgen = "0.43.0"  # WIT binding generation for macro usage
 
 [dev-dependencies]
 tokio-test = "0.4"
