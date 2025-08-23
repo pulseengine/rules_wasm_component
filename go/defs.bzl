@@ -57,8 +57,11 @@ def _assert_valid_go_component_attrs(ctx):
     
     # Validate world name format if provided
     if ctx.attr.world:
-        if not ctx.attr.world.replace("-", "").replace("_", "").isalnum():
-            fail("go_wasm_component rule '{}' has invalid world name '{}'. World names must be alphanumeric with hyphens/underscores".format(
+        # WIT world names support namespaces with colons, hyphens, underscores, and forward slashes
+        # Valid examples: "wasi:cli/command", "example:calculator/operations", "simple-world"
+        allowed_chars = ctx.attr.world.replace("-", "").replace("_", "").replace(":", "").replace("/", "")
+        if not allowed_chars.isalnum():
+            fail("go_wasm_component rule '{}' has invalid world name '{}'. World names must be alphanumeric with hyphens, underscores, colons, and forward slashes".format(
                 ctx.label, ctx.attr.world))
 
 def _assert_valid_toolchain_setup(ctx, tinygo, wasm_tools):
