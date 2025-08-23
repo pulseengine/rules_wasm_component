@@ -146,6 +146,7 @@ def _download_tinygo(repository_ctx, version, platform):
         # Check if TinyGo's LLVM tools exist
         if clang_path.exists and ar_path.exists and nm_path.exists:
             print("TinyGo LLVM tools available for WASI-libc build")
+
             # Skip actual rebuild to eliminate ctx.execute calls
             print("Using downloaded WASI-libc (build skipped for hermeticity)")
         else:

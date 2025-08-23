@@ -39,22 +39,25 @@ load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_go_module_action")
 
 def _assert_valid_go_component_attrs(ctx):
     """Validates go_wasm_component attributes for common mistakes and deprecated patterns"""
-    
+
     # Validate sources
     if not ctx.files.srcs:
         fail("go_wasm_component rule '{}' requires at least one Go source file in 'srcs'".format(ctx.label))
-    
+
     # Ensure all source files are .go files
     for src in ctx.files.srcs:
         if not src.basename.endswith(".go"):
             fail("go_wasm_component rule '{}' source file '{}' must be a .go file".format(ctx.label, src.basename))
-    
+
     # Validate optimization levels
     valid_optimizations = ["debug", "release", "size"]
     if ctx.attr.optimization not in valid_optimizations:
         fail("go_wasm_component rule '{}' has invalid optimization '{}'. Must be one of: {}".format(
-            ctx.label, ctx.attr.optimization, ", ".join(valid_optimizations)))
-    
+            ctx.label,
+            ctx.attr.optimization,
+            ", ".join(valid_optimizations),
+        ))
+
     # Validate world name format if provided
     if ctx.attr.world:
         # WIT world names support namespaces with colons, hyphens, underscores, and forward slashes
@@ -62,26 +65,31 @@ def _assert_valid_go_component_attrs(ctx):
         allowed_chars = ctx.attr.world.replace("-", "").replace("_", "").replace(":", "").replace("/", "")
         if not allowed_chars.isalnum():
             fail("go_wasm_component rule '{}' has invalid world name '{}'. World names must be alphanumeric with hyphens, underscores, colons, and forward slashes".format(
-                ctx.label, ctx.attr.world))
+                ctx.label,
+                ctx.attr.world,
+            ))
 
 def _assert_valid_toolchain_setup(ctx, tinygo, wasm_tools):
     """Validates that required toolchains are properly configured"""
-    
+
     if not tinygo:
         fail("TinyGo binary not found in toolchain for target '{}'".format(ctx.label))
     if not wasm_tools:
         fail("wasm-tools binary not found in toolchain for target '{}'".format(ctx.label))
-    
+
     # Validate TinyGo version compatibility (basic check)
     if "tinygo" not in tinygo.basename.lower():
         fail("TinyGo toolchain binary '{}' for target '{}' does not appear to be TinyGo".format(
-            tinygo.basename, ctx.label))
+            tinygo.basename,
+            ctx.label,
+        ))
 
 def _build_tool_path_env(ctx, tool_paths):
     """Build PATH environment variable from tool directories - THE BAZEL WAY"""
+
     # Detect platform - Bazel provides this via ctx
     is_windows = ctx.configuration.host_path_separator == ";"
-    
+
     if is_windows:
         # Windows path separator
         if not tool_paths:
@@ -281,10 +289,10 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
 
     # THE BAZEL WAY: Build environment variables for TinyGo
     # No shell scripts needed - use ctx.actions.run() with environment
-    
+
     # Build PATH environment variable
     path_env = _build_tool_path_env(ctx, tool_paths)
-    
+
     # Build environment dictionary for TinyGo
     env = {
         "TINYGOROOT": tinygo_root,
@@ -296,18 +304,31 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         "TMPDIR": temp_cache_dir.path,
         "PATH": path_env,
     }
-    
+
     # Add explicit Go binary path if available
     if go_binary:
-        # Set GOROOT to help TinyGo find the Go installation  
+        # Set GOROOT to help TinyGo find the Go installation
         go_root = go_binary.dirname + "/.."  # Go binary is in bin/, so parent is GOROOT
         env["GOROOT"] = go_root
+
         # Also set the Go binary path directly - TinyGo can use this
         env["GOBIN"] = go_binary.dirname
+
         # Set the Go binary path for TinyGo to find
         env["GO"] = go_binary.path
+        
+        # CRITICAL FIX: Ensure Go binary is first in PATH for TinyGo to find it
+        # TinyGo looks for 'go' command via PATH lookup, needs to be absolute
+        go_bin_dir = go_binary.dirname
+        current_path = env["PATH"]
+        if go_bin_dir not in current_path:
+            # Prepend Go binary directory to PATH with higher priority
+            env["PATH"] = go_bin_dir + ":" + current_path
+            print("DEBUG: Prepended Go binary dir to PATH: %s" % go_bin_dir)
+        
         print("DEBUG: Set GOROOT to: %s" % go_root)
         print("DEBUG: Set GO to: %s" % go_binary.path)
+        print("DEBUG: Final PATH: %s" % env["PATH"])
 
     # Prepare inputs and tools - no wrapper script needed!
     inputs = [go_module_files, tinygo, wasm_tools]
@@ -334,16 +355,67 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         wit_info = ctx.attr.wit[WitInfo]
         inputs.extend(wit_info.wit_files.to_list())
 
-    # THE BAZEL WAY: Direct execution with environment variables
+    # CRITICAL FIX: TinyGo needs absolute paths for Go binary
+    # Create a wrapper script that sets up the environment with absolute paths
+    wrapper_script = ctx.actions.declare_file(ctx.attr.name + "_tinygo_wrapper.sh")
+    
+    script_content = [
+        "#!/bin/bash",
+        "set -euo pipefail",
+        "",
+        "# Resolve absolute paths in Bazel execution environment",
+        "EXECROOT=$(pwd)",
+        "",
+    ]
+    
+    # Set up environment with absolute paths
+    for key, value in env.items():
+        if key == "PATH":
+            # Convert relative paths in PATH to absolute paths
+            path_parts = value.split(":")
+            absolute_parts = []
+            for part in path_parts:
+                if part.startswith("/"):
+                    absolute_parts.append(part)
+                else:
+                    absolute_parts.append("$EXECROOT/" + part)
+            absolute_path = ":".join(absolute_parts)
+            script_content.append("export PATH=\"{}\"".format(absolute_path))
+        elif key in ["GO", "GOROOT", "GOBIN", "TINYGOROOT", "GOCACHE", "HOME", "TMPDIR"] and not value.startswith("/"):
+            # Convert relative paths to absolute for critical Go paths
+            script_content.append("export {}=\"$EXECROOT/{}\"".format(key, value))
+        else:
+            script_content.append("export {}=\"{}\"".format(key, value))
+    
+    script_content.extend([
+        "",
+        "# Debug: Show resolved paths",
+        "echo \"DEBUG: Resolved GO=$GO\"",
+        "echo \"DEBUG: Resolved GOROOT=$GOROOT\"", 
+        "echo \"DEBUG: Resolved PATH=$PATH\"",
+        "",
+        "# Execute TinyGo with resolved paths",
+    ])
+    
+    # Add the TinyGo command with arguments
+    tinygo_cmd = "\"$EXECROOT/{}\"".format(tinygo.path) if not tinygo.path.startswith("/") else "\"{}\"".format(tinygo.path)
+    script_content.append(tinygo_cmd + " " + " ".join(["\"%s\"" % arg for arg in tinygo_args]))
+    
+    ctx.actions.write(
+        output = wrapper_script,
+        content = "\n".join(script_content),
+        is_executable = True,
+    )
+    
+    # Execute the wrapper script instead of TinyGo directly
     ctx.actions.run(
-        executable = tinygo,
-        arguments = tinygo_args,
-        inputs = inputs,
+        executable = wrapper_script,
+        arguments = [],
+        inputs = inputs + [wrapper_script],
         tools = tools,
         outputs = [wasm_module, temp_cache_dir],
         mnemonic = "TinyGoCompile",
         progress_message = "Compiling %s with TinyGo" % ctx.attr.name,
-        env = env,
         use_default_shell_env = False,
         execution_requirements = {
             "local": "1",  # TinyGo requires local execution

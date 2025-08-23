@@ -161,11 +161,11 @@ exit 1
         wizer_path = "bin/wizer"
 
     elif strategy == "source":
-        # Use git_repository approach (modernized) 
+        # Use git_repository approach (modernized)
         # Note: For complex crates like wizer, we still need the existing "build" strategy
         # The "source" strategy is primarily for avoiding ctx.execute() calls
         wizer_path = "wizer_placeholder"
-        
+
         # Create placeholder since complex dependency resolution is challenging
         ctx.file("wizer_placeholder", """#!/bin/bash
 echo "Wizer source strategy: Use 'build' or 'cargo' strategy for full functionality"  

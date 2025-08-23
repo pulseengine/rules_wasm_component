@@ -1,0 +1,26 @@
+"""Rust implementation of file operations for build tools"""
+
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "file_ops_rust",
+    srcs = ["lib.rs"],
+    crate_name = "file_ops_component",
+    edition = "2021",
+    deps = [
+        "@crates//:anyhow",
+        "@crates//:serde",
+        "@crates//:serde_json",
+    ],
+)
+
+rust_test(
+    name = "file_ops_rust_test",
+    crate = ":file_ops_rust",
+    edition = "2021",
+    deps = [
+        "@crates//:tempfile",
+    ],
+)
