@@ -22,7 +22,7 @@ wit_library(
 
 wit_library(
     name = "user_service_wit",
-    package_name = "user:service",
+    package_name = "example:user-service",
     srcs = ["wit/user_service.wit"],
     world = "user-service",
 )
