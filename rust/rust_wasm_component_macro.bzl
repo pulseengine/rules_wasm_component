@@ -57,7 +57,7 @@ def rust_wasm_component_macro(
         name,
         srcs,
         wit,
-        wit_bindgen_crate = "@crate_index//:wit-bindgen",
+        wit_bindgen_crate = "@crates//:wit-bindgen",
         deps = [],
         crate_features = [],
         rustc_flags = [],
