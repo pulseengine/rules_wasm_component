@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 // Use the generated bindings from rust_wasm_component_bindgen
-use user_service_bindings::exports::user::service::user_service::Guest;
+use user_service_bindings::exports::example::user_service::user_service::Guest;
 
 // Re-export the generated WIT types
-pub use user_service_bindings::exports::user::service::user_service::*;
+pub use user_service_bindings::exports::example::user_service::user_service::*;
 
 /// Rust User Service Component
 ///
