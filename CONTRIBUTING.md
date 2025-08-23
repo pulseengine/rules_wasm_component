@@ -8,7 +8,6 @@ We welcome contributions to the rules_wasm_component project! This document prov
 
 - **Bazel 7.0+** with bzlmod support
 - **Rust 1.75+** with WASM targets
-- **WASM tools**: `wasm-tools`, `wac-cli`, `wit-bindgen-cli`
 
 ### Installation
 
@@ -20,13 +19,12 @@ cd rules_wasm_component
 # Install Rust and WASM targets
 rustup target add wasm32-wasip2 wasm32-wasip1 wasm32-unknown-unknown
 
-# Install WASM tools
-cargo install wasm-tools wac-cli wit-bindgen-cli
-
-# Verify setup
+# Verify setup - all tools downloaded automatically by Bazel
 bazel build //...
 bazel test //...
 ```
+
+> **Note**: All WASM tools (`wasm-tools`, `wac-cli`, `wit-bindgen-cli`, etc.) are now downloaded automatically by Bazel for truly hermetic builds. No manual installation required!
 
 ## Contributing Guidelines
 
