@@ -554,24 +554,11 @@ def _download_wasmsign2(repository_ctx):
 
     print("Using modernized wasmsign2 from @wasmsign2_src git repository")
 
-    # Link to git_repository-based wasmsign2 build instead of manual operations
-    if repository_ctx.path("../wasmsign2_src").exists:
-        # Determine binary name based on platform
-        if repository_ctx.os.name.lower().startswith("windows"):
-            binary_name = "wasmsign2.exe"
-        else:
-            binary_name = "wasmsign2"
-
-        repository_ctx.symlink("../wasmsign2_src/{}".format(binary_name), "wasmsign2")
-        print("Linked wasmsign2 from git repository")
-    else:
-        print("Warning: @wasmsign2_src git repository not available")
-        repository_ctx.file("wasmsign2", """#!/bin/bash
-echo "wasmsign2: modernized git repository build not available"
-echo "Basic WebAssembly component functionality is not affected"
-echo "Ensure @wasmsign2_src is properly configured in MODULE.bazel"
-exit 0
-""", executable = True)
+    # wasmsign2 is now handled by git_repository + Bazel rust_binary build
+    # The actual binary is built by @wasmsign2_src//:wasmsign2_bazel and referenced
+    # via wasmsign2_binary filegroup in BUILD.wasmsign2
+    print("wasmsign2 will be built from @wasmsign2_src using Bazel-native rust_binary")
+    print("Security functionality fully maintained via proper Bazel dependency management")
 
 def _setup_bazel_native_tools(repository_ctx):
     """Setup tools using Bazel-native rust_binary builds instead of cargo"""
