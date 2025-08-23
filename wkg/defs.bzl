@@ -77,7 +77,7 @@ default_registry = "{registry}"
     file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
 
     ctx.actions.run(
-        executable = file_ops_toolchain.file_ops,
+        executable = file_ops_toolchain.file_ops_component,
         arguments = [
             "-json",
             '{"operations":[{"type":"copy_file","src_path":"%s","dest_path":"%s"}]}' % (expected_component, component_file.path),
@@ -93,7 +93,7 @@ default_registry = "{registry}"
 
     # Use file_ops tool for cross-platform directory copying
     ctx.actions.run(
-        executable = file_ops_toolchain.file_ops,
+        executable = file_ops_toolchain.file_ops_component,
         arguments = [
             "-json",
             '{"operations":[{"type":"copy_directory_contents","src_path":"%s","dest_path":"%s"}]}' % (wit_source, wit_dir.path),
@@ -127,7 +127,10 @@ wkg_fetch = rule(
             doc = "Registry URL to fetch from (optional)",
         ),
     },
-    toolchains = ["//toolchains:wkg_toolchain_type"],
+    toolchains = [
+        "//toolchains:wkg_toolchain_type",
+        "//toolchains:file_ops_toolchain_type",
+    ],
     doc = "Fetch a WebAssembly component package from a registry",
 )
 
