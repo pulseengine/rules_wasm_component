@@ -240,7 +240,7 @@ def _jco_extension_impl(module_ctx):
         jco_toolchain_repository(
             name = name + "_toolchain",
             version = registration.version,
-            node_version = getattr(registration, "node_version", "18.19.0"),
+            node_version = getattr(registration, "node_version", "18.20.8"),
         )
 
     # If no registrations, create default toolchain
@@ -248,7 +248,7 @@ def _jco_extension_impl(module_ctx):
         jco_toolchain_repository(
             name = "jco_toolchain",
             version = "1.4.0",
-            node_version = "18.19.0",
+            node_version = "18.20.8",
         )
 
 # Module extension for jco (JavaScript Component Tools)
@@ -267,7 +267,7 @@ jco = module_extension(
                 ),
                 "node_version": attr.string(
                     doc = "Node.js version for hermetic strategy",
-                    default = "18.19.0",
+                    default = "18.20.8",
                 ),
             },
         ),
