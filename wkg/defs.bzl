@@ -75,7 +75,7 @@ default_registry = "{registry}"
 
     # Use file_ops tool for cross-platform file copying
     file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
-    
+
     ctx.actions.run(
         executable = file_ops_toolchain.file_ops,
         arguments = [
@@ -90,6 +90,7 @@ default_registry = "{registry}"
 
     # For WIT files: use simple recursive copy (assumes wit directory exists)
     wit_source = "{}/wit".format(output_dir.path)
+
     # Use file_ops tool for cross-platform directory copying
     ctx.actions.run(
         executable = file_ops_toolchain.file_ops,

@@ -286,7 +286,7 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
     # But preserve directory structure for cross-package headers
     for hdr in headers:
         relative_path = hdr.basename  # Default to basename for local headers
-        
+
         # Check if this header is in a different package/directory structure
         # that requires preserving path (cross-package dependencies)
         if "/test/" in hdr.short_path or "/external/" in hdr.path:

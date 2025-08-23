@@ -301,7 +301,7 @@ def _download_wrpc_enhanced(repository_ctx):
     """Download wrpc using modernized git_repository approach"""
 
     print("Using modernized wrpc from @wrpc_src git repository")
-    
+
     # Link to git_repository-based wrpc build
     # The actual build is handled by @rules_rust in the git repository
     if repository_ctx.path("../wrpc_src").exists:
@@ -383,35 +383,35 @@ def _setup_built_tools_original(repository_ctx):
     # Link to modernized git_repository-based builds
     # All the git operations and cargo builds are now handled by Bazel's git_repository
     # rules and @rules_rust, eliminating the need for ctx.execute()
-    
+
     # Link to wasm-tools from git repository
     if repository_ctx.path("../wasm_tools_src").exists:
         repository_ctx.symlink("../wasm_tools_src/wasm-tools", "wasm-tools")
         print("Linked wasm-tools from git repository")
     else:
         print("❌ @wasm_tools_src not available")
-    
-    # Link to wac from git repository  
+
+    # Link to wac from git repository
     if repository_ctx.path("../wac_src").exists:
         repository_ctx.symlink("../wac_src/wac", "wac")
         print("Linked wac from git repository")
     else:
         print("❌ @wac_src not available")
-        
+
     # Link to wit-bindgen from git repository
     if repository_ctx.path("../wit_bindgen_src").exists:
         repository_ctx.symlink("../wit_bindgen_src/wit-bindgen", "wit-bindgen")
         print("Linked wit-bindgen from git repository")
     else:
         print("❌ @wit_bindgen_src not available")
-        
+
     # Link to wrpc from git repository
     if repository_ctx.path("../wrpc_src").exists:
         repository_ctx.symlink("../wrpc_src/wrpc-wasmtime", "wrpc")
         print("Linked wrpc from git repository")
     else:
         print("@wrpc_src not available")
-        
+
     print("Build strategy configured")
 
 def _setup_hybrid_tools_original(repository_ctx):
@@ -536,7 +536,7 @@ def _download_wrpc(repository_ctx):
     """Download wrpc using modernized git_repository approach"""
 
     print("Using modernized wrpc from @wrpc_src git repository")
-    
+
     # Link to git_repository-based wrpc build instead of manual git clone + cargo build
     if repository_ctx.path("../wrpc_src").exists:
         repository_ctx.symlink("../wrpc_src/wrpc-wasmtime", "wrpc")
@@ -553,7 +553,7 @@ def _download_wasmsign2(repository_ctx):
     """Download wasmsign2 using modernized git_repository approach"""
 
     print("Using modernized wasmsign2 from @wasmsign2_src git repository")
-    
+
     # Link to git_repository-based wasmsign2 build instead of manual operations
     if repository_ctx.path("../wasmsign2_src").exists:
         # Determine binary name based on platform
@@ -561,7 +561,7 @@ def _download_wasmsign2(repository_ctx):
             binary_name = "wasmsign2.exe"
         else:
             binary_name = "wasmsign2"
-            
+
         repository_ctx.symlink("../wasmsign2_src/{}".format(binary_name), "wasmsign2")
         print("Linked wasmsign2 from git repository")
     else:

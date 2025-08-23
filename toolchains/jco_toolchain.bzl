@@ -197,9 +197,11 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
     # Actually install the packages using npm
     npm_install_result = repository_ctx.execute([
         str(npm_binary),
-        "install", "--global-style", "--no-package-lock",
+        "install",
+        "--global-style",
+        "--no-package-lock",
     ] + install_packages, environment = npm_env, working_directory = "jco_workspace")
-    
+
     if npm_install_result.return_code != 0:
         print("ERROR: npm install failed:")
         print("STDOUT:", npm_install_result.stdout)
