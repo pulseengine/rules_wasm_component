@@ -165,6 +165,7 @@ def rust_wasm_component_macro(
     # Build the final WASM component
     rust_wasm_component(
         name = name,
+        srcs = srcs,
         deps = [":" + wasm_lib],
         wit = wit,
         profiles = profiles,
