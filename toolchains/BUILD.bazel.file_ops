@@ -1,0 +1,32 @@
+"""File Operations Toolchain Configuration and Build Settings"""
+
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("//toolchains:file_ops_selection.bzl", "file_ops_build_setting")
+
+package(default_visibility = ["//visibility:public"])
+
+# Build flag for selecting file operations implementation
+string_flag(
+    name = "file_ops_implementation",
+    build_setting_default = "auto",
+    values = [
+        "tinygo",
+        "rust", 
+        "auto",
+    ],
+)
+
+# Configuration settings for implementation selection
+file_ops_build_setting()
+
+# Toolchain type definition
+toolchain_type(
+    name = "file_ops_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+# Alias for backward compatibility
+alias(
+    name = "file_ops_toolchain_type_legacy",
+    actual = ":file_ops_toolchain_type",
+)

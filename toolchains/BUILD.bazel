@@ -1,6 +1,7 @@
 """Toolchain type definitions"""
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 # File Operations Component toolchain configuration
 load("//toolchains:file_ops_toolchain.bzl", "file_ops_toolchain")
@@ -159,6 +160,21 @@ bzl_library(
     visibility = ["//visibility:public"],
 )
 
+# Bzl library for Dual Implementation File Operations toolchain 
+bzl_library(
+    name = "dual_file_ops_toolchain",
+    srcs = ["dual_file_ops_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+)
+
+# Bzl library for File Operations selection system
+bzl_library(
+    name = "file_ops_selection",
+    srcs = ["file_ops_selection.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [":dual_file_ops_toolchain"],
+)
+
 # Bzl library for WASM Tools Component toolchain implementation
 bzl_library(
     name = "wasm_tools_component_toolchain",
@@ -204,4 +220,38 @@ toolchain(
     # Universal toolchain - works on all platforms
     toolchain = ":wasm_tools_component_toolchain_impl",
     toolchain_type = ":wasm_tools_component_toolchain_type",
+)
+
+# File Operations Implementation Selection
+# Build flag for selecting file operations implementation at build time
+string_flag(
+    name = "file_ops_implementation",
+    build_setting_default = "auto",
+    values = [
+        "tinygo",   # TinyGo implementation (compact, secure)
+        "rust",     # Rust implementation (performance, features)  
+        "auto",     # Automatic selection based on availability and platform
+    ],
+)
+
+# Configuration settings for implementation selection
+config_setting(
+    name = "file_ops_use_tinygo",
+    flag_values = {
+        ":file_ops_implementation": "tinygo",
+    },
+)
+
+config_setting(
+    name = "file_ops_use_rust", 
+    flag_values = {
+        ":file_ops_implementation": "rust",
+    },
+)
+
+config_setting(
+    name = "file_ops_auto_select",
+    flag_values = {
+        ":file_ops_implementation": "auto", 
+    },
 )
