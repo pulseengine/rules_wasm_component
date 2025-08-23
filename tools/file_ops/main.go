@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -18,10 +19,14 @@ type Config struct {
 
 // Operation represents a single file operation
 type Operation struct {
-	Type     string `json:"type"`
-	SrcPath  string `json:"src_path,omitempty"`
-	DestPath string `json:"dest_path,omitempty"`
-	Path     string `json:"path,omitempty"`
+	Type       string   `json:"type"`
+	SrcPath    string   `json:"src_path,omitempty"`
+	DestPath   string   `json:"dest_path,omitempty"`
+	Path       string   `json:"path,omitempty"`
+	Command    string   `json:"command,omitempty"`
+	Args       []string `json:"args,omitempty"`
+	WorkDir    string   `json:"work_dir,omitempty"`
+	OutputFile string   `json:"output_file,omitempty"`
 }
 
 // FileOpsRunner executes file operations hermetically
@@ -71,6 +76,10 @@ func (r *FileOpsRunner) executeOperation(op Operation) error {
 		return r.copyFile(op.SrcPath, op.DestPath)
 	case "mkdir":
 		return r.createDirectory(op.Path)
+	case "copy_directory_contents":
+		return r.copyDirectoryContents(op.SrcPath, op.DestPath)
+	case "run_command":
+		return r.runCommand(op.Command, op.Args, op.WorkDir, op.OutputFile)
 	default:
 		return fmt.Errorf("unknown operation type: %s", op.Type)
 	}
@@ -121,6 +130,167 @@ func (r *FileOpsRunner) createDirectory(path string) error {
 	return nil
 }
 
+// copyDirectoryContents copies all contents of a directory to destination
+func (r *FileOpsRunner) copyDirectoryContents(srcPath, destPath string) error {
+	// Destination is relative to workspace
+	fullDestPath := filepath.Join(r.config.WorkspaceDir, destPath)
+
+	// Ensure destination directory exists
+	if err := os.MkdirAll(fullDestPath, 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory %s: %w", fullDestPath, err)
+	}
+
+	// Open source directory
+	srcDir, err := os.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to open source directory %s: %w", srcPath, err)
+	}
+	defer srcDir.Close()
+
+	// Read directory entries
+	entries, err := srcDir.Readdir(-1)
+	if err != nil {
+		return fmt.Errorf("failed to read directory entries: %w", err)
+	}
+
+	// Copy each entry
+	for _, entry := range entries {
+		srcEntryPath := filepath.Join(srcPath, entry.Name())
+		destEntryPath := filepath.Join(fullDestPath, entry.Name())
+
+		if entry.IsDir() {
+			// Recursively copy directory
+			if err := r.copyDirectoryRecursive(srcEntryPath, destEntryPath); err != nil {
+				return fmt.Errorf("failed to copy directory %s: %w", entry.Name(), err)
+			}
+		} else {
+			// Copy file
+			if err := r.copyFileToAbsolute(srcEntryPath, destEntryPath); err != nil {
+				return fmt.Errorf("failed to copy file %s: %w", entry.Name(), err)
+			}
+		}
+	}
+
+	log.Printf("Copied directory contents: %s -> %s", srcPath, destPath)
+	return nil
+}
+
+// copyDirectoryRecursive recursively copies a directory
+func (r *FileOpsRunner) copyDirectoryRecursive(srcPath, destPath string) error {
+	if err := os.MkdirAll(destPath, 0755); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", destPath, err)
+	}
+
+	srcDir, err := os.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to open source directory %s: %w", srcPath, err)
+	}
+	defer srcDir.Close()
+
+	entries, err := srcDir.Readdir(-1)
+	if err != nil {
+		return fmt.Errorf("failed to read directory entries: %w", err)
+	}
+
+	for _, entry := range entries {
+		srcEntryPath := filepath.Join(srcPath, entry.Name())
+		destEntryPath := filepath.Join(destPath, entry.Name())
+
+		if entry.IsDir() {
+			if err := r.copyDirectoryRecursive(srcEntryPath, destEntryPath); err != nil {
+				return err
+			}
+		} else {
+			if err := r.copyFileToAbsolute(srcEntryPath, destEntryPath); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// copyFileToAbsolute copies a file to an absolute destination path
+func (r *FileOpsRunner) copyFileToAbsolute(srcPath, destPath string) error {
+	srcFile, err := os.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to open source file %s: %w", srcPath, err)
+	}
+	defer srcFile.Close()
+
+	destFile, err := os.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file %s: %w", destPath, err)
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy file contents: %w", err)
+	}
+
+	return nil
+}
+
+// runCommand executes a command in the specified working directory
+func (r *FileOpsRunner) runCommand(command string, args []string, workDir, outputFile string) error {
+	// Set working directory - relative to workspace if specified
+	var fullWorkDir string
+	if workDir != "" {
+		if filepath.IsAbs(workDir) {
+			fullWorkDir = workDir
+		} else {
+			fullWorkDir = filepath.Join(r.config.WorkspaceDir, workDir)
+		}
+	} else {
+		fullWorkDir = r.config.WorkspaceDir
+	}
+
+	// Create command
+	cmd := exec.Command(command, args...)
+	cmd.Dir = fullWorkDir
+
+	// Handle output
+	if outputFile != "" {
+		// Output to file (relative to workspace)
+		var fullOutputPath string
+		if filepath.IsAbs(outputFile) {
+			fullOutputPath = outputFile
+		} else {
+			fullOutputPath = filepath.Join(r.config.WorkspaceDir, outputFile)
+		}
+
+		// Ensure output directory exists
+		outDir := filepath.Dir(fullOutputPath)
+		if err := os.MkdirAll(outDir, 0755); err != nil {
+			return fmt.Errorf("failed to create output directory %s: %w", outDir, err)
+		}
+
+		outFile, err := os.Create(fullOutputPath)
+		if err != nil {
+			return fmt.Errorf("failed to create output file %s: %w", fullOutputPath, err)
+		}
+		defer outFile.Close()
+
+		cmd.Stdout = outFile
+		cmd.Stderr = os.Stderr
+	} else {
+		// Output to logs
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+
+	log.Printf("Running command: %s %v in %s", command, args, fullWorkDir)
+
+	// Execute command
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("command failed: %w", err)
+	}
+
+	log.Printf("Command completed successfully")
+	return nil
+}
+
 // validateConfig performs basic validation on the configuration
 func (r *FileOpsRunner) validateConfig() error {
 	if r.config.WorkspaceDir == "" {
@@ -149,6 +319,20 @@ func (r *FileOpsRunner) validateConfig() error {
 			}
 			if filepath.IsAbs(op.Path) {
 				return fmt.Errorf("operation %d: mkdir path must be relative: %s", i, op.Path)
+			}
+		case "copy_directory_contents":
+			if op.SrcPath == "" || op.DestPath == "" {
+				return fmt.Errorf("operation %d: copy_directory_contents requires src_path and dest_path", i)
+			}
+			if !filepath.IsAbs(op.SrcPath) {
+				return fmt.Errorf("operation %d: src_path must be absolute: %s", i, op.SrcPath)
+			}
+			if filepath.IsAbs(op.DestPath) {
+				return fmt.Errorf("operation %d: dest_path must be relative: %s", i, op.DestPath)
+			}
+		case "run_command":
+			if op.Command == "" {
+				return fmt.Errorf("operation %d: run_command requires command", i)
 			}
 		default:
 			return fmt.Errorf("operation %d: unknown operation type: %s", i, op.Type)

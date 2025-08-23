@@ -1,25 +1,25 @@
 """BUILD file for wit-bindgen repository
 
-This file creates wit-bindgen binary using cargo within the git repository.
-This is a hybrid approach - git_repository for source + genrule for cargo build.
+This file creates wit-bindgen binary using @rules_rust instead of shell commands.
+This modernized approach eliminates cargo+cp genrule pattern for better
+cross-platform compatibility and Bazel integration.
 """
 
-# Build wit-bindgen using cargo (hybrid approach)
-genrule(
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+# Build wit-bindgen using @rules_rust (modernized approach)
+rust_binary(
     name = "wit-bindgen",
-    srcs = glob(["**/*"]),  # All source files
-    outs = ["wit-bindgen"],
-    cmd = """cd $$(dirname $(location Cargo.toml)) && \
-             export CARGO_HOME="$$PWD/.cargo" && \
-             cargo build --release --bin wit-bindgen && \
-             cp target/release/wit-bindgen $(location wit-bindgen)""",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2021",
     visibility = ["//visibility:public"],
-    tags = ["requires-network"],  # Cargo may need to fetch dependencies
+    # Crate dependencies will be resolved automatically by rules_rust
+    # from the Cargo.toml file in the repository
 )
 
 # Export the binary for toolchain use
 filegroup(
-    name = "wit_bindgen_binary",
+    name = "wit_bindgen_binary", 
     srcs = [":wit-bindgen"],
     visibility = ["//visibility:public"],
 )

@@ -73,9 +73,15 @@ default_registry = "{registry}"
     # This is more predictable than dynamic discovery
     expected_component = "{}/{}.wasm".format(output_dir.path, ctx.attr.package.split("/")[-1])
 
+    # Use file_ops tool for cross-platform file copying
+    file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
+    
     ctx.actions.run(
-        executable = "cp",
-        arguments = [expected_component, component_file.path],
+        executable = file_ops_toolchain.file_ops,
+        arguments = [
+            "-json",
+            '{"operations":[{"type":"copy_file","src_path":"%s","dest_path":"%s"}]}' % (expected_component, component_file.path),
+        ],
         inputs = [output_dir],
         outputs = [component_file],
         mnemonic = "WkgCopyComponent",
@@ -84,9 +90,13 @@ default_registry = "{registry}"
 
     # For WIT files: use simple recursive copy (assumes wit directory exists)
     wit_source = "{}/wit".format(output_dir.path)
+    # Use file_ops tool for cross-platform directory copying
     ctx.actions.run(
-        executable = "cp",
-        arguments = ["-r", wit_source, wit_dir.path],
+        executable = file_ops_toolchain.file_ops,
+        arguments = [
+            "-json",
+            '{"operations":[{"type":"copy_directory_contents","src_path":"%s","dest_path":"%s"}]}' % (wit_source, wit_dir.path),
+        ],
         inputs = [output_dir],
         outputs = [wit_dir],
         mnemonic = "WkgCopyWit",

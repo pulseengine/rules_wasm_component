@@ -1,0 +1,22 @@
+package macro:example;
+
+/// A simple calculator interface for demonstrating macro usage
+interface calculator {
+    /// Add two numbers
+    add: func(a: f64, b: f64) -> f64;
+    
+    /// Multiply two numbers
+    multiply: func(a: f64, b: f64) -> f64;
+}
+
+/// Logger interface for macro examples
+interface logger {
+    /// Log a message with a level
+    log: func(level: string, message: string);
+}
+
+/// The main world that exports calculator and imports logger
+world macro-world {
+    export calculator;
+    import logger;
+}

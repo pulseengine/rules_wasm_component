@@ -195,13 +195,10 @@ def _create_simple_composition(ctx, wasm_tools, components, manifest, output):
     """Create a simple composition by bundling components together"""
 
     if len(components) == 1:
-        # Single component - just copy it
-        ctx.actions.run(
-            executable = "cp",
-            arguments = [components[0].path, output.path],
-            inputs = components + [manifest],
-            outputs = [output],
-            mnemonic = "WasmCopy",
+        # Single component - just copy it using Bazel-native symlink
+        ctx.actions.symlink(
+            output = output,
+            target_file = components[0],
             progress_message = "Creating single-component composition %s" % ctx.attr.name,
         )
     else:

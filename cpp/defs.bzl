@@ -1,4 +1,53 @@
-"""Bazel rules for C/C++ WebAssembly components with Preview2 support"""
+# Copyright 2024 Ralf Anton Beier. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""C/C++ WebAssembly Component Model rules
+
+Production-ready C/C++ support for WebAssembly Component Model using:
+- WASI SDK v27+ with native Preview2 support
+- Clang 20+ with advanced WebAssembly optimizations
+- Bazel-native implementation with comprehensive cross-package header staging
+- Cross-platform compatibility (Windows/macOS/Linux)
+- Modern C++17/20/23 standard support with exception handling
+- External library integration (nlohmann_json, abseil-cpp, spdlog, fmt)
+- Advanced header dependency resolution and CcInfo provider integration
+- Component libraries for modular development
+
+Example usage:
+
+    cpp_component(
+        name = "calculator",
+        srcs = ["calculator.cpp", "math_utils.cpp"],
+        hdrs = ["calculator.h"],
+        wit = "//wit:calculator-interface",
+        world = "calculator",
+        language = "cpp",
+        cxx_std = "c++20",
+        enable_exceptions = True,
+        deps = [
+            "@nlohmann_json//:json",
+            "@abseil-cpp//absl/strings",
+        ],
+    )
+
+    cc_component_library(
+        name = "math_utils",
+        srcs = ["math.cpp"],
+        hdrs = ["math.h"],
+        deps = ["@fmt//:fmt"],
+    )
+"""
 
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
@@ -593,18 +642,29 @@ def _cc_component_library_impl(ctx):
     transitive_headers = []
     transitive_libraries = []
     transitive_includes = []
+    direct_includes = []  # For external library includes used by this library
 
     for dep in ctx.attr.deps:
         if CcInfo in dep:
             cc_info = dep[CcInfo]
             transitive_headers.append(cc_info.compilation_context.headers)
+
+            # Collect all types of includes for proper transitive propagation
             transitive_includes.extend(cc_info.compilation_context.includes.to_list())
+            direct_includes.extend(cc_info.compilation_context.includes.to_list())
+            direct_includes.extend(cc_info.compilation_context.system_includes.to_list())
+            direct_includes.extend(cc_info.compilation_context.quote_includes.to_list())
+
             transitive_libraries.append(cc_info.linking_context.linker_inputs)
 
     # Create compilation context with current headers and transitive headers
+    # Include both local header directories and external library include paths
+    local_includes = [h.dirname for h in ctx.files.hdrs] + ctx.attr.includes
+    all_includes = local_includes + direct_includes
+
     compilation_context = cc_common.create_compilation_context(
         headers = depset(ctx.files.hdrs, transitive = transitive_headers),
-        includes = depset([h.dirname for h in ctx.files.hdrs] + ctx.attr.includes, transitive = [depset(transitive_includes)]),
+        includes = depset(all_includes, transitive = [depset(transitive_includes)]),
     )
 
     # Create linking context for the static library
