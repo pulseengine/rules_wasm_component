@@ -35,19 +35,19 @@ def main():
     if len(sys.argv) < 4:
         print("Usage: build_docs.py <output_tar> <package_json> <src_files...>")
         sys.exit(1)
-    
+
     output_tar = sys.argv[1]
     package_json = sys.argv[2]
     src_files = sys.argv[3:]
-    
+
     # Create temporary workspace
     with tempfile.TemporaryDirectory() as work_dir:
         print(f"Working in: {work_dir}")
-        
+
         # Copy package.json
         shutil.copy2(package_json, os.path.join(work_dir, "package.json"))
         print(f"Copied package.json")
-        
+
         # Copy all source files, maintaining docs-site structure
         copied_files = 0
         for src_file in src_files:
@@ -56,20 +56,20 @@ def main():
                 rel_path = src_file[10:]  # len("docs-site/") = 10
                 dest_file = os.path.join(work_dir, rel_path)
                 dest_dir = os.path.dirname(dest_file)
-                
+
                 # Ensure parent directory exists
                 os.makedirs(dest_dir, exist_ok=True)
-                
+
                 # Copy file
                 shutil.copy2(src_file, dest_file)
                 copied_files += 1
-        
+
         print(f"Copied {copied_files} source files")
-        
+
         # Change to workspace for npm operations
         original_cwd = os.getcwd()
         os.chdir(work_dir)
-        
+
         try:
             # Install dependencies using hermetic npm
             print("Installing npm dependencies...")
@@ -79,13 +79,13 @@ def main():
                 text=True,
                 timeout=300  # 5 minute timeout
             )
-            
+
             if result.returncode != 0:
                 print(f"npm install failed: {result.stderr}")
                 sys.exit(1)
-            
+
             print("npm install completed successfully")
-            
+
             # Build documentation site
             print("Building documentation site...")
             result = subprocess.run(
@@ -94,38 +94,38 @@ def main():
                 text=True,
                 timeout=300  # 5 minute timeout
             )
-            
+
             if result.returncode != 0:
                 print(f"npm run build failed: {result.stderr}")
                 sys.exit(1)
-            
+
             print("Documentation build completed successfully")
-            
+
             # Return to original directory and create output archive
             os.chdir(original_cwd)
-            
+
             # Ensure output directory exists
             os.makedirs(os.path.dirname(output_tar), exist_ok=True)
-            
+
             # Create tar archive from dist directory
             dist_dir = os.path.join(work_dir, "dist")
             if not os.path.exists(dist_dir):
                 print(f"Error: dist directory not found at {dist_dir}")
                 sys.exit(1)
-            
+
             # Use tar command for compression
             result = subprocess.run(
                 ["tar", "-czf", output_tar, "-C", dist_dir, "."],
                 capture_output=True,
                 text=True
             )
-            
+
             if result.returncode != 0:
                 print(f"tar creation failed: {result.stderr}")
                 sys.exit(1)
-            
+
             print(f"Documentation build complete: {output_tar}")
-            
+
         except subprocess.TimeoutExpired as e:
             print(f"Build process timed out: {e}")
             sys.exit(1)
@@ -136,7 +136,7 @@ def main():
 if __name__ == "__main__":
     main()
 '''
-    
+
     ctx.actions.write(
         output = build_script,
         content = script_content,

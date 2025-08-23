@@ -168,16 +168,35 @@ toolchain(
 )
 """)
 
+    elif strategy == "source":
+        # Use git_repository approach (modernized)
+        ctx.file("BUILD.bazel", """
+load("@rules_wasm_component//toolchains:wkg_toolchain.bzl", "wkg_toolchain")
+
+wkg_toolchain(
+    name = "wkg_toolchain",
+    wkg = "@wkg_src//:wkg",
+    visibility = ["//visibility:public"],
+)
+
+toolchain(
+    name = "wkg_toolchain_def",
+    toolchain = ":wkg_toolchain",
+    toolchain_type = "@rules_wasm_component//toolchains:wkg_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+""")
+
     else:
-        fail("Unknown strategy: {}. Supported: download, build".format(strategy))
+        fail("Unknown strategy: {}. Supported: download, build, source".format(strategy))
 
 wkg_toolchain_repository = repository_rule(
     implementation = _wkg_toolchain_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Tool acquisition strategy: 'download' or 'build'",
+            doc = "Tool acquisition strategy: 'download', 'build', or 'source'",
             default = "download",
-            values = ["download", "build"],
+            values = ["download", "build", "source"],
         ),
         "version": attr.string(
             doc = "Version to download/build",

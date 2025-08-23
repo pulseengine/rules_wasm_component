@@ -281,16 +281,30 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
         "dependencies": [],
     }
 
-    # For local headers within the same component, use basename only
-    # This matches how the source files include them (e.g., #include "calculator_c.h")
+    # For local headers within the same component, preserve directory structure
+    # This handles cases where source files include headers with subdirectory paths
     for hdr in headers:
-        # For headers within the same component, just use the basename
-        # Source files expect to find headers in the same directory
-        relative_path = hdr.basename
+        # Preserve the original directory structure for local headers
+        # This handles includes like #include "foundation/types.h"
+        relative_path = hdr.short_path
+
+        # For local headers, try to preserve meaningful directory structure
+        if "/" in relative_path:
+            path_parts = relative_path.split("/")
+
+            # If this is a local header in a subdirectory, preserve the structure
+            # For example: test/cross_package_headers/foundation/types.h -> foundation/types.h
+            if len(path_parts) >= 2:
+                # Take the last 2 parts to preserve subdirectory structure
+                relative_path = "/".join(path_parts[-2:])
+            else:
+                relative_path = hdr.basename
+        else:
+            relative_path = hdr.basename
 
         config["headers"].append({
             "source": hdr,
-            "destination": relative_path,  # Use basename for local headers
+            "destination": relative_path,  # Preserve directory structure for local headers
             "preserve_permissions": False,
         })
 

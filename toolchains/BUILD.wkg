@@ -1,9 +1,9 @@
-"""BUILD file for wizer (WebAssembly pre-initialization tool) built from source"""
+"""BUILD file for wkg (WebAssembly Package Tools) built from source"""
 
 load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 rust_binary(
-    name = "wizer",
+    name = "wkg",
     srcs = glob(["src/**/*.rs"]),
     edition = "2021",
     visibility = ["//visibility:public"],
@@ -11,11 +11,4 @@ rust_binary(
         # Note: Dependencies will be resolved by rules_rust from Cargo.toml
         # This follows the same pattern as other modernized tools
     ],
-)
-
-# Alias for Bazel integration
-alias(
-    name = "wizer_bazel",
-    actual = ":wizer",
-    visibility = ["//visibility:public"],
 )

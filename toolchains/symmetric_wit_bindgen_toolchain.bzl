@@ -118,39 +118,9 @@ def _download_official_wit_bindgen(repository_ctx, platform):
 def _build_symmetric_wit_bindgen(repository_ctx):
     """Build wit-bindgen from cpetig's symmetric fork"""
 
-    # Clone cpetig's wit-bindgen fork
-    result = repository_ctx.execute([
-        "git",
-        "clone",
-        "--depth",
-        "1",
-        "--branch",
-        "experimental",  # Use experimental branch that has symmetric features
-        "https://github.com/cpetig/wit-bindgen.git",
-        "wit-bindgen-symmetric-src",
-    ])
+    print("Using git_repository for symmetric wit-bindgen")
 
-    if result.return_code != 0:
-        fail(format_diagnostic_error(
-            "E003",
-            "Failed to clone symmetric wit-bindgen fork: {}".format(result.stderr),
-            "Check network connectivity and git installation",
-        ))
-
-    # Build wit-bindgen with symmetric features
-    result = repository_ctx.execute([
-        "cargo",
-        "build",
-        "--release",
-        "--manifest-path=wit-bindgen-symmetric-src/Cargo.toml",
-    ])
-
-    if result.return_code != 0:
-        fail(format_diagnostic_error(
-            "E005",
-            "Failed to build symmetric wit-bindgen: {}".format(result.stderr),
-            "Ensure Rust toolchain is installed and try again",
-        ))
+    print("Using rules_rust for symmetric wit-bindgen build")
 
     # Copy built binary
     repository_ctx.symlink(

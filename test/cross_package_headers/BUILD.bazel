@@ -22,15 +22,16 @@ cc_component_library(
         "foundation/types.h",
         "foundation/utils.h",
     ],
+    enable_exceptions = True,  # Required for spdlog in comprehensive test
     tags = ["manual"],  # Exclude from CI wildcard builds due to complex external dependencies
     visibility = ["//visibility:public"],
     deps = [
-        "@fmt",                                       # Modern formatting library (compiled)
-        "@nlohmann_json//:json",                      # JSON library (header-only)
-        "@abseil-cpp//absl/strings",                  # Google's string utilities (compiled)
+        # "@fmt",  # Excluded to avoid conflict with spdlog's bundled fmt
+        "@nlohmann_json//:json",  # JSON library (header-only)
+        "@abseil-cpp//absl/strings",  # Google's string utilities (compiled)
         "@abseil-cpp//absl/container:flat_hash_map",  # High-performance containers
-        "@abseil-cpp//absl/time",                     # Time utilities (compiled)
-        "@spdlog//:spdlog",                           # Fast logging library (header-only/compiled backend)
+        "@abseil-cpp//absl/time",  # Time utilities (compiled)
+        "@spdlog",  # Fast logging library (includes fmt internally)
     ],
 )
 
@@ -45,6 +46,7 @@ wit_library(
 cpp_component(
     name = "consumer_component",
     srcs = ["src/consumer.cpp"],
+    enable_exceptions = True,  # Required for spdlog in comprehensive test
     tags = ["manual"],  # Exclude from CI wildcard builds due to complex external dependencies
     wit = ":consumer_interface",
     deps = [":foundation_lib"],  # Cross-package dependency

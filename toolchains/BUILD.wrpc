@@ -1,19 +1,22 @@
 """BUILD file for wrpc repository
 
-This file creates wrpc-wasmtime binary using cargo within the git repository.
-This is a hybrid approach - git_repository for source + genrule for cargo build.
+This file creates wrpc-wasmtime binary using @rules_rust instead of shell commands.
+This modernized approach eliminates cargo+cp genrule pattern for better
+cross-platform compatibility and Bazel integration.
 """
 
-# Build wrpc-wasmtime using cargo (hybrid approach)
-genrule(
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+# Build wrpc-wasmtime using @rules_rust (modernized approach)  
+rust_binary(
     name = "wrpc-wasmtime",
-    srcs = glob(["**/*"]),  # All source files
-    outs = ["wrpc-wasmtime"],
-    cmd = """cd $$(dirname $(location Cargo.toml)) && \
-             cargo build --release --bin wrpc-wasmtime --features bin-wasmtime && \
-             cp target/release/wrpc-wasmtime $(location wrpc-wasmtime)""",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2021",
     visibility = ["//visibility:public"],
-    tags = ["requires-network"],  # Cargo may need to fetch dependencies
+    # Enable the bin-wasmtime feature as specified in the original genrule
+    rustc_flags = ["--cfg", "feature=\"bin-wasmtime\""],
+    # Crate dependencies will be resolved automatically by rules_rust
+    # from the Cargo.toml file in the repository
 )
 
 # Export the binary for toolchain use

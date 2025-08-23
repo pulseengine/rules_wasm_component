@@ -6,11 +6,13 @@ This document describes the implemented solution for making wit-bindgen rules ge
 
 ## Architecture Overview
 
-### 1. **Dual Toolchain System** 
+### 1. **Dual Toolchain System**
+
 - **Traditional toolchain**: Uses official wit-bindgen via `@rules_wasm_component//toolchains:wasm_tools_toolchain_type`
 - **Symmetric toolchain**: Provides both official and cpetig's fork via `@rules_wasm_component//toolchains:symmetric_wit_bindgen_toolchain_type`
 
 ### 2. **Separate Rules for Each Mode**
+
 - **`wit_bindgen`**: Traditional rule (unchanged) for official wit-bindgen
 - **`symmetric_wit_bindgen`**: New rule for symmetric mode using cpetig's fork
 - **`rust_wasm_component_bindgen`**: High-level rule supporting both via `symmetric` parameter
@@ -46,17 +48,19 @@ This document describes the implemented solution for making wit-bindgen rules ge
 
 ## Usage Examples
 
-### Basic Setup (MODULE.bazel):
+### Basic Setup (MODULE.bazel)
+
 ```starlark
 # Optional: Add symmetric support
 symmetric_wit_bindgen = use_extension(
-    "@rules_wasm_component//toolchains:extensions.bzl", 
+    "@rules_wasm_component//toolchains:extensions.bzl",
     "symmetric_wit_bindgen"
 )
 register_toolchains("@symmetric_wit_bindgen//:symmetric_wit_bindgen_toolchain")
 ```
 
-### Traditional Approach (no changes needed):
+### Traditional Approach (no changes needed)
+
 ```starlark
 rust_wasm_component_bindgen(
     name = "my_component",
@@ -66,7 +70,8 @@ rust_wasm_component_bindgen(
 )
 ```
 
-### Symmetric Approach:
+### Symmetric Approach
+
 ```starlark
 rust_wasm_component_bindgen(
     name = "my_symmetric_component",
@@ -77,7 +82,8 @@ rust_wasm_component_bindgen(
 )
 ```
 
-### Direct Symmetric Rule Usage:
+### Direct Symmetric Rule Usage
+
 ```starlark
 load("@rules_wasm_component//wit:defs.bzl", "symmetric_wit_bindgen")
 
@@ -101,6 +107,7 @@ symmetric_wit_bindgen(
 ## Testing Results ✅
 
 All tests pass:
+
 - ✅ Basic `wit_bindgen` rule compilation (traditional mode)
 - ✅ Symmetric example builds successfully
 - ✅ Traditional component builds and runs
@@ -110,7 +117,7 @@ All tests pass:
 ```bash
 # These all work:
 bazel build //examples/basic:hello_component_bindings          # Traditional
-bazel build //examples/symmetric_example:traditional_component # Traditional 
+bazel build //examples/symmetric_example:traditional_component # Traditional
 bazel run //examples/symmetric_example:traditional_host        # Traditional host
 bazel build //examples/symmetric_example:test_symmetric_compilation # Test suite
 ```
@@ -124,7 +131,7 @@ bazel build //examples/symmetric_example:test_symmetric_compilation # Test suite
 ## Technical Choices Made
 
 1. **Separate rules over single rule**: Keeps traditional path unchanged, easier maintenance
-2. **Optional toolchain**: Avoids requiring symmetric setup for traditional users  
+2. **Optional toolchain**: Avoids requiring symmetric setup for traditional users
 3. **Module extension**: Easy setup experience via MODULE.bazel
 4. **Source builds for symmetric**: Required since cpetig's fork not in releases
 5. **Python filtering scripts**: Cleaner than complex shell in wrapper generation
@@ -150,6 +157,7 @@ bazel build //examples/symmetric_example:test_symmetric_compilation # Test suite
 ## Conclusion
 
 The implementation successfully provides:
+
 - **Unified API** for both traditional and symmetric approaches
 - **No breaking changes** to existing code
 - **Complete feature support** from cpetig's fork

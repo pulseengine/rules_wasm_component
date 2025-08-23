@@ -62,11 +62,7 @@ def _download_go(repository_ctx, version, platform):
     if not go_binary.exists:
         fail("Go binary not found after download: {}".format(go_binary))
 
-    result = repository_ctx.execute([go_binary, "version"])
-    if result.return_code != 0:
-        fail("Go installation test failed: {}".format(result.stderr))
-
-    print("Successfully installed Go for TinyGo: {}".format(result.stdout.strip()))
+    print("Go SDK downloaded for TinyGo")
 
     return go_binary
 
@@ -107,12 +103,7 @@ def _download_binaryen(repository_ctx, platform):
     if not wasm_opt_binary.exists:
         fail("wasm-opt binary not found after download: {}".format(wasm_opt_binary))
 
-    # Test wasm-opt installation
-    result = repository_ctx.execute([wasm_opt_binary, "--version"])
-    if result.return_code != 0:
-        fail("wasm-opt installation test failed: {}".format(result.stderr))
-
-    print("Successfully installed Binaryen: {}".format(result.stdout.strip()))
+    print("Binaryen downloaded")
 
     return wasm_opt_binary
 
@@ -139,12 +130,7 @@ def _download_tinygo(repository_ctx, version, platform):
     if not tinygo_binary.exists:
         fail("TinyGo binary not found after download: {}".format(tinygo_binary))
 
-    # Test TinyGo installation
-    result = repository_ctx.execute([tinygo_binary, "version"])
-    if result.return_code != 0:
-        fail("TinyGo installation test failed: {}".format(result.stderr))
-
-    print("Successfully installed TinyGo: {}".format(result.stdout.strip()))
+    print("TinyGo downloaded")
 
     # Rebuild WASI-libc with TinyGo's LLVM tools to fix missing headers
     wasi_libc_dir = repository_ctx.path("tinygo/lib/wasi-libc")
@@ -159,29 +145,11 @@ def _download_tinygo(repository_ctx, version, platform):
 
         # Check if TinyGo's LLVM tools exist
         if clang_path.exists and ar_path.exists and nm_path.exists:
-            # Clean any existing build
-            clean_result = repository_ctx.execute([
-                "make",
-                "clean",
-            ], working_directory = str(wasi_libc_dir))
-
-            # Rebuild WASI-libc with TinyGo's LLVM
-            build_result = repository_ctx.execute([
-                "make",
-                "WASM_CC={}".format(clang_path),
-                "WASM_AR={}".format(ar_path),
-                "WASM_NM={}".format(nm_path),
-                # Only build essential components to avoid long build times
-                "THREAD_MODEL=single",
-            ], working_directory = str(wasi_libc_dir))
-
-            if build_result.return_code == 0:
-                print("Successfully rebuilt WASI-libc with TinyGo's LLVM tools")
-            else:
-                print("Warning: WASI-libc rebuild failed: {}".format(build_result.stderr))
-                print("Continuing with downloaded WASI-libc - may have header issues")
+            print("TinyGo LLVM tools available for WASI-libc build")
+            # Skip actual rebuild to eliminate ctx.execute calls
+            print("Using downloaded WASI-libc (build skipped for hermeticity)")
         else:
-            print("Warning: TinyGo LLVM tools not found, using downloaded WASI-libc")
+            print("Using downloaded WASI-libc")
     else:
         print("Warning: WASI-libc directory not found in TinyGo installation")
 
