@@ -32,13 +32,14 @@ import tempfile
 from pathlib import Path
 
 def main():
-    if len(sys.argv) < 4:
-        print("Usage: build_docs.py <output_tar> <package_json> <src_files...>")
+    if len(sys.argv) < 5:
+        print("Usage: build_docs.py <output_tar> <package_json> <npm_binary> <src_files...>")
         sys.exit(1)
 
     output_tar = sys.argv[1]
     package_json = sys.argv[2]
-    src_files = sys.argv[3:]
+    npm_binary = sys.argv[3]
+    src_files = sys.argv[4:]
 
     # Create temporary workspace
     with tempfile.TemporaryDirectory() as work_dir:
@@ -74,7 +75,7 @@ def main():
             # Install dependencies using hermetic npm
             print("Installing npm dependencies...")
             result = subprocess.run(
-                ["npm", "install", "--no-audit", "--no-fund"],
+                [npm_binary, "install", "--no-audit", "--no-fund"],
                 capture_output=True,
                 text=True,
                 timeout=300  # 5 minute timeout
@@ -89,7 +90,7 @@ def main():
             # Build documentation site
             print("Building documentation site...")
             result = subprocess.run(
-                ["npm", "run", "build"],
+                [npm_binary, "run", "build"],
                 capture_output=True,
                 text=True,
                 timeout=300  # 5 minute timeout
@@ -145,7 +146,7 @@ if __name__ == "__main__":
 
     ctx.actions.run(
         executable = build_script,
-        arguments = [docs_archive.path, package_json.path] + input_file_args,
+        arguments = [docs_archive.path, package_json.path, npm.path] + input_file_args,
         inputs = source_files + [package_json, build_script],
         outputs = [docs_archive],
         tools = [node, npm],
