@@ -194,16 +194,22 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
 
     print("JCO dependencies configured")
 
-    print("JCO build configured")
-
-    # Create jco_workspace directory structure for compatibility
-    repository_ctx.file("jco_workspace/node_modules/.keep", "")
+    # Actually install the packages using npm
+    npm_install_result = repository_ctx.execute([
+        str(npm_binary),
+        "install", "--global-style", "--no-package-lock",
+    ] + install_packages, environment = npm_env, working_directory = "jco_workspace")
     
+    if npm_install_result.return_code != 0:
+        print("ERROR: npm install failed:")
+        print("STDOUT:", npm_install_result.stdout)
+        print("STDERR:", npm_install_result.stderr)
+        fail("Failed to install jco dependencies: {}".format(npm_install_result.stderr))
+
+    print("JCO installation completed successfully")
+
     # Create robust wrapper script for jco that always uses hermetic Node.js
     workspace_path = repository_ctx.path("jco_workspace").realpath
-
-    # Create placeholder package.json for compatibility
-    repository_ctx.file("jco_workspace/node_modules/@bytecodealliance/jco/package.json", "{}")
 
     print("jco installation verified, creating hermetic wrapper...")
 
