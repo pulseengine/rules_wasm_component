@@ -67,15 +67,18 @@ def main():
 
         print(f"Copied {copied_files} source files")
 
+        # Resolve npm binary to absolute path before changing directory
+        npm_abs_path = os.path.abspath(npm_binary)
+        
         # Change to workspace for npm operations
         original_cwd = os.getcwd()
         os.chdir(work_dir)
 
         try:
             # Install dependencies using hermetic npm
-            print("Installing npm dependencies...")
+            print(f"Installing npm dependencies using: {npm_abs_path}")
             result = subprocess.run(
-                [npm_binary, "install", "--no-audit", "--no-fund"],
+                [npm_abs_path, "install", "--no-audit", "--no-fund"],
                 capture_output=True,
                 text=True,
                 timeout=300  # 5 minute timeout
@@ -90,7 +93,7 @@ def main():
             # Build documentation site
             print("Building documentation site...")
             result = subprocess.run(
-                [npm_binary, "run", "build"],
+                [npm_abs_path, "run", "build"],
                 capture_output=True,
                 text=True,
                 timeout=300  # 5 minute timeout
