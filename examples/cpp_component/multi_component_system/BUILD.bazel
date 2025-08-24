@@ -43,6 +43,11 @@ rust_wasm_component_bindgen(
     srcs = ["components/user_service.rs"],
     visibility = ["//visibility:public"],
     wit = ":user_service_wit",
+    deps = [
+        "@crates//:serde_json",
+        "@crates//:serde", 
+        "@crates//:uuid",
+    ],
 )
 
 # Alias for auth service to match expected name
