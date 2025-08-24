@@ -99,3 +99,16 @@ go_wasm_component(
     optimization = "debug",
     world = "simple-test",
 )
+
+# Test multi-file Go component to verify the fix
+go_wasm_component(
+    name = "multi_file_test",
+    srcs = [
+        "main.go",
+        "utils.go",
+    ],
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    go_mod = "go.mod",
+    optimization = "debug",
+    world = "simple-test",
+)
