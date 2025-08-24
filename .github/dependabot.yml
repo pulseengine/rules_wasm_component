@@ -1,0 +1,253 @@
+version: 2
+updates:
+  # Rust dependencies for tools and components
+  - package-ecosystem: "cargo"
+    directory: "/tools/checksum_updater"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "rust/checksum"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "automated"
+      - "toolchain"
+
+  - package-ecosystem: "cargo"
+    directory: "/tools/checksum_updater_wasm"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "rust/wasm-checksum"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "automated"
+      - "wasm"
+
+  - package-ecosystem: "cargo"
+    directory: "/tools/ssh_keygen"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "rust/keygen"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "automated"
+      - "security"
+
+  - package-ecosystem: "cargo"
+    directory: "/tools/wizer_initializer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "rust/wizer"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "automated"
+      - "performance"
+
+  - package-ecosystem: "cargo"
+    directory: "/tools/file_operations_component"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "rust/file-ops"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "automated"
+      - "wasm"
+
+  - package-ecosystem: "cargo"
+    directory: "/tools-builder/toolchains"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "rust/toolchains"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "automated"
+      - "toolchain"
+
+  # Go module dependencies
+  - package-ecosystem: "gomod"
+    directory: "/tools/file_ops"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "go/file-ops"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "tinygo"
+      - "automated"
+
+  - package-ecosystem: "gomod"
+    directory: "/tools/http_downloader_go"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "go/http-downloader"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "tinygo"
+      - "automated"
+
+  - package-ecosystem: "gomod"
+    directory: "/examples/olareg_wasm"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "go/olareg"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "tinygo"
+      - "automated"
+      - "registry"
+
+  - package-ecosystem: "gomod"
+    directory: "/examples/go_component"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "pulseengine/maintainers"
+    assignees:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "go/examples"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "tinygo"
+      - "automated"
+
+  # NPM dependencies for documentation site
+  - package-ecosystem: "npm"
+    directory: "/docs-site"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "docs"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "documentation"
+      - "automated"
+
+  - package-ecosystem: "npm"
+    directory: "/examples/js_component"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "js/examples"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "automated"
+
+  # GitHub Actions workflow dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "pulseengine/maintainers"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "ci-cd"
+      - "automated"
