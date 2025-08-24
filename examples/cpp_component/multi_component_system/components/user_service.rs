@@ -126,7 +126,7 @@ struct UserServiceImpl {
     metrics: ServiceMetrics,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 struct ServiceMetrics {
     total_users: u64,
     active_sessions: u64,
@@ -351,7 +351,7 @@ impl UserServiceImpl {
     }
 
     // Safe statistics collection using Rust's type system
-    fn get_service_stats(&self) -> ServiceMetrics {
+    fn get_internal_stats(&self) -> ServiceMetrics {
         ServiceMetrics {
             total_users: self.users.len() as u64,
             active_sessions: self.user_sessions.values().map(|s| s.len() as u64).sum(),
@@ -369,43 +369,43 @@ impl UserServiceImpl {
 struct UserService;
 
 impl Guest for UserService {
-    fn create_user(&mut self, request: CreateUserRequest) -> UserResult {
+    fn create_user(request: CreateUserRequest) -> UserResult {
         UserServiceImpl::get_instance().create_user(request)
     }
 
-    fn get_user(&mut self, user_id: String) -> UserResult {
+    fn get_user(user_id: String) -> UserResult {
         UserServiceImpl::get_instance().get_user(user_id)
     }
 
-    fn update_user(&mut self, user_id: String, request: ProfileUpdateRequest) -> bool {
+    fn update_user(user_id: String, request: ProfileUpdateRequest) -> bool {
         UserServiceImpl::get_instance().update_user(user_id, request)
     }
 
-    fn delete_user(&mut self, user_id: String) -> bool {
+    fn delete_user(user_id: String) -> bool {
         UserServiceImpl::get_instance().delete_user(user_id)
     }
 
-    fn search_users(&mut self, query: SearchQuery) -> Vec<User> {
+    fn search_users(query: SearchQuery) -> Vec<User> {
         UserServiceImpl::get_instance().search_users(query)
     }
 
-    fn add_friend(&mut self, user_id: String, friend_id: String) -> bool {
+    fn add_friend(user_id: String, friend_id: String) -> bool {
         UserServiceImpl::get_instance().add_friend(user_id, friend_id)
     }
 
-    fn remove_friend(&mut self, user_id: String, friend_id: String) -> bool {
+    fn remove_friend(user_id: String, friend_id: String) -> bool {
         UserServiceImpl::get_instance().remove_friend(user_id, friend_id)
     }
 
-    fn get_friends(&mut self, user_id: String) -> Vec<String> {
+    fn get_friends(user_id: String) -> Vec<String> {
         UserServiceImpl::get_instance().get_friends(user_id)
     }
 
-    fn health_check(&mut self) -> bool {
+    fn health_check() -> bool {
         UserServiceImpl::get_instance().health_check()
     }
 
-    fn get_service_stats(&mut self) -> String {
+    fn get_service_stats() -> String {
         UserServiceImpl::get_instance().get_service_stats()
     }
 }
@@ -518,16 +518,7 @@ impl UserServiceImpl {
     }
 
     fn get_service_stats(&mut self) -> String {
-        let stats = ServiceMetrics {
-            total_users: self.users.len() as u64,
-            active_sessions: self.user_sessions.values().map(|s| s.len() as u64).sum(),
-            profile_updates: self.metrics.profile_updates,
-            relationship_operations: self.metrics.relationship_operations,
-            cache_hits: self.metrics.cache_hits,
-            cache_misses: self.metrics.cache_misses,
-            async_operations: self.metrics.async_operations,
-            zero_copy_operations: self.metrics.zero_copy_operations,
-        };
+        let stats = self.get_internal_stats();
         // Safe JSON serialization using serde
         serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
     }
