@@ -75,12 +75,19 @@ def main():
         current_path = os.environ.get("PATH", "")
         hermetic_path = f"{node_bin_dir}:{current_path}" if current_path else node_bin_dir
         
-        # Set up minimal hermetic environment for npm
+        # Add common shell locations for native module compilation
+        shell_paths = ["/bin", "/usr/bin", "/usr/local/bin"]
+        for shell_path in shell_paths:
+            if os.path.exists(shell_path) and shell_path not in hermetic_path:
+                hermetic_path = f"{hermetic_path}:{shell_path}"
+        
+        # Set up minimal hermetic environment for npm with shell access
         npm_env = {
             "PATH": hermetic_path,
             "NODE_PATH": "",  # Clear any existing NODE_PATH
             "npm_config_cache": os.path.join(work_dir, ".npm-cache"),
             "npm_config_progress": "false",
+            "SHELL": "/bin/sh",  # Explicitly provide shell for native modules
         }
         
         # Change to workspace for npm operations
