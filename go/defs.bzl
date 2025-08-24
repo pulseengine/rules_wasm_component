@@ -232,26 +232,14 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
                 ctx.attr.world,
             ])
 
-    # Find main Go file path within the module directory
-    main_go_found = False
-    main_go_path = None
-    for src in ctx.files.srcs:
-        if src.basename == "main.go":
-            main_go_path = go_module_files.path + "/main.go"
-            main_go_found = True
-            break
-
-    if main_go_found:
-        tinygo_args.append(main_go_path)
-    else:
-        # Check if there's at least one Go file
-        go_files = [src for src in ctx.files.srcs if src.extension == "go"]
-        if not go_files:
-            fail("No Go source files found for %s" % ctx.attr.name)
-
-        # Fallback: compile the entire Go module directory
-        tinygo_args.append(go_module_files.path)
-        print("Warning: No main.go found for %s, compiling entire module directory" % ctx.attr.name)
+    # Always compile the entire Go module directory to include all source files
+    # This ensures TinyGo can see all Go files in the same package, not just main.go
+    tinygo_args.append(go_module_files.path)
+    
+    # Validate that we have Go source files
+    go_files = [src for src in ctx.files.srcs if src.extension == "go"]
+    if not go_files:
+        fail("No Go source files found for %s" % ctx.attr.name)
 
     # THE BAZEL WAY: Use Bazel's toolchain path resolution
     # Calculate TINYGOROOT from tinygo binary path dynamically
