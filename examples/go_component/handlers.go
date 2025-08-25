@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/example/httpservice/bindings"
 	"strconv"
 	"strings"
 )
@@ -64,7 +63,7 @@ func (r *RequestHandler) ParseJSONBody(body string) (map[string]interface{}, err
 }
 
 // CreateErrorResponse creates a standardized error response
-func (r *RequestHandler) CreateErrorResponse(status int, message string, details ...string) bindings.HttpResponse {
+func (r *RequestHandler) CreateErrorResponse(status int, message string, details ...string) HttpResponse {
 	errorData := map[string]interface{}{
 		"error":   true,
 		"status":  status,
@@ -77,7 +76,7 @@ func (r *RequestHandler) CreateErrorResponse(status int, message string, details
 
 	body, _ := json.Marshal(errorData)
 
-	return bindings.HttpResponse{
+	return HttpResponse{
 		Status: int32(status),
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -87,7 +86,7 @@ func (r *RequestHandler) CreateErrorResponse(status int, message string, details
 }
 
 // CreateSuccessResponse creates a standardized success response
-func (r *RequestHandler) CreateSuccessResponse(data interface{}) bindings.HttpResponse {
+func (r *RequestHandler) CreateSuccessResponse(data interface{}) HttpResponse {
 	responseData := map[string]interface{}{
 		"success": true,
 		"data":    data,
@@ -95,7 +94,7 @@ func (r *RequestHandler) CreateSuccessResponse(data interface{}) bindings.HttpRe
 
 	body, _ := json.Marshal(responseData)
 
-	return bindings.HttpResponse{
+	return HttpResponse{
 		Status: 200,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -141,8 +140,8 @@ func (r *RequestHandler) ExtractNumericParam(params map[string]string, key strin
 }
 
 // BuildRedirectResponse creates an HTTP redirect response
-func (r *RequestHandler) BuildRedirectResponse(location string) bindings.HttpResponse {
-	return bindings.HttpResponse{
+func (r *RequestHandler) BuildRedirectResponse(location string) HttpResponse {
+	return HttpResponse{
 		Status: 302,
 		Headers: map[string]string{
 			"Location": location,
@@ -152,7 +151,7 @@ func (r *RequestHandler) BuildRedirectResponse(location string) bindings.HttpRes
 }
 
 // LogRequest logs details about an incoming request
-func (r *RequestHandler) LogRequest(request bindings.HttpRequest) {
+func (r *RequestHandler) LogRequest(request HttpRequest) {
 	fmt.Printf("[REQUEST] %s %s\n", request.Method, request.Path)
 
 	if len(request.Headers) > 0 {
