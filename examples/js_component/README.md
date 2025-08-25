@@ -173,13 +173,23 @@ js_component(
 
 ## Installation
 
-Install jco globally via npm:
+> **Recommended**: All tools are now downloaded automatically by Bazel for hermetic builds. No manual installation required!
+
+```starlark
+# MODULE.bazel - Automatic hermetic setup
+bazel_dep(name = "rules_wasm_component", version = "1.0.0")
+```
+
+<details>
+<summary>Alternative: Manual Installation</summary>
+
+If you prefer manual installation (not recommended for production):
 
 ```bash
 npm install -g @bytecodealliance/jco
 ```
 
-Or use the automatic toolchain setup in your MODULE.bazel file.
+</details>
 
 ## Integration with Other Components
 
@@ -210,6 +220,6 @@ wac_remote_compose(
 ## Troubleshooting
 
 - Ensure Node.js and npm are installed
-- Check that jco is available in PATH (for system strategy)
+- All tools are downloaded automatically by Bazel (hermetic builds)
 - Verify WIT interface matches exported functions
 - Use `--verbose` flag with bazel for detailed error messages

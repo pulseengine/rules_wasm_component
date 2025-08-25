@@ -21,53 +21,158 @@ def _docs_build_impl(ctx):
         if src.path.startswith("docs-site/"):
             input_file_args.append(src.path)
 
-    ctx.actions.run_shell(
-        command = """
-        set -euo pipefail
+    # Create documentation build script for better cross-platform support
+    build_script = ctx.actions.declare_file(ctx.label.name + "_build_docs.py")
+    script_content = '''#!/usr/bin/env python3
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
 
-        # Store execution root and output path
-        EXEC_ROOT="$(pwd)"
-        OUTPUT_TAR="$1"
-        PACKAGE_JSON="$2"
-        shift 2
+def main():
+    if len(sys.argv) < 5:
+        print("Usage: build_docs.py <output_tar> <package_json> <npm_binary> <src_files...>")
+        sys.exit(1)
 
-        # Create temporary workspace
-        WORK_DIR="$(mktemp -d)"
-        echo "Working in: $WORK_DIR"
+    output_tar = sys.argv[1]
+    package_json = sys.argv[2]
+    npm_binary = sys.argv[3]
+    src_files = sys.argv[4:]
+
+    # Create temporary workspace
+    with tempfile.TemporaryDirectory() as work_dir:
+        print(f"Working in: {work_dir}")
 
         # Copy package.json
-        cp "$PACKAGE_JSON" "$WORK_DIR/package.json"
+        shutil.copy2(package_json, os.path.join(work_dir, "package.json"))
+        print(f"Copied package.json")
 
         # Copy all source files, maintaining docs-site structure
-        for src_file in "$@"; do
-            if [[ "$src_file" == docs-site/* ]]; then
+        copied_files = 0
+        for src_file in src_files:
+            if src_file.startswith("docs-site/"):
                 # Remove docs-site/ prefix to get relative path
-                rel_path="${src_file#docs-site/}"
-                dest_file="$WORK_DIR/$rel_path"
-                dest_dir="$(dirname "$dest_file")"
-                mkdir -p "$dest_dir"
-                cp "$src_file" "$dest_file"
-            fi
-        done
+                rel_path = src_file[10:]  # len("docs-site/") = 10
+                dest_file = os.path.join(work_dir, rel_path)
+                dest_dir = os.path.dirname(dest_file)
 
+                # Ensure parent directory exists
+                os.makedirs(dest_dir, exist_ok=True)
+
+                # Copy file
+                shutil.copy2(src_file, dest_file)
+                copied_files += 1
+
+        print(f"Copied {copied_files} source files")
+
+        # Resolve npm binary to absolute path before changing directory
+        npm_abs_path = os.path.abspath(npm_binary)
+        
+        # Set up PATH to include hermetic node binary for npm subprocesses
+        node_bin_dir = os.path.dirname(npm_abs_path)
+        current_path = os.environ.get("PATH", "")
+        hermetic_path = f"{node_bin_dir}:{current_path}" if current_path else node_bin_dir
+        
+        # Add common shell locations for native module compilation
+        shell_paths = ["/bin", "/usr/bin", "/usr/local/bin"]
+        for shell_path in shell_paths:
+            if os.path.exists(shell_path) and shell_path not in hermetic_path:
+                hermetic_path = f"{hermetic_path}:{shell_path}"
+        
+        # Set up minimal hermetic environment for npm with shell access
+        npm_env = {
+            "PATH": hermetic_path,
+            "NODE_PATH": "",  # Clear any existing NODE_PATH
+            "npm_config_cache": os.path.join(work_dir, ".npm-cache"),
+            "npm_config_progress": "false",
+            "SHELL": "/bin/sh",  # Explicitly provide shell for native modules
+        }
+        
         # Change to workspace for npm operations
-        cd "$WORK_DIR"
+        original_cwd = os.getcwd()
+        os.chdir(work_dir)
 
-        # Install dependencies using hermetic npm (from PATH via tools)
-        npm install --no-audit --no-fund
+        try:
+            # Install dependencies using hermetic npm
+            print(f"Installing npm dependencies using: {npm_abs_path}")
+            result = subprocess.run(
+                [npm_abs_path, "install", "--no-audit", "--no-fund"],
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+                env=npm_env
+            )
 
-        # Build documentation site (rule docs should be pre-generated)
-        npm run build
+            if result.returncode != 0:
+                print(f"npm install failed: {result.stderr}")
+                sys.exit(1)
 
-        # Return to execution root and create output file there
-        cd "$EXEC_ROOT"
-        mkdir -p "$(dirname "$OUTPUT_TAR")"
-        tar -czf "$OUTPUT_TAR" -C "$WORK_DIR/dist" .
+            print("npm install completed successfully")
 
-        echo "Documentation build complete: $OUTPUT_TAR"
-        """,
-        arguments = [docs_archive.path, package_json.path] + input_file_args,
-        inputs = source_files + [package_json],
+            # Build documentation site
+            print("Building documentation site...")
+            result = subprocess.run(
+                [npm_abs_path, "run", "build"],
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+                env=npm_env
+            )
+
+            if result.returncode != 0:
+                print(f"npm run build failed: {result.stderr}")
+                sys.exit(1)
+
+            print("Documentation build completed successfully")
+
+            # Return to original directory and create output archive
+            os.chdir(original_cwd)
+
+            # Ensure output directory exists
+            os.makedirs(os.path.dirname(output_tar), exist_ok=True)
+
+            # Create tar archive from dist directory
+            dist_dir = os.path.join(work_dir, "dist")
+            if not os.path.exists(dist_dir):
+                print(f"Error: dist directory not found at {dist_dir}")
+                sys.exit(1)
+
+            # Use tar command for compression
+            result = subprocess.run(
+                ["tar", "-czf", output_tar, "-C", dist_dir, "."],
+                capture_output=True,
+                text=True
+            )
+
+            if result.returncode != 0:
+                print(f"tar creation failed: {result.stderr}")
+                sys.exit(1)
+
+            print(f"Documentation build complete: {output_tar}")
+
+        except subprocess.TimeoutExpired as e:
+            print(f"Build process timed out: {e}")
+            sys.exit(1)
+        except Exception as e:
+            print(f"Build process failed: {e}")
+            sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+'''
+
+    ctx.actions.write(
+        output = build_script,
+        content = script_content,
+        is_executable = True,
+    )
+
+    ctx.actions.run(
+        executable = build_script,
+        arguments = [docs_archive.path, package_json.path, npm.path] + input_file_args,
+        inputs = source_files + [package_json, build_script],
         outputs = [docs_archive],
         tools = [node, npm],
         mnemonic = "BuildDocs",
@@ -75,7 +180,6 @@ def _docs_build_impl(ctx):
         execution_requirements = {
             "local": "1",  # npm install needs network
         },
-        use_default_shell_env = True,
     )
 
     return [

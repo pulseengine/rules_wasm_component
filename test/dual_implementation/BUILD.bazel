@@ -1,0 +1,51 @@
+"""Tests for dual implementation file operations toolchain"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//toolchains:dual_file_ops_toolchain.bzl", "dual_file_ops_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+# Test dual toolchain with actual components
+dual_file_ops_toolchain(
+    name = "test_dual_toolchain",
+    tinygo_component = "//tools/file_operations_component:file_ops",  # Current Rust implementation as mock TinyGo
+    rust_component = "//tools/file_operations_component:file_ops",    # Actual Rust implementation
+    implementation_preference = "auto",
+    wit_files = ["//tools/file_operations_component:wit_files"],
+)
+
+# Test security-focused configuration  
+dual_file_ops_toolchain(
+    name = "test_security_toolchain",
+    tinygo_component = "//tools/file_operations_component:file_ops",
+    implementation_preference = "tinygo",
+    wit_files = ["//tools/file_operations_component:wit_files"],
+)
+
+# Test performance-focused configuration
+dual_file_ops_toolchain(
+    name = "test_performance_toolchain", 
+    rust_component = "//tools/file_operations_component:file_ops",
+    implementation_preference = "rust",
+    wit_files = ["//tools/file_operations_component:wit_files"],
+)
+
+# Build tests to verify toolchain configurations
+build_test(
+    name = "dual_toolchain_build_test",
+    targets = [
+        ":test_dual_toolchain",
+        ":test_security_toolchain", 
+        ":test_performance_toolchain",
+    ],
+)
+
+# Test flag-based selection
+build_test(
+    name = "flag_selection_test",
+    targets = [
+        "//toolchains:file_ops_use_tinygo",
+        "//toolchains:file_ops_use_rust",
+        "//toolchains:file_ops_auto_select",
+    ],
+)

@@ -1,4 +1,53 @@
-"""Bazel rules for C/C++ WebAssembly components with Preview2 support"""
+# Copyright 2024 Ralf Anton Beier. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""C/C++ WebAssembly Component Model rules
+
+Production-ready C/C++ support for WebAssembly Component Model using:
+- WASI SDK v27+ with native Preview2 support
+- Clang 20+ with advanced WebAssembly optimizations
+- Bazel-native implementation with comprehensive cross-package header staging
+- Cross-platform compatibility (Windows/macOS/Linux)
+- Modern C++17/20/23 standard support with exception handling
+- External library integration (nlohmann_json, abseil-cpp, spdlog, fmt)
+- Advanced header dependency resolution and CcInfo provider integration
+- Component libraries for modular development
+
+Example usage:
+
+    cpp_component(
+        name = "calculator",
+        srcs = ["calculator.cpp", "math_utils.cpp"],
+        hdrs = ["calculator.h"],
+        wit = "//wit:calculator-interface",
+        world = "calculator",
+        language = "cpp",
+        cxx_std = "c++20",
+        enable_exceptions = True,
+        deps = [
+            "@nlohmann_json//:json",
+            "@abseil-cpp//absl/strings",
+        ],
+    )
+
+    cc_component_library(
+        name = "math_utils",
+        srcs = ["math.cpp"],
+        hdrs = ["math.h"],
+        deps = ["@fmt//:fmt"],
+    )
+"""
 
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
@@ -39,11 +88,15 @@ def _cpp_component_impl(ctx):
                 elif file.extension == "a":
                     dep_libraries.append(file)
 
-        # Also extract headers and includes from CcInfo for proper transitive dependencies
+        # Extract includes from CcInfo for proper transitive dependencies
+        # but DON'T copy external headers to workspace (they use original paths)
         if CcInfo in dep:
             cc_info = dep[CcInfo]
-            dep_headers.extend(cc_info.compilation_context.headers.to_list())
+
+            # Add all types of include paths (direct, system, and quote includes)
             dep_includes.extend(cc_info.compilation_context.includes.to_list())
+            dep_includes.extend(cc_info.compilation_context.system_includes.to_list())
+            dep_includes.extend(cc_info.compilation_context.quote_includes.to_list())
 
     # Generate bindings directory
     bindings_dir = ctx.actions.declare_directory(ctx.attr.name + "_bindings")
@@ -183,10 +236,17 @@ def _cpp_component_impl(ctx):
     for lib in dep_libraries:
         compile_args.add(lib.path)
 
+    # Add external dependency headers to inputs (from CcInfo)
+    external_headers = []
+    for dep in ctx.attr.deps:
+        if CcInfo in dep:
+            cc_info = dep[CcInfo]
+            external_headers.extend(cc_info.compilation_context.headers.to_list())
+
     ctx.actions.run(
         executable = clang,
         arguments = [compile_args],
-        inputs = [work_dir] + sysroot_files.files.to_list() + dep_libraries + dep_headers,
+        inputs = [work_dir] + sysroot_files.files.to_list() + dep_libraries + dep_headers + external_headers,
         outputs = [wasm_binary],
         mnemonic = "CompileCppWasm",
         progress_message = "Compiling C/C++ to WASM for %s" % ctx.label,
@@ -425,10 +485,26 @@ def _cc_component_library_impl(ctx):
     # Collect dependency headers
     dep_headers = []
     for dep in ctx.attr.deps:
+        # Check DefaultInfo first for direct file access (cc_component_library outputs)
         if DefaultInfo in dep:
             for file in dep[DefaultInfo].files.to_list():
                 if file.extension in ["h", "hpp", "hh", "hxx"]:
                     dep_headers.append(file)
+
+        # For CcInfo dependencies (external libraries), don't copy headers to workspace
+        # since they already provide proper include paths. Only copy headers from
+        # DefaultInfo (our own cc_component_library targets that need cross-package staging)
+        # if CcInfo in dep:
+        #     cc_info = dep[CcInfo]
+        #     dep_headers.extend(cc_info.compilation_context.headers.to_list())
+
+    # Set up workspace with proper header staging (CRITICAL FIX for issue #38)
+    work_dir = setup_cpp_workspace_action(
+        ctx,
+        sources = ctx.files.srcs,
+        headers = ctx.files.hdrs,
+        dep_headers = dep_headers,
+    )
 
     # Compile source files to object files
     object_files = []
@@ -479,9 +555,8 @@ def _cc_component_library_impl(ctx):
             if ctx.attr.cxx_std:
                 compile_args.add("-std=" + ctx.attr.cxx_std)
 
-        # Include directories
-        for hdr in ctx.files.hdrs:
-            compile_args.add("-I" + hdr.dirname)
+        # Include directories - CRITICAL FIX: Use workspace directory for proper header staging
+        compile_args.add("-I" + work_dir.path)  # Workspace with staged headers
 
         # Add C++ standard library paths for wasm32-wasip2 target
         if ctx.attr.language == "cpp":
@@ -505,6 +580,21 @@ def _cc_component_library_impl(ctx):
         for dep_hdr in dep_headers:
             compile_args.add("-I" + dep_hdr.dirname)
 
+        # Add include paths from CcInfo dependencies (external libraries)
+        for dep in ctx.attr.deps:
+            if CcInfo in dep:
+                cc_info = dep[CcInfo]
+
+                # Add both direct includes and system includes
+                for include_path in cc_info.compilation_context.includes.to_list():
+                    compile_args.add("-I" + include_path)
+                for include_path in cc_info.compilation_context.system_includes.to_list():
+                    compile_args.add("-I" + include_path)
+
+                # Also add quote includes if available
+                for include_path in cc_info.compilation_context.quote_includes.to_list():
+                    compile_args.add("-I" + include_path)
+
         # Defines
         for define in ctx.attr.defines:
             compile_args.add("-D" + define)
@@ -513,14 +603,21 @@ def _cc_component_library_impl(ctx):
         for opt in ctx.attr.copts:
             compile_args.add(opt)
 
-        # Output and input
+        # Output and input - CRITICAL FIX: Use source file from workspace
         compile_args.add("-o", obj_file.path)
-        compile_args.add(src.path)
+        compile_args.add(work_dir.path + "/" + src.basename)
+
+        # Add external dependency headers to inputs
+        all_inputs = [work_dir] + sysroot_files.files.to_list()
+        for dep in ctx.attr.deps:
+            if CcInfo in dep:
+                cc_info = dep[CcInfo]
+                all_inputs.extend(cc_info.compilation_context.headers.to_list())
 
         ctx.actions.run(
             executable = clang,
             arguments = [compile_args],
-            inputs = [src] + sysroot_files.files.to_list() + ctx.files.hdrs + dep_headers,
+            inputs = all_inputs,
             outputs = [obj_file],
             mnemonic = "CompileCppObject",
             progress_message = "Compiling {} for component library".format(src.basename),
@@ -545,18 +642,29 @@ def _cc_component_library_impl(ctx):
     transitive_headers = []
     transitive_libraries = []
     transitive_includes = []
+    direct_includes = []  # For external library includes used by this library
 
     for dep in ctx.attr.deps:
         if CcInfo in dep:
             cc_info = dep[CcInfo]
             transitive_headers.append(cc_info.compilation_context.headers)
+
+            # Collect all types of includes for proper transitive propagation
             transitive_includes.extend(cc_info.compilation_context.includes.to_list())
+            direct_includes.extend(cc_info.compilation_context.includes.to_list())
+            direct_includes.extend(cc_info.compilation_context.system_includes.to_list())
+            direct_includes.extend(cc_info.compilation_context.quote_includes.to_list())
+
             transitive_libraries.append(cc_info.linking_context.linker_inputs)
 
     # Create compilation context with current headers and transitive headers
+    # Include both local header directories and external library include paths
+    local_includes = [h.dirname for h in ctx.files.hdrs] + ctx.attr.includes
+    all_includes = local_includes + direct_includes
+
     compilation_context = cc_common.create_compilation_context(
         headers = depset(ctx.files.hdrs, transitive = transitive_headers),
-        includes = depset([h.dirname for h in ctx.files.hdrs] + ctx.attr.includes, transitive = [depset(transitive_includes)]),
+        includes = depset(all_includes, transitive = [depset(transitive_includes)]),
     )
 
     # Create linking context for the static library

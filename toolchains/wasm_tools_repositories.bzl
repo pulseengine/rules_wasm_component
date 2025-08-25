@@ -64,4 +64,12 @@ def register_wasm_tool_repositories():
         build_file = "//toolchains:BUILD.wasmsign2",
     )
 
-    print("✅ Modernized WASM tool repositories registered - replaced all git clone operations")
+    # wkg: WebAssembly package tools
+    git_repository(
+        name = "wkg_src",
+        remote = "https://github.com/bytecodealliance/wasm-pkg-tools.git",
+        commit = "main",  # Use main branch for latest features
+        build_file = "//toolchains:BUILD.wkg",
+    )
+
+    # All git repositories registered for Bazel-native builds

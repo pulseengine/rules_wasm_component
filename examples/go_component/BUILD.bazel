@@ -50,6 +50,7 @@ go_wasm_component(
     srcs = [
         "calculator.go",
         "main.go",
+        "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
@@ -60,15 +61,15 @@ go_wasm_component(
 # Generate Go bindings for HTTP service
 go_wit_bindgen(
     name = "http_service_bindings",
-    world = "wasi:cli/command",
+    world = "http-service-world",
 )
 
 # Build HTTP service component using TinyGo + WASI Preview 2
 go_wasm_component(
     name = "http_service_component",
     srcs = [
+        "bindings.go",
         "handlers.go",
-        "main.go",
         "service.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
@@ -83,6 +84,7 @@ go_wasm_component(
     srcs = [
         "calculator.go",
         "main.go",
+        "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
@@ -90,10 +92,23 @@ go_wasm_component(
     world = "wasi:cli/command",
 )
 
-# Simple test without WIT bindings to isolate asyncify issues
+# Multi-file test demonstrating TinyGo compilation with multiple Go source files
 go_wasm_component(
     name = "simple_test",
-    srcs = ["main.go"],
+    srcs = ["main.go", "utils.go"],  # Include both main.go and utils.go
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    go_mod = "go.mod",
+    optimization = "debug",
+    world = "simple-test",
+)
+
+# Test multi-file Go component to verify the fix
+go_wasm_component(
+    name = "multi_file_test",
+    srcs = [
+        "main.go",
+        "utils.go",
+    ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",

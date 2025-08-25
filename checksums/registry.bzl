@@ -328,7 +328,7 @@ def _get_fallback_checksums(tool_name):
         "nodejs": {
             "tool_name": "nodejs",
             "github_repo": "nodejs/node",
-            "latest_version": "18.19.0",
+            "latest_version": "20.18.0",
             "build_type": "download",
             "versions": {
                 "18.19.0": {
@@ -360,6 +360,76 @@ def _get_fallback_checksums(tool_name):
                         },
                         "windows_amd64": {
                             "sha256": "5311913d45e1fcc3643c58d1e3926eb85437b180f025fe5857413c9f02403645",
+                            "url_suffix": "win-x64.zip",
+                            "binary_path": "node-v{}-win-x64/node.exe",
+                            "npm_path": "node-v{}-win-x64/npm.cmd",
+                        },
+                    },
+                },
+                "18.20.8": {
+                    "release_date": "2024-09-03",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "ed2554677188f4afc0d050ecd8bd56effb2572d6518f8da6d40321ede6698509",
+                            "url_suffix": "darwin-x64.tar.gz",
+                            "binary_path": "node-v{}-darwin-x64/bin/node",
+                            "npm_path": "node-v{}-darwin-x64/bin/npm",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "bae4965d29d29bd32f96364eefbe3bca576a03e917ddbb70b9330d75f2cacd76",
+                            "url_suffix": "darwin-arm64.tar.gz",
+                            "binary_path": "node-v{}-darwin-arm64/bin/node",
+                            "npm_path": "node-v{}-darwin-arm64/bin/npm",
+                        },
+                        "linux_amd64": {
+                            "sha256": "27a9f3f14d5e99ad05a07ed3524ba3ee92f8ff8b6db5ff80b00f9feb5ec8097a",
+                            "url_suffix": "linux-x64.tar.gz",
+                            "binary_path": "node-v{}-linux-x64/bin/node",
+                            "npm_path": "node-v{}-linux-x64/bin/npm",
+                        },
+                        "linux_arm64": {
+                            "sha256": "2e3dfc51154e6fea9fc86a90c4ea8f3ecb8b60acaf7367c4b76691da192571c1",
+                            "url_suffix": "linux-arm64.tar.gz",
+                            "binary_path": "node-v{}-linux-arm64/bin/node",
+                            "npm_path": "node-v{}-linux-arm64/bin/npm",
+                        },
+                        "windows_amd64": {
+                            "sha256": "1a1e40260a6facba83636e4cd0ba01eb5bd1386896824b36645afba44857384a",
+                            "url_suffix": "win-x64.zip",
+                            "binary_path": "node-v{}-win-x64/node.exe",
+                            "npm_path": "node-v{}-win-x64/npm.cmd",
+                        },
+                    },
+                },
+                "20.18.0": {
+                    "release_date": "2024-10-03",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "c02aa7560612a4e2cc359fd89fae7aedde370c06db621f2040a4a9f830a125dc",
+                            "url_suffix": "darwin-x64.tar.gz",
+                            "binary_path": "node-v{}-darwin-x64/bin/node",
+                            "npm_path": "node-v{}-darwin-x64/bin/npm",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "92e180624259d082562592bb12548037c6a417069be29e452ec5d158d657b4be",
+                            "url_suffix": "darwin-arm64.tar.gz",
+                            "binary_path": "node-v{}-darwin-arm64/bin/node",
+                            "npm_path": "node-v{}-darwin-arm64/bin/npm",
+                        },
+                        "linux_amd64": {
+                            "sha256": "24a5d58a1d4c2903478f4b7c3cfd2eeb5cea2cae3baee11a4dc6a1fed25fec6c",
+                            "url_suffix": "linux-x64.tar.gz",
+                            "binary_path": "node-v{}-linux-x64/bin/node",
+                            "npm_path": "node-v{}-linux-x64/bin/npm",
+                        },
+                        "linux_arm64": {
+                            "sha256": "38bccb35c06ee4edbcd00c77976e3fad1d69d2e57c3c0c363d1700a2a2493278",
+                            "url_suffix": "linux-arm64.tar.gz",
+                            "binary_path": "node-v{}-linux-arm64/bin/node",
+                            "npm_path": "node-v{}-linux-arm64/bin/npm",
+                        },
+                        "windows_amd64": {
+                            "sha256": "f5cea43414cc33024bbe5867f208d1c9c915d6a38e92abeee07ed9e563662297",
                             "url_suffix": "win-x64.zip",
                             "binary_path": "node-v{}-win-x64/node.exe",
                             "npm_path": "node-v{}-win-x64/npm.cmd",

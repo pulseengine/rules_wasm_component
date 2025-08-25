@@ -2,12 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-wit_bindgen::generate!({
-    world: "user-service"
-});
+// Use the generated bindings from rust_wasm_component_bindgen
+use user_service_bindings::exports::user_service::Guest;
 
 // Re-export the generated WIT types
-pub use exports::example::user_service::user_service::*;
+pub use user_service_bindings::exports::user_service::*;
 
 /// Rust User Service Component
 ///
@@ -127,7 +126,7 @@ struct UserServiceImpl {
     metrics: ServiceMetrics,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 struct ServiceMetrics {
     total_users: u64,
     active_sessions: u64,
@@ -352,7 +351,7 @@ impl UserServiceImpl {
     }
 
     // Safe statistics collection using Rust's type system
-    fn get_service_stats(&self) -> ServiceMetrics {
+    fn get_internal_stats(&self) -> ServiceMetrics {
         ServiceMetrics {
             total_users: self.users.len() as u64,
             active_sessions: self.user_sessions.values().map(|s| s.len() as u64).sum(),
@@ -370,10 +369,48 @@ impl UserServiceImpl {
 struct UserService;
 
 impl Guest for UserService {
-    type UserService = UserServiceImpl;
+    fn create_user(request: CreateUserRequest) -> UserResult {
+        UserServiceImpl::get_instance().create_user(request)
+    }
+
+    fn get_user(user_id: String) -> UserResult {
+        UserServiceImpl::get_instance().get_user(user_id)
+    }
+
+    fn update_user(user_id: String, request: ProfileUpdateRequest) -> bool {
+        UserServiceImpl::get_instance().update_user(user_id, request)
+    }
+
+    fn delete_user(user_id: String) -> bool {
+        UserServiceImpl::get_instance().delete_user(user_id)
+    }
+
+    fn search_users(query: SearchQuery) -> Vec<User> {
+        UserServiceImpl::get_instance().search_users(query)
+    }
+
+    fn add_friend(user_id: String, friend_id: String) -> bool {
+        UserServiceImpl::get_instance().add_friend(user_id, friend_id)
+    }
+
+    fn remove_friend(user_id: String, friend_id: String) -> bool {
+        UserServiceImpl::get_instance().remove_friend(user_id, friend_id)
+    }
+
+    fn get_friends(user_id: String) -> Vec<String> {
+        UserServiceImpl::get_instance().get_friends(user_id)
+    }
+
+    fn health_check() -> bool {
+        UserServiceImpl::get_instance().health_check()
+    }
+
+    fn get_service_stats() -> String {
+        UserServiceImpl::get_instance().get_service_stats()
+    }
 }
 
-impl GuestUserService for UserServiceImpl {
+impl UserServiceImpl {
     fn create_user(&mut self, request: CreateUserRequest) -> UserResult {
         match self.create_user_profile(&request) {
             Ok(profile) => UserResult::Success(User {
@@ -481,11 +518,11 @@ impl GuestUserService for UserServiceImpl {
     }
 
     fn get_service_stats(&mut self) -> String {
-        let stats = self.get_service_stats();
+        let stats = self.get_internal_stats();
         // Safe JSON serialization using serde
         serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
     }
 }
 
 // Export the component
-export!(UserService with_types_in UserService);
+user_service_bindings::export!(UserService with_types_in user_service_bindings);

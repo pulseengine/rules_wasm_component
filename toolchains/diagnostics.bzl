@@ -131,6 +131,7 @@ def validate_system_tool(ctx, tool_name, expected_version = None):
 
     # Check version if expected version provided
     if expected_version:
+        # Use standardized tool validation approach (following tool_cache.bzl pattern)
         result = ctx.execute([tool_name, "--version"])
         if result.return_code == 0:
             actual_version = _extract_version_from_output(result.stdout)

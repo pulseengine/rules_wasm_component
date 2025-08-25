@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/example/httpservice/bindings"
 	"log"
-	"net/http"
 	"time"
 )
 
@@ -21,7 +19,7 @@ func NewServiceImpl() *ServiceImpl {
 	}
 }
 
-func (s *ServiceImpl) HandleRequest(request bindings.HttpRequest) bindings.HttpResponse {
+func (s *ServiceImpl) HandleRequest(request HttpRequest) HttpResponse {
 	s.requests++
 
 	log.Printf("Handling %s request to %s", request.Method, request.Path)
@@ -39,14 +37,14 @@ func (s *ServiceImpl) HandleRequest(request bindings.HttpRequest) bindings.HttpR
 	}
 }
 
-func (s *ServiceImpl) handleRoot(request bindings.HttpRequest) bindings.HttpResponse {
+func (s *ServiceImpl) handleRoot(request HttpRequest) HttpResponse {
 	body := `{
 		"message": "Welcome to Go WebAssembly HTTP Service",
 		"version": "1.0.0",
 		"timestamp": "` + time.Now().Format(time.RFC3339) + `"
 	}`
 
-	return bindings.HttpResponse{
+	return HttpResponse{
 		Status: 200,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -56,7 +54,7 @@ func (s *ServiceImpl) handleRoot(request bindings.HttpRequest) bindings.HttpResp
 	}
 }
 
-func (s *ServiceImpl) handleHealth(request bindings.HttpRequest) bindings.HttpResponse {
+func (s *ServiceImpl) handleHealth(request HttpRequest) HttpResponse {
 	uptime := time.Since(s.startTime)
 
 	body := fmt.Sprintf(`{
@@ -65,7 +63,7 @@ func (s *ServiceImpl) handleHealth(request bindings.HttpRequest) bindings.HttpRe
 		"requests_served": %d
 	}`, uptime.Seconds(), s.requests)
 
-	return bindings.HttpResponse{
+	return HttpResponse{
 		Status: 200,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -74,7 +72,7 @@ func (s *ServiceImpl) handleHealth(request bindings.HttpRequest) bindings.HttpRe
 	}
 }
 
-func (s *ServiceImpl) handleStats(request bindings.HttpRequest) bindings.HttpResponse {
+func (s *ServiceImpl) handleStats(request HttpRequest) HttpResponse {
 	uptime := time.Since(s.startTime)
 
 	body := fmt.Sprintf(`{
@@ -97,7 +95,7 @@ func (s *ServiceImpl) handleStats(request bindings.HttpRequest) bindings.HttpRes
 		s.startTime.Format(time.RFC3339),
 	)
 
-	return bindings.HttpResponse{
+	return HttpResponse{
 		Status: 200,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -106,14 +104,14 @@ func (s *ServiceImpl) handleStats(request bindings.HttpRequest) bindings.HttpRes
 	}
 }
 
-func (s *ServiceImpl) handleNotFound(request bindings.HttpRequest) bindings.HttpResponse {
+func (s *ServiceImpl) handleNotFound(request HttpRequest) HttpResponse {
 	body := fmt.Sprintf(`{
 		"error": "Not Found",
 		"message": "Path '%s' not found",
 		"available_paths": ["/", "/health", "/stats"]
 	}`, request.Path)
 
-	return bindings.HttpResponse{
+	return HttpResponse{
 		Status: 404,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -122,10 +120,10 @@ func (s *ServiceImpl) handleNotFound(request bindings.HttpRequest) bindings.Http
 	}
 }
 
-func (s *ServiceImpl) GetServiceInfo() bindings.ServiceInfo {
+func (s *ServiceImpl) GetServiceInfo() ServiceInfo {
 	uptime := time.Since(s.startTime)
 
-	return bindings.ServiceInfo{
+	return ServiceInfo{
 		Name:        "Go WebAssembly HTTP Service",
 		Version:     "1.0.0",
 		Description: "A sample HTTP service built as a WebAssembly component using Go",
@@ -139,7 +137,7 @@ func main() {
 	service := NewServiceImpl()
 
 	// Initialize the component with our service implementation
-	bindings.SetExports(service)
+	SetExports(service)
 
 	log.Println("Go WebAssembly HTTP Service component initialized")
 }

@@ -188,7 +188,7 @@ def _wkg_extension_impl(module_ctx):
     if not registrations:
         wkg_toolchain_repository(
             name = "wkg_toolchain",
-            strategy = "download",
+            strategy = "source",
             version = "0.11.0",
         )
 
@@ -203,9 +203,9 @@ wkg = module_extension(
                     default = "wkg",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'download' or 'build'",
-                    default = "download",
-                    values = ["download", "build"],
+                    doc = "Tool acquisition strategy: 'download', 'build', or 'source'",
+                    default = "source",
+                    values = ["download", "build", "source"],
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download/build strategies)",
@@ -240,7 +240,7 @@ def _jco_extension_impl(module_ctx):
         jco_toolchain_repository(
             name = name + "_toolchain",
             version = registration.version,
-            node_version = getattr(registration, "node_version", "18.19.0"),
+            node_version = getattr(registration, "node_version", "20.18.0"),
         )
 
     # If no registrations, create default toolchain
@@ -248,7 +248,7 @@ def _jco_extension_impl(module_ctx):
         jco_toolchain_repository(
             name = "jco_toolchain",
             version = "1.4.0",
-            node_version = "18.19.0",
+            node_version = "20.18.0",
         )
 
 # Module extension for jco (JavaScript Component Tools)
@@ -267,7 +267,7 @@ jco = module_extension(
                 ),
                 "node_version": attr.string(
                     doc = "Node.js version for hermetic strategy",
-                    default = "18.19.0",
+                    default = "20.18.0",
                 ),
             },
         ),
@@ -390,7 +390,7 @@ def _wizer_extension_impl(module_ctx):
         wizer_toolchain_repository(
             name = "wizer_toolchain",
             version = "9.0.0",
-            strategy = "cargo",
+            strategy = "source",
         )
 
 # Module extension for Wizer WebAssembly pre-initialization
@@ -408,9 +408,9 @@ wizer = module_extension(
                     default = "9.0.0",
                 ),
                 "strategy": attr.string(
-                    doc = "Installation strategy: 'build' (build from source), 'cargo' (install via cargo), or 'download' (download prebuilt binary)",
-                    default = "cargo",
-                    values = ["build", "cargo", "download"],
+                    doc = "Installation strategy: 'build' (build from source), 'cargo' (install via cargo), 'source' (git repository), or 'download' (download prebuilt binary)",
+                    default = "source",
+                    values = ["build", "cargo", "source", "download"],
                 ),
             },
         ),

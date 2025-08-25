@@ -1,24 +1,21 @@
-"""BUILD file for wizer repository
+"""BUILD file for wizer (WebAssembly pre-initialization tool) built from source"""
 
-This file creates wizer binary using cargo build with download strategy.
-The download strategy provides hermetic builds without complex workspace dependencies.
-"""
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 
-# Cargo build for wizer
-genrule(
+rust_binary(
     name = "wizer",
-    srcs = glob(["**/*"]),  # All source files
-    outs = ["wizer"],
-    cmd = """cd $$(dirname $(location Cargo.toml)) && \
-             cargo build --release --bin wizer --all-features && \
-             cp target/release/wizer $(location wizer)""",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2021",
     visibility = ["//visibility:public"],
-    tags = ["requires-network"],  # Cargo may need to fetch dependencies
+    deps = [
+        # Note: Dependencies will be resolved by rules_rust from Cargo.toml
+        # This follows the same pattern as other modernized tools
+    ],
 )
 
-# Export the legacy binary for toolchain use
-filegroup(
-    name = "wizer_binary",
-    srcs = [":wizer"],
+# Alias for Bazel integration
+alias(
+    name = "wizer_bazel",
+    actual = ":wizer",
     visibility = ["//visibility:public"],
 )

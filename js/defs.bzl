@@ -1,4 +1,43 @@
-"""Bazel rules for JavaScript/TypeScript WebAssembly components using jco"""
+# Copyright 2024 Ralf Anton Beier. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""JavaScript/TypeScript WebAssembly Component Model rules
+
+Modern JavaScript/TypeScript support for WebAssembly Component Model using:
+- Node.js 18.20.8+ with hermetic toolchain management
+- jco v1.4.0+ for component compilation and optimization
+- Bazel-native implementation with zero shell scripts
+- Cross-platform compatibility (Windows/macOS/Linux)
+- TypeScript support with automatic transpilation
+- NPM dependency management integration
+- Component composition and binding generation
+
+Example usage:
+
+    js_component(
+        name = "web_service",
+        srcs = ["index.js", "service.js"],
+        package_json = "package.json",
+        wit = "//wit:web-interface",
+        world = "web-service",
+        entry_point = "index.js",
+        npm_dependencies = {
+            "express": "^4.18.0",
+            "@types/node": "^18.0.0",
+        },
+    )
+"""
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("//providers:providers.bzl", "WasmComponentInfo")

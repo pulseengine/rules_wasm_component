@@ -62,9 +62,9 @@ genrule(
     tags = ["requires-network"],  # Cargo may need to fetch dependencies
 )
 
-# Export the legacy binary for toolchain use
+# Export the Bazel-native binary for toolchain use (replaces legacy cargo build)
 filegroup(
     name = "wasmsign2_binary",
-    srcs = [":wasmsign2"],
+    srcs = [":wasmsign2_bazel"],
     visibility = ["//visibility:public"],
 )

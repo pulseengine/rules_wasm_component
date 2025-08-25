@@ -117,27 +117,74 @@ This directory contains automatically generated documentation for all WIT interf
         content = index_content,
     )
 
-    # Copy all files and create index in one cleaner action
-    ctx.actions.run_shell(
-        command = """
-        mkdir -p {output_dir}
+    # Create documentation collection script for cross-platform file operations
+    collection_script = ctx.actions.declare_file(ctx.attr.name + "_collect_docs.py")
+    script_content = '''#!/usr/bin/env python3
+import os
+import shutil
+import sys
+from pathlib import Path
 
-        # Copy documentation files using find (more reliable than glob)
-        for doc_dir in {docs}; do
-            if [ -d "$doc_dir" ]; then
-                find "$doc_dir" -name "*.md" -exec cp {{}} {output_dir}/ \\; 2>/dev/null || true
-                find "$doc_dir" -name "*.html" -exec cp {{}} {output_dir}/ \\; 2>/dev/null || true
-            fi
-        done
+def main():
+    output_dir = sys.argv[1]
+    index_file = sys.argv[2]
+    doc_dirs = sys.argv[3:]
 
-        # Copy pre-generated index
-        cp {index_file} {output_dir}/index.md
-        """.format(
-            output_dir = docs_dir.path,
-            docs = " ".join([f.path for f in doc_dirs]),
-            index_file = index_file.path,
-        ),
-        inputs = doc_dirs + [index_file],
+    # Create output directory
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Collect documentation files from all input directories
+    collected_files = []
+
+    for doc_dir in doc_dirs:
+        if os.path.isdir(doc_dir):
+            doc_path = Path(doc_dir)
+
+            # Find all markdown and HTML files
+            for pattern in ["*.md", "*.html"]:
+                for file_path in doc_path.glob(pattern):
+                    if file_path.is_file():
+                        dest_name = file_path.name
+                        dest_path = os.path.join(output_dir, dest_name)
+
+                        try:
+                            shutil.copy2(str(file_path), dest_path)
+                            collected_files.append(dest_name)
+                            print(f"Copied: {file_path} -> {dest_name}")
+                        except Exception as e:
+                            print(f"Warning: Failed to copy {file_path}: {e}")
+
+    # Copy the pre-generated index file
+    try:
+        shutil.copy2(index_file, os.path.join(output_dir, "index.md"))
+        collected_files.append("index.md")
+        print(f"Copied index: {index_file}")
+    except Exception as e:
+        print(f"Error copying index: {e}")
+        sys.exit(1)
+
+    print(f"Documentation collection complete: {len(collected_files)} files")
+
+    # Create a manifest of collected files for debugging
+    manifest_path = os.path.join(output_dir, ".collection_manifest")
+    with open(manifest_path, 'w') as f:
+        f.write("\\n".join(sorted(collected_files)))
+
+if __name__ == "__main__":
+    main()
+'''
+
+    ctx.actions.write(
+        output = collection_script,
+        content = script_content,
+        is_executable = True,
+    )
+
+    # Run documentation collection using structured script
+    ctx.actions.run(
+        executable = collection_script,
+        arguments = [docs_dir.path, index_file.path] + [f.path for f in doc_dirs],
+        inputs = doc_dirs + [index_file, collection_script],
         outputs = [docs_dir],
         mnemonic = "WitDocsCollection",
         progress_message = "Collecting WIT documentation for %s" % ctx.attr.name,

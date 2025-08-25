@@ -1,0 +1,14 @@
+"""BUILD file for wkg (WebAssembly Package Tools) built from source"""
+
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "wkg",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2021",
+    visibility = ["//visibility:public"],
+    deps = [
+        # Note: Dependencies will be resolved by rules_rust from Cargo.toml
+        # This follows the same pattern as other modernized tools
+    ],
+)

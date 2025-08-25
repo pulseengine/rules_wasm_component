@@ -22,17 +22,17 @@ def _wit_deps_check_impl(ctx):
     # Run dependency analysis
     output_file = ctx.actions.declare_file(ctx.label.name + "_analysis.json")
 
-    # Run dependency analysis using ctx.actions.run_shell with proper output redirection
+    # CRITICAL FIX: WIT dependency analyzer expects exactly one argument and outputs to stdout
+    # The analyzer's usage is: wit_dependency_analyzer <config.json>
+    # Use ctx.actions.run_shell to capture stdout properly
     ctx.actions.run_shell(
-        command = '"$1" "$2" > "$3"',
-        arguments = [
-            ctx.executable._wit_dependency_analyzer.path,
-            config_file.path,
-            output_file.path,
-        ],
-        inputs = [config_file, ctx.file.wit_file],
+        command = "{analyzer} {config} > {output}".format(
+            analyzer = ctx.executable._wit_dependency_analyzer.path,
+            config = config_file.path,
+            output = output_file.path,
+        ),
+        inputs = [config_file, ctx.file.wit_file, ctx.executable._wit_dependency_analyzer],
         outputs = [output_file],
-        tools = [ctx.executable._wit_dependency_analyzer],
         mnemonic = "CheckWitDependencies",
         progress_message = "Checking WIT dependencies in %s" % ctx.file.wit_file.short_path,
     )

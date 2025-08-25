@@ -1,0 +1,14 @@
+module(
+    name = "cross_package_headers_test",
+    version = "1.0.0",
+)
+
+# Modern Bazel dependency management using Bazel Central Registry
+# These are popular C++ header-only libraries that demonstrate realistic external dependencies
+
+bazel_dep(name = "fmt", version = "11.0.2")
+bazel_dep(name = "nlohmann_json", version = "3.11.3")
+
+# Note: spdlog depends on fmt, so we get it transitively
+# but we could also explicitly declare it:
+# bazel_dep(name = "spdlog", version = "1.12.0")

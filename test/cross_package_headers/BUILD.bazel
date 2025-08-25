@@ -1,0 +1,65 @@
+"""Cross-package C++ header dependency test
+
+This test reproduces the issue described in #38 where cross-package C++ headers
+are not properly staged in the compilation workspace, causing "file not found" errors.
+
+Test Structure:
+- foundation_lib: Provides foundation/types.h header in a separate package
+- consumer_component: Uses the foundation header via #include "foundation/types.h"
+"""
+
+load("@rules_wasm_component//cpp:defs.bzl", "cc_component_library", "cpp_component")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+# Foundation library with headers in subdirectory + external dependencies
+cc_component_library(
+    name = "foundation_lib",
+    srcs = [
+        "foundation/types.cpp",
+        "foundation/utils.cpp",
+    ],
+    hdrs = [
+        "foundation/types.h",
+        "foundation/utils.h",
+    ],
+    enable_exceptions = True,  # Required for spdlog in comprehensive test
+    tags = ["manual"],  # Exclude from CI wildcard builds due to complex external dependencies
+    visibility = ["//visibility:public"],
+    deps = [
+        # "@fmt",  # Excluded to avoid conflict with spdlog's bundled fmt
+        "@nlohmann_json//:json",  # JSON library (header-only)
+        "@abseil-cpp//absl/strings",  # Google's string utilities (compiled)
+        "@abseil-cpp//absl/container:flat_hash_map",  # High-performance containers
+        "@abseil-cpp//absl/time",  # Time utilities (compiled)
+        "@spdlog",  # Fast logging library (includes fmt internally)
+    ],
+)
+
+# Consumer WIT interface
+wit_library(
+    name = "consumer_interface",
+    package_name = "test:consumer@1.0.0",
+    srcs = ["consumer.wit"],
+)
+
+# Consumer component that depends on foundation headers
+cpp_component(
+    name = "consumer_component",
+    srcs = ["src/consumer.cpp"],
+    enable_exceptions = True,  # Required for spdlog in comprehensive test
+    tags = ["manual"],  # Exclude from CI wildcard builds due to complex external dependencies
+    wit = ":consumer_interface",
+    deps = [":foundation_lib"],  # Cross-package dependency
+)
+
+# Build test to verify cross-package header staging works for WebAssembly components
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+build_test(
+    name = "cross_package_header_build_test",
+    tags = ["manual"],  # Exclude from CI wildcard builds due to complex external dependencies
+    targets = [
+        ":foundation_lib",  # Library with headers in subdirectories
+        ":consumer_component",  # Component using cross-package headers
+    ],
+)

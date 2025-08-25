@@ -21,9 +21,8 @@ def get_cache_info(ctx, tool_name, version, platform, strategy):
     cache_dir = "/tmp/bazel_wasm_tool_cache"  # Global cache directory
     tool_cache_path = "{}/{}".format(cache_dir, cache_key)
 
-    # Check if cached version exists
-    result = ctx.execute(["test", "-d", tool_cache_path])
-    cache_exists = result.return_code == 0
+    # Check if cached version exists using repository_ctx API
+    cache_exists = ctx.path(tool_cache_path).exists
 
     cache_info = {
         "cache_key": cache_key,
@@ -44,23 +43,28 @@ def _verify_cache_integrity(ctx, cache_path, tool_name):
     integrity_file = "{}/integrity.txt".format(cache_path)
     binary_path = "{}/{}".format(cache_path, tool_name)
 
-    # Check if integrity file exists
-    result = ctx.execute(["test", "-f", integrity_file])
-    if result.return_code != 0:
+    # Check if integrity file exists using repository_ctx API
+    integrity_path = ctx.path(integrity_file)
+    if not integrity_path.exists:
         return {"valid": False, "reason": "Missing integrity file"}
 
-    # Check if binary exists and is executable
-    result = ctx.execute(["test", "-x", binary_path])
-    if result.return_code != 0:
-        return {"valid": False, "reason": "Binary not found or not executable"}
+    # Check if binary exists using repository_ctx API
+    binary_ctx_path = ctx.path(binary_path)
+    if not binary_ctx_path.exists:
+        return {"valid": False, "reason": "Binary not found"}
 
-    # Read integrity information
-    result = ctx.execute(["cat", integrity_file])
-    if result.return_code != 0:
+    # Read integrity information using repository_ctx API
+    # Check if integrity file exists before reading
+    integrity_ctx_path = ctx.path(integrity_path)
+    if not integrity_ctx_path.exists:
+        return {"valid": False, "reason": "Integrity file not found"}
+
+    integrity_content = ctx.read(integrity_path)
+    if not integrity_content:
         return {"valid": False, "reason": "Cannot read integrity file"}
 
     integrity_info = {}
-    for line in result.stdout.strip().split("\n"):
+    for line in integrity_content.strip().split("\n"):
         if "=" in line:
             key, value = line.split("=", 1)
             integrity_info[key.strip()] = value.strip()
@@ -110,8 +114,42 @@ def clean_expired_cache(ctx, max_age_days = 30):
     # Bazel's repository caching instead of a custom cache system.
     pass
 
+# =============================================================================
+# STANDARDIZED TOOL VALIDATION PATTERNS
+# =============================================================================
+# These functions provide consistent, cross-platform tool validation for all
+# toolchain setup operations. Use these patterns instead of direct ctx.execute()
+# calls to ensure consistent error handling and reporting across the codebase.
+# =============================================================================
+
+def _validate_tool_command(ctx, tool_binary, args, command_desc):
+    """Helper function to validate a tool command execution
+
+    Args:
+        ctx: Repository rule context
+        tool_binary: Path to the tool binary
+        args: Command arguments to test
+        command_desc: Description for error messages
+
+    Returns:
+        dict: Validation result with 'valid', 'stdout', and optional 'error' keys
+    """
+    result = ctx.execute([tool_binary] + args)
+
+    if result.return_code != 0:
+        return {
+            "valid": False,
+            "error": "{} failed (exit {}): {}".format(command_desc, result.return_code, result.stderr),
+            "stdout": result.stdout,
+        }
+
+    return {
+        "valid": True,
+        "stdout": result.stdout,
+    }
+
 def validate_tool_functionality(ctx, tool_binary, tool_name):
-    """Validate that a tool binary is functional"""
+    """Validate that a tool binary is functional using standardized validation patterns"""
 
     validation_tests = {
         "wasm-tools": ["--version"],
@@ -125,28 +163,32 @@ def validate_tool_functionality(ctx, tool_binary, tool_name):
         # No specific validation for this tool, assume it's valid
         return {"valid": True}
 
+    # Primary validation: check version command
     test_args = validation_tests[tool_name]
-    result = ctx.execute([tool_binary] + test_args)
+    result = _validate_tool_command(ctx, tool_binary, test_args, "Version check for {}".format(tool_name))
 
-    if result.return_code != 0:
+    if not result["valid"]:
         return {
             "valid": False,
-            "error": "Tool validation failed: {}".format(result.stderr),
+            "error": result["error"],
         }
 
-    # Additional checks for specific tools
+    # Store version output for return
+    version_output = result["stdout"]
+
+    # Additional tool-specific validation checks
     if tool_name == "wasm-tools":
-        # Check if wasm-tools can show help
-        result = ctx.execute([tool_binary, "help"])
-        if result.return_code != 0:
+        # Secondary validation: check help command functionality
+        help_result = _validate_tool_command(ctx, tool_binary, ["help"], "Help command for wasm-tools")
+        if not help_result["valid"]:
             return {
                 "valid": False,
-                "error": "wasm-tools help command failed",
+                "error": help_result["error"],
             }
 
     return {
         "valid": True,
-        "version_output": result.stdout,
+        "version_output": version_output,
     }
 
 def get_cache_statistics(ctx):

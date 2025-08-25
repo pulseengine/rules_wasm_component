@@ -15,11 +15,11 @@ rust_wasm_component(
     rustc_flags = [
         "-C",
         "opt-level=3",  # Custom optimization
-        "-C",
-        "lto=thin",  # Link-time optimization
+        # Note: LTO is incompatible with WebAssembly builds that use embed-bitcode=no
     ],
     deps = [
         "@crates//:anyhow",  # Error handling
+        "@crates//:chrono",  # Date/time handling
         "@crates//:clap",  # CLI argument parsing
         "@crates//:serde_json",  # JSON processing
     ],

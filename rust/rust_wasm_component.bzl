@@ -252,7 +252,7 @@ def rust_wasm_component(
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags,
             visibility = ["//visibility:private"],
-            tags = ["wasm_component"],  # Tag to identify WASM components
+            tags = ["manual"],  # Manual tag prevents inclusion in wildcard builds
             **filtered_kwargs
         )
 

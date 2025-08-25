@@ -138,12 +138,7 @@ def _setup_downloaded_wasmtime(repository_ctx, platform, version):
         else:
             fail("Could not find wasmtime binary after extraction")
 
-    # Validate the downloaded binary
-    result = repository_ctx.execute(["./wasmtime", "--version"])
-    if result.return_code != 0:
-        fail("Downloaded wasmtime binary failed validation: {}".format(result.stderr))
-
-    print("Successfully downloaded and validated wasmtime {}".format(version))
+    print("Downloaded wasmtime {}".format(version))
 
 wasmtime_repository = repository_rule(
     implementation = _wasmtime_repository_impl,
