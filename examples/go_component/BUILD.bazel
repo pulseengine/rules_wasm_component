@@ -61,22 +61,22 @@ go_wasm_component(
 # Generate Go bindings for HTTP service
 go_wit_bindgen(
     name = "http_service_bindings",
-    world = "wasi:cli/command",
+    world = "http-service-world",
 )
 
 # Build HTTP service component using TinyGo + WASI Preview 2
 go_wasm_component(
     name = "http_service_component",
     srcs = [
+        "bindings.go",
         "handlers.go",
-        "main.go",
         "service.go",
-        "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "release",
-    world = "wasi:cli/command",
+    wit = ":http_service_wit",
+    world = "http-service-world",
 )
 
 # Debug version for development
