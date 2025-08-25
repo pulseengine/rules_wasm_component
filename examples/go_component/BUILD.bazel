@@ -90,10 +90,10 @@ go_wasm_component(
     world = "wasi:cli/command",
 )
 
-# Simple test without WIT bindings to isolate asyncify issues
+# Multi-file test demonstrating TinyGo compilation with multiple Go source files
 go_wasm_component(
     name = "simple_test",
-    srcs = ["main.go"],
+    srcs = ["main.go", "utils.go"],  # Include both main.go and utils.go
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",
