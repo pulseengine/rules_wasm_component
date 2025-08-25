@@ -1,12 +1,43 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::Uuid;
+use uuid::{Builder, Uuid, Variant, Version};
 
 // Use the generated bindings from rust_wasm_component_bindgen
 use user_service_bindings::exports::user_service::Guest;
 
 // Re-export the generated WIT types
 pub use user_service_bindings::exports::user_service::*;
+
+/// Global counter for UUID generation uniqueness
+static mut UUID_COUNTER: u64 = 0;
+
+/// Generate a deterministic UUID without depending on getrandom/wasi
+/// Uses timestamp + counter for uniqueness, avoiding wit-bindgen-rt version conflicts
+fn generate_deterministic_uuid() -> Uuid {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap();
+    
+    let timestamp_nanos = now.as_nanos() as u64;
+    
+    // Safe increment of counter
+    let counter = unsafe {
+        UUID_COUNTER += 1;
+        UUID_COUNTER
+    };
+    
+    // Create 16 bytes from timestamp (8) + counter (8)
+    let mut bytes = [0u8; 16];
+    bytes[0..8].copy_from_slice(&timestamp_nanos.to_be_bytes());
+    bytes[8..16].copy_from_slice(&counter.to_be_bytes());
+    
+    // Create UUID v4-style with proper version and variant bits
+    let mut builder = Builder::from_random_bytes(bytes);
+    builder
+        .set_variant(Variant::RFC4122)
+        .set_version(Version::Random)
+        .into_uuid()
+}
 
 /// Rust User Service Component
 ///
@@ -173,7 +204,7 @@ impl UserServiceImpl {
             return Err("User already exists".to_string());
         }
 
-        let user_id = Uuid::new_v4().to_string();
+        let user_id = generate_deterministic_uuid().to_string();
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -309,7 +340,7 @@ impl UserServiceImpl {
             return Err("Relationship already exists".to_string());
         }
 
-        let relationship_id = Uuid::new_v4().to_string();
+        let relationship_id = generate_deterministic_uuid().to_string();
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
