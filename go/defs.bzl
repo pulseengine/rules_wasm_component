@@ -232,21 +232,9 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
                 ctx.attr.world,
             ])
 
-    # Find main Go file path within the module directory
-    main_go_found = False
-    main_go_path = None
-    for src in ctx.files.srcs:
-        if src.basename == "main.go":
-            main_go_path = go_module_files.path + "/main.go"
-            main_go_found = True
-            break
-
-    if main_go_found:
-        tinygo_args.append(main_go_path)
-    else:
-        # If no main.go, compile the entire module directory
-        # This allows TinyGo to see all Go files in the package
-        tinygo_args.append(go_module_files.path)
+    # Use current directory approach - change to module directory and compile "."
+    # This allows TinyGo to discover all .go files in the package
+    tinygo_args.append(".")
     
     # Validate that we have Go source files
     go_files = [src for src in ctx.files.srcs if src.extension == "go"]
@@ -394,12 +382,26 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         "echo \"DEBUG: Resolved GOROOT=$GOROOT\"", 
         "echo \"DEBUG: Resolved PATH=$PATH\"",
         "",
-        "# Execute TinyGo with resolved paths",
+        "# Change to Go module directory and execute TinyGo",
+        "cd \"$EXECROOT/{}\"".format(go_module_files.path),
+        "echo \"DEBUG: Changed to directory: $(pwd)\"",
+        "echo \"DEBUG: Files in directory: $(ls -la)\"",
+        "",
     ])
     
-    # Add the TinyGo command with arguments
+    # Add the TinyGo command with arguments, adjusting output path to be absolute
     tinygo_cmd = "\"$EXECROOT/{}\"".format(tinygo.path) if not tinygo.path.startswith("/") else "\"{}\"".format(tinygo.path)
-    script_content.append(tinygo_cmd + " " + " ".join(["\"%s\"" % arg for arg in tinygo_args]))
+    
+    # Adjust the output path to be absolute since we're changing directories
+    adjusted_args = []
+    for arg in tinygo_args:
+        if arg == wasm_module.path:
+            # Make output path absolute
+            adjusted_args.append("\"$EXECROOT/{}\"".format(wasm_module.path))
+        else:
+            adjusted_args.append("\"%s\"" % arg)
+    
+    script_content.append(tinygo_cmd + " " + " ".join(adjusted_args))
     
     ctx.actions.write(
         output = wrapper_script,
