@@ -117,6 +117,9 @@ register_toolchains(
     "@wasi_sdk//:cc_toolchain",
 )
 
+# Register default C++ toolchains for host Rust binaries requiring C++ linking
+register_toolchains("@bazel_tools//tools/cpp:all")
+
 # TinyGo WASI Preview 2 toolchain
 tinygo = use_extension("//wasm:extensions.bzl", "tinygo")
 tinygo.register(
