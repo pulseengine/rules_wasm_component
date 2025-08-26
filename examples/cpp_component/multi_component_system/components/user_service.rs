@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::{Builder, Uuid, Variant, Version};
-
-// Use the generated bindings from rust_wasm_component_bindgen
-use user_service_bindings::exports::user_service::Guest;
+use uuid::Uuid;
 
 // Re-export the generated WIT types
 pub use user_service_bindings::exports::user_service::*;
@@ -32,11 +29,12 @@ fn generate_deterministic_uuid() -> Uuid {
     bytes[8..16].copy_from_slice(&counter.to_be_bytes());
     
     // Create UUID v4-style with proper version and variant bits
-    let mut builder = Builder::from_random_bytes(bytes);
-    builder
-        .set_variant(Variant::RFC4122)
-        .set_version(Version::Random)
-        .into_uuid()
+    // Set version 4 bits: set bits 12-15 of the time-high-and-version field to 0100
+    bytes[6] = (bytes[6] & 0x0F) | 0x40;
+    // Set variant bits: set bits 6-7 of the clock-seq-hi-and-reserved to 10  
+    bytes[8] = (bytes[8] & 0x3F) | 0x80;
+    
+    Uuid::from_bytes(bytes)
 }
 
 /// Rust User Service Component
