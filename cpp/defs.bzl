@@ -88,8 +88,8 @@ def _cpp_component_impl(ctx):
                 elif file.extension == "a":
                     dep_libraries.append(file)
 
-        # Extract includes from CcInfo for proper transitive dependencies
-        # but DON'T copy external headers to workspace (they use original paths)
+        # Extract includes and headers from CcInfo for proper transitive dependencies
+        # CRITICAL FIX for Issue #38: Distinguish between external vs local CcInfo headers
         if CcInfo in dep:
             cc_info = dep[CcInfo]
 
@@ -97,6 +97,17 @@ def _cpp_component_impl(ctx):
             dep_includes.extend(cc_info.compilation_context.includes.to_list())
             dep_includes.extend(cc_info.compilation_context.system_includes.to_list())
             dep_includes.extend(cc_info.compilation_context.quote_includes.to_list())
+            
+            # CRITICAL FIX: Stage local CcInfo headers for cross-package dependencies
+            # External libraries (path contains "external/") don't need staging - use original paths
+            # Local libraries (same workspace) need staging for relative includes to work
+            for hdr in cc_info.compilation_context.headers.to_list():
+                if hdr.extension in ["h", "hpp", "hh", "hxx"]:
+                    # Check if this is an external dependency or local cross-package dependency
+                    if "external/" not in hdr.path:
+                        # Local cross-package header - stage it for relative includes to work
+                        dep_headers.append(hdr)
+                    # External headers are handled via include paths only (no staging needed)
 
     # Generate bindings directory
     bindings_dir = ctx.actions.declare_directory(ctx.attr.name + "_bindings")
@@ -482,7 +493,7 @@ def _cc_component_library_impl(ctx):
     # Output library
     library = ctx.actions.declare_file("lib{}.a".format(ctx.attr.name))
 
-    # Collect dependency headers
+    # Collect dependency headers with proper cross-package staging
     dep_headers = []
     for dep in ctx.attr.deps:
         # Check DefaultInfo first for direct file access (cc_component_library outputs)
@@ -491,12 +502,18 @@ def _cc_component_library_impl(ctx):
                 if file.extension in ["h", "hpp", "hh", "hxx"]:
                     dep_headers.append(file)
 
-        # For CcInfo dependencies (external libraries), don't copy headers to workspace
-        # since they already provide proper include paths. Only copy headers from
-        # DefaultInfo (our own cc_component_library targets that need cross-package staging)
-        # if CcInfo in dep:
-        #     cc_info = dep[CcInfo]
-        #     dep_headers.extend(cc_info.compilation_context.headers.to_list())
+        # CRITICAL FIX for Issue #38: Stage local CcInfo headers for cross-package dependencies
+        # External libraries (path contains "external/") don't need staging - use original paths
+        # Local libraries (same workspace) need staging for relative includes to work
+        if CcInfo in dep:
+            cc_info = dep[CcInfo]
+            for hdr in cc_info.compilation_context.headers.to_list():
+                if hdr.extension in ["h", "hpp", "hh", "hxx"]:
+                    # Check if this is an external dependency or local cross-package dependency
+                    if "external/" not in hdr.path:
+                        # Local cross-package header - stage it for relative includes to work
+                        dep_headers.append(hdr)
+                    # External headers are handled via include paths only (no staging needed)
 
     # Set up workspace with proper header staging (CRITICAL FIX for issue #38)
     work_dir = setup_cpp_workspace_action(
