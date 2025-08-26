@@ -281,26 +281,27 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
         "dependencies": [],
     }
 
-    # CRITICAL FIX for Issue #38: Preserve directory structure for all headers
-    # Headers need their directory structure preserved if source files include them with paths
+    # CRITICAL FIX for Issue #38: Handle both local and cross-package headers correctly
+    # Two patterns:
+    # 1. Same-component headers: "simd_utils.h" included as #include "simd_utils.h" → use basename
+    # 2. Cross-package headers: "foundation/types.h" included as #include "foundation/types.h" → preserve directory
     for hdr in headers:
-        # Always preserve directory structure by using short_path
-        # This handles cases where source files use #include "foundation/types.h"
         relative_path = hdr.short_path
         
-        # For headers within the current target's directory, preserve the relative structure
-        # This ensures "foundation/types.h" includes work correctly
+        # Check if this is a cross-package header that needs directory structure preservation
+        # Cross-package headers typically have multiple path components and contain package/directory names
         path_parts = relative_path.split("/")
-        if len(path_parts) >= 2:
-            # Preserve the directory structure (e.g., "foundation/types.h")
+        
+        if len(path_parts) >= 2 and ("test/" in relative_path or "/foundation/" in relative_path):
+            # Cross-package header - preserve directory structure (e.g., "foundation/types.h")
             relative_path = "/".join(path_parts[-2:])
         else:
-            # Single-level headers use basename
+            # Same-component header - use basename for local includes (e.g., "simd_utils.h")
             relative_path = hdr.basename
 
         config["headers"].append({
             "source": hdr,
-            "destination": relative_path,  # Preserve directory structure
+            "destination": relative_path,
             "preserve_permissions": False,
         })
 
