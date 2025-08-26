@@ -111,6 +111,7 @@ use_repo(wasi_sdk, "wasi_sdk")
 register_toolchains(
     "@wasi_sdk//:wasi_sdk_toolchain",
     "@wasi_sdk//:cc_toolchain",
+    "@bazel_tools//tools/cpp:all",  # Default host C++ toolchains for Rust binaries
 )
 
 # TinyGo WASI Preview 2 toolchain
