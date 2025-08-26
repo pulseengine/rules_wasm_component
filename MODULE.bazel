@@ -107,11 +107,14 @@ wasi_sdk.register(
 )
 use_repo(wasi_sdk, "wasi_sdk")
 
-# Register both WASI SDK and C++ toolchains
+# Enable C++ toolchain auto-configuration for cross-platform support
+cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure")
+use_repo(cc_configure, "local_config_cc")
+
+# Register both WASI SDK and C++ toolchains  
 register_toolchains(
     "@wasi_sdk//:wasi_sdk_toolchain",
     "@wasi_sdk//:cc_toolchain",
-    "@bazel_tools//tools/cpp:all",  # Default host C++ toolchains for Rust binaries
 )
 
 # TinyGo WASI Preview 2 toolchain
