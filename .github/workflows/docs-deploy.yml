@@ -73,7 +73,7 @@ jobs:
       - name: Deploy to Netcup hosting
         # Only deploy if secrets are available
         if: env.NETCUP_URI != '' && env.NETCUP_USER != '' && env.NETCUP_PASSWORD != ''
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ env.NETCUP_URI }}
           username: ${{ env.NETCUP_USER }}
