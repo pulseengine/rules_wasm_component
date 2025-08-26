@@ -251,9 +251,11 @@ def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None):
         })
 
     if wit_file:
+        # CRITICAL FIX: TinyGo and wasm-tools expect WIT file in wit/ subdirectory
+        # with the original filename (file-operations.wit)
         config["dependencies"].append({
             "source": wit_file,
-            "destination": "component.wit",
+            "destination": "wit/file-operations.wit",
             "preserve_permissions": False,
         })
 
