@@ -281,24 +281,26 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
         "dependencies": [],
     }
 
-    # For local headers within the same component, use basename only for local headers
-    # This matches how the source files include them (e.g., #include "simd_utils.h")
-    # But preserve directory structure for cross-package headers
+    # CRITICAL FIX for Issue #38: Preserve directory structure for all headers
+    # Headers need their directory structure preserved if source files include them with paths
     for hdr in headers:
-        relative_path = hdr.basename  # Default to basename for local headers
-
-        # Check if this header is in a different package/directory structure
-        # that requires preserving path (cross-package dependencies)
-        if "/test/" in hdr.short_path or "/external/" in hdr.path:
-            # For cross-package headers, preserve some directory structure
-            path_parts = hdr.short_path.split("/")
-            if len(path_parts) >= 2:
-                # Take the last 2 parts to preserve subdirectory structure
-                relative_path = "/".join(path_parts[-2:])
+        # Always preserve directory structure by using short_path
+        # This handles cases where source files use #include "foundation/types.h"
+        relative_path = hdr.short_path
+        
+        # For headers within the current target's directory, preserve the relative structure
+        # This ensures "foundation/types.h" includes work correctly
+        path_parts = relative_path.split("/")
+        if len(path_parts) >= 2:
+            # Preserve the directory structure (e.g., "foundation/types.h")
+            relative_path = "/".join(path_parts[-2:])
+        else:
+            # Single-level headers use basename
+            relative_path = hdr.basename
 
         config["headers"].append({
             "source": hdr,
-            "destination": relative_path,  # Use basename for local headers
+            "destination": relative_path,  # Preserve directory structure
             "preserve_permissions": False,
         })
 
