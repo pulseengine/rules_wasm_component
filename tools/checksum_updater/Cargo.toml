@@ -27,7 +27,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tempfile = "3.0"
 async-trait = "0.1"
-wit-bindgen = "0.43.0"  # WIT binding generation for macro usage
+wit-bindgen = "0.44.0"  # WIT binding generation for macro usage
 uuid = { version = "1.0", default-features = false }  # UUID generation for user service (deterministic, no getrandom dependency)
 
 [dev-dependencies]
