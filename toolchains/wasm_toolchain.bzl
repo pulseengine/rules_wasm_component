@@ -753,9 +753,9 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-filegroup(
+alias(
     name = "wasmsign2_binary",
-    srcs = ["wasmsign2"],
+    actual = "@wasmsign2_src//:wasmsign2_bazel",
     visibility = ["//visibility:public"],
 )
 

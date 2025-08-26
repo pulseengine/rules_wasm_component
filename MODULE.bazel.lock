@@ -269,7 +269,7 @@
     },
     "//wasm:extensions.bzl%cpp_component": {
       "general": {
-        "bzlTransitiveDigest": "00sQGeeqjiz/RPM70vsE05l5AV46FjcnMexXU5/Kn44=",
+        "bzlTransitiveDigest": "d3MyC2lR4prkmFGUybg9eipU8U6rkyQOIZ+iiBoyDbo=",
         "usagesDigest": "60f0O3+qNo5tYrXjypa0YLZBtNMmSOws3xIOdJkff/0=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -294,7 +294,7 @@
     },
     "//wasm:extensions.bzl%jco": {
       "general": {
-        "bzlTransitiveDigest": "00sQGeeqjiz/RPM70vsE05l5AV46FjcnMexXU5/Kn44=",
+        "bzlTransitiveDigest": "d3MyC2lR4prkmFGUybg9eipU8U6rkyQOIZ+iiBoyDbo=",
         "usagesDigest": "Q/dCQKDfQQu8p/6sB8y5vGvN4aSwDm+u8BTrw309aao=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -319,7 +319,7 @@
     },
     "//wasm:extensions.bzl%tinygo": {
       "general": {
-        "bzlTransitiveDigest": "00sQGeeqjiz/RPM70vsE05l5AV46FjcnMexXU5/Kn44=",
+        "bzlTransitiveDigest": "d3MyC2lR4prkmFGUybg9eipU8U6rkyQOIZ+iiBoyDbo=",
         "usagesDigest": "tE5hZWIXf+a1hThQOIcRRVjPbVQjFDb2aj5a1eEhvaA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -343,7 +343,7 @@
     },
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "00sQGeeqjiz/RPM70vsE05l5AV46FjcnMexXU5/Kn44=",
+        "bzlTransitiveDigest": "d3MyC2lR4prkmFGUybg9eipU8U6rkyQOIZ+iiBoyDbo=",
         "usagesDigest": "RoedjSblpjIxlcUjWjhz1L4mn2x/vCtO1RtPL64VguE=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -530,7 +530,7 @@
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "00sQGeeqjiz/RPM70vsE05l5AV46FjcnMexXU5/Kn44=",
+        "bzlTransitiveDigest": "d3MyC2lR4prkmFGUybg9eipU8U6rkyQOIZ+iiBoyDbo=",
         "usagesDigest": "j2w0KsG/e6tltUI+WAeNH505251eBn4uleGJW2ExVag=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -564,7 +564,7 @@
     },
     "//wasm:extensions.bzl%wasmtime": {
       "general": {
-        "bzlTransitiveDigest": "00sQGeeqjiz/RPM70vsE05l5AV46FjcnMexXU5/Kn44=",
+        "bzlTransitiveDigest": "d3MyC2lR4prkmFGUybg9eipU8U6rkyQOIZ+iiBoyDbo=",
         "usagesDigest": "s1jIaDZbU9PAsYZLH9PgXwfrefil+sn/XLcVn/P9Q6U=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -589,7 +589,7 @@
     },
     "//wasm:extensions.bzl%wizer": {
       "general": {
-        "bzlTransitiveDigest": "00sQGeeqjiz/RPM70vsE05l5AV46FjcnMexXU5/Kn44=",
+        "bzlTransitiveDigest": "d3MyC2lR4prkmFGUybg9eipU8U6rkyQOIZ+iiBoyDbo=",
         "usagesDigest": "6/Tf087fjdhszmx0SYaOq709EsMncT4yVq6Sh711KFo=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -614,7 +614,7 @@
     },
     "//wasm:extensions.bzl%wkg": {
       "general": {
-        "bzlTransitiveDigest": "00sQGeeqjiz/RPM70vsE05l5AV46FjcnMexXU5/Kn44=",
+        "bzlTransitiveDigest": "d3MyC2lR4prkmFGUybg9eipU8U6rkyQOIZ+iiBoyDbo=",
         "usagesDigest": "mH3SUo8xNuIm+C21hj2zQVuSslC4w2RVQ5JRqzScS24=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -4295,7 +4295,7 @@
         "usagesDigest": "KLE1VIsNBTsarofzlfg2EpPOFOta6Tn8Fyv73CgQSyU=",
         "recordedFileInputs": {
           "@@+wasm_tool_repositories+wasmsign2_src//Cargo.toml": "fd9646fb96e6ca6dda4420f08e8f238a3ec86ba525ccd4311a6c7e3a398eef99",
-          "@@//tools/checksum_updater/Cargo.lock": "2f5045281d1e60d516f6b1e91bec0880b6b61cafb15b93cdcdfc98f17fe0a096",
+          "@@//tools/checksum_updater/Cargo.lock": "c0bb7285c7940d4a7756bfe7aeb07a58bf774b516ac62d638ad700fbfb47d71f",
           "@@//tools/checksum_updater/Cargo.toml": "08fe0c8d7c1ea5d0f62c194bb533d39713d8d67ab096ca3524bdc4e08c758cb8",
           "@@//tools/ssh_keygen/Cargo.lock": "a89e133f5dd184922131708deb92c48ac566cb236fe8be7e631d5739f41bbe83",
           "@@//tools/ssh_keygen/Cargo.toml": "517a596a911e42ee68188226a6fd5400cd369c54e61f677f4790a0c5733ca69b",
