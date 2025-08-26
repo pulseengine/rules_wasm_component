@@ -13,7 +13,7 @@ path = "src/checksum_updater.rs"
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 
 # Additional dependencies for checksum updater
 reqwest = { version = "0.11", features = ["json", "stream"] }
