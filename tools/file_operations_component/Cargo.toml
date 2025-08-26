@@ -17,7 +17,7 @@ walkdir = "2.3"
 filetime = "0.2"
 
 [dependencies.wit-bindgen-rt]
-version = "0.43.0"
+version = "0.44.0"
 features = ["bitflags"]
 
 [package.metadata.component]
