@@ -406,7 +406,7 @@ dependencies = [
  "env_logger",
  "log",
  "wasm-encoder 0.221.3",
- "wasmparser 0.221.3",
+ "wasmparser 0.236.1",
  "wat",
  "wit-component",
  "wit-parser",
@@ -482,7 +482,6 @@ dependencies = [
  "hashbrown",
  "indexmap",
  "semver",
- "serde",
 ]
 
 [[package]]
@@ -492,8 +491,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9b1e81f3eb254cf7404a82cee6926a4a3ccc5aad80cc3d43608a070c67aa1d7"
 dependencies = [
  "bitflags",
+ "hashbrown",
  "indexmap",
  "semver",
+ "serde",
 ]
 
 [[package]]
