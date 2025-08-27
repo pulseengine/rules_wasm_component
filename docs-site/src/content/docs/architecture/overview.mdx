@@ -147,7 +147,7 @@ graph LR
 **Go components use TinyGo instead of the standard Go compiler** because TinyGo is specifically designed for WebAssembly and embedded systems. The workflow is similar to Rust but with Go-specific tooling:
 
 1. **WIT Processing**: Same `wit_library` rule as other languages
-2. **Go Binding Generation**: `go_wit_bindgen` creates Go interfaces and types
+2. **Automatic Binding Generation**: `go_wasm_component` automatically generates Go interfaces and types
 3. **TinyGo Compilation**: TinyGo compiler with WASI Preview 2 target
 4. **Adapter Integration**: WASI snapshot preview1 adapter for compatibility
 5. **Component Assembly**: Same component wrapping process as Rust

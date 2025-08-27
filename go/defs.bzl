@@ -116,17 +116,9 @@ def _go_wasm_component_impl(ctx):
 
     # Get hermetic Go binary from TinyGo toolchain
     go_binary = getattr(tinygo_toolchain, "go", None)
-    if go_binary:
-        print("DEBUG: Found hermetic Go binary from TinyGo toolchain: %s" % go_binary.path)
-    else:
-        print("DEBUG: No Go binary provided by TinyGo toolchain")
 
     # Get wasm-opt binary from TinyGo toolchain
     wasm_opt_binary = getattr(tinygo_toolchain, "wasm_opt", None)
-    if wasm_opt_binary:
-        print("DEBUG: Found wasm-opt binary from TinyGo toolchain: %s" % wasm_opt_binary.path)
-    else:
-        print("DEBUG: No wasm-opt binary provided by TinyGo toolchain")
 
     # Validate toolchain setup
     _assert_valid_toolchain_setup(ctx, tinygo, wasm_tools)
@@ -217,8 +209,13 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
     # Add optimization flags (now we have hermetic wasm-opt)
     if ctx.attr.optimization == "release":
         tinygo_args.extend(["-opt=2", "-no-debug"])  # Use full optimization with wasm-opt
-    else:
+    elif ctx.attr.optimization == "size":
+        tinygo_args.extend(["-opt=s", "-no-debug"])  # Optimize for size
+    elif ctx.attr.optimization == "debug":
         tinygo_args.extend(["-opt=1"])  # Use basic optimization for debug
+    else:
+        # Should not happen due to validation, but be defensive
+        tinygo_args.extend(["-opt=1"])
 
     # Add WIT integration if available
     if ctx.attr.wit and ctx.attr.world:
@@ -261,19 +258,16 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
     if go_binary:
         go_bin_dir = go_binary.dirname
         tool_paths.append(go_bin_dir)
-        print("DEBUG: Added Go binary directory to PATH: %s" % go_bin_dir)
 
     # Include wasm-opt binary directory from Binaryen
     if wasm_opt_binary:
         wasm_opt_bin_dir = wasm_opt_binary.dirname
         tool_paths.append(wasm_opt_bin_dir)
-        print("DEBUG: Added wasm-opt binary directory to PATH: %s" % wasm_opt_bin_dir)
 
     # Include wasm-tools binary directory
     if wasm_tools:
         wasm_tools_bin_dir = wasm_tools.dirname
         tool_paths.append(wasm_tools_bin_dir)
-        print("DEBUG: Added wasm-tools binary directory to PATH: %s" % wasm_tools_bin_dir)
 
     # THE BAZEL WAY: Build environment variables for TinyGo
     # No shell scripts needed - use ctx.actions.run() with environment
@@ -312,11 +306,6 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         if go_bin_dir not in current_path:
             # Prepend Go binary directory to PATH with higher priority
             env["PATH"] = go_bin_dir + ":" + current_path
-            print("DEBUG: Prepended Go binary dir to PATH: %s" % go_bin_dir)
-        
-        print("DEBUG: Set GOROOT to: %s" % go_root)
-        print("DEBUG: Set GO to: %s" % go_binary.path)
-        print("DEBUG: Final PATH: %s" % env["PATH"])
 
     # Prepare inputs and tools - no wrapper script needed!
     inputs = [go_module_files, tinygo, wasm_tools]
@@ -377,15 +366,8 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
     
     script_content.extend([
         "",
-        "# Debug: Show resolved paths",
-        "echo \"DEBUG: Resolved GO=$GO\"",
-        "echo \"DEBUG: Resolved GOROOT=$GOROOT\"", 
-        "echo \"DEBUG: Resolved PATH=$PATH\"",
-        "",
         "# Change to Go module directory and execute TinyGo",
         "cd \"$EXECROOT/{}\"".format(go_module_files.path),
-        "echo \"DEBUG: Changed to directory: $(pwd)\"",
-        "echo \"DEBUG: Files in directory: $(ls -la)\"",
         "",
     ])
     
@@ -460,9 +442,9 @@ go_wasm_component = rule(
             doc = "WASI adapter for component transformation",
         ),
         "optimization": attr.string(
-            doc = "Optimization level: 'debug' or 'release'",
+            doc = "Optimization level: 'debug', 'release', or 'size'",
             default = "release",
-            values = ["debug", "release"],
+            values = ["debug", "release", "size"],
         ),
     },
     toolchains = [

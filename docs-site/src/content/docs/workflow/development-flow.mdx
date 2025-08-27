@@ -79,13 +79,13 @@ sequenceDiagram
 sequenceDiagram
     participant Dev as Developer
     participant Bazel as Bazel Build
-    participant WITG as go_wit_bindgen
+    participant GoComp as go_wasm_component
     participant TinyGo as TinyGo Compiler
     participant Tools as wasm-tools
 
     Dev->>Bazel: bazel build :component
-    Bazel->>WITG: Generate Go bindings
-    WITG-->>Bazel: Generated interfaces
+    Bazel->>GoComp: Generate bindings & compile
+    GoComp-->>Bazel: Generated interfaces
     Bazel->>TinyGo: Compile with wasm target
     TinyGo-->>Bazel: Core module
     Bazel->>Tools: Apply WASI adapter

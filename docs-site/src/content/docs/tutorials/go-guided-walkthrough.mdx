@@ -10,130 +10,30 @@ This guided walkthrough shows you how to build WebAssembly components using Tiny
 ## What We're Building
 
 We'll create a calculator WebAssembly component that:
-- Performs mathematical operations (add, subtract, multiply, divide)
-- Handles error conditions gracefully
-- Uses complex WIT types (records, variants, options)
-- Demonstrates TinyGo's WASI Preview 2 capabilities
-- Can be called from any WebAssembly runtime
+- Demonstrates TinyGo compilation to WebAssembly
+- Uses WASI Preview 2 for system interface access
+- Shows multi-file Go component architecture
+- Provides mathematical utility functions
+- Runs as a WASI CLI component
 
-**End Goal:** A `.wasm` component that other programs can import for mathematical operations.
+**End Goal:** A `.wasm` component that runs with WASI-compatible runtimes like wasmtime.
+
+**Important Note:** This tutorial demonstrates WASI CLI components (using `world = "wasi:cli/command"`). For custom WIT interface implementations, see the Rust tutorial which shows that pattern.
 
 ## Pipeline Overview
 
-**The TinyGo journey:** `calculator.wit` → `wit_library` → `go_wasm_component` → `calculator_component.wasm`
+**The TinyGo journey:** `Go source files` → `go_wasm_component` → `calculator_component.wasm`
 
 ```mermaid
 flowchart LR
-    A[📊 calculator.wit] --> B[🔧 Bazel Rules] --> C[🐹 Your Go Code] --> D[📦 calculator_component.wasm]
+    A[🐹 Your Go Code] --> B[🔧 TinyGo Compiler] --> C[📦 calculator_component.wasm]
 ```
 
-**Key Difference from Rust:** TinyGo has native WASI Preview 2 support, making the pipeline more direct.
+**Key Difference from Rust:** This example shows WASI CLI components, which don't require custom WIT interfaces. TinyGo compiles directly to WebAssembly with native WASI Preview 2 support.
 
 ---
 
-## Step 1: Advanced Interface Design (calculator.wit)
-
-**What:** Define a complex interface with real-world types
-**Why:** Shows how WIT handles structured data and error conditions
-**Pipeline Stage:** Interface specification with type safety
-
-```wit title="examples/go_component/wit/calculator.wit"
-package example:calculator@1.0.0;
-
-interface calculator {
-    variant operation-type {
-        add,
-        subtract,
-        multiply,
-        divide,
-    }
-
-    record operation {
-        op: operation-type,
-        a: f64,
-        b: f64,
-    }
-
-    record calculation-result {
-        success: bool,
-        error: option<string>,
-        value: option<f64>,
-    }
-
-    record component-info {
-        name: string,
-        version: string,
-        supported-operations: list<string>,
-    }
-
-    add: func(a: f64, b: f64) -> f64;
-    subtract: func(a: f64, b: f64) -> f64;
-    multiply: func(a: f64, b: f64) -> f64;
-    divide: func(a: f64, b: f64) -> calculation-result;
-
-    calculate: func(operation: operation) -> calculation-result;
-    get-calculator-info: func() -> component-info;
-}
-
-world calculator-world {
-    export calculator;
-}
-```
-
-### Advanced Type System Breakdown:
-
-**Variants (Enums):**
-```wit
-variant operation-type {
-    add,
-    subtract,
-    multiply,
-    divide,
-}
-```
-- **Like Go enums:** Represents one of several possible values
-- **Type safety:** Only valid operations can be used
-- **Generated code:** Becomes Go type with methods
-
-**Records (Structs):**
-```wit
-record operation {
-    op: operation-type,
-    a: f64,
-    b: f64,
-}
-```
-- **Like Go structs:** Groups related data together
-- **Composition:** Uses other WIT types (variants, primitives)
-- **Generated code:** Becomes Go struct with all fields
-
-**Options (Nullable Values):**
-```wit
-record calculation-result {
-    success: bool,
-    error: option<string>,
-    value: option<f64>,
-}
-```
-- **Like Go pointers:** Can be present or absent
-- **Error handling:** Clean way to represent success/failure
-- **Generated code:** Becomes `*string` and `*float64` in Go
-
-**Lists (Arrays/Slices):**
-```wit
-supported-operations: list<string>,
-```
-- **Like Go slices:** Dynamic arrays
-- **Generated code:** Becomes `[]string` in Go
-
-### Key Insights:
-- **Rich type system** beyond simple primitives
-- **Cross-language compatibility** - same types work in Rust, C++, JS
-- **Generated bindings** handle all marshaling/unmarshaling
-
----
-
-## Step 2: Go Project Setup (go.mod)
+## Step 1: Go Project Setup (go.mod)
 
 **What:** Configure Go module dependencies
 **Why:** TinyGo needs specific WebAssembly tools
@@ -175,82 +75,75 @@ require github.com/bytecodealliance/wasm-tools-go v0.3.0
 
 ---
 
-## Step 3: Build Configuration (BUILD.bazel)
+## Step 2: Build Configuration (BUILD.bazel)
 
-**What:** Configure the complete build pipeline
-**Why:** Orchestrates WIT processing, code generation, and compilation
+**What:** Configure the complete build pipeline  
+**Why:** Orchestrates TinyGo compilation to WebAssembly
 **Pipeline Stage:** Build system orchestration
 
 ```python title="examples/go_component/BUILD.bazel"
 """Example demonstrating TinyGo WASI Preview 2 WebAssembly components"""
 
-load("@rules_wasm_component//go:defs.bzl", "go_wasm_component", "go_wit_bindgen")
-load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
 
 package(default_visibility = ["//visibility:public"])
 
-# WIT library definitions for calculator interface
-wit_library(
-    name = "calculator_wit",
-    srcs = ["wit/calculator.wit"],
-    world = "calculator-world",
-)
-
-# Generate markdown documentation for calculator interface
-wit_markdown(
-    name = "calculator_docs",
-    wit = ":calculator_wit",
-)
-
-# Generate Go bindings from WIT for calculator
-go_wit_bindgen(
-    name = "calculator_bindings",
-    wit = ":calculator_wit",
-    world = "calculator-world",
-)
-
 # Build calculator component using TinyGo + WASI Preview 2
+# This is a simple WASI CLI component, not implementing WIT interfaces
 go_wasm_component(
     name = "calculator_component",
     srcs = [
         "calculator.go",
         "main.go",
+        "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "release",
-    wit = ":calculator_wit",
-    world = "calculator-world",
+    world = "wasi:cli/command",
+)
+
+# Debug version for development
+go_wasm_component(
+    name = "calculator_component_debug",
+    srcs = [
+        "calculator.go", 
+        "main.go",
+        "utils.go",
+    ],
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    go_mod = "go.mod",
+    optimization = "debug",
+    world = "wasi:cli/command",
 )
 ```
 
 ### Breaking This Down:
 
 ```python
-go_wit_bindgen(
-    name = "calculator_bindings",
-    wit = ":calculator_wit",
-    world = "calculator-world",
-)
-```
-**What happens:** Generate Go code from WIT interface
-**Generated files:** Go structs, types, and traits matching WIT
-**Pipeline step:** WIT Interface → Go Types
-
-```python
 go_wasm_component(
     name = "calculator_component",
-    srcs = ["calculator.go", "main.go"],
-    wit = ":calculator_wit",
-    world = "calculator-world",
+    srcs = ["calculator.go", "main.go", "utils.go"],
+    world = "wasi:cli/command",
+    go_mod = "go.mod",
+    optimization = "release",
 )
 ```
-**What happens:** Complete TinyGo compilation pipeline
-**Pipeline steps:**
-1. Compile Go code with TinyGo
-2. Link with WebAssembly Component Model runtime
-3. Generate WASI Preview 2 compatible component
-4. Wrap as Component Model component
+**What happens:** Compiles Go code to WebAssembly using TinyGo
+**Generated files:** Final .wasm component file
+**Pipeline step:** Go Source Files → TinyGo → WebAssembly Component
+
+**Key features of go_wasm_component:**
+1. **TinyGo compilation** - Optimized for WebAssembly output
+2. **WASI Preview 2 support** - Modern system interface
+3. **Multi-file support** - Handles multiple Go source files
+4. **Component model wrapping** - Creates proper .wasm components
+
+```python
+world = "wasi:cli/command"
+```
+**What:** Uses the standard WASI CLI world for command-line style programs
+**Why:** This allows the component to run like a regular CLI program with WASI system access
 
 ```python
 adapter = "//wasm/adapters:wasi_snapshot_preview1"
@@ -259,18 +152,18 @@ adapter = "//wasm/adapters:wasi_snapshot_preview1"
 **Why:** Bridges WASI Preview 1 and Preview 2 interfaces
 
 ### Build Features:
-- **Automatic binding generation** from WIT
 - **TinyGo optimization** for small binary size
 - **WASI Preview 2 support** built-in
-- **Documentation generation** from WIT comments
+- **Multi-file Go compilation** with proper module support
+- **Release and debug build modes**
 
 ---
 
-## Step 4: Implementation (calculator.go)
+## Step 3: Implementation (calculator.go)
 
 **What:** Implement the business logic
-**Why:** This is where the actual calculator functionality lives
-**Pipeline Stage:** Component implementation with generated bindings
+**Why:** This is where the actual calculator functionality lives  
+**Pipeline Stage:** Component implementation in standard Go
 
 ```go title="examples/go_component/calculator.go"
 package main
@@ -364,96 +257,71 @@ func ValidateOperation(op string, a, b float64) error {
 
 ---
 
-## Step 5: Entry Point (main.go)
+## Step 4: Entry Point (main.go)
 
-**What:** Minimal entry point for TinyGo
-**Why:** TinyGo requires a main function even for components
-**Pipeline Stage:** Component initialization
+**What:** CLI entry point for WASI component
+**Why:** WASI CLI components run like regular command-line programs
+**Pipeline Stage:** Component execution entry point
 
 ```go title="examples/go_component/main.go"
 package main
 
+import "fmt"
+
 func main() {
-	// Minimal working TinyGo WASI Preview 2 WebAssembly component
-	// This demonstrates the complete TinyGo + Component Model pipeline working!
+	// Test calling functions from other Go files in same package
+	result := TestFunction("Multi-file Go component test")
+	fmt.Println(result)
+	
+	// Test mathematical operations
+	sum := Add(5, 3)
+	product := Multiply(4, 6)
+	fmt.Printf("Add(5, 3) = %d\n", sum)
+	fmt.Printf("Multiply(4, 6) = %d\n", product)
+	
+	// This demonstrates the complete TinyGo + Component Model pipeline working with multiple Go files!
 }
 ```
 
 ### Understanding the Entry Point:
 
 **Why a main function?**
-- **TinyGo requirement:** Needs entry point for compilation
-- **Component model:** Runtime will call exported functions, not main
-- **Minimal implementation:** Just needs to exist
+- **WASI CLI pattern:** This runs like a regular command-line program
+- **Component entry point:** main() is called when the component starts
+- **Multi-file demo:** Shows how to use functions from other Go files
 
 **What happens at runtime:**
-1. Component is instantiated by host
-2. Host calls exported functions directly
-3. main() may never be called during normal operation
-4. Component Model handles the function dispatch
+1. Component is instantiated by WASI runtime (like wasmtime)
+2. main() function is called as the program entry point
+3. Component can use standard I/O (fmt.Println, fmt.Printf)
+4. Functions from other files (utils.go, calculator.go) are available
 
 ---
 
-## Step 6: The TinyGo Build Process - What Happens
+## Step 5: The TinyGo Build Process - What Happens
 
 **Command:** `bazel build //examples/go_component:calculator_component`
 
-### Stage 1: WIT Processing
-```bash
-# Bazel processes WIT files
-wit-bindgen go --out-dir $GENERATED_DIR examples/go_component/wit/calculator.wit
-```
-**Generated files:**
-- Go struct definitions for all WIT records
-- Go constants for variants
-- Interface types and method signatures
-- Component Model export/import handling
-
-### Stage 2: Go Binding Generation
-**Generated Go code includes:**
-```go
-// Generated from WIT
-type OperationType uint32
-const (
-    OperationTypeAdd OperationType = iota
-    OperationTypeSubtract
-    OperationTypeMultiply
-    OperationTypeDivide
-)
-
-type Operation struct {
-    Op OperationType
-    A  float64
-    B  float64
-}
-
-type CalculationResult struct {
-    Success bool
-    Error   *string
-    Value   *float64
-}
-```
-
-### Stage 3: TinyGo Compilation
+### Stage 1: TinyGo Compilation
 ```bash
 # Bazel runs TinyGo with WASI Preview 2 target
-tinygo build -target=wasip2 -o calculator.wasm calculator.go main.go
+tinygo build -target=wasip2 -o calculator.wasm calculator.go main.go utils.go
 ```
 **What happens:**
-- Compiles Go code to WebAssembly
+- Compiles all Go source files to WebAssembly
 - Links with WASI Preview 2 runtime
 - Includes Component Model support
 - Optimizes for size and performance
 
-### Stage 4: Component Wrapping
+### Stage 2: Component Wrapping
 ```bash
 # Bazel creates final component
 wasm-tools component new calculator.wasm -o calculator_component.wasm
 ```
 **What happens:**
 - Wraps core module as Component Model component
-- Adds WIT interface metadata
-- Creates typed exports/imports
+- Adds WASI CLI world metadata
+- Creates proper WASI exports/imports
 - Validates component structure
 
 ### Build Output:
@@ -464,7 +332,7 @@ bazel-bin/examples/go_component/
 
 ---
 
-## Step 7: Testing Your Go Component
+## Step 6: Testing Your Go Component
 
 **Validate the component:**
 
@@ -482,56 +350,74 @@ wasmtime run --wasi preview2 bazel-bin/examples/go_component/calculator_componen
 **Expected output:**
 ```
 Component: calculator_component.wasm
-├── Exports: example:calculator/calculator@1.0.0
-├── Functions: add, subtract, multiply, divide, calculate, get-calculator-info
-├── Types: operation-type, operation, calculation-result, component-info
+├── Exports: wasi:cli/command world
+├── Functions: main (CLI entry point)
+├── Types: Standard WASI types for I/O
 ├── Size: ~200KB (TinyGo optimized)
 └── WASI: Preview 2 native support
 ```
 
-### Understanding Component Metadata:
-
-**Interface exports:**
-```wit
-interface calculator {
-    add: func(a: f64, b: f64) -> f64;
-    divide: func(a: f64, b: f64) -> calculation-result;
-    // ... other functions
-}
+**Running the component:**
+```bash
+# Run with wasmtime
+wasmtime run --wasi preview2 bazel-bin/examples/go_component/calculator_component.wasm
 ```
 
-**Type information:**
-- All WIT types are preserved in the component
-- Runtime type checking ensures safety
-- Cross-language interoperability guaranteed
+**Expected runtime output:**
+```
+Multi-file Go component test
+Add(5, 3) = 8
+Multiply(4, 6) = 24
+```
+
+**Understanding Component Structure:**
+- This is a WASI CLI component that runs like a regular program
+- It has access to standard I/O (println, printf work)
+- Functions from multiple Go files are available
+- Component follows WASI Preview 2 interfaces
 
 ---
 
-## Step 8: How This Connects to Larger Systems
+## Step 7: How This Connects to Larger Systems
 
 ### Using Your Go Component:
 
-**From another Go component:**
-```go
-// In another component using wasmtime-go
-calculator := NewCalculator(instance)
-result := calculator.Add(5.0, 3.0)
-fmt.Printf("5 + 3 = %f\n", result)
+**As a WASI CLI application:**
+```bash
+# Run directly with wasmtime
+wasmtime run --wasi preview2 calculator_component.wasm
+
+# Or use as part of a larger system
+docker run --rm -v $(pwd):/app wasmtime:latest \
+  wasmtime run --wasi preview2 /app/calculator_component.wasm
 ```
 
-**From a Rust host:**
+**From host applications:**
 ```rust
 // In a Rust application using wasmtime
-let result: f64 = instance.call_add(&mut store, 5.0, 3.0)?;
-println!("5 + 3 = {}", result);
+use wasmtime::*;
+use wasmtime_wasi::{WasiCtxBuilder, WasiView};
+
+let mut store = Store::new(&engine, WasiCtx::default());
+let instance = Instance::new(&mut store, &module, &[])?;
+// Call the main function to run the Go component
+instance.get_func(&mut store, "_start")?.call(&mut store, &[], &mut [])?;
 ```
 
-**From JavaScript:**
-```javascript
-// In Node.js using @bytecodealliance/jco
-import { calculator } from './calculator_component.js';
-const result = calculator.add(5.0, 3.0);
-console.log(`5 + 3 = ${result}`);
+**Container deployment:**
+```yaml
+# Kubernetes deployment for WASI components
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-calculator
+spec:
+  template:
+    spec:
+      containers:
+      - name: wasmtime
+        image: wasmtime/wasmtime:latest
+        command: ["wasmtime", "run", "--wasi", "preview2", "/app/calculator_component.wasm"]
 ```
 
 ### Composition with WAC:

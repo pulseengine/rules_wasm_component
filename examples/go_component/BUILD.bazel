@@ -6,7 +6,7 @@ This example shows state-of-the-art Go support for WebAssembly Component Model:
 - Full Component Model and WASI 0.2 interface support
 """
 
-load("@rules_wasm_component//go:defs.bzl", "go_wasm_component", "go_wit_bindgen")
+load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
 
 package(default_visibility = ["//visibility:public"])
@@ -38,13 +38,8 @@ wit_markdown(
     wit = ":http_service_wit",
 )
 
-# Generate Go bindings from WIT for calculator
-go_wit_bindgen(
-    name = "calculator_bindings",
-    world = "wasi:cli/command",
-)
-
 # Build calculator component using TinyGo + WASI Preview 2
+# Note: This is a simple WASI CLI component, not implementing WIT interfaces
 go_wasm_component(
     name = "calculator_component",
     srcs = [
@@ -58,13 +53,8 @@ go_wasm_component(
     world = "wasi:cli/command",
 )
 
-# Generate Go bindings for HTTP service
-go_wit_bindgen(
-    name = "http_service_bindings",
-    world = "http-service-world",
-)
-
 # Build HTTP service component using TinyGo + WASI Preview 2
+# Note: This is a simple WASI CLI component, not implementing WIT interfaces
 go_wasm_component(
     name = "http_service_component",
     srcs = [
@@ -99,7 +89,7 @@ go_wasm_component(
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",
-    world = "simple-test",
+    world = "wasi:cli/command",
 )
 
 # Test multi-file Go component to verify the fix
@@ -112,5 +102,18 @@ go_wasm_component(
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",
-    world = "simple-test",
+    world = "wasi:cli/command",
+)
+
+# Test size optimization to verify the fix
+go_wasm_component(
+    name = "size_test",
+    srcs = [
+        "main.go",
+        "utils.go",
+    ],
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    go_mod = "go.mod",
+    optimization = "size",
+    world = "wasi:cli/command",
 )
