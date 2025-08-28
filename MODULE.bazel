@@ -111,6 +111,10 @@ use_repo(wasi_sdk, "wasi_sdk")
 cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure")
 use_repo(cc_configure, "local_config_cc")
 
+# Add compatibility proxy repository for rules_cc 0.2.0 (required for bzlmod)
+cc_compatibility = use_extension("@rules_cc//cc:extensions.bzl", "compatibility_proxy_repo") 
+cc_compatibility.compatibility_proxy_repo()
+
 # Register both WASI SDK and C++ toolchains  
 register_toolchains(
     "@wasi_sdk//:wasi_sdk_toolchain",
