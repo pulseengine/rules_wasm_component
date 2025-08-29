@@ -251,6 +251,95 @@
   stroke-width: 2px !important;
 }
 
+/* Complexity badges */
+.complexity-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin: 1.5rem 0 2rem 0;
+  border-radius: 0.5rem;
+  border-left: 4px solid;
+}
+
+.complexity-badge.beginner {
+  background: rgba(34, 197, 94, 0.1);
+  border-left-color: rgb(34, 197, 94);
+  color: rgb(21, 128, 61);
+}
+
+.complexity-badge.intermediate {
+  background: rgba(234, 179, 8, 0.1);
+  border-left-color: rgb(234, 179, 8);
+  color: rgb(161, 98, 7);
+}
+
+.complexity-badge.advanced {
+  background: rgba(239, 68, 68, 0.1);
+  border-left-color: rgb(239, 68, 68);
+  color: rgb(185, 28, 28);
+}
+
+.badge-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.badge-content {
+  flex: 1;
+}
+
+.badge-content strong {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.badge-content p {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.8;
+  line-height: 1.3;
+}
+
+/* Dark mode adjustments for complexity badges */
+:root[data-theme="dark"] .complexity-badge.beginner {
+  background: rgba(34, 197, 94, 0.15);
+  color: rgb(74, 222, 128);
+}
+
+:root[data-theme="dark"] .complexity-badge.intermediate {
+  background: rgba(234, 179, 8, 0.15);
+  color: rgb(250, 204, 21);
+}
+
+:root[data-theme="dark"] .complexity-badge.advanced {
+  background: rgba(239, 68, 68, 0.15);
+  color: rgb(248, 113, 113);
+}
+
+/* Path selector styling */
+.path-selector {
+  max-width: 800px;
+}
+
+.path-selector h2 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.path-selector > div {
+  border-left: 4px solid #667eea;
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
   .demo-buttons {
@@ -275,5 +364,15 @@
     max-width: 95vw;
     max-height: 85vh;
     padding: 1rem;
+  }
+
+  .complexity-badge {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .badge-icon {
+    font-size: 2rem;
   }
 }

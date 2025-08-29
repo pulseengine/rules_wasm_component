@@ -97,7 +97,7 @@ def _cpp_component_impl(ctx):
             dep_includes.extend(cc_info.compilation_context.includes.to_list())
             dep_includes.extend(cc_info.compilation_context.system_includes.to_list())
             dep_includes.extend(cc_info.compilation_context.quote_includes.to_list())
-            
+
             # CRITICAL FIX: Stage local CcInfo headers for cross-package dependencies
             # External libraries (path contains "external/") don't need staging - use original paths
             # Local libraries (same workspace) need staging for relative includes to work
@@ -107,6 +107,7 @@ def _cpp_component_impl(ctx):
                     if "external/" not in hdr.path:
                         # Local cross-package header - stage it for relative includes to work
                         dep_headers.append(hdr)
+
                     # External headers are handled via include paths only (no staging needed)
 
     # Generate bindings directory
@@ -170,6 +171,12 @@ def _cpp_component_impl(ctx):
     compile_args.add("-D_WASI_EMULATED_SIGNAL")
     compile_args.add("-D_WASI_EMULATED_MMAN")
     compile_args.add("-DCOMPONENT_MODEL_PREVIEW2")
+
+    # Standard library control
+    if ctx.attr.nostdlib:
+        compile_args.add("-nostdlib")
+        # When using nostdlib, we need to be more selective about what we link
+        compile_args.add("-Wl,--no-entry")  # Don't expect a main function
 
     # Optimization and language settings
     if ctx.attr.optimize:
@@ -239,14 +246,6 @@ def _cpp_component_impl(ctx):
     # Output
     compile_args.add("-o", wasm_binary.path)
 
-    # Add source files from work directory
-    for src in sources:
-        compile_args.add(work_dir.path + "/" + src.basename)
-
-    # Add dependency libraries for linking
-    for lib in dep_libraries:
-        compile_args.add(lib.path)
-
     # Add external dependency headers to inputs (from CcInfo)
     external_headers = []
     for dep in ctx.attr.deps:
@@ -254,10 +253,81 @@ def _cpp_component_impl(ctx):
             cc_info = dep[CcInfo]
             external_headers.extend(cc_info.compilation_context.headers.to_list())
 
+    # Add source files from work directory
+    for src in sources:
+        compile_args.add(work_dir.path + "/" + src.basename)
+
+    # Compile generated WIT binding C file separately (without C++ flags)
+    # wit-bindgen generates filenames by converting hyphens to underscores: http-service-world -> http_service_world.c
+    world_name = ctx.attr.world or "component"  # Default to "component" if no world specified
+    file_safe_world_name = world_name.replace("-", "_")  # Convert hyphens to underscores for filesystem
+    binding_c_file = bindings_dir.path + "/" + file_safe_world_name + ".c"
+    binding_h_file = bindings_dir.path + "/" + file_safe_world_name + ".h"
+    binding_o_file = bindings_dir.path + "/" + file_safe_world_name + "_component_type.o"
+
+    # Add bindings header directory to include path
+    compile_args.add("-I" + bindings_dir.path)
+
+    # Compile the generated C binding file separately to avoid C++ flags
+    binding_obj_file = ctx.actions.declare_file(ctx.attr.name + "_bindings.o")
+
+    binding_compile_args = ctx.actions.args()
+    binding_compile_args.add("--target=wasm32-wasip2")
+    binding_compile_args.add("--sysroot=" + sysroot_path)
+    binding_compile_args.add("-c")  # Compile only, don't link
+
+    # Component model definitions (same as main compilation)
+    binding_compile_args.add("-D_WASI_EMULATED_PROCESS_CLOCKS")
+    binding_compile_args.add("-D_WASI_EMULATED_SIGNAL")
+    binding_compile_args.add("-D_WASI_EMULATED_MMAN")
+    binding_compile_args.add("-DCOMPONENT_MODEL_PREVIEW2")
+
+    # Optimization settings
+    if ctx.attr.optimize:
+        binding_compile_args.add("-O3")
+        binding_compile_args.add("-flto")
+    else:
+        binding_compile_args.add("-O0")
+        binding_compile_args.add("-g")
+
+    # Include directories
+    binding_compile_args.add("-I" + work_dir.path)
+    binding_compile_args.add("-I" + bindings_dir.path)
+
+    # Add dependency include directories
+    for include_dir in dep_includes:
+        binding_compile_args.add("-I" + include_dir)
+
+    # Output and input
+    binding_compile_args.add("-o", binding_obj_file.path)
+    binding_compile_args.add(binding_c_file)
+
+    ctx.actions.run(
+        executable = clang,
+        arguments = [binding_compile_args],
+        inputs = [work_dir, bindings_dir] + sysroot_files.files.to_list() + dep_headers + external_headers,
+        outputs = [binding_obj_file],
+        mnemonic = "CompileCppBindings",
+        progress_message = "Compiling WIT bindings for %s" % ctx.label,
+    )
+
+    # Add compiled binding object file and pre-compiled component type object to linking
+    compile_args.add(binding_obj_file.path)
+    compile_args.add(binding_o_file)
+
+    # Add C++ standard library linking for C++ language (unless nostdlib is used)
+    if ctx.attr.language == "cpp" and not ctx.attr.nostdlib:
+        compile_args.add("-lc++")
+        compile_args.add("-lc++abi")
+
+    # Add dependency libraries for linking
+    for lib in dep_libraries:
+        compile_args.add(lib.path)
+
     ctx.actions.run(
         executable = clang,
         arguments = [compile_args],
-        inputs = [work_dir] + sysroot_files.files.to_list() + dep_libraries + dep_headers + external_headers,
+        inputs = [work_dir, bindings_dir, binding_obj_file] + sysroot_files.files.to_list() + dep_libraries + dep_headers + external_headers,
         outputs = [wasm_binary],
         mnemonic = "CompileCppWasm",
         progress_message = "Compiling C/C++ to WASM for %s" % ctx.label,
@@ -368,6 +438,10 @@ cpp_component = rule(
         "enable_exceptions": attr.bool(
             default = False,
             doc = "Enable C++ exceptions (increases binary size)",
+        ),
+        "nostdlib": attr.bool(
+            default = False,
+            doc = "Disable standard library linking to create minimal components that match WIT specifications exactly",
         ),
     },
     toolchains = [
@@ -485,7 +559,9 @@ def _cc_component_library_impl(ctx):
 
     # Get C/C++ toolchain
     cpp_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:cpp_component_toolchain_type"]
-    clang = cpp_toolchain.clang if ctx.attr.language == "c" else cpp_toolchain.clang_cpp
+
+    # Use clang for both C and C++ compilation to avoid clang_cpp preprocessor issues
+    clang = cpp_toolchain.clang
     llvm_ar = cpp_toolchain.llvm_ar
     sysroot = cpp_toolchain.sysroot
     sysroot_files = cpp_toolchain.sysroot_files
@@ -513,6 +589,7 @@ def _cc_component_library_impl(ctx):
                     if "external/" not in hdr.path:
                         # Local cross-package header - stage it for relative includes to work
                         dep_headers.append(hdr)
+
                     # External headers are handled via include paths only (no staging needed)
 
     # Set up workspace with proper header staging (CRITICAL FIX for issue #38)
@@ -752,6 +829,10 @@ cc_component_library = rule(
         "enable_exceptions": attr.bool(
             default = False,
             doc = "Enable C++ exceptions (increases binary size)",
+        ),
+        "nostdlib": attr.bool(
+            default = False,
+            doc = "Disable standard library linking to create minimal components that match WIT specifications exactly",
         ),
     },
     toolchains = [

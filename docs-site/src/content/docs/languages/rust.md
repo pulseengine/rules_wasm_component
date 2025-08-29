@@ -3,6 +3,16 @@ title: Rust Components
 description: Build WebAssembly components with Rust using rules_rust integration
 ---
 
+# Rust Components
+
+<div class="complexity-badge intermediate">
+  <span class="badge-icon">🦀</span>
+  <div class="badge-content">
+    <strong>INTERMEDIATE</strong>
+    <p>Assumes basic Rust knowledge and some Bazel familiarity</p>
+  </div>
+</div>
+
 ## Why Rust for WebAssembly Components?
 
 Rust is the **ideal language** for WebAssembly components. Its zero-cost abstractions, memory safety, and lack of runtime overhead make it perfect for creating fast, secure, portable components.

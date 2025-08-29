@@ -1,0 +1,382 @@
+---
+title: Composition Rules
+description: Rules for connecting and composing WebAssembly components into larger systems
+---
+
+# Composition Rules
+
+**Connect WebAssembly components like LEGO blocks** to build larger, more complex systems. These rules handle component composition, orchestration, and deployment patterns.
+
+## Quick Reference
+
+| Rule | Purpose | Use Case |
+|------|---------|----------|
+| **[wac_compose](#wac_compose)** | Main composition rule | Connecting multiple components |
+| **[wac_bundle](#wac_bundle)** | Package compositions | Self-contained applications |
+| **[wac_plug](#wac_plug)** | Plugin architecture | Extensible systems |
+| **[wac_remote_compose](#wac_remote_compose)** | Remote composition | Distributed systems |
+
+---
+
+## wac_compose
+
+**🎯 Core composition rule** - connects multiple WebAssembly components according to a WAC (WebAssembly Composition) specification.
+
+### Usage
+
+```python
+load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
+
+wac_compose(
+    name = "microservice_app",
+    composition_file = "app.wac",
+    components = {
+        "auth": ":auth_component",
+        "api": ":api_component", 
+        "storage": ":storage_component",
+    },
+)
+```
+
+### Attributes
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `composition_file` | Label | ✅ | WAC file defining component relationships |
+| `components` | Dict[String, Label] | ✅ | Map of component names to targets |
+| `registry_config` | Label | ❌ | OCI registry configuration for remote dependencies |
+
+### WAC Composition File
+
+**WAC files describe how components connect:**
+
+```wac
+// app.wac - Define component composition
+component auth from ./auth.wasm;
+component api from ./api.wasm; 
+component storage from ./storage.wasm;
+
+// Connect components
+api.auth_provider = auth.authenticate;
+api.data_store = storage.read_write;
+
+// Export final interface
+export api.http_handler as http;
+```
+
+### Examples
+
+**Simple 2-Component System:**
+```python
+wac_compose(
+    name = "calculator_with_ui",
+    composition_file = "calculator.wac", 
+    components = {
+        "calc": ":calculator_component",
+        "ui": ":ui_component",
+    },
+)
+```
+
+**Complex Multi-Service Architecture:**
+```python
+wac_compose(
+    name = "ecommerce_system",
+    composition_file = "ecommerce.wac",
+    components = {
+        "auth": ":auth_service",
+        "catalog": ":product_catalog", 
+        "cart": ":shopping_cart",
+        "payment": ":payment_processor",
+        "frontend": ":web_ui",
+    },
+    registry_config = ":oci_registry_config",
+)
+```
+
+---
+
+## wac_bundle
+
+**📦 Package complete compositions** into self-contained, deployable units.
+
+### Usage
+
+```python
+load("@rules_wasm_component//wac:defs.bzl", "wac_bundle")
+
+wac_bundle(
+    name = "app_bundle",
+    composition = ":microservice_app",
+    metadata = {
+        "version": "1.0.0",
+        "description": "Complete microservice application",
+    },
+)
+```
+
+### Attributes
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `composition` | Label | ✅ | wac_compose target to bundle |
+| `metadata` | Dict[String, String] | ❌ | Additional metadata for the bundle |
+| `compress` | Boolean | ❌ | Whether to compress the bundle (default: true) |
+
+### Examples
+
+**Production Application Bundle:**
+```python
+wac_bundle(
+    name = "production_app",
+    composition = ":ecommerce_system",
+    metadata = {
+        "version": "2.1.0",
+        "environment": "production", 
+        "maintainer": "platform-team@company.com",
+    },
+    compress = True,
+)
+```
+
+**Development Bundle:**
+```python
+wac_bundle(
+    name = "dev_app",
+    composition = ":ecommerce_system", 
+    metadata = {
+        "version": "dev",
+        "debug": "true",
+    },
+    compress = False,  # Faster builds during development
+)
+```
+
+---
+
+## wac_plug
+
+**🔌 Plugin architecture rule** - enables dynamic component loading and extensibility.
+
+### Usage
+
+```python
+load("@rules_wasm_component//wac:defs.bzl", "wac_plug")
+
+wac_plug(
+    name = "extensible_editor",
+    core_component = ":editor_core",
+    plugin_interface = ":plugin_interface_wit",
+    plugins = [
+        ":syntax_highlighter",
+        ":code_formatter", 
+        ":lsp_client",
+    ],
+)
+```
+
+### Attributes
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `core_component` | Label | ✅ | Main component that loads plugins |
+| `plugin_interface` | Label | ✅ | WIT interface that plugins must implement |
+| `plugins` | List of Labels | ❌ | Optional bundled plugins |
+| `plugin_discovery` | String | ❌ | Plugin discovery mechanism ("static", "dynamic") |
+
+### Examples
+
+**Text Editor with Plugins:**
+```python
+wac_plug(
+    name = "code_editor",
+    core_component = ":editor_engine",
+    plugin_interface = ":editor_plugin_wit",
+    plugins = [
+        ":rust_language_server",
+        ":git_integration",
+        ":theme_manager",
+    ],
+    plugin_discovery = "dynamic",
+)
+```
+
+**Game Engine with Mods:**
+```python
+wac_plug(
+    name = "game_with_mods",
+    core_component = ":game_engine",
+    plugin_interface = ":mod_interface_wit", 
+    plugins = [
+        ":graphics_enhancer",
+        ":physics_mod",
+        ":new_levels",
+    ],
+)
+```
+
+---
+
+## wac_remote_compose
+
+**🌐 Remote composition rule** - compose components from different sources including OCI registries.
+
+### Usage
+
+```python
+load("@rules_wasm_component//wac:defs.bzl", "wac_remote_compose")
+
+wac_remote_compose(
+    name = "distributed_app",
+    composition_file = "distributed.wac", 
+    local_components = {
+        "frontend": ":web_ui",
+    },
+    remote_components = {
+        "auth": "registry.company.com/auth:v1.2.0",
+        "payment": "public.registry.io/payment:latest",
+    },
+    registry_config = ":registry_auth",
+)
+```
+
+### Attributes
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `composition_file` | Label | ✅ | WAC file defining component relationships |
+| `local_components` | Dict[String, Label] | ❌ | Locally built components |
+| `remote_components` | Dict[String, String] | ❌ | Components from OCI registries |
+| `registry_config` | Label | ✅ | Registry authentication and configuration |
+
+### Registry Configuration
+
+**Set up registry access:**
+
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_registry_config")
+
+wkg_registry_config(
+    name = "registry_auth",
+    registries = {
+        "registry.company.com": {
+            "auth": "token",
+            "token": "$(COMPANY_REGISTRY_TOKEN)",
+        },
+        "public.registry.io": {
+            "auth": "none",
+        },
+    },
+)
+```
+
+### Examples
+
+**Hybrid Local/Remote System:**
+```python
+wac_remote_compose(
+    name = "saas_application",
+    composition_file = "saas.wac",
+    local_components = {
+        "custom_logic": ":business_rules",
+        "ui_theme": ":branded_ui", 
+    },
+    remote_components = {
+        "auth": "saas.registry.io/auth:v2.0.0",
+        "analytics": "analytics.co/tracker:stable",
+        "payments": "stripe.registry.io/processor:v3.1.0",
+    },
+    registry_config = ":multi_registry_config",
+)
+```
+
+**Microservices with Shared Services:**
+```python
+wac_remote_compose(
+    name = "team_microservice",
+    composition_file = "team-service.wac",
+    local_components = {
+        "team_api": ":team_service_component",
+    },
+    remote_components = {
+        "auth": "platform.company.com/shared/auth:latest",
+        "logging": "platform.company.com/shared/logging:v1.0.0", 
+        "metrics": "platform.company.com/shared/metrics:stable",
+    },
+    registry_config = ":company_registry",
+)
+```
+
+---
+
+## Composition Patterns
+
+### Pattern 1: Layered Architecture
+
+**Separate concerns into layers:**
+
+```wac
+// layers.wac
+component presentation from ./ui.wasm;
+component business from ./logic.wasm;  
+component data from ./storage.wasm;
+
+// Data flows up through layers
+business.data_provider = data.repository;
+presentation.api = business.service;
+
+export presentation.http as app;
+```
+
+### Pattern 2: Event-Driven Architecture  
+
+**Components communicate through events:**
+
+```wac  
+// events.wac
+component producer from ./event_producer.wasm;
+component processor from ./event_processor.wasm;
+component consumer from ./event_consumer.wasm;
+
+// Event flow
+processor.events = producer.event_stream;
+consumer.events = processor.processed_stream;
+
+export consumer.results as output;
+```
+
+### Pattern 3: Plugin Ecosystem
+
+**Core system with optional extensions:**
+
+```wac
+// plugins.wac  
+component core from ./app_core.wasm;
+component auth_plugin from ./auth.wasm;
+component storage_plugin from ./storage.wasm;
+
+// Plugins extend core
+core.auth_provider = auth_plugin.authenticate;
+core.data_store = storage_plugin.read_write;
+
+export core.application as app;
+```
+
+---
+
+## Related Rules
+
+**Prerequisites:**
+- **[WIT & Interface Rules](/reference/wit-interface-rules/)** - Define component interfaces
+- **[Language Rules](/reference/language-rules/)** - Build individual components
+
+**Related:**
+- **[Security Rules](/reference/security-rules/)** - Sign and verify composed systems
+
+**See Also:**
+- **[WAC Composition Guide](/build/composition/wac/)** - Detailed composition patterns
+- **[OCI Publishing](/build/deployment/oci-publishing/)** - Deploy composed systems

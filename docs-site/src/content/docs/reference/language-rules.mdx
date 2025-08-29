@@ -1,0 +1,312 @@
+---
+title: Language Rules
+description: Rules for building WebAssembly components in different programming languages
+---
+
+# Language Rules
+
+Build **WebAssembly components in your preferred language** using these language-specific rules. Each rule is optimized for its language's ecosystem and patterns.
+
+## Quick Reference
+
+| Language | Primary Rule | Use For | Performance |
+|----------|-------------|---------|-------------|
+| **Rust** | [rust_wasm_component_bindgen](#rust-rules) | Most components | ⭐⭐⭐ Excellent |
+| **Go** | [go_wasm_component](#go-rules) | Services, CLI tools | ⭐⭐⭐ Very Good |
+| **C++** | [cpp_component](#c-rules) | Legacy integration | ⭐⭐⭐ Excellent |
+| **JavaScript** | [js_component](#javascript-rules) | Web integration | ⭐⭐ Good |
+
+---
+
+## Rust Rules
+
+**🦀 Recommended for most WebAssembly components** - excellent performance, mature tooling, zero-cost abstractions.
+
+### rust_wasm_component_bindgen
+
+**🎯 Primary rule** for building Rust components with custom WIT interfaces.
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "rust_wasm_component_bindgen")
+
+rust_wasm_component_bindgen(
+    name = "calculator",
+    srcs = ["src/lib.rs"],
+    wit = ":calculator_interfaces",
+    profiles = ["release"],
+)
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `srcs` | List of Labels | ✅ | Rust source files |
+| `wit` | Label | ✅ | WIT library for interface generation |
+| `profiles` | List of Strings | ❌ | Build profiles ("debug", "release") |
+| `deps` | List of Labels | ❌ | Rust crate dependencies |
+| `rustc_flags` | List of Strings | ❌ | Additional Rust compiler flags |
+| `edition` | String | ❌ | Rust edition (default: "2021") |
+
+### rust_wasm_component
+
+**🔧 Advanced rule** for library components without custom interfaces.
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "rust_wasm_component")
+
+rust_wasm_component(
+    name = "crypto_utils",
+    srcs = ["src/lib.rs"],
+    deps = ["@crates//:ring", "@crates//:base64"],
+    rustc_flags = ["-C", "opt-level=3"],
+)
+```
+
+### rust_wasm_component_test
+
+**🧪 Test rule** for Rust component testing.
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "rust_wasm_component_test")
+
+rust_wasm_component_test(
+    name = "calculator_test",
+    component = ":calculator",
+    test_srcs = ["tests/calculator_test.rs"],
+)
+```
+
+---
+
+## Go Rules
+
+**🐹 Great for services and CLI tools** - familiar syntax, good concurrency, easy deployment.
+
+### go_wasm_component
+
+**🎯 Primary rule** for building Go components with TinyGo.
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "go_wasm_component")
+
+go_wasm_component(
+    name = "http_service",
+    srcs = ["main.go", "handler.go"],
+    wit = ":http_interfaces",
+    goarch = "wasm",
+    goos = "wasip2",
+)
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `srcs` | List of Labels | ✅ | Go source files |
+| `wit` | Label | ✅ | WIT library for interface generation |
+| `deps` | List of Labels | ❌ | Go module dependencies |
+| `goarch` | String | ❌ | Target architecture (default: "wasm") |
+| `goos` | String | ❌ | Target OS (default: "wasip2") |
+
+### go_wit_bindgen
+
+**🔧 Standalone binding generation** for Go (used internally by go_wasm_component).
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "go_wit_bindgen")
+
+go_wit_bindgen(
+    name = "service_bindings",
+    wit = ":service_interfaces",
+    out_dir = "bindings/",
+)
+```
+
+### go_wasm_component_test
+
+**🧪 Test rule** for Go component testing.
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "go_wasm_component_test")
+
+go_wasm_component_test(
+    name = "service_test", 
+    component = ":http_service",
+    test_srcs = ["service_test.go"],
+)
+```
+
+---
+
+## C++ Rules
+
+**⚡ Perfect for legacy integration** - port existing C/C++ code, maximum performance, hardware access.
+
+### cpp_component
+
+**🎯 Primary rule** for building C++ components.
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "cpp_component")
+
+cpp_component(
+    name = "image_processor",
+    srcs = ["processor.cpp", "filters.cpp"],
+    hdrs = ["processor.h", "filters.h"],
+    wit = ":image_interfaces",
+    deps = ["@opencv//:core"],
+)
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `srcs` | List of Labels | ✅ | C++ source files |
+| `hdrs` | List of Labels | ❌ | C++ header files |
+| `wit` | Label | ✅ | WIT library for interface generation |
+| `deps` | List of Labels | ❌ | C++ library dependencies |
+| `copts` | List of Strings | ❌ | Additional compiler options |
+
+### cpp_wit_bindgen
+
+**🔧 Standalone binding generation** for C++ (used internally by cpp_component).
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "cpp_wit_bindgen")
+
+cpp_wit_bindgen(
+    name = "image_bindings",
+    wit = ":image_interfaces", 
+    out_dir = "generated/",
+)
+```
+
+### cc_component_library
+
+**📚 Reusable C++ component library.**
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "cc_component_library")
+
+cc_component_library(
+    name = "math_utils",
+    srcs = ["math.cpp"],
+    hdrs = ["math.h"],
+    visibility = ["//visibility:public"],
+)
+```
+
+---
+
+## JavaScript Rules
+
+**🌐 Best for web integration** - seamless browser integration, npm ecosystem access, familiar development.
+
+### js_component
+
+**🎯 Primary rule** for building JavaScript/TypeScript components.
+
+```python
+load("@rules_wasm_component//js:defs.bzl", "js_component")
+
+js_component(
+    name = "ui_component",
+    srcs = ["src/index.js", "src/handlers.js"],
+    wit = ":ui_interfaces",
+    deps = [":package_json"],
+)
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `srcs` | List of Labels | ✅ | JavaScript/TypeScript source files |
+| `wit` | Label | ✅ | WIT library for interface generation |
+| `deps` | List of Labels | ❌ | npm package dependencies |
+| `typescript` | Boolean | ❌ | Enable TypeScript support |
+
+### jco_transpile
+
+**🔄 Transform rule** for JavaScript component compilation.
+
+```python
+load("@rules_wasm_component//js:defs.bzl", "jco_transpile")
+
+jco_transpile(
+    name = "transpiled_component",
+    src = "component.js",
+    wit = ":component_interfaces",
+)
+```
+
+### npm_install
+
+**📦 Package management** for JavaScript dependencies.
+
+```python
+load("@rules_wasm_component//js:defs.bzl", "npm_install")
+
+npm_install(
+    name = "node_modules",
+    package_json = ":package.json",
+    package_lock_json = ":package-lock.json",
+)
+```
+
+---
+
+## Language Comparison
+
+### When to Choose Each Language
+
+**Choose Rust when:**
+- Building high-performance components
+- Memory safety is critical
+- Component will be widely reused
+- You need zero-cost abstractions
+
+**Choose Go when:**
+- Building microservices or API servers
+- Team is familiar with Go patterns
+- You need good concurrency primitives
+- Simple deployment is important
+
+**Choose C++ when:**
+- Porting existing C/C++ applications
+- Maximum performance is required
+- Integration with hardware or legacy systems
+- Using existing C++ libraries
+
+**Choose JavaScript when:**
+- Building web-facing components
+- Integrating with browser APIs
+- Team expertise is in web development
+- Rapid prototyping and iteration
+
+### Performance Characteristics
+
+| Language | Binary Size | Startup Time | Runtime Performance | Memory Usage |
+|----------|-------------|-------------|-------------------|--------------|
+| **Rust** | ⭐⭐⭐ Small | ⭐⭐⭐ Fast | ⭐⭐⭐ Excellent | ⭐⭐⭐ Low |
+| **Go** | ⭐⭐ Medium | ⭐⭐ Good | ⭐⭐⭐ Very Good | ⭐⭐ Medium |
+| **C++** | ⭐⭐⭐ Small | ⭐⭐⭐ Fast | ⭐⭐⭐ Excellent | ⭐⭐⭐ Low |
+| **JavaScript** | ⭐ Large | ⭐ Slow | ⭐⭐ Good | ⭐ High |
+
+---
+
+## Related Rules
+
+**Next Steps:**
+- **[WIT & Interface Rules](/reference/wit-interface-rules/)** - Define component interfaces
+- **[Composition Rules](/reference/composition-rules/)** - Connect components together
+
+**See Also:**
+- **[Multi-Language Development](/learn/multi-language/)** - Choosing the right language for each component
+- **[Language Development Guides](/build/languages/)** - Detailed guides for each language

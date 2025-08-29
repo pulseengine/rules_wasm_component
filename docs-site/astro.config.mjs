@@ -44,95 +44,83 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
-					label: 'Getting Started',
+					label: 'GET STARTED',
 					items: [
-						{ label: 'Learning Path', slug: 'learning-path' },
+						{ label: '👋 Pick Your Learning Path', slug: 'pick-your-path' },
 						{ label: 'Zero to Component in 2 Minutes', slug: 'zero-to-component' },
-						{ label: 'Quick Start', slug: 'getting-started' },
-						{ label: 'Installation', slug: 'installation' },
-						{ label: 'First Component', slug: 'first-component' },
+						{ label: 'Installation & Setup', slug: 'installation' },
 					],
 				},
 				{
-					label: 'Architecture',
+					label: 'LEARN',
 					items: [
-						{ label: 'Overview', slug: 'architecture/overview' },
-						{ label: 'Development Workflow', slug: 'workflow/development-flow' },
+						{ label: 'WebAssembly Component Fundamentals', slug: 'learn/fundamentals' },
+						{ label: 'Component Architecture', slug: 'architecture/overview' },
+						{ label: 'Multi-Language Development', slug: 'guides/wit-bindgen-interface-mapping' },
+						{ label: 'Tutorials', collapsed: true, items: [
+							{ label: 'Code Explained Line by Line', slug: 'tutorials/code-explained' },
+							{ label: 'First Component Tutorial', slug: 'first-component' },
+							{ label: 'Guided Rust Walkthrough', slug: 'tutorials/rust-guided-walkthrough' },
+							{ label: 'Guided Go (TinyGo) Walkthrough', slug: 'tutorials/go-guided-walkthrough' },
+						]},
 					],
 				},
 				{
-					label: 'Tutorials',
+					label: 'BUILD',
 					items: [
-						{ label: 'Code Explained Line by Line', slug: 'tutorials/code-explained' },
-						{ label: 'Guided Rust Walkthrough', slug: 'tutorials/rust-guided-walkthrough' },
-						{ label: 'Guided Go (TinyGo) Walkthrough', slug: 'tutorials/go-guided-walkthrough' },
+						{ label: 'Language Development', collapsed: false, items: [
+							{ label: 'Rust Components', slug: 'languages/rust' },
+							{ label: 'Go Components', slug: 'languages/go' },
+							{ label: 'JavaScript & TypeScript', slug: 'languages/javascript' },
+							{ label: 'C & C++', slug: 'languages/cpp' },
+						]},
+						{ label: 'Common Patterns', collapsed: true, items: [
+							{ label: 'WIT Bindgen Interface Mapping', slug: 'guides/wit-bindgen-interface-mapping' },
+							{ label: 'WIT Bindgen Advanced Concepts', slug: 'guides/wit-bindgen-advanced-concepts' },
+							{ label: 'Guest vs Native-Guest Bindings', slug: 'guides/host-vs-wasm-bindings' },
+							{ label: 'Performance Optimization', slug: 'production/performance' },
+							{ label: 'Advanced Features', slug: 'guides/advanced-features' },
+						]},
+						{ label: 'Examples', collapsed: true, items: [
+							{ label: 'Basic Component', slug: 'examples/basic' },
+							{ label: 'Basic Examples', slug: 'examples/basic-examples' },
+							{ label: 'Intermediate Examples', slug: 'examples/intermediate-examples' },
+							{ label: 'Advanced Examples', slug: 'examples/advanced-examples' },
+							{ label: 'WIT Bindgen Interface Mapping', slug: 'examples/wit-bindgen-with-mappings' },
+							{ label: 'Calculator (C++)', slug: 'examples/calculator' },
+							{ label: 'HTTP Service (Go)', slug: 'examples/http-service' },
+							{ label: 'Multi-Language System', slug: 'examples/multi-language' },
+						]},
+						{ label: 'Composition & Deployment', collapsed: true, items: [
+							{ label: 'WAC Composition', slug: 'composition/wac' },
+							{ label: 'WAC + OCI Integration', slug: 'composition/wac-oci-integration' },
+							{ label: 'OCI Publishing', slug: 'production/publishing' },
+							{ label: 'Deployment Guide', slug: 'production/deployment-guide' },
+							{ label: 'Component Signing', slug: 'security/component-signing' },
+							{ label: 'OCI Component Signing', slug: 'security/oci-signing' },
+						]},
+						{ label: 'Configuration & Tooling', collapsed: true, items: [
+							{ label: 'Toolchain Configuration', slug: 'guides/toolchain-configuration' },
+							{ label: 'Multi-Profile Builds', slug: 'guides/multi-profile-builds' },
+							{ label: 'External WIT Dependencies', slug: 'guides/external-wit-dependencies' },
+							{ label: 'Migration Guide', slug: 'guides/migration' },
+							{ label: 'Development Workflow', slug: 'workflow/development-flow' },
+						]},
+						{ label: 'Troubleshooting', collapsed: true, items: [
+							{ label: 'Common Issues & Solutions', slug: 'troubleshooting/common-issues' },
+							{ label: 'Export Macro Visibility', slug: 'troubleshooting/export-macro-visibility' },
+							{ label: 'WIT Bindgen Troubleshooting', slug: 'guides/wit-bindgen-troubleshooting' },
+						]},
 					],
 				},
 				{
-					label: 'Languages',
+					label: 'REFERENCE',
 					items: [
-						{ label: 'Rust Components', slug: 'languages/rust' },
-						{ label: 'Go Components', slug: 'languages/go' },
-						{ label: 'JavaScript & TypeScript', slug: 'languages/javascript' },
-						{ label: 'C & C++', slug: 'languages/cpp' },
-					],
-				},
-				{
-					label: 'Guides',
-					items: [
-						{ label: 'Guest vs Native-Guest Bindings', slug: 'guides/guest-vs-native-guest-bindings' },
-						{ label: 'Advanced Features', slug: 'guides/advanced-features' },
-						{ label: 'Migration Guide', slug: 'guides/migration' },
-						{ label: 'Toolchain Configuration', slug: 'guides/toolchain-configuration' },
-						{ label: 'Multi-Profile Builds', slug: 'guides/multi-profile-builds' },
-						{ label: 'External WIT Dependencies', slug: 'guides/external-wit-dependencies' },
-					],
-				},
-				{
-					label: 'Examples',
-					items: [
-						{ label: 'Basic Component', slug: 'examples/basic' },
-						{ label: 'Basic Examples', slug: 'examples/basic-examples' },
-						{ label: 'Intermediate Examples', slug: 'examples/intermediate-examples' },
-						{ label: 'Advanced Examples', slug: 'examples/advanced-examples' },
-						{ label: 'Calculator (C++)', slug: 'examples/calculator' },
-						{ label: 'HTTP Service (Go)', slug: 'examples/http-service' },
-						{ label: 'Multi-Language System', slug: 'examples/multi-language' },
-					],
-				},
-				{
-					label: 'Composition',
-					items: [
-						{ label: 'WAC Composition', slug: 'composition/wac' },
-						{ label: 'WAC + OCI Integration', slug: 'composition/wac-oci-integration' },
-					],
-				},
-				{
-					label: 'Security',
-					items: [
-						{ label: 'Component Signing', slug: 'security/component-signing' },
-						{ label: 'OCI Component Signing', slug: 'security/oci-signing' },
-					],
-				},
-				{
-					label: 'Production',
-					items: [
-						{ label: 'Deployment Guide', slug: 'production/deployment-guide' },
-						{ label: 'OCI Publishing', slug: 'production/publishing' },
-						{ label: 'Performance Optimization', slug: 'production/performance' },
-					],
-				},
-				{
-					label: 'Troubleshooting',
-					items: [
-						{ label: 'Common Issues & Solutions', slug: 'troubleshooting/common-issues' },
-						{ label: 'Export Macro Visibility', slug: 'troubleshooting/export-macro-visibility' },
-					],
-				},
-				{
-					label: 'Reference',
-					items: [
-						{ label: 'Rule Reference', slug: 'reference/rules' },
+						{ label: 'WIT & Interface Rules', slug: 'reference/wit-interface-rules' },
+						{ label: 'Language Rules', slug: 'reference/language-rules' },
+						{ label: 'Composition Rules', slug: 'reference/composition-rules' },
+						{ label: 'Security Rules', slug: 'reference/security-rules' },
+						{ label: 'Complete Rule Reference', slug: 'reference/rules' },
 					],
 				},
 			],
