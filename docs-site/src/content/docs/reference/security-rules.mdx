@@ -1,0 +1,383 @@
+---
+title: Security Rules
+description: Rules for signing, verifying, and securing WebAssembly components
+---
+
+# Security Rules  
+
+**Secure your WebAssembly components** with cryptographic signatures, verification, and key management. These rules provide production-ready security for component distribution and deployment.
+
+## Quick Reference
+
+| Rule | Purpose | Use Case |
+|------|---------|----------|
+| **[wasm_sign](#wasm_sign)** | Sign components | Production deployment |
+| **[wasm_verify](#wasm_verify)** | Verify signatures | Security validation |
+| **[wasm_keygen](#wasm_keygen)** | Generate key pairs | Key management |
+
+---
+
+## wasm_sign
+
+**🔒 Sign WebAssembly components** with cryptographic signatures for tamper detection and authenticity verification.
+
+### Usage
+
+```python
+load("@rules_wasm_component//security:defs.bzl", "wasm_sign")
+
+wasm_sign(
+    name = "signed_component",
+    component = ":my_component",
+    private_key = ":signing_key",
+    algorithm = "ed25519",
+)
+```
+
+### Attributes
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `component` | Label | ✅ | WebAssembly component to sign |
+| `private_key` | Label | ✅ | Private key file for signing |
+| `algorithm` | String | ❌ | Signature algorithm ("ed25519", "rsa", "ecdsa") |
+| `metadata` | Dict[String, String] | ❌ | Additional metadata to include in signature |
+| `timestamp` | Boolean | ❌ | Include timestamp in signature (default: true) |
+
+### Supported Algorithms
+
+| Algorithm | Key Size | Performance | Security | Use Case |
+|-----------|----------|-------------|----------|----------|
+| **ed25519** | 256-bit | ⭐⭐⭐ Fast | ⭐⭐⭐ High | Recommended default |
+| **rsa** | 2048/4096-bit | ⭐⭐ Medium | ⭐⭐⭐ High | Enterprise compatibility |
+| **ecdsa** | 256/384-bit | ⭐⭐⭐ Fast | ⭐⭐⭐ High | Standards compliance |
+
+### Examples
+
+**Basic Component Signing:**
+```python
+wasm_sign(
+    name = "production_component",
+    component = ":calculator_component",
+    private_key = ":prod_signing_key",
+    algorithm = "ed25519",
+)
+```
+
+**Signed with Metadata:**
+```python
+wasm_sign(
+    name = "signed_with_metadata",
+    component = ":api_service",
+    private_key = ":company_key",
+    algorithm = "rsa",
+    metadata = {
+        "version": "1.2.0",
+        "build": "$(BUILD_NUMBER)",
+        "maintainer": "security-team@company.com",
+        "environment": "production",
+    },
+    timestamp = True,
+)
+```
+
+**Development Signing:**
+```python
+wasm_sign(
+    name = "dev_signed_component", 
+    component = ":test_component",
+    private_key = ":dev_key",
+    algorithm = "ed25519",
+    metadata = {
+        "environment": "development",
+        "warning": "not for production use",
+    },
+)
+```
+
+---
+
+## wasm_verify
+
+**✅ Verify component signatures** to ensure authenticity and detect tampering.
+
+### Usage
+
+```python
+load("@rules_wasm_component//security:defs.bzl", "wasm_verify")
+
+wasm_verify(
+    name = "verify_component",
+    signed_component = ":signed_component",
+    public_key = ":verification_key", 
+    fail_on_invalid = True,
+)
+```
+
+### Attributes
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `signed_component` | Label | ✅ | Signed component to verify |
+| `public_key` | Label | ✅ | Public key file for verification |
+| `fail_on_invalid` | Boolean | ❌ | Fail build if signature is invalid (default: true) |
+| `required_metadata` | Dict[String, String] | ❌ | Required metadata fields and values |
+| `max_age` | String | ❌ | Maximum signature age ("24h", "7d", "30d") |
+
+### Examples
+
+**Basic Verification:**
+```python
+wasm_verify(
+    name = "verify_production_component",
+    signed_component = ":production_component", 
+    public_key = ":prod_public_key",
+    fail_on_invalid = True,
+)
+```
+
+**Verification with Requirements:**
+```python
+wasm_verify(
+    name = "strict_verification",
+    signed_component = ":external_component",
+    public_key = ":trusted_vendor_key",
+    fail_on_invalid = True,
+    required_metadata = {
+        "environment": "production",
+        "version": "^1.0.0",  # Semantic version matching
+    },
+    max_age = "30d",  # Reject signatures older than 30 days
+)
+```
+
+**Development Verification:**
+```python
+wasm_verify(
+    name = "verify_dev_component",
+    signed_component = ":dev_signed_component",
+    public_key = ":dev_public_key", 
+    fail_on_invalid = False,  # Warning only in development
+)
+```
+
+---
+
+## wasm_keygen
+
+**🗝️ Generate cryptographic key pairs** for component signing and verification.
+
+### Usage
+
+```python
+load("@rules_wasm_component//security:defs.bzl", "wasm_keygen")
+
+wasm_keygen(
+    name = "signing_keys",
+    algorithm = "ed25519",
+    private_key_output = "private_key.pem",
+    public_key_output = "public_key.pem",
+)
+```
+
+### Attributes
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | String | ✅ | A unique name for this target |
+| `algorithm` | String | ✅ | Key generation algorithm |
+| `private_key_output` | String | ✅ | Output filename for private key |
+| `public_key_output` | String | ✅ | Output filename for public key |
+| `key_size` | Integer | ❌ | Key size in bits (algorithm-dependent) |
+| `password_protect` | Boolean | ❌ | Password protect private key (default: false) |
+
+### Examples
+
+**Generate Ed25519 Keys (Recommended):**
+```python
+wasm_keygen(
+    name = "prod_keys",
+    algorithm = "ed25519",
+    private_key_output = "prod_private.pem",
+    public_key_output = "prod_public.pem", 
+)
+```
+
+**Generate RSA Keys:**
+```python
+wasm_keygen(
+    name = "enterprise_keys",
+    algorithm = "rsa", 
+    key_size = 4096,
+    private_key_output = "enterprise_private.pem",
+    public_key_output = "enterprise_public.pem",
+    password_protect = True,
+)
+```
+
+**Generate ECDSA Keys:**
+```python
+wasm_keygen(
+    name = "standards_keys",
+    algorithm = "ecdsa",
+    key_size = 384,
+    private_key_output = "ecdsa_private.pem", 
+    public_key_output = "ecdsa_public.pem",
+)
+```
+
+---
+
+## Security Patterns
+
+### Pattern 1: Multi-Environment Signing
+
+**Different keys for different environments:**
+
+```python
+# Production keys - highly protected
+wasm_keygen(
+    name = "prod_keys",
+    algorithm = "ed25519",
+    private_key_output = "prod_private.pem",
+    public_key_output = "prod_public.pem",
+)
+
+wasm_sign(
+    name = "prod_component",
+    component = ":my_component",
+    private_key = ":prod_keys",
+    metadata = {"environment": "production"},
+)
+
+# Staging keys - separate from production
+wasm_keygen(
+    name = "staging_keys", 
+    algorithm = "ed25519",
+    private_key_output = "staging_private.pem",
+    public_key_output = "staging_public.pem",
+)
+
+wasm_sign(
+    name = "staging_component",
+    component = ":my_component", 
+    private_key = ":staging_keys",
+    metadata = {"environment": "staging"},
+)
+```
+
+### Pattern 2: Vendor Component Verification
+
+**Verify external components before use:**
+
+```python
+# Verify vendor-signed components
+wasm_verify(
+    name = "verify_vendor_auth",
+    signed_component = "@vendor//auth:signed_component",
+    public_key = ":vendor_public_key",
+    required_metadata = {
+        "vendor": "trusted-vendor-inc",
+        "certified": "true",
+    },
+    max_age = "90d",
+)
+
+# Use verified component in composition
+wac_compose(
+    name = "secure_app",
+    composition_file = "app.wac", 
+    components = {
+        "auth": ":verify_vendor_auth",  # Verified component
+        "api": ":my_signed_api",        # Our signed component
+    },
+)
+```
+
+### Pattern 3: CI/CD Integration
+
+**Automated signing in build pipeline:**
+
+```python
+# Sign components in CI/CD
+genrule(
+    name = "ci_sign_component",
+    srcs = [":my_component"],
+    outs = ["signed_component.wasm"],
+    cmd = """
+        wasm-sign \\
+            --component $(location :my_component) \\
+            --private-key $$CI_SIGNING_KEY \\
+            --metadata version=$$BUILD_VERSION \\
+            --metadata commit=$$GIT_COMMIT \\
+            --output $@
+    """,
+    tools = ["@wasm_tools//:wasm_sign"],
+)
+
+# Verify during deployment
+wasm_verify(
+    name = "verify_for_deployment",
+    signed_component = ":ci_sign_component",
+    public_key = ":ci_public_key",
+    required_metadata = {
+        "version": ".*",  # Any version
+        "commit": ".*",   # Any commit
+    },
+    max_age = "24h",  # Must be recently signed
+)
+```
+
+---
+
+## Key Management Best Practices
+
+### Development Environment
+```bash
+# Generate development keys (not for production!)
+bazel run //:dev_keygen
+
+# Sign development components
+bazel build //:dev_signed_component
+```
+
+### Production Environment
+```bash
+# Use hardware security module (HSM) or secure key storage
+export SIGNING_KEY_PATH="/secure/storage/prod_key.pem"
+
+# Sign with metadata
+bazel build //:prod_component \\
+  --define version=1.2.0 \\
+  --define build_number=123
+```
+
+### Key Rotation
+```python
+# Support multiple verification keys
+wasm_verify(
+    name = "verify_with_rotation",
+    signed_component = ":component",
+    public_keys = [
+        ":current_key",    # Current signing key
+        ":previous_key",   # Previous key (for transition)
+    ],
+)
+```
+
+---
+
+## Related Rules
+
+**Prerequisites:**
+- **[Language Rules](/reference/language-rules/)** - Build components to sign
+- **[Composition Rules](/reference/composition-rules/)** - Compose signed components
+
+**Integration:**
+- **OCI Component Signing** - Sign components in OCI registries
+
+**See Also:**
+- **[Component Signing Guide](/build/security/component-signing/)** - Detailed signing workflows
+- **[Production Deployment](/build/deployment/production/)** - Secure deployment patterns
