@@ -1,4 +1,4 @@
-load("//cpp:defs.bzl", "cc_component_library", "cpp_wit_bindgen")
+load("//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen")
 
 # WIT bindings generation
 cpp_wit_bindgen(
@@ -55,20 +55,15 @@ cc_component_library(
 # )
 
 # Main data structures component
-# NOTE: Disabled - depends on unimplemented components and missing main source
-# cpp_component(
-#     name = "data_structures_component",
-#     srcs = ["src/data_structures.cpp"],
-#     hdrs = ["src/data_structures.h"],
-#     target_compatible_with = ["@platforms//cpu:wasm32"],
-#     visibility = ["//visibility:public"],
-#     wit = "wit/data_structures.wit",
-#     world = "data-structures",
-#     deps = [
-#         ":hash_table",
-#         ":memory_pool",
-#     ],
-# )
+cpp_component(
+    name = "data_structures_component",
+    srcs = ["src/data_structures.cpp"],
+    hdrs = ["src/data_structures.h"],
+    target_compatible_with = ["@platforms//cpu:wasm32"],
+    visibility = ["//visibility:public"],
+    wit = "wit/data_structures.wit",
+    world = "data-structures-world",
+)
 
 # Performance benchmark
 # NOTE: Disabled - cc_binary cannot depend on WebAssembly component libraries
