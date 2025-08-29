@@ -142,11 +142,11 @@ impl Math for Component {
 **JavaScript Usage:**
 ```javascript
 // Generated automatically from WIT
-import { math } from './calculator.js';
+import { calc } from './calculator.js';
 
-const result = math.add(5.0, 3.0);       // Returns: 8.0
-const divided = math.divide(10.0, 2.0);  // Returns: { ok: 5.0 }
-const error = math.divide(10.0, 0.0);    // Returns: { err: "Division by zero" }
+const result = calc.add(5.0, 3.0);       // Returns: 8.0
+const divided = calc.divide(10.0, 2.0);  // Returns: { success: true, error: null, value: 5.0 }
+const error = calc.divide(10.0, 0.0);    // Returns: { success: false, error: "Division by zero is not allowed", value: null }
 ```
 
 **The magic:** You write the WIT once, implement it in any language, and it automatically works with every other language.
