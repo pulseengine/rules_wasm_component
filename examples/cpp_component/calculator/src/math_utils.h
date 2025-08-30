@@ -3,7 +3,6 @@
 #include <cmath>
 #include <functional>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -67,8 +66,11 @@ public:
     bool is_err() const { return !success; }
 
     T unwrap() const {
+        // WASI SDK doesn't support exceptions, so we return a default value
+        // In production code, you should use unwrap_or() instead of unwrap()
         if (!success) {
-            throw std::runtime_error(error.value_or("Unknown error"));
+            // Return default-constructed value instead of throwing
+            return T{};
         }
         return value.value();
     }

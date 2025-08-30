@@ -343,6 +343,96 @@ load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 ---
 
+## C++ Exception Handling Issues
+
+### "Undefined symbol: __cxa_allocate_exception"
+
+**Symptom**:
+```
+wasm-ld: error: undefined symbol: __cxa_allocate_exception
+wasm-ld: error: undefined symbol: __cxa_throw
+wasm-ld: error: undefined symbol: __cxa_free_exception
+```
+
+**Cause**: WASI SDK does not support C++ exceptions. The runtime exception handling symbols are not available.
+
+**Solution**: Disable exceptions in your C++ components:
+
+```python title="BUILD.bazel"
+cpp_component(
+    name = "my_component",
+    # ... other attributes
+    enable_exceptions = False,  # Required - WASI SDK limitation
+)
+
+cc_component_library(
+    name = "my_library",
+    # ... other attributes  
+    enable_exceptions = False,  # Required - WASI SDK limitation
+)
+```
+
+**Alternative Error Handling**:
+```cpp title="src/component.cpp"
+// ✅ Use Result types instead of exceptions
+std::variant<double, std::string> divide(double a, double b) {
+    if (b == 0.0) {
+        return std::string("Division by zero");
+    }
+    return a / b;
+}
+
+// ✅ Use optional types for operations that might fail  
+std::optional<double> safe_operation(double input) {
+    if (input < 0) {
+        return std::nullopt;  // Instead of throwing
+    }
+    return process(input);
+}
+```
+
+**Learn more**: [C++ WASI SDK Limitations](/languages/cpp/#wasi-sdk-limitations)
+
+---
+
+## Component Validation Issues
+
+### "Component doesn't export expected functions"
+
+**Symptom**: Component builds but runtime shows missing exports or validation failures
+
+**Cause**: WIT interface doesn't match component implementation
+
+**Solution**: Enable validation to catch mismatches during build:
+
+```python title="BUILD.bazel"
+cpp_component(
+    name = "validated_component", 
+    # ... other attributes
+    validate_wit = True,  # Enable WIT compliance validation
+)
+```
+
+**Check validation results**:
+```bash
+# Build creates validation log
+bazel build //:my_component
+cat bazel-bin/my_component_wit_validation.log
+```
+
+**Common validation errors**:
+- Export function names don't match WIT specification
+- Function parameter types don't match WIT types  
+- Missing implementation of WIT world exports
+
+**Verify the fix**:
+```bash
+# Check component exports match WIT
+bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/my_component.wasm
+```
+
+---
+
 ## 📦 Dependency Issues
 
 ### "Version conflict in crate dependencies"
