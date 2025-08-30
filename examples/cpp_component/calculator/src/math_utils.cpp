@@ -1,7 +1,6 @@
 #include "math_utils.h"
 #include <cmath>
 #include <limits>
-#include <stdexcept>
 
 namespace math_utils {
 

@@ -386,8 +386,8 @@ public:
 ### Language Features
 - **Templates**: Full template metaprogramming support
 - **STL**: Standard Template Library available
-- **Exceptions**: Optional exception handling support
-- **RTTI**: Runtime Type Information (limited)
+- **Exceptions**: Currently not supported by WASI SDK (see limitations below)
+- **RTTI**: Runtime Type Information (limited, disabled by default)
 - **Threading**: Limited threading support (single-threaded execution)
 
 ### Memory Management
@@ -414,13 +414,13 @@ cpp_component(
     # ... other attributes
     optimize = True,           # Enable -O2 optimization
     cxx_std = "c++20",        # Use latest standard
-    enable_exceptions = False, # Disable exceptions for size
+    enable_exceptions = False, # Required: WASI SDK doesn't support exceptions
 )
 ```
 
 ### Best Practices
 1. **Minimize allocations**: Use stack allocation when possible
-2. **Avoid exceptions**: For smaller component size (optional)
+2. **Use error codes or Result types**: Instead of exceptions (required)
 3. **Use const correctness**: Enable compiler optimizations
 4. **Profile memory usage**: WebAssembly has limited memory
 5. **Optimize hot paths**: Focus on frequently called functions
@@ -500,16 +500,99 @@ wasm_component_test(
 )
 ```
 
+## WASI SDK Limitations
+
+### C++ Exception Handling
+
+**Current Status**: WASI SDK does not support C++ exceptions. Components must be built with `enable_exceptions = False`.
+
+**Technical Details**:
+- WASI SDK's libc++abi is compiled without exception handling support
+- Missing runtime symbols: `__cxa_allocate_exception`, `__cxa_throw`, `__cxa_free_exception`
+- WebAssembly exception handling proposal is available but not yet integrated in WASI SDK
+
+**Required Configuration**:
+```python
+cpp_component(
+    name = "my_component",
+    # ... other attributes
+    enable_exceptions = False,  # Required - must be False
+)
+
+cc_component_library(
+    name = "my_library", 
+    # ... other attributes
+    enable_exceptions = False,  # Required - must be False
+)
+```
+
+**Error Handling Alternatives**:
+```cpp
+// ✅ Use Result types or error codes instead of exceptions
+std::variant<double, std::string> divide(double a, double b) {
+    if (b == 0.0) {
+        return std::string("Division by zero");
+    }
+    return a / b;
+}
+
+// ✅ Use optional types for operations that might fail
+std::optional<double> safe_sqrt(double x) {
+    if (x < 0) {
+        return std::nullopt;  // Instead of throwing
+    }
+    return std::sqrt(x);
+}
+
+// ✅ Use error codes
+enum class CalculationError { DivisionByZero, InvalidInput };
+struct Result {
+    bool success;
+    double value;
+    CalculationError error;
+};
+```
+
+### Component Validation
+
+Components built with rules_wasm_component include automatic validation to ensure they conform to the WebAssembly Component Model specification.
+
+**Enable Validation**:
+```python
+cpp_component(
+    name = "validated_component",
+    # ... other attributes
+    validate_wit = True,  # Enable WIT compliance validation
+)
+```
+
+**Validation Process**:
+1. **WIT Interface Check**: Ensures component exports match WIT specification
+2. **Component Model Compliance**: Validates against WebAssembly Component Model format  
+3. **Type Safety**: Verifies that exported functions have correct signatures
+
+**Validation Output**:
+```bash
+# Validation creates a log file showing results
+bazel build //:my_component
+# Creates: bazel-bin/my_component_wit_validation.log
+```
+
+**Common Validation Errors**:
+- **Export mismatch**: Component doesn't export all functions declared in WIT
+- **Type signature mismatch**: Function parameters or return types don't match WIT
+- **Missing world implementation**: WIT world not properly implemented
+
 ## Troubleshooting
 
 ### Common Issues
 
-**Linker errors with undefined symbols:**
+**Linker errors with C++ exception symbols:**
 ```
-Error: undefined symbol: std::__throw_bad_alloc
+wasm-ld: error: undefined symbol: __cxa_allocate_exception
+wasm-ld: error: undefined symbol: __cxa_throw
 ```
-- Enable exceptions: `enable_exceptions = True`
-- Or avoid code paths that throw (recommended)
+**Solution**: Set `enable_exceptions = False` (required for WASI SDK)
 
 **Memory allocation failures:**
 ```
@@ -527,10 +610,18 @@ Error: 'pthread_create' undefined
 - Use single-threaded algorithms
 - Consider async patterns instead of threads
 
+**Validation failures:**
+```
+Error: Component doesn't export function 'calculate'
+```
+- Check WIT file matches component implementation
+- Ensure all exported functions are implemented
+- Verify function signatures match exactly
+
 ### Performance Issues
 
 **Large component size:**
-- Disable exceptions: `enable_exceptions = False`
+- Always use `enable_exceptions = False` (required)
 - Use smaller standard library subset
 - Enable optimization: `optimize = True`
 - Consider C instead of C++ for minimal components
