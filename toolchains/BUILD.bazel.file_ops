@@ -11,7 +11,7 @@ string_flag(
     build_setting_default = "auto",
     values = [
         "tinygo",
-        "rust", 
+        "rust",
         "auto",
     ],
 )

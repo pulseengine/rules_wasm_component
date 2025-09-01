@@ -160,7 +160,7 @@ bzl_library(
     visibility = ["//visibility:public"],
 )
 
-# Bzl library for Dual Implementation File Operations toolchain 
+# Bzl library for Dual Implementation File Operations toolchain
 bzl_library(
     name = "dual_file_ops_toolchain",
     srcs = ["dual_file_ops_toolchain.bzl"],
@@ -228,9 +228,9 @@ string_flag(
     name = "file_ops_implementation",
     build_setting_default = "auto",
     values = [
-        "tinygo",   # TinyGo implementation (compact, secure)
-        "rust",     # Rust implementation (performance, features)  
-        "auto",     # Automatic selection based on availability and platform
+        "tinygo",  # TinyGo implementation (compact, secure)
+        "rust",  # Rust implementation (performance, features)
+        "auto",  # Automatic selection based on availability and platform
     ],
 )
 
@@ -243,7 +243,7 @@ config_setting(
 )
 
 config_setting(
-    name = "file_ops_use_rust", 
+    name = "file_ops_use_rust",
     flag_values = {
         ":file_ops_implementation": "rust",
     },
@@ -252,6 +252,6 @@ config_setting(
 config_setting(
     name = "file_ops_auto_select",
     flag_values = {
-        ":file_ops_implementation": "auto", 
+        ":file_ops_implementation": "auto",
     },
 )

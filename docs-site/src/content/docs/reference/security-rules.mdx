@@ -3,7 +3,7 @@ title: Security Rules
 description: Rules for signing, verifying, and securing WebAssembly components
 ---
 
-# Security Rules  
+# Security Rules
 
 **Secure your WebAssembly components** with cryptographic signatures, verification, and key management. These rules provide production-ready security for component distribution and deployment.
 
@@ -85,7 +85,7 @@ wasm_sign(
 **Development Signing:**
 ```python
 wasm_sign(
-    name = "dev_signed_component", 
+    name = "dev_signed_component",
     component = ":test_component",
     private_key = ":dev_key",
     algorithm = "ed25519",
@@ -110,7 +110,7 @@ load("@rules_wasm_component//security:defs.bzl", "wasm_verify")
 wasm_verify(
     name = "verify_component",
     signed_component = ":signed_component",
-    public_key = ":verification_key", 
+    public_key = ":verification_key",
     fail_on_invalid = True,
 )
 ```
@@ -132,7 +132,7 @@ wasm_verify(
 ```python
 wasm_verify(
     name = "verify_production_component",
-    signed_component = ":production_component", 
+    signed_component = ":production_component",
     public_key = ":prod_public_key",
     fail_on_invalid = True,
 )
@@ -158,7 +158,7 @@ wasm_verify(
 wasm_verify(
     name = "verify_dev_component",
     signed_component = ":dev_signed_component",
-    public_key = ":dev_public_key", 
+    public_key = ":dev_public_key",
     fail_on_invalid = False,  # Warning only in development
 )
 ```
@@ -201,7 +201,7 @@ wasm_keygen(
     name = "prod_keys",
     algorithm = "ed25519",
     private_key_output = "prod_private.pem",
-    public_key_output = "prod_public.pem", 
+    public_key_output = "prod_public.pem",
 )
 ```
 
@@ -209,7 +209,7 @@ wasm_keygen(
 ```python
 wasm_keygen(
     name = "enterprise_keys",
-    algorithm = "rsa", 
+    algorithm = "rsa",
     key_size = 4096,
     private_key_output = "enterprise_private.pem",
     public_key_output = "enterprise_public.pem",
@@ -223,7 +223,7 @@ wasm_keygen(
     name = "standards_keys",
     algorithm = "ecdsa",
     key_size = 384,
-    private_key_output = "ecdsa_private.pem", 
+    private_key_output = "ecdsa_private.pem",
     public_key_output = "ecdsa_public.pem",
 )
 ```
@@ -254,7 +254,7 @@ wasm_sign(
 
 # Staging keys - separate from production
 wasm_keygen(
-    name = "staging_keys", 
+    name = "staging_keys",
     algorithm = "ed25519",
     private_key_output = "staging_private.pem",
     public_key_output = "staging_public.pem",
@@ -262,7 +262,7 @@ wasm_keygen(
 
 wasm_sign(
     name = "staging_component",
-    component = ":my_component", 
+    component = ":my_component",
     private_key = ":staging_keys",
     metadata = {"environment": "staging"},
 )
@@ -288,7 +288,7 @@ wasm_verify(
 # Use verified component in composition
 wac_compose(
     name = "secure_app",
-    composition_file = "app.wac", 
+    composition_file = "app.wac",
     components = {
         "auth": ":verify_vendor_auth",  # Verified component
         "api": ":my_signed_api",        # Our signed component

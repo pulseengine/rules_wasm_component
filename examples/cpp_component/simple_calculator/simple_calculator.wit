@@ -1,0 +1,12 @@
+package example:simple-calculator@1.0.0;
+
+interface calc {
+    add: func(a: f64, b: f64) -> f64;
+    subtract: func(a: f64, b: f64) -> f64;
+    multiply: func(a: f64, b: f64) -> f64;
+    divide: func(a: f64, b: f64) -> f64;
+}
+
+world calculator {
+    export calc;
+}

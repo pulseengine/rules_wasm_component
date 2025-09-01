@@ -579,7 +579,7 @@ fi
 # Execute the built binary with all arguments
 exec "$WASMSIGN2_BINARY" "$@"
 """, executable = True)
-    
+
     print("Created wasmsign2 wrapper for Bazel-native rust_binary build")
     print("Security functionality fully maintained via proper dependency management")
 

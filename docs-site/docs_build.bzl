@@ -69,18 +69,18 @@ def main():
 
         # Resolve npm binary to absolute path before changing directory
         npm_abs_path = os.path.abspath(npm_binary)
-        
+
         # Set up PATH to include hermetic node binary for npm subprocesses
         node_bin_dir = os.path.dirname(npm_abs_path)
         current_path = os.environ.get("PATH", "")
         hermetic_path = f"{node_bin_dir}:{current_path}" if current_path else node_bin_dir
-        
+
         # Add common shell locations for native module compilation
         shell_paths = ["/bin", "/usr/bin", "/usr/local/bin"]
         for shell_path in shell_paths:
             if os.path.exists(shell_path) and shell_path not in hermetic_path:
                 hermetic_path = f"{hermetic_path}:{shell_path}"
-        
+
         # Set up minimal hermetic environment for npm with shell access
         npm_env = {
             "PATH": hermetic_path,
@@ -89,7 +89,7 @@ def main():
             "npm_config_progress": "false",
             "SHELL": "/bin/sh",  # Explicitly provide shell for native modules
         }
-        
+
         # Change to workspace for npm operations
         original_cwd = os.getcwd()
         os.chdir(work_dir)

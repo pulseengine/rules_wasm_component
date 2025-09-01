@@ -19,7 +19,7 @@ rust_binary(
 
 # Export the binary for toolchain use
 filegroup(
-    name = "wit_bindgen_binary", 
+    name = "wit_bindgen_binary",
     srcs = [":wit-bindgen"],
     visibility = ["//visibility:public"],
 )

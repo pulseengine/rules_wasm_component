@@ -32,7 +32,7 @@ wac_compose(
     composition_file = "app.wac",
     components = {
         "auth": ":auth_component",
-        "api": ":api_component", 
+        "api": ":api_component",
         "storage": ":storage_component",
     },
 )
@@ -54,7 +54,7 @@ wac_compose(
 ```wac
 // app.wac - Define component composition
 component auth from ./auth.wasm;
-component api from ./api.wasm; 
+component api from ./api.wasm;
 component storage from ./storage.wasm;
 
 // Connect components
@@ -71,7 +71,7 @@ export api.http_handler as http;
 ```python
 wac_compose(
     name = "calculator_with_ui",
-    composition_file = "calculator.wac", 
+    composition_file = "calculator.wac",
     components = {
         "calc": ":calculator_component",
         "ui": ":ui_component",
@@ -86,7 +86,7 @@ wac_compose(
     composition_file = "ecommerce.wac",
     components = {
         "auth": ":auth_service",
-        "catalog": ":product_catalog", 
+        "catalog": ":product_catalog",
         "cart": ":shopping_cart",
         "payment": ":payment_processor",
         "frontend": ":web_ui",
@@ -134,7 +134,7 @@ wac_bundle(
     composition = ":ecommerce_system",
     metadata = {
         "version": "2.1.0",
-        "environment": "production", 
+        "environment": "production",
         "maintainer": "platform-team@company.com",
     },
     compress = True,
@@ -145,7 +145,7 @@ wac_bundle(
 ```python
 wac_bundle(
     name = "dev_app",
-    composition = ":ecommerce_system", 
+    composition = ":ecommerce_system",
     metadata = {
         "version": "dev",
         "debug": "true",
@@ -171,7 +171,7 @@ wac_plug(
     plugin_interface = ":plugin_interface_wit",
     plugins = [
         ":syntax_highlighter",
-        ":code_formatter", 
+        ":code_formatter",
         ":lsp_client",
     ],
 )
@@ -209,7 +209,7 @@ wac_plug(
 wac_plug(
     name = "game_with_mods",
     core_component = ":game_engine",
-    plugin_interface = ":mod_interface_wit", 
+    plugin_interface = ":mod_interface_wit",
     plugins = [
         ":graphics_enhancer",
         ":physics_mod",
@@ -231,7 +231,7 @@ load("@rules_wasm_component//wac:defs.bzl", "wac_remote_compose")
 
 wac_remote_compose(
     name = "distributed_app",
-    composition_file = "distributed.wac", 
+    composition_file = "distributed.wac",
     local_components = {
         "frontend": ":web_ui",
     },
@@ -283,7 +283,7 @@ wac_remote_compose(
     composition_file = "saas.wac",
     local_components = {
         "custom_logic": ":business_rules",
-        "ui_theme": ":branded_ui", 
+        "ui_theme": ":branded_ui",
     },
     remote_components = {
         "auth": "saas.registry.io/auth:v2.0.0",
@@ -304,7 +304,7 @@ wac_remote_compose(
     },
     remote_components = {
         "auth": "platform.company.com/shared/auth:latest",
-        "logging": "platform.company.com/shared/logging:v1.0.0", 
+        "logging": "platform.company.com/shared/logging:v1.0.0",
         "metrics": "platform.company.com/shared/metrics:stable",
     },
     registry_config = ":company_registry",
@@ -322,7 +322,7 @@ wac_remote_compose(
 ```wac
 // layers.wac
 component presentation from ./ui.wasm;
-component business from ./logic.wasm;  
+component business from ./logic.wasm;
 component data from ./storage.wasm;
 
 // Data flows up through layers
@@ -332,11 +332,11 @@ presentation.api = business.service;
 export presentation.http as app;
 ```
 
-### Pattern 2: Event-Driven Architecture  
+### Pattern 2: Event-Driven Architecture
 
 **Components communicate through events:**
 
-```wac  
+```wac
 // events.wac
 component producer from ./event_producer.wasm;
 component processor from ./event_processor.wasm;
@@ -354,7 +354,7 @@ export consumer.results as output;
 **Core system with optional extensions:**
 
 ```wac
-// plugins.wac  
+// plugins.wac
 component core from ./app_core.wasm;
 component auth_plugin from ./auth.wasm;
 component storage_plugin from ./storage.wasm;

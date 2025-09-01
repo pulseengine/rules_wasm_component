@@ -8,25 +8,25 @@ package(default_visibility = ["//visibility:public"])
 # Test dual toolchain with actual components
 dual_file_ops_toolchain(
     name = "test_dual_toolchain",
-    tinygo_component = "//tools/file_operations_component:file_ops",  # Current Rust implementation as mock TinyGo
-    rust_component = "//tools/file_operations_component:file_ops",    # Actual Rust implementation
     implementation_preference = "auto",
+    rust_component = "//tools/file_operations_component:file_ops",  # Actual Rust implementation
+    tinygo_component = "//tools/file_operations_component:file_ops",  # Current Rust implementation as mock TinyGo
     wit_files = ["//tools/file_operations_component:wit_files"],
 )
 
-# Test security-focused configuration  
+# Test security-focused configuration
 dual_file_ops_toolchain(
     name = "test_security_toolchain",
-    tinygo_component = "//tools/file_operations_component:file_ops",
     implementation_preference = "tinygo",
+    tinygo_component = "//tools/file_operations_component:file_ops",
     wit_files = ["//tools/file_operations_component:wit_files"],
 )
 
 # Test performance-focused configuration
 dual_file_ops_toolchain(
-    name = "test_performance_toolchain", 
-    rust_component = "//tools/file_operations_component:file_ops",
+    name = "test_performance_toolchain",
     implementation_preference = "rust",
+    rust_component = "//tools/file_operations_component:file_ops",
     wit_files = ["//tools/file_operations_component:wit_files"],
 )
 
@@ -35,7 +35,7 @@ build_test(
     name = "dual_toolchain_build_test",
     targets = [
         ":test_dual_toolchain",
-        ":test_security_toolchain", 
+        ":test_security_toolchain",
         ":test_performance_toolchain",
     ],
 )

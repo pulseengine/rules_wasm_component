@@ -168,7 +168,7 @@ exit 1
 
         # Create placeholder since complex dependency resolution is challenging
         ctx.file("wizer_placeholder", """#!/bin/bash
-echo "Wizer source strategy: Use 'build' or 'cargo' strategy for full functionality"  
+echo "Wizer source strategy: Use 'build' or 'cargo' strategy for full functionality"
 echo "Source strategy eliminates ctx.execute calls but requires proper dependency resolution"
 exit 1
 """, executable = True)

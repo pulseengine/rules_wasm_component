@@ -133,7 +133,7 @@ go_wit_bindgen(
 load("@rules_wasm_component//wasm:defs.bzl", "go_wasm_component_test")
 
 go_wasm_component_test(
-    name = "service_test", 
+    name = "service_test",
     component = ":http_service",
     test_srcs = ["service_test.go"],
 )
@@ -181,7 +181,7 @@ load("@rules_wasm_component//wasm:defs.bzl", "cpp_wit_bindgen")
 
 cpp_wit_bindgen(
     name = "image_bindings",
-    wit = ":image_interfaces", 
+    wit = ":image_interfaces",
     out_dir = "generated/",
 )
 ```

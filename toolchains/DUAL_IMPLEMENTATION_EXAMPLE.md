@@ -21,7 +21,7 @@ configure_file_ops()  # Intelligent auto-selection
 # Security-focused configuration (prefer TinyGo)
 configure_file_ops(strategy = "security")
 
-# Performance-focused configuration (prefer Rust)  
+# Performance-focused configuration (prefer Rust)
 configure_file_ops(strategy = "performance")
 
 # Minimal binary size (prefer TinyGo)
@@ -58,7 +58,7 @@ load("@rules_wasm_component//toolchains:file_ops_selection.bzl", "configure_file
 configure_file_ops_preset("security")
 
 # High-performance batch processing
-configure_file_ops_preset("performance") 
+configure_file_ops_preset("performance")
 
 # Edge computing / embedded
 configure_file_ops_preset("minimal")
@@ -75,7 +75,7 @@ Control implementation selection with command-line flags:
 # Use TinyGo implementation
 bazel build //your:target --//toolchains:file_ops_implementation=tinygo
 
-# Use Rust implementation  
+# Use Rust implementation
 bazel build //your:target --//toolchains:file_ops_implementation=rust
 
 # Use automatic selection (default)
@@ -117,21 +117,21 @@ build:dev --//toolchains:file_ops_implementation=auto
 def _my_rule_impl(ctx):
     # Get the file operations toolchain
     file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
-    
+
     # Access selected component and metadata
     component = file_ops_toolchain.file_ops_component
     implementation = file_ops_toolchain.selected_implementation
     capabilities = file_ops_toolchain.file_ops_info.capabilities
-    
+
     # Use capabilities to optimize behavior
     if capabilities.streaming_io:
         # Use streaming operations for large files
         pass
-    
+
     if capabilities.parallel_processing:
         # Process multiple files concurrently
         pass
-    
+
     # Execute file operations
     ctx.actions.run(
         executable = component,
@@ -156,7 +156,7 @@ load("@rules_wasm_component//toolchains:file_ops_selection.bzl", "select_file_op
 # Different components for different file sizes
 my_file_processor = select_file_ops_component(
     tinygo_target = "//my:small_file_processor",    # < 10MB files
-    rust_target = "//my:large_file_processor",      # >= 10MB files  
+    rust_target = "//my:large_file_processor",      # >= 10MB files
     auto_target = "//my:adaptive_processor",        # Auto-detect
 )
 ```
@@ -168,12 +168,12 @@ my_file_processor = select_file_ops_component(
 ```starlark
 # Prefer TinyGo for minimal attack surface
 configure_file_ops(
-    strategy = "security", 
+    strategy = "security",
     enable_rust = False,  # Security-only deployment
 )
 ```
 
-### 2. Data Processing Pipeline  
+### 2. Data Processing Pipeline
 
 ```starlark
 # Prefer Rust for streaming I/O and performance
@@ -185,7 +185,7 @@ configure_file_ops(
 
 ### 3. Edge Computing Device
 
-```starlark  
+```starlark
 # Minimize binary size for resource constraints
 configure_file_ops(
     strategy = "minimal",
@@ -240,7 +240,7 @@ For performance debugging:
 # Use Rust implementation for better performance
 bazel build --//toolchains:file_ops_implementation=rust
 
-# Enable performance-focused toolchain  
+# Enable performance-focused toolchain
 bazel build --config=performance
 ```
 
@@ -261,15 +261,17 @@ bazel build --config=minimal
 If you're migrating from a single implementation:
 
 1. **Replace direct component references:**
+
    ```starlark
    # Old
    file_ops_component = "@rules_wasm_component//tools/file_ops:file_ops"
-   
-   # New  
+
+   # New
    file_ops_component = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"].file_ops_component
    ```
 
 2. **Update toolchain declarations:**
+
    ```starlark
    my_rule = rule(
        # Add toolchain dependency
@@ -279,6 +281,7 @@ If you're migrating from a single implementation:
    ```
 
 3. **Configure preferred implementation:**
+
    ```starlark
    # In MODULE.bazel
    configure_file_ops(strategy = "performance")  # Or your preferred strategy

@@ -29,6 +29,7 @@ rust_wasm_component_bindgen(
         "release",
     ],  # Build both variants
     wit = ":sensor_interfaces",
+    validate_wit = True,  # Enable WIT compliance validation
 )
 
 rust_wasm_component_bindgen(
