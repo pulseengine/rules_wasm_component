@@ -17,7 +17,7 @@
 State-of-the-art Rust support for WebAssembly Component Model using:
 - Rust 1.88.0+ with native WASI Preview 2 support
 - Bazel-native implementation following modern patterns
-- Cross-platform compatibility (Windows/macOS/Linux) 
+- Cross-platform compatibility (Windows/macOS/Linux)
 - Advanced optimization with Wizer pre-initialization
 - Clippy integration for code quality
 - Comprehensive test framework support
@@ -28,7 +28,7 @@ Example usage:
     rust_wasm_component(
         name = "my_service",
         srcs = ["lib.rs", "service.rs"],
-        wit = "//wit:service-interface", 
+        wit = "//wit:service-interface",
         world = "service",
         optimization = "release",
         enable_wizer = True,

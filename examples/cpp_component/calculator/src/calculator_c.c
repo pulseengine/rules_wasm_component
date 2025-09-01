@@ -324,52 +324,152 @@ void calculator_c_free_component_info(component_info_t* info) {
     info->max_factorial = 0;
 }
 
-// WIT interface implementation for C
-// These functions will be called by the generated WIT bindings
+// WIT interface implementation - must match generated binding signatures
+#include "calculator.h"  // Generated WIT bindings
 
-extern double calculator_add(double a, double b) {
+// Helper function to convert C result to WIT binding result structure
+static void fill_calculation_result(const calculation_result_t* c_result,
+                                   exports_example_calculator_calc_calculation_result_t* wit_result) {
+    wit_result->success = c_result->success;
+
+    if (c_result->success) {
+        wit_result->value.is_some = 1;
+        wit_result->value.val = c_result->result;
+        wit_result->error.is_some = 0;
+    } else {
+        wit_result->value.is_some = 0;
+        wit_result->error.is_some = 1;
+        calculator_string_dup(&wit_result->error.val, c_result->error);
+    }
+}
+
+// WIT interface implementations - exact names expected by generated bindings
+double exports_example_calculator_calc_add(double a, double b) {
     return calculator_c_add(a, b);
 }
 
-extern double calculator_subtract(double a, double b) {
+double exports_example_calculator_calc_subtract(double a, double b) {
     return calculator_c_subtract(a, b);
 }
 
-extern double calculator_multiply(double a, double b) {
+double exports_example_calculator_calc_multiply(double a, double b) {
     return calculator_c_multiply(a, b);
 }
 
-// For operations that return results, we need to handle WIT binding structures
-// These are placeholders that will be properly implemented once WIT bindings are generated
-extern void calculator_divide(double a, double b, void* result_ptr) {
+void exports_example_calculator_calc_divide(double a, double b, exports_example_calculator_calc_calculation_result_t *ret) {
     calculation_result_t result = calculator_c_divide(a, b);
-    // Implementation depends on generated binding structure
-    // For now, this is a placeholder
+    fill_calculation_result(&result, ret);
     calculator_c_free_result(&result);
 }
 
-extern void calculator_power(double base, double exponent, void* result_ptr) {
+void exports_example_calculator_calc_power(double base, double exponent, exports_example_calculator_calc_calculation_result_t *ret) {
     calculation_result_t result = calculator_c_power(base, exponent);
-    // Implementation depends on generated binding structure
+    fill_calculation_result(&result, ret);
     calculator_c_free_result(&result);
 }
 
-extern void calculator_sqrt(double value, void* result_ptr) {
+void exports_example_calculator_calc_sqrt(double value, exports_example_calculator_calc_calculation_result_t *ret) {
     calculation_result_t result = calculator_c_sqrt(value);
-    // Implementation depends on generated binding structure
+    fill_calculation_result(&result, ret);
     calculator_c_free_result(&result);
 }
 
-extern void calculator_factorial(uint32_t n, void* result_ptr) {
+void exports_example_calculator_calc_factorial(uint32_t n, exports_example_calculator_calc_calculation_result_t *ret) {
     calculation_result_t result = calculator_c_factorial(n);
-    // Implementation depends on generated binding structure
+    fill_calculation_result(&result, ret);
     calculator_c_free_result(&result);
 }
 
-extern double calculator_get_pi(void) {
+void exports_example_calculator_calc_calculate(exports_example_calculator_calc_operation_t *operation, exports_example_calculator_calc_calculation_result_t *ret) {
+    // Convert WIT operation to C operation
+    operation_t c_op;
+
+    // Convert operation type
+    switch (operation->op.tag) {
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_ADD:
+            c_op.op = OP_ADD;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_SUBTRACT:
+            c_op.op = OP_SUBTRACT;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_MULTIPLY:
+            c_op.op = OP_MULTIPLY;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_DIVIDE:
+            c_op.op = OP_DIVIDE;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_POWER:
+            c_op.op = OP_POWER;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_SQRT:
+            c_op.op = OP_SQRT;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_FACTORIAL:
+            c_op.op = OP_FACTORIAL;
+            break;
+        default:
+            // Return error for unknown operation
+            ret->success = 0;
+            ret->error.is_some = 1;
+            calculator_string_dup(&ret->error.val, "Unknown operation type");
+            ret->value.is_some = 0;
+            return;
+    }
+
+    c_op.a = operation->a;
+    c_op.has_b = operation->b.is_some;
+    if (c_op.has_b) {
+        c_op.b = operation->b.val;
+    }
+
+    calculation_result_t result = calculator_c_calculate(&c_op);
+    fill_calculation_result(&result, ret);
+    calculator_c_free_result(&result);
+}
+
+void exports_example_calculator_calc_calculate_batch(exports_example_calculator_calc_list_operation_t *operations, exports_example_calculator_calc_list_calculation_result_t *ret) {
+    if (!operations || operations->len == 0) {
+        ret->len = 0;
+        ret->ptr = NULL;
+        return;
+    }
+
+    // Allocate result array
+    ret->len = operations->len;
+    ret->ptr = (exports_example_calculator_calc_calculation_result_t*)malloc(
+        operations->len * sizeof(exports_example_calculator_calc_calculation_result_t));
+
+    // Process each operation
+    for (size_t i = 0; i < operations->len; i++) {
+        exports_example_calculator_calc_calculate(&operations->ptr[i], &ret->ptr[i]);
+    }
+}
+
+void exports_example_calculator_calc_get_calculator_info(exports_example_calculator_calc_component_info_t *ret) {
+    component_info_t info = calculator_c_get_info();
+
+    // Convert strings
+    calculator_string_dup(&ret->name, info.name);
+    calculator_string_dup(&ret->version, info.version);
+    calculator_string_dup(&ret->precision, info.precision);
+    ret->max_factorial = info.max_factorial;
+
+    // Convert supported operations list
+    ret->supported_operations.len = info.supported_operations_count;
+    ret->supported_operations.ptr = (calculator_string_t*)malloc(
+        info.supported_operations_count * sizeof(calculator_string_t));
+
+    for (size_t i = 0; i < info.supported_operations_count; i++) {
+        calculator_string_dup(&ret->supported_operations.ptr[i], info.supported_operations[i]);
+    }
+
+    calculator_c_free_component_info(&info);
+}
+
+double exports_example_calculator_calc_get_pi(void) {
     return calculator_c_get_pi();
 }
 
-extern double calculator_get_e(void) {
+double exports_example_calculator_calc_get_e(void) {
     return calculator_c_get_e();
 }

@@ -325,6 +325,7 @@ def rust_wasm_component_bindgen(
         crate_features = [],
         rustc_flags = [],
         profiles = ["release"],
+        validate_wit = False,
         visibility = None,
         symmetric = False,
         invert_direction = False,
@@ -479,6 +480,7 @@ def rust_wasm_component_bindgen(
         crate_features = crate_features,
         rustc_flags = rustc_flags,
         profiles = profiles,
+        validate_wit = validate_wit,  # Pass validation flag to component
         visibility = visibility,
         **kwargs
     )

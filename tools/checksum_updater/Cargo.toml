@@ -33,4 +33,3 @@ uuid = { version = "1.0", default-features = false }  # UUID generation for user
 [dev-dependencies]
 tokio-test = "0.4"
 mockito = "1.0"
-

@@ -1,86 +1,53 @@
 #include "calculator_impl.h"
+#include <cmath>
+#include <vector>
 #include <algorithm>
-#include <limits>
-#include <sstream>
 
 namespace calculator {
 
-// Basic arithmetic operations
+// Basic arithmetic operations - simplified to avoid math_utils dependencies
 double Calculator::add(double a, double b) const {
-    if (!math_utils::MathUtils::is_valid_number(a) || !math_utils::MathUtils::is_valid_number(b)) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    return math_utils::MathUtils::round_to_precision(a + b);
+    return a + b;
 }
 
 double Calculator::subtract(double a, double b) const {
-    if (!math_utils::MathUtils::is_valid_number(a) || !math_utils::MathUtils::is_valid_number(b)) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    return math_utils::MathUtils::round_to_precision(a - b);
+    return a - b;
 }
 
 double Calculator::multiply(double a, double b) const {
-    if (!math_utils::MathUtils::is_valid_number(a) || !math_utils::MathUtils::is_valid_number(b)) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    return math_utils::MathUtils::round_to_precision(a * b);
+    return a * b;
 }
 
-// Operations that can fail
+// Operations that can fail - simplified
 Calculator::CalculationResult Calculator::divide(double a, double b) const {
-    if (!validate_inputs(a, b)) {
-        return create_error("Invalid input numbers");
+    if (b == 0.0) {
+        return create_error("Division by zero is not allowed");
     }
-
-    auto result = math_utils::MathUtils::safe_divide(a, b);
-    if (!result.has_value()) {
-        if (math_utils::MathUtils::approximately_equal(b, 0.0)) {
-            return create_error("Division by zero is not allowed");
-        }
-        return create_error("Division resulted in invalid number");
-    }
-
-    return create_success(result.value());
+    return create_success(a / b);
 }
 
 Calculator::CalculationResult Calculator::power(double base, double exponent) const {
-    if (!validate_inputs(base, exponent)) {
-        return create_error("Invalid input numbers");
-    }
-
-    auto result = math_utils::MathUtils::safe_power(base, exponent);
-    if (!result.has_value()) {
-        std::ostringstream oss;
-        oss << "Power operation failed: " << base << "^" << exponent;
-        return create_error(oss.str());
-    }
-
-    return create_success(result.value());
+    double result = pow(base, exponent);
+    return create_success(result);
 }
 
 Calculator::CalculationResult Calculator::sqrt(double value) const {
-    if (!math_utils::MathUtils::is_valid_number(value)) {
-        return create_error("Invalid input number");
-    }
-
-    auto result = math_utils::MathUtils::safe_sqrt(value);
-    if (!result.has_value()) {
+    if (value < 0.0) {
         return create_error("Square root of negative number is not supported");
     }
-
-    return create_success(result.value());
+    double result = ::sqrt(value);
+    return create_success(result);
 }
 
 Calculator::CalculationResult Calculator::factorial(uint32_t n) const {
-    auto result = math_utils::MathUtils::safe_factorial(n);
-    if (!result.has_value()) {
-        std::ostringstream oss;
-        oss << "Factorial of " << n << " is too large or not supported";
-        return create_error(oss.str());
+    if (n > 20) {
+        return create_error("Factorial too large");
     }
-
-    return create_success(static_cast<double>(result.value()));
+    double result = 1.0;
+    for (uint32_t i = 2; i <= n; i++) {
+        result *= i;
+    }
+    return create_success(result);
 }
 
 // Batch operations
@@ -143,7 +110,7 @@ std::vector<Calculator::CalculationResult> Calculator::calculate_batch(
     return results;
 }
 
-// Component metadata
+// Component metadata - simplified
 Calculator::ComponentInfo Calculator::get_calculator_info() const {
     return ComponentInfo{
         .name = "C++ Calculator Component",
@@ -152,18 +119,18 @@ Calculator::ComponentInfo Calculator::get_calculator_info() const {
             "add", "subtract", "multiply", "divide",
             "power", "sqrt", "factorial"
         },
-        .precision = "IEEE 754 double precision (15-17 decimal digits)",
-        .max_factorial = math_utils::MathUtils::MAX_FACTORIAL
+        .precision = "IEEE 754 double precision",
+        .max_factorial = 20
     };
 }
 
-// Mathematical constants
+// Mathematical constants - simplified
 double Calculator::get_pi() const {
-    return math_utils::MathUtils::get_pi();
+    return 3.141592653589793;
 }
 
 double Calculator::get_e() const {
-    return math_utils::MathUtils::get_e();
+    return 2.718281828459045;
 }
 
 // Private helper methods
@@ -176,8 +143,8 @@ Calculator::CalculationResult Calculator::create_success(double value) const {
 }
 
 bool Calculator::validate_inputs(double a, double b) const {
-    return math_utils::MathUtils::is_valid_number(a) &&
-           math_utils::MathUtils::is_valid_number(b);
+    // Simple validation - avoid math_utils
+    return !isnan(a) && !isnan(b) && isfinite(a) && isfinite(b);
 }
 
 std::string Calculator::operation_to_string(OperationType op) const {
@@ -195,55 +162,191 @@ std::string Calculator::operation_to_string(OperationType op) const {
 
 } // namespace calculator
 
-// WIT interface implementation
-// These functions will be called by the generated WIT bindings
+// WIT interface implementation - must match generated binding signatures
+// Include generated binding header for proper types
+#include "calculator.h"
 
 extern "C" {
 
 // Global calculator instance
 static calculator::Calculator calc;
 
-// WIT interface implementations
-double calculator_add(double a, double b) {
+// Helper function to convert C++ result to WIT binding result structure
+void fill_calculation_result(const calculator::Calculator::CalculationResult& cpp_result,
+                            exports_example_calculator_calc_calculation_result_t* wit_result) {
+    wit_result->success = cpp_result.success;
+
+    if (cpp_result.success) {
+        wit_result->value.is_some = true;
+        wit_result->value.val = cpp_result.result.value();
+        wit_result->error.is_some = false;
+    } else {
+        wit_result->value.is_some = false;
+        wit_result->error.is_some = true;
+        calculator_string_dup(&wit_result->error.val, cpp_result.error.value().c_str());
+    }
+}
+
+// WIT interface implementations - exact names expected by generated bindings
+double exports_example_calculator_calc_add(double a, double b) {
     return calc.add(a, b);
 }
 
-double calculator_subtract(double a, double b) {
+double exports_example_calculator_calc_subtract(double a, double b) {
     return calc.subtract(a, b);
 }
 
-double calculator_multiply(double a, double b) {
+double exports_example_calculator_calc_multiply(double a, double b) {
     return calc.multiply(a, b);
 }
 
-// For divide operation, we need to return a result struct
-// This will be properly implemented once WIT bindings are generated
-void calculator_divide(double a, double b, void* result_ptr) {
+void exports_example_calculator_calc_divide(double a, double b, exports_example_calculator_calc_calculation_result_t *ret) {
     auto result = calc.divide(a, b);
-    // Implementation depends on generated binding structure
-    // For now, this is a placeholder
+    fill_calculation_result(result, ret);
 }
 
-void calculator_power(double base, double exponent, void* result_ptr) {
+void exports_example_calculator_calc_power(double base, double exponent, exports_example_calculator_calc_calculation_result_t *ret) {
     auto result = calc.power(base, exponent);
-    // Implementation depends on generated binding structure
+    fill_calculation_result(result, ret);
 }
 
-void calculator_sqrt(double value, void* result_ptr) {
+void exports_example_calculator_calc_sqrt(double value, exports_example_calculator_calc_calculation_result_t *ret) {
     auto result = calc.sqrt(value);
-    // Implementation depends on generated binding structure
+    fill_calculation_result(result, ret);
 }
 
-void calculator_factorial(uint32_t n, void* result_ptr) {
+void exports_example_calculator_calc_factorial(uint32_t n, exports_example_calculator_calc_calculation_result_t *ret) {
     auto result = calc.factorial(n);
-    // Implementation depends on generated binding structure
+    fill_calculation_result(result, ret);
 }
 
-double calculator_get_pi() {
+void exports_example_calculator_calc_calculate(exports_example_calculator_calc_operation_t *operation, exports_example_calculator_calc_calculation_result_t *ret) {
+    // Convert WIT operation to C++ operation
+    calculator::Calculator::Operation cpp_op;
+
+    // Convert operation type
+    switch (operation->op.tag) {
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_ADD:
+            cpp_op.op = calculator::Calculator::OperationType::Add;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_SUBTRACT:
+            cpp_op.op = calculator::Calculator::OperationType::Subtract;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_MULTIPLY:
+            cpp_op.op = calculator::Calculator::OperationType::Multiply;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_DIVIDE:
+            cpp_op.op = calculator::Calculator::OperationType::Divide;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_POWER:
+            cpp_op.op = calculator::Calculator::OperationType::Power;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_SQRT:
+            cpp_op.op = calculator::Calculator::OperationType::Sqrt;
+            break;
+        case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_FACTORIAL:
+            cpp_op.op = calculator::Calculator::OperationType::Factorial;
+            break;
+        default:
+            // Return error for unknown operation
+            ret->success = false;
+            ret->error.is_some = true;
+            calculator_string_dup(&ret->error.val, "Unknown operation type");
+            ret->value.is_some = false;
+            return;
+    }
+
+    cpp_op.a = operation->a;
+    if (operation->b.is_some) {
+        cpp_op.b = operation->b.val;
+    }
+
+    auto result = calc.calculate(cpp_op);
+    fill_calculation_result(result, ret);
+}
+
+void exports_example_calculator_calc_calculate_batch(exports_example_calculator_calc_list_operation_t *operations, exports_example_calculator_calc_list_calculation_result_t *ret) {
+    // Convert WIT operations list to C++ vector
+    std::vector<calculator::Calculator::Operation> cpp_operations;
+    cpp_operations.reserve(operations->len);
+
+    for (size_t i = 0; i < operations->len; i++) {
+        exports_example_calculator_calc_operation_t* wit_op = &operations->ptr[i];
+        calculator::Calculator::Operation cpp_op;
+
+        // Convert operation type (same logic as single calculate)
+        switch (wit_op->op.tag) {
+            case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_ADD:
+                cpp_op.op = calculator::Calculator::OperationType::Add;
+                break;
+            case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_SUBTRACT:
+                cpp_op.op = calculator::Calculator::OperationType::Subtract;
+                break;
+            case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_MULTIPLY:
+                cpp_op.op = calculator::Calculator::OperationType::Multiply;
+                break;
+            case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_DIVIDE:
+                cpp_op.op = calculator::Calculator::OperationType::Divide;
+                break;
+            case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_POWER:
+                cpp_op.op = calculator::Calculator::OperationType::Power;
+                break;
+            case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_SQRT:
+                cpp_op.op = calculator::Calculator::OperationType::Sqrt;
+                break;
+            case EXPORTS_EXAMPLE_CALCULATOR_CALC_OPERATION_TYPE_FACTORIAL:
+                cpp_op.op = calculator::Calculator::OperationType::Factorial;
+                break;
+            default:
+                cpp_op.op = calculator::Calculator::OperationType::Add; // Default fallback
+                break;
+        }
+
+        cpp_op.a = wit_op->a;
+        if (wit_op->b.is_some) {
+            cpp_op.b = wit_op->b.val;
+        }
+
+        cpp_operations.push_back(cpp_op);
+    }
+
+    // Execute batch calculation
+    auto cpp_results = calc.calculate_batch(cpp_operations);
+
+    // Convert results back to WIT format
+    ret->len = cpp_results.size();
+    ret->ptr = (exports_example_calculator_calc_calculation_result_t*)malloc(
+        cpp_results.size() * sizeof(exports_example_calculator_calc_calculation_result_t));
+
+    for (size_t i = 0; i < cpp_results.size(); i++) {
+        fill_calculation_result(cpp_results[i], &ret->ptr[i]);
+    }
+}
+
+void exports_example_calculator_calc_get_calculator_info(exports_example_calculator_calc_component_info_t *ret) {
+    auto info = calc.get_calculator_info();
+
+    // Convert strings
+    calculator_string_dup(&ret->name, info.name.c_str());
+    calculator_string_dup(&ret->version, info.version.c_str());
+    calculator_string_dup(&ret->precision, info.precision.c_str());
+    ret->max_factorial = info.max_factorial;
+
+    // Convert supported operations list
+    ret->supported_operations.len = info.supported_operations.size();
+    ret->supported_operations.ptr = (calculator_string_t*)malloc(
+        info.supported_operations.size() * sizeof(calculator_string_t));
+
+    for (size_t i = 0; i < info.supported_operations.size(); i++) {
+        calculator_string_dup(&ret->supported_operations.ptr[i], info.supported_operations[i].c_str());
+    }
+}
+
+double exports_example_calculator_calc_get_pi(void) {
     return calc.get_pi();
 }
 
-double calculator_get_e() {
+double exports_example_calculator_calc_get_e(void) {
     return calc.get_e();
 }
 

@@ -49,6 +49,7 @@ cpp_component(
     enable_exceptions = True,  # Required for spdlog in comprehensive test
     tags = ["manual"],  # Exclude from CI wildcard builds due to complex external dependencies
     wit = ":consumer_interface",
+    world = "consumer",  # Must match world name in WIT file
     deps = [":foundation_lib"],  # Cross-package dependency
 )
 

@@ -46,6 +46,7 @@ cpp_component(
     ],
     language = "c",
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    validate_wit = True,  # Validate WIT compliance
     visibility = ["//visibility:public"],
     wit = "wit/http_service.wit",
     world = "http-service-world",

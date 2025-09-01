@@ -66,7 +66,7 @@ register_toolchains("@rust_toolchains//:all")
 
 # Go toolchain setup
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.download(version = "1.24.4")
+go_sdk.download(version = "1.25.0")
 use_repo(go_sdk, "go_toolchains")
 
 register_toolchains("@go_toolchains//:all")
@@ -114,7 +114,7 @@ use_repo(cc_configure, "local_config_cc")
 # Add compatibility proxy repository for rules_cc 0.2.0 (required for bzlmod)
 cc_compatibility = use_extension("@rules_cc//cc:extensions.bzl", "compatibility_proxy")
 
-# Register both WASI SDK and C++ toolchains  
+# Register both WASI SDK and C++ toolchains
 register_toolchains(
     "@wasi_sdk//:wasi_sdk_toolchain",
     "@wasi_sdk//:cc_toolchain",
@@ -127,7 +127,7 @@ register_toolchains("@bazel_tools//tools/cpp:all")
 tinygo = use_extension("//wasm:extensions.bzl", "tinygo")
 tinygo.register(
     name = "tinygo",
-    tinygo_version = "0.38.0",
+    tinygo_version = "0.39.0",
 )
 use_repo(tinygo, "tinygo_toolchain")
 

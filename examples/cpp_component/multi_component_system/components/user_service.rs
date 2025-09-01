@@ -14,26 +14,26 @@ fn generate_deterministic_uuid() -> Uuid {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap();
-    
+
     let timestamp_nanos = now.as_nanos() as u64;
-    
+
     // Safe increment of counter
     let counter = unsafe {
         UUID_COUNTER += 1;
         UUID_COUNTER
     };
-    
+
     // Create 16 bytes from timestamp (8) + counter (8)
     let mut bytes = [0u8; 16];
     bytes[0..8].copy_from_slice(&timestamp_nanos.to_be_bytes());
     bytes[8..16].copy_from_slice(&counter.to_be_bytes());
-    
+
     // Create UUID v4-style with proper version and variant bits
     // Set version 4 bits: set bits 12-15 of the time-high-and-version field to 0100
     bytes[6] = (bytes[6] & 0x0F) | 0x40;
-    // Set variant bits: set bits 6-7 of the clock-seq-hi-and-reserved to 10  
+    // Set variant bits: set bits 6-7 of the clock-seq-hi-and-reserved to 10
     bytes[8] = (bytes[8] & 0x3F) | 0x80;
-    
+
     Uuid::from_bytes(bytes)
 }
 

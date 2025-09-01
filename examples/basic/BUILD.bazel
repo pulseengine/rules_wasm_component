@@ -19,6 +19,7 @@ rust_wasm_component_bindgen(
     srcs = ["src/lib.rs"],
     profiles = ["release"],  # Build release profile
     wit = ":hello_interfaces",
+    validate_wit = True,  # Enable WIT compliance validation
 )
 
 # Test the component

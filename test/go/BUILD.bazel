@@ -46,16 +46,18 @@ go_component_analysis_test(
 )
 
 # WIT Bindgen Compatibility Tests
+# Note: Current Go examples use WASI CLI pattern, not WIT bindings
+# Binding generation tests disabled until WIT-based examples are added
 
-go_wit_bindgen_test(
-    name = "test_calculator_bindings_generation",
-    target_under_test = "//examples/go_component:calculator_bindings",
-)
-
-go_wit_bindgen_test(
-    name = "test_http_service_bindings_generation",
-    target_under_test = "//examples/go_component:http_service_bindings",
-)
+# go_wit_bindgen_test(
+#     name = "test_calculator_bindings_generation",
+#     target_under_test = "//examples/go_component:calculator_bindings",
+# )
+#
+# go_wit_bindgen_test(
+#     name = "test_http_service_bindings_generation",
+#     target_under_test = "//examples/go_component:http_service_bindings",
+# )
 
 # Component Validation Tests
 

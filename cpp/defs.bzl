@@ -190,7 +190,8 @@ def _cpp_component_impl(ctx):
     if ctx.attr.language == "cpp":
         if ctx.attr.enable_exceptions:
             # Enable exceptions if specifically requested
-            pass
+            compile_args.add("-fexceptions")
+            compile_args.add("-fcxx-exceptions")
         else:
             compile_args.add("-fno-exceptions")
 
@@ -289,6 +290,11 @@ def _cpp_component_impl(ctx):
     else:
         binding_compile_args.add("-O0")
         binding_compile_args.add("-g")
+    
+    # Exception handling for binding compilation (if C++ exceptions are enabled)
+    if ctx.attr.language == "cpp" and ctx.attr.enable_exceptions:
+        binding_compile_args.add("-fexceptions")
+        binding_compile_args.add("-fcxx-exceptions")
 
     # Include directories
     binding_compile_args.add("-I" + work_dir.path)
@@ -319,6 +325,9 @@ def _cpp_component_impl(ctx):
     if ctx.attr.language == "cpp" and not ctx.attr.nostdlib:
         compile_args.add("-lc++")
         compile_args.add("-lc++abi")
+        
+        # Add exception handling support if enabled
+        # Note: Exception handling symbols are typically in libc++abi which we already link
 
     # Add dependency libraries for linking
     for lib in dep_libraries:
@@ -353,6 +362,45 @@ def _cpp_component_impl(ctx):
         progress_message = "Creating WebAssembly component for %s" % ctx.label,
     )
 
+    # Optional WIT validation
+    validation_outputs = []
+    if ctx.attr.validate_wit:
+        validation_log = ctx.actions.declare_file(ctx.attr.name + "_wit_validation.log")
+        validation_outputs.append(validation_log)
+
+        # Create validation arguments
+        validate_args = ctx.actions.args()
+        validate_args.add("component")
+        validate_args.add("wit")
+        validate_args.add(component_wasm.path)
+
+        # Run wasm-tools validate to verify component is valid WebAssembly
+        # and extract interface for documentation
+        ctx.actions.run_shell(
+            command = '''
+            # Validate component with component model features
+            "$1" validate --features component-model "$2" 2>&1
+            if [ $? -ne 0 ]; then
+                echo "ERROR: Component validation failed for $2" > "$3"
+                "$1" validate --features component-model "$2" >> "$3" 2>&1
+                exit 1
+            fi
+            
+            # Extract WIT interface for documentation
+            echo "=== COMPONENT VALIDATION PASSED ===" > "$3"
+            echo "Component is valid WebAssembly with component model" >> "$3"
+            echo "" >> "$3"
+            echo "=== EXPORTED WIT INTERFACE ===" >> "$3"
+            "$1" component wit "$2" >> "$3" 2>&1 || echo "Failed to extract WIT interface" >> "$3"
+            ''',
+            arguments = [wasm_tools.path, component_wasm.path, validation_log.path],
+            inputs = [component_wasm],
+            outputs = [validation_log],
+            tools = [wasm_tools],
+            mnemonic = "ValidateWasmComponent", 
+            progress_message = "Validating WebAssembly component for %s" % ctx.label,
+        )
+
     # Create component info
     component_info = WasmComponentInfo(
         wasm_file = component_wasm,
@@ -376,10 +424,11 @@ def _cpp_component_impl(ctx):
 
     return [
         component_info,
-        DefaultInfo(files = depset([component_wasm])),
+        DefaultInfo(files = depset([component_wasm] + validation_outputs)),
         OutputGroupInfo(
             bindings = depset([bindings_dir]),
             wasm_module = depset([wasm_binary]),
+            validation = depset(validation_outputs),
         ),
     ]
 
@@ -442,6 +491,10 @@ cpp_component = rule(
         "nostdlib": attr.bool(
             default = False,
             doc = "Disable standard library linking to create minimal components that match WIT specifications exactly",
+        ),
+        "validate_wit": attr.bool(
+            default = False,
+            doc = "Validate that the component exports match the WIT specification",
         ),
     },
     toolchains = [

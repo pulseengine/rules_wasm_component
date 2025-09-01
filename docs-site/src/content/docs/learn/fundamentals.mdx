@@ -23,19 +23,19 @@ description: Understanding WebAssembly components, WIT interfaces, and the Compo
 graph LR
     subgraph "Traditional Libraries"
         L1[Python Library]
-        L2[Node.js Module] 
+        L2[Node.js Module]
         L3[Rust Crate]
         L4[Java JAR]
     end
-    
+
     subgraph "WebAssembly Component"
         WC[Universal Component<br/>Works Everywhere]
     end
-    
+
     L1 -.->|"Language<br/>Specific"| L2
     L2 -.->|"Platform<br/>Specific"| L3
     L3 -.->|"Ecosystem<br/>Specific"| L4
-    
+
     WC -->|"Universal<br/>Interface"| A[Any Language]
     WC -->|"Portable<br/>Binary"| B[Any Platform]
     WC -->|"Secure<br/>Sandbox"| C[Any Runtime]
@@ -61,17 +61,17 @@ graph TB
         M3[Function Exports]
         M4[No Type Safety]
     end
-    
+
     subgraph "WebAssembly Component (Modern)"
         C1[Wrapped Module]
         C2[Rich Type System]
         C3[Interface Contracts]
         C4[Composition Ready]
     end
-    
+
     M1 --> M2 --> M3 --> M4
     C1 --> C2 --> C3 --> C4
-    
+
     style C1 fill:#4caf50
     style C2 fill:#4caf50
     style C3 fill:#4caf50
@@ -128,7 +128,7 @@ impl Math for Component {
     fn add(&mut self, a: f64, b: f64) -> f64 {
         a + b
     }
-    
+
     fn divide(&mut self, a: f64, b: f64) -> Result<f64, String> {
         if b == 0.0 {
             Err("Division by zero".to_string())
@@ -160,25 +160,25 @@ graph TB
     subgraph "Frontend (JavaScript)"
         UI[User Interface]
     end
-    
+
     subgraph "API Gateway (Go)"
         API[HTTP Router]
     end
-    
+
     subgraph "Business Logic (Rust)"
         BL[Calculator Logic]
         DB[Database Access]
     end
-    
+
     subgraph "Authentication (C++)"
         AUTH[Auth Service]
     end
-    
+
     UI --> API
     API --> BL
     API --> AUTH
     BL --> DB
-    
+
     style UI fill:#ffd54f
     style API fill:#81c784
     style BL fill:#ff8a65
@@ -200,26 +200,26 @@ flowchart LR
     subgraph "Component Sandbox"
         C[Your Component]
     end
-    
+
     subgraph "WASI Interfaces"
         F[Files]
         N[Network]
         E[Environment]
         T[Time]
     end
-    
+
     subgraph "Host System"
         FS[File System]
         NET[Network Stack]
         ENV[Environment Variables]
         SYS[System Clock]
     end
-    
+
     C -->|"Controlled<br/>Access"| F
     C -->|"Controlled<br/>Access"| N
     C -->|"Controlled<br/>Access"| E
     C -->|"Controlled<br/>Access"| T
-    
+
     F -.->|"Permission<br/>Required"| FS
     N -.->|"Permission<br/>Required"| NET
     E -.->|"Permission<br/>Required"| ENV
@@ -243,7 +243,7 @@ sequenceDiagram
     participant Lang as Language Toolchain
     participant WASM as WebAssembly Tools
     participant Runtime as Runtime Host
-    
+
     Dev->>WIT: 1. Define interfaces
     WIT->>Lang: 2. Generate bindings
     Dev->>Lang: 3. Implement logic

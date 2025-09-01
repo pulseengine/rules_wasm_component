@@ -17,6 +17,8 @@ rust_wasm_component(
         "opt-level=3",  # Custom optimization
         # Note: LTO is incompatible with WebAssembly builds that use embed-bitcode=no
     ],
+    # Note: validate_wit only works when wit attribute is provided
+    # CLI components using only WASI don't have custom WIT to validate
     deps = [
         "@crates//:anyhow",  # Error handling
         "@crates//:chrono",  # Date/time handling

@@ -20,14 +20,14 @@ FILE_OPS_IMPLEMENTATIONS = {
 
 def _dual_file_ops_toolchain_impl(ctx):
     """Implementation of dual_file_ops_toolchain rule with intelligent selection"""
-    
+
     # Get implementation preference from configuration
     implementation_preference = ctx.attr.implementation_preference
-    
+
     # Select the appropriate component based on preference and availability
     selected_component = None
     selected_implementation = None
-    
+
     if implementation_preference == "tinygo" and ctx.executable.tinygo_component:
         selected_component = ctx.executable.tinygo_component
         selected_implementation = "tinygo"
@@ -42,7 +42,7 @@ def _dual_file_ops_toolchain_impl(ctx):
         elif ctx.executable.tinygo_component:
             selected_component = ctx.executable.tinygo_component
             selected_implementation = "tinygo"
-    
+
     # Fallback selection if preferred implementation is not available
     if not selected_component:
         if ctx.executable.rust_component:
@@ -53,7 +53,7 @@ def _dual_file_ops_toolchain_impl(ctx):
             selected_implementation = "tinygo"
         else:
             fail("No file operations component available. Ensure at least one of tinygo_component or rust_component is provided.")
-    
+
     # Create toolchain info with selected component
     toolchain_info = platform_common.ToolchainInfo(
         file_ops_component = selected_component,
@@ -70,7 +70,7 @@ def _dual_file_ops_toolchain_impl(ctx):
             capabilities = _get_implementation_capabilities(selected_implementation),
         ),
     )
-    
+
     return [toolchain_info]
 
 def _get_implementation_capabilities(implementation):
@@ -108,7 +108,7 @@ dual_file_ops_toolchain = rule(
         ),
         "rust_component": attr.label(
             executable = True,
-            cfg = "exec", 
+            cfg = "exec",
             doc = "Rust File Operations Component executable",
         ),
         "implementation_preference": attr.string(
@@ -126,24 +126,24 @@ dual_file_ops_toolchain = rule(
 
 def _dual_file_ops_toolchain_repository_impl(repository_ctx):
     """Implementation of dual_file_ops_toolchain_repository rule"""
-    
+
     # Get configuration attributes
     implementation_preference = repository_ctx.attr.implementation_preference
     enable_tinygo = repository_ctx.attr.enable_tinygo
     enable_rust = repository_ctx.attr.enable_rust
-    
+
     # Build the toolchain configuration
     tinygo_component = ""
     rust_component = ""
-    
+
     if enable_tinygo:
         # Reference to external TinyGo component
         tinygo_component = '''tinygo_component = "@bazel_file_ops_component//tinygo:file_ops_tinygo",'''
-    
+
     if enable_rust:
-        # Reference to external Rust component  
+        # Reference to external Rust component
         rust_component = '''rust_component = "@bazel_file_ops_component//rust:file_ops_rust",'''
-    
+
     # Create BUILD file with dual toolchain configuration
     repository_ctx.file("BUILD.bazel", """
 load("@rules_wasm_component//toolchains:dual_file_ops_toolchain.bzl", "dual_file_ops_toolchain")
@@ -163,12 +163,12 @@ dual_file_ops_toolchain(
 
 # Toolchain for high-security scenarios (prefer TinyGo)
 dual_file_ops_toolchain(
-    name = "security_focused_toolchain_impl", 
+    name = "security_focused_toolchain_impl",
     {tinygo_component}
     {rust_component}
     implementation_preference = "tinygo",
     wit_files = [
-        "@bazel_file_ops_component//wit:file_operations_wit", 
+        "@bazel_file_ops_component//wit:file_operations_wit",
     ],
 )
 
@@ -193,7 +193,7 @@ toolchain(
 # Security-focused toolchain registration
 toolchain(
     name = "security_focused_toolchain",
-    toolchain = ":security_focused_toolchain_impl", 
+    toolchain = ":security_focused_toolchain_impl",
     toolchain_type = "@rules_wasm_component//toolchains:file_ops_toolchain_type",
 )
 
@@ -230,19 +230,19 @@ dual_file_ops_toolchain_repository = repository_rule(
 )
 
 def register_dual_file_ops_toolchains(
-    name = "dual_file_ops",
-    implementation_preference = "auto",
-    enable_tinygo = True,
-    enable_rust = True):
+        name = "dual_file_ops",
+        implementation_preference = "auto",
+        enable_tinygo = True,
+        enable_rust = True):
     """Register dual implementation file operations toolchains
-    
+
     Args:
         name: Repository name prefix for toolchain repositories
         implementation_preference: Default implementation preference ("tinygo", "rust", "auto")
         enable_tinygo: Whether to enable TinyGo implementation
         enable_rust: Whether to enable Rust implementation
     """
-    
+
     # Create the dual toolchain repository
     dual_file_ops_toolchain_repository(
         name = name,
@@ -250,7 +250,7 @@ def register_dual_file_ops_toolchains(
         enable_tinygo = enable_tinygo,
         enable_rust = enable_rust,
     )
-    
+
     # Register the toolchain
     native.register_toolchains(
         "@{}//:dual_file_ops_toolchain".format(name),

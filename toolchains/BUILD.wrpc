@@ -7,7 +7,7 @@ cross-platform compatibility and Bazel integration.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary")
 
-# Build wrpc-wasmtime using @rules_rust (modernized approach)  
+# Build wrpc-wasmtime using @rules_rust (modernized approach)
 rust_binary(
     name = "wrpc-wasmtime",
     srcs = glob(["src/**/*.rs"]),

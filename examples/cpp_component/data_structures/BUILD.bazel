@@ -63,6 +63,7 @@ cpp_component(
     visibility = ["//visibility:public"],
     wit = "wit/data_structures.wit",
     world = "data-structures-world",
+    validate_wit = True,  # Enable WIT validation
 )
 
 # Performance benchmark

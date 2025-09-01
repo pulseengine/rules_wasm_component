@@ -1,0 +1,85 @@
+// Example WIT interface showcasing different mapping scenarios
+package example:api@1.0.0;
+
+world api-service {
+    // Our custom interfaces (typically mapped to "generate")
+    export service;
+    export logging;
+    export auth;
+}
+
+// Custom service interface
+interface service {
+    // Basic types that might need custom derives
+    record api-config {
+        endpoint: string,
+        timeout-ms: u32,
+        retry-attempts: u8,
+    }
+
+    // Resource that benefits from custom type mapping
+    resource connection {
+        constructor(config: api-config);
+        
+        // Sync method
+        send-request: func(data: list<u8>) -> result<list<u8>, string>;
+        
+        // Async method (good candidate for async_interfaces)
+        async-process: func(input: string) -> result<string, string>;
+        
+        close: func();
+    }
+
+    // Function that uses WASI types (good for interface mapping demo)  
+    process-http-request: func(
+        request: string
+    ) -> result<string, string>;
+}
+
+// Logging interface that could be mapped to existing tracing crate
+interface logging {
+    enum log-level {
+        debug,
+        info,
+        warn,
+        error,
+    }
+
+    record log-entry {
+        level: log-level,
+        message: string,
+        timestamp: u64,
+        module: option<string>,
+    }
+
+    log: func(entry: log-entry);
+    set-level: func(level: log-level);
+}
+
+// Auth interface demonstrating resource with custom derives
+interface auth {
+    // Token type that benefits from Clone, Debug, PartialEq derives
+    record auth-token {
+        value: string,
+        expires-at: u64,
+        scopes: list<string>,
+    }
+
+    resource session {
+        constructor(token: auth-token);
+        
+        validate: func() -> result<bool, string>;
+        refresh: func() -> result<auth-token, string>;
+        get-user-info: func() -> result<string, string>;
+    }
+
+    // Functions using filesystem (good for interface mapping)
+    load-credentials: func(
+        path: string
+    ) -> result<auth-token, string>;
+    
+    save-credentials: func(
+        path: string,
+        token: auth-token
+    ) -> result<_, string>;
+}

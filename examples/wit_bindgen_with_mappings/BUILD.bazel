@@ -1,0 +1,98 @@
+load("@rules_wasm_component//wit:defs.bzl", "wit_bindgen", "wit_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+# Example WIT interface with custom interfaces for mapping demonstration
+wit_library(
+    name = "api_interfaces",
+    package_name = "example:api@1.0.0",
+    srcs = ["api.wit"],
+)
+
+# Basic wit-bindgen usage without interface mappings
+wit_bindgen(
+    name = "basic_bindings",
+    language = "rust",
+    wit = ":api_interfaces",
+)
+
+# Enhanced wit-bindgen testing additional features
+wit_bindgen(
+    name = "advanced_bindings",
+    additional_derives = [
+        "Clone",
+        "Debug",
+        "PartialEq",
+    ],
+    format_code = True,
+    generate_all = True,  # Generate all interfaces
+    language = "rust",
+    ownership = "borrowing",
+    wit = ":api_interfaces",
+)
+
+# WASI example demonstrating real with_mappings usage
+wit_library(
+    name = "wasi_demo_interfaces",
+    package_name = "example:wasi-demo@1.0.0",
+    srcs = ["wasi_example.wit"],
+    deps = [
+        "@wasi_io//:streams",
+    ],
+)
+
+# Example showing how to map WASI interfaces to existing crates
+wit_bindgen(
+    name = "wasi_mapped_bindings",
+    additional_derives = [
+        "Clone",
+        "Debug",
+    ],
+    format_code = True,
+    generate_all = False,  # Only generate interfaces not in with_mappings
+    language = "rust",
+    ownership = "borrowing",
+    wit = ":wasi_demo_interfaces",
+    with_mappings = {
+        # Map WASI interfaces to existing ecosystem crates
+        "wasi:io/streams": "wasi::io::streams",
+        "wasi:io/poll": "wasi::io::poll",
+        # Generate our custom interface
+        "example:wasi-demo/file-processor": "generate",
+    },
+)
+
+# Comprehensive example with all options (simplified)
+wit_bindgen(
+    name = "full_featured_bindings",
+    additional_derives = [
+        "Clone",
+        "Debug",
+    ],
+    format_code = True,
+    generate_all = True,
+    language = "rust",
+    ownership = "borrowing-duplicate-if-necessary",
+    wit = ":api_interfaces",
+)
+
+# Example using the bindings in a Rust library
+rust_library(
+    name = "api_client",
+    srcs = ["src/client.rs"],
+    deps = [
+        ":advanced_bindings",
+        "@crates//:anyhow",
+        "@crates//:tokio",
+    ],
+)
+
+# Test the bindings work correctly
+rust_test(
+    name = "bindings_test",
+    srcs = ["tests/bindings_test.rs"],
+    deps = [
+        ":advanced_bindings",
+        ":basic_bindings",
+        ":full_featured_bindings",
+    ],
+)

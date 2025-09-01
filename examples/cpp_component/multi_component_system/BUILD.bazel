@@ -44,8 +44,8 @@ rust_wasm_component_bindgen(
     visibility = ["//visibility:public"],
     wit = ":user_service_wit",
     deps = [
+        "@crates//:serde",
         "@crates//:serde_json",
-        "@crates//:serde", 
         "@crates//:uuid",
     ],
 )

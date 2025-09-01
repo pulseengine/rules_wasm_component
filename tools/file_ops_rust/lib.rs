@@ -6,8 +6,8 @@
 use anyhow::Result as AnyhowResult;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
 use std::io::{BufReader, BufWriter, Read, Write};
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 /// Main result type used throughout the component
@@ -178,21 +178,21 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> FileOpsResult<()> {
 /// Append content to file
 pub fn append_to_file(path: &str, content: &str) -> FileOpsResult<()> {
     let file_path = Path::new(path);
-    
+
     // Ensure parent directory exists
     if let Some(parent) = file_path.parent() {
         fs::create_dir_all(parent)?;
     }
-    
+
     use std::fs::OpenOptions;
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(file_path)?;
-    
+
     use std::io::Write;
     file.write_all(content.as_bytes())?;
-    
+
     Ok(())
 }
 
@@ -219,9 +219,13 @@ impl Default for SecurityContext {
 }
 
 /// Validate path access based on security context
-pub fn validate_path_access(path: &str, context: &SecurityContext, operation: &str) -> FileOpsResult<()> {
+pub fn validate_path_access(
+    path: &str,
+    context: &SecurityContext,
+    operation: &str,
+) -> FileOpsResult<()> {
     let path_obj = Path::new(path);
-    
+
     // Try to get absolute path, but handle non-existent files gracefully
     let abs_path_str = if path_obj.is_absolute() {
         path.to_string()
@@ -235,12 +239,12 @@ pub fn validate_path_access(path: &str, context: &SecurityContext, operation: &s
             Err(_) => path.to_string(), // Fallback to original path
         }
     };
-    
+
     // Check for path traversal attacks
     if path.contains("../") || path.contains("..\\") {
         return Err(anyhow::anyhow!("Path traversal not allowed: {}", path));
     }
-    
+
     // If allowed paths are specified, check them first (they have priority)
     if !context.allowed_paths.is_empty() {
         let mut allowed = false;
@@ -250,7 +254,7 @@ pub fn validate_path_access(path: &str, context: &SecurityContext, operation: &s
                 break;
             }
         }
-        
+
         if !allowed {
             return Err(anyhow::anyhow!("Path not in allowed list: {}", path));
         }
@@ -262,18 +266,20 @@ pub fn validate_path_access(path: &str, context: &SecurityContext, operation: &s
             }
         }
     }
-    
+
     // Check read-only restrictions for write operations
     if context.read_only {
         match operation {
-            "write_file" | "write_file_bytes" | "copy_file" | "move_file" | 
-            "delete_file" | "create_directory" | "delete_directory" | "append_to_file" => {
-                return Err(anyhow::anyhow!("Write operations not allowed in read-only mode"));
+            "write_file" | "write_file_bytes" | "copy_file" | "move_file" | "delete_file"
+            | "create_directory" | "delete_directory" | "append_to_file" => {
+                return Err(anyhow::anyhow!(
+                    "Write operations not allowed in read-only mode"
+                ));
             }
             _ => {} // Read operations are allowed
         }
     }
-    
+
     // Security level specific checks
     match context.level {
         SecurityLevel::Standard => {
@@ -286,16 +292,21 @@ pub fn validate_path_access(path: &str, context: &SecurityContext, operation: &s
         SecurityLevel::Strict => {
             // Very restrictive checks
             if !path.starts_with("./") && !path.starts_with("/workspace/") {
-                return Err(anyhow::anyhow!("Strict mode: only relative paths or /workspace/ allowed"));
+                return Err(anyhow::anyhow!(
+                    "Strict mode: only relative paths or /workspace/ allowed"
+                ));
             }
         }
     }
-    
+
     Ok(())
 }
 
 /// Create a security context with preopen directories (WASI-style)
-pub fn create_preopen_context(allowed_dirs: Vec<&str>, permissions: AccessPermissions) -> SecurityContext {
+pub fn create_preopen_context(
+    allowed_dirs: Vec<&str>,
+    permissions: AccessPermissions,
+) -> SecurityContext {
     SecurityContext {
         level: SecurityLevel::High,
         allowed_paths: allowed_dirs.into_iter().map(|s| s.to_string()).collect(),
@@ -310,42 +321,54 @@ pub fn create_preopen_context(allowed_dirs: Vec<&str>, permissions: AccessPermis
 }
 
 /// Secure file copy with validation
-pub fn secure_copy_file(source: &str, destination: &str, context: &SecurityContext) -> FileOpsResult<()> {
+pub fn secure_copy_file(
+    source: &str,
+    destination: &str,
+    context: &SecurityContext,
+) -> FileOpsResult<()> {
     validate_path_access(source, context, "read_file")?;
     validate_path_access(destination, context, "copy_file")?;
-    
+
     copy_file(source, destination)
 }
 
 /// Secure file write with validation
-pub fn secure_write_file(path: &str, content: &str, context: &SecurityContext) -> FileOpsResult<()> {
+pub fn secure_write_file(
+    path: &str,
+    content: &str,
+    context: &SecurityContext,
+) -> FileOpsResult<()> {
     validate_path_access(path, context, "write_file")?;
-    
+
     write_file(path, content)
 }
 
 /// Secure directory creation with validation
 pub fn secure_create_directory(path: &str, context: &SecurityContext) -> FileOpsResult<()> {
     validate_path_access(path, context, "create_directory")?;
-    
+
     create_directory(path)
 }
 
 // Performance Optimizations
 
 /// Copy a large file with streaming I/O and buffering
-pub fn copy_file_streaming(source: &str, destination: &str, buffer_size: Option<usize>) -> FileOpsResult<u64> {
+pub fn copy_file_streaming(
+    source: &str,
+    destination: &str,
+    buffer_size: Option<usize>,
+) -> FileOpsResult<u64> {
     let buffer_size = buffer_size.unwrap_or(64 * 1024); // 64KB default buffer
-    
+
     let source_file = fs::File::open(source)?;
     let dest_file = fs::File::create(destination)?;
-    
+
     let mut reader = BufReader::with_capacity(buffer_size, source_file);
     let mut writer = BufWriter::with_capacity(buffer_size, dest_file);
-    
+
     let bytes_copied = std::io::copy(&mut reader, &mut writer)?;
     writer.flush()?;
-    
+
     Ok(bytes_copied)
 }
 
@@ -356,35 +379,28 @@ where
 {
     let mut file = fs::File::open(path)?;
     let mut buffer = vec![0u8; chunk_size];
-    
+
     loop {
         let bytes_read = file.read(&mut buffer)?;
         if bytes_read == 0 {
             break; // End of file
         }
-        
+
         let should_continue = callback(&buffer[..bytes_read])?;
         if !should_continue {
             break;
         }
     }
-    
+
     Ok(())
 }
 
 /// Batch file operation types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BatchFileOperation {
-    Copy {
-        source: String,
-        destination: String,
-    },
-    Delete {
-        path: String,
-    },
-    CreateDir {
-        path: String,
-    },
+    Copy { source: String, destination: String },
+    Delete { path: String },
+    CreateDir { path: String },
 }
 
 /// Batch operation result
@@ -397,65 +413,64 @@ pub struct BatchOperationResult {
 }
 
 /// Batch process multiple file operations for efficiency
-pub fn process_file_batch(operations: &[BatchFileOperation]) -> FileOpsResult<Vec<BatchOperationResult>> {
+pub fn process_file_batch(
+    operations: &[BatchFileOperation],
+) -> FileOpsResult<Vec<BatchOperationResult>> {
     let results = Arc::new(Mutex::new(Vec::new()));
-    
+
     for (index, operation) in operations.iter().enumerate() {
         let result = match operation {
-            BatchFileOperation::Copy { source, destination } => {
-                match copy_file_streaming(source, destination, None) {
-                    Ok(bytes) => BatchOperationResult {
-                        index,
-                        success: true,
-                        message: format!("Copied {} bytes", bytes),
-                        bytes_processed: Some(bytes),
-                    },
-                    Err(e) => BatchOperationResult {
-                        index,
-                        success: false,
-                        message: format!("Copy failed: {}", e),
-                        bytes_processed: None,
-                    },
-                }
-            }
-            BatchFileOperation::Delete { path } => {
-                match delete_file(path) {
-                    Ok(_) => BatchOperationResult {
-                        index,
-                        success: true,
-                        message: "File deleted successfully".to_string(),
-                        bytes_processed: None,
-                    },
-                    Err(e) => BatchOperationResult {
-                        index,
-                        success: false,
-                        message: format!("Delete failed: {}", e),
-                        bytes_processed: None,
-                    },
-                }
-            }
-            BatchFileOperation::CreateDir { path } => {
-                match create_directory(path) {
-                    Ok(_) => BatchOperationResult {
-                        index,
-                        success: true,
-                        message: "Directory created successfully".to_string(),
-                        bytes_processed: None,
-                    },
-                    Err(e) => BatchOperationResult {
-                        index,
-                        success: false,
-                        message: format!("Create directory failed: {}", e),
-                        bytes_processed: None,
-                    },
-                }
-            }
+            BatchFileOperation::Copy {
+                source,
+                destination,
+            } => match copy_file_streaming(source, destination, None) {
+                Ok(bytes) => BatchOperationResult {
+                    index,
+                    success: true,
+                    message: format!("Copied {} bytes", bytes),
+                    bytes_processed: Some(bytes),
+                },
+                Err(e) => BatchOperationResult {
+                    index,
+                    success: false,
+                    message: format!("Copy failed: {}", e),
+                    bytes_processed: None,
+                },
+            },
+            BatchFileOperation::Delete { path } => match delete_file(path) {
+                Ok(_) => BatchOperationResult {
+                    index,
+                    success: true,
+                    message: "File deleted successfully".to_string(),
+                    bytes_processed: None,
+                },
+                Err(e) => BatchOperationResult {
+                    index,
+                    success: false,
+                    message: format!("Delete failed: {}", e),
+                    bytes_processed: None,
+                },
+            },
+            BatchFileOperation::CreateDir { path } => match create_directory(path) {
+                Ok(_) => BatchOperationResult {
+                    index,
+                    success: true,
+                    message: "Directory created successfully".to_string(),
+                    bytes_processed: None,
+                },
+                Err(e) => BatchOperationResult {
+                    index,
+                    success: false,
+                    message: format!("Create directory failed: {}", e),
+                    bytes_processed: None,
+                },
+            },
         };
-        
+
         let mut results_guard = results.lock().unwrap();
         results_guard.push(result);
     }
-    
+
     let final_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
     Ok(final_results)
 }
@@ -473,11 +488,12 @@ pub struct FileInfo {
 /// Get detailed file information
 pub fn get_file_info(path: &str) -> FileOpsResult<FileInfo> {
     let metadata = fs::metadata(path)?;
-    let modified_time = metadata.modified()
+    let modified_time = metadata
+        .modified()
         .ok()
         .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
         .map(|duration| duration.as_secs());
-    
+
     Ok(FileInfo {
         path: path.to_string(),
         size: metadata.len(),
@@ -524,7 +540,7 @@ pub fn process_json_batch(request_json: &str) -> FileOpsResult<String> {
     let request: JsonBatchRequest = serde_json::from_str(request_json)?;
     let mut results = Vec::new();
     let mut overall_success = true;
-    
+
     for op in request.operations {
         let result = execute_json_operation(&op);
         if !result.success {
@@ -532,12 +548,12 @@ pub fn process_json_batch(request_json: &str) -> FileOpsResult<String> {
         }
         results.push(result);
     }
-    
+
     let response = JsonBatchResponse {
         success: overall_success,
         results,
     };
-    
+
     Ok(serde_json::to_string(&response)?)
 }
 
@@ -576,7 +592,9 @@ fn execute_json_operation(op: &JsonOperation) -> JsonOperationResult {
             if let (Some(dest), Some(content)) = (&op.destination, &op.content) {
                 write_file(dest, content).map(|_| None)
             } else {
-                Err(anyhow::anyhow!("write_file requires destination and content"))
+                Err(anyhow::anyhow!(
+                    "write_file requires destination and content"
+                ))
             }
         }
         "create_directory" => {
@@ -610,7 +628,7 @@ fn execute_json_operation(op: &JsonOperation) -> JsonOperationResult {
         }
         _ => Err(anyhow::anyhow!("Unknown operation: {}", op.operation)),
     };
-    
+
     match result {
         Ok(output) => JsonOperationResult {
             success: true,
@@ -719,7 +737,7 @@ mod tests {
     fn test_security_context() {
         let temp_dir = TempDir::new().unwrap();
         let allowed_path = temp_dir.path().to_str().unwrap().to_string();
-        
+
         // Create security context that only allows operations in temp directory
         let context = SecurityContext {
             level: SecurityLevel::High,
@@ -730,13 +748,13 @@ mod tests {
 
         let test_file = temp_dir.path().join("secure_test.txt");
         let test_file_str = test_file.to_str().unwrap();
-        
+
         // This should succeed (within allowed path)
         assert!(validate_path_access(test_file_str, &context, "write_file").is_ok());
-        
+
         // This should fail (path traversal)
         assert!(validate_path_access("../etc/passwd", &context, "read_file").is_err());
-        
+
         // This should fail (forbidden path)
         assert!(validate_path_access("/etc/passwd", &context, "read_file").is_err());
     }
@@ -745,26 +763,28 @@ mod tests {
     fn test_preopen_context() {
         let temp_dir = TempDir::new().unwrap();
         let temp_path = temp_dir.path().to_str().unwrap();
-        
+
         // Create preopen context (WASI-style)
         let context = create_preopen_context(vec![temp_path], AccessPermissions::ReadWrite);
-        
+
         let test_file = temp_dir.path().join("preopen_test.txt");
         let content = "Test content for preopen";
-        
+
         // Secure operations should work within allowed directory
         assert!(secure_write_file(test_file.to_str().unwrap(), content, &context).is_ok());
-        
+
         // Read-only context should prevent writes
         let readonly_context = create_preopen_context(vec![temp_path], AccessPermissions::ReadOnly);
-        assert!(secure_write_file(test_file.to_str().unwrap(), "blocked", &readonly_context).is_err());
+        assert!(
+            secure_write_file(test_file.to_str().unwrap(), "blocked", &readonly_context).is_err()
+        );
     }
 
     #[test]
     fn test_json_batch_processing() {
         let temp_dir = TempDir::new().unwrap();
         let test_file = temp_dir.path().join("batch_test.txt");
-        
+
         let batch_request = JsonBatchRequest {
             operations: vec![
                 JsonOperation {
@@ -781,19 +801,23 @@ mod tests {
                 },
             ],
         };
-        
+
         let request_json = serde_json::to_string(&batch_request).unwrap();
         let response_json = process_json_batch(&request_json).unwrap();
         let response: JsonBatchResponse = serde_json::from_str(&response_json).unwrap();
-        
+
         assert!(response.success);
         assert_eq!(response.results.len(), 2);
         assert!(response.results[0].success);
         assert!(response.results[1].success);
-        
+
         // The read operation should return the content we wrote
         assert!(response.results[1].output.is_some());
-        assert!(response.results[1].output.as_ref().unwrap().contains("Batch test content"));
+        assert!(response.results[1]
+            .output
+            .as_ref()
+            .unwrap()
+            .contains("Batch test content"));
     }
 
     #[test]
@@ -801,20 +825,21 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let source_file = temp_dir.path().join("source_large.txt");
         let dest_file = temp_dir.path().join("dest_large.txt");
-        
+
         // Create a test file with some content
         let test_content = "Large file content ".repeat(1000); // Create ~19KB of content
         write_file(source_file.to_str().unwrap(), &test_content).unwrap();
-        
+
         // Test streaming copy
         let bytes_copied = copy_file_streaming(
-            source_file.to_str().unwrap(), 
-            dest_file.to_str().unwrap(), 
-            Some(1024) // 1KB buffer for testing
-        ).unwrap();
-        
+            source_file.to_str().unwrap(),
+            dest_file.to_str().unwrap(),
+            Some(1024), // 1KB buffer for testing
+        )
+        .unwrap();
+
         assert_eq!(bytes_copied, test_content.len() as u64);
-        
+
         // Verify content matches
         let copied_content = read_file(dest_file.to_str().unwrap()).unwrap();
         assert_eq!(test_content, copied_content);
@@ -824,18 +849,19 @@ mod tests {
     fn test_chunked_reading() {
         let temp_dir = TempDir::new().unwrap();
         let test_file = temp_dir.path().join("chunked_test.txt");
-        
+
         let test_content = "Chunked reading test content with multiple lines\nLine 2\nLine 3\n";
         write_file(test_file.to_str().unwrap(), test_content).unwrap();
-        
+
         let mut chunks_read = Vec::new();
         let chunk_size = 10; // Small chunks for testing
-        
+
         read_file_chunked(test_file.to_str().unwrap(), chunk_size, |chunk| {
             chunks_read.push(String::from_utf8_lossy(chunk).to_string());
             Ok(true) // Continue reading
-        }).unwrap();
-        
+        })
+        .unwrap();
+
         // Verify we read the content in chunks
         assert!(chunks_read.len() > 1);
         let reassembled = chunks_read.join("");
@@ -848,10 +874,10 @@ mod tests {
         let source_file = temp_dir.path().join("batch_source.txt");
         let dest_file = temp_dir.path().join("batch_dest.txt");
         let new_dir = temp_dir.path().join("batch_new_dir");
-        
+
         // Create source file
         write_file(source_file.to_str().unwrap(), "Batch operation test").unwrap();
-        
+
         let operations = vec![
             BatchFileOperation::Copy {
                 source: source_file.to_str().unwrap().to_string(),
@@ -861,14 +887,14 @@ mod tests {
                 path: new_dir.to_str().unwrap().to_string(),
             },
         ];
-        
+
         let results = process_file_batch(&operations).unwrap();
-        
+
         assert_eq!(results.len(), 2);
         assert!(results[0].success);
         assert!(results[1].success);
         assert!(results[0].bytes_processed.is_some());
-        
+
         // Verify operations completed
         assert_eq!(path_exists(dest_file.to_str().unwrap()), PathInfo::File);
         assert_eq!(path_exists(new_dir.to_str().unwrap()), PathInfo::Directory);
@@ -878,12 +904,12 @@ mod tests {
     fn test_file_info() {
         let temp_dir = TempDir::new().unwrap();
         let test_file = temp_dir.path().join("info_test.txt");
-        
+
         let content = "File info test content";
         write_file(test_file.to_str().unwrap(), content).unwrap();
-        
+
         let file_info = get_file_info(test_file.to_str().unwrap()).unwrap();
-        
+
         assert_eq!(file_info.size, content.len() as u64);
         assert!(file_info.is_file);
         assert!(!file_info.is_dir);

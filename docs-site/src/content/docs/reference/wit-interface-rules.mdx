@@ -12,7 +12,7 @@ These rules handle **WebAssembly Interface Types (WIT)** - the interface definit
 | Rule | Purpose | Most Common Use |
 |------|---------|----------------|
 | **[wit_bindgen](#wit_bindgen)** | Generate language bindings from WIT | Essential for every component |
-| **[wit_library](#wit_library)** | Package WIT files for reuse | Interface libraries |  
+| **[wit_library](#wit_library)** | Package WIT files for reuse | Interface libraries |
 | **[wit_deps_check](#wit_deps_check)** | Validate WIT dependencies | Troubleshooting |
 | **[wit_markdown](#wit_markdown)** | Generate docs from WIT | Documentation |
 
@@ -55,7 +55,7 @@ wit_bindgen(
 ```python
 wit_bindgen(
     name = "rust_bindings",
-    language = "rust", 
+    language = "rust",
     ownership = "borrowing",  # Zero-copy performance
     additional_derives = ["Clone", "Debug", "Serialize"],
     async_interfaces = ["http-handler"],
@@ -72,7 +72,7 @@ wit_bindgen(
 ```
 
 **JavaScript:**
-```python 
+```python
 wit_bindgen(
     name = "js_bindings",
     language = "js",
@@ -86,7 +86,7 @@ wit_bindgen(
 ```python
 wit_bindgen(
     name = "math_rust",
-    wit = ":math_interfaces", 
+    wit = ":math_interfaces",
     language = "rust",
 )
 ```
@@ -145,7 +145,7 @@ wit_library(
 **Library with Dependencies:**
 ```python
 wit_library(
-    name = "http_service_interfaces", 
+    name = "http_service_interfaces",
     srcs = ["service.wit", "types.wit"],
     deps = [
         "@wasi//:http",
@@ -193,7 +193,7 @@ wit_deps_check(
 ### Usage
 
 ```python
-load("@rules_wasm_component//wit:defs.bzl", "wit_markdown") 
+load("@rules_wasm_component//wit:defs.bzl", "wit_markdown")
 
 wit_markdown(
     name = "api_docs",
@@ -224,7 +224,7 @@ wit_markdown(
 ```python
 wit_markdown(
     name = "public_api_docs",
-    wit = ":public_interfaces", 
+    wit = ":public_interfaces",
     output_dir = "public/api-docs/",
 )
 ```
