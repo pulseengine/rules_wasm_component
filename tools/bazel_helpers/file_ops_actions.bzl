@@ -174,7 +174,8 @@ def prepare_workspace_action(ctx, config):
         dep_file = dep_info["source"]
         dest_name = dep_info.get("destination") or dep_file.basename
         all_inputs.append(dep_file)
-        file_mappings.append((dep_file, dest_name))
+        # Include the full dep_info for directory handling
+        file_mappings.append((dep_file, dest_name, dep_info))
 
     script_lines = [
         "#!/bin/sh",
@@ -186,14 +187,57 @@ def prepare_workspace_action(ctx, config):
     ]
 
     # Add file operations using basic POSIX commands
-    for src_file, dest_name in file_mappings:
+    for mapping in file_mappings:
+        if len(mapping) == 3:
+            src_file, dest_name, dep_info = mapping
+            is_directory = dep_info.get("is_directory", False)
+        else:
+            src_file, dest_name = mapping
+            is_directory = False
+        
         # Ensure parent directory exists for nested paths
         if "/" in dest_name:
             parent_dir = "/".join(dest_name.split("/")[:-1])
             script_lines.append("mkdir -p \"$WORKSPACE_DIR/{}\"".format(parent_dir))
 
-        # Use cp to copy files (available on all POSIX systems)
-        script_lines.append("cp \"{}\" \"$WORKSPACE_DIR/{}\"".format(src_file.path, dest_name))
+        # Use cp -r for directories, cp for files
+        if is_directory:
+            # For directories, copy contents not the directory itself
+            script_lines.append("mkdir -p \"$WORKSPACE_DIR/{}\"".format(dest_name))
+            script_lines.append("cp -r \"{}\"/* \"$WORKSPACE_DIR/{}\"".format(src_file.path, dest_name))
+        else:
+            script_lines.append("cp \"{}\" \"$WORKSPACE_DIR/{}\"".format(src_file.path, dest_name))
+
+    # Add Go module dependency resolution if go_binary provided
+    go_binary = config.get("go_binary")
+    if go_binary and config.get("workspace_type") == "go":
+        # Note: go_binary.path might be relative, ensure it's resolved correctly
+        go_binary_path = go_binary.path
+        script_lines.extend([
+            "",
+            "# Go module dependency resolution",
+            "echo \"Resolving Go module dependencies...\"",
+            "cd \"$WORKSPACE_DIR\"",
+            "export GOCACHE=\"$WORKSPACE_DIR/.gocache\"",
+            "export GOPATH=\"$WORKSPACE_DIR/.gopath\"", 
+            "mkdir -p \"$GOCACHE\" \"$GOPATH\"",
+            "",
+            "# Find the Go binary in execution root",
+            "if [ -f \"$EXECROOT/{}\" ]; then".format(go_binary_path),
+            "    GO_BIN=\"$EXECROOT/{}\"".format(go_binary_path),
+            "elif [ -f \"{}\" ]; then".format(go_binary_path),
+            "    GO_BIN=\"{}\"".format(go_binary_path),
+            "else",
+            "    echo \"Warning: Go binary not found, skipping dependency resolution\"",
+            "    GO_BIN=\"\"",
+            "fi",
+            "",
+            "if [ -n \"$GO_BIN\" ]; then",
+            "    \"$GO_BIN\" mod download || echo \"Note: Go mod download failed or not needed\"",
+            "    echo \"Go dependencies resolved\"",
+            "fi",
+            "",
+        ])
 
     script_lines.extend([
         "",
@@ -207,11 +251,16 @@ def prepare_workspace_action(ctx, config):
         is_executable = True,
     )
 
+    # Add go_binary to inputs if provided
+    action_inputs = all_inputs + [workspace_script]
+    if go_binary:
+        action_inputs.append(go_binary)
+
     # Execute the workspace setup using only basic POSIX shell
     ctx.actions.run(
         executable = workspace_script,
         arguments = [workspace_dir.path],
-        inputs = all_inputs + [workspace_script],
+        inputs = action_inputs,
         outputs = [workspace_dir],
         mnemonic = "PrepareWorkspaceHermetic",
         progress_message = "Preparing {} workspace for {} (hermetic)".format(
@@ -222,7 +271,7 @@ def prepare_workspace_action(ctx, config):
 
     return workspace_dir
 
-def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None):
+def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None, bindings_dir = None, go_binary = None):
     """Set up a Go module workspace for TinyGo compilation
 
     Args:
@@ -230,6 +279,8 @@ def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None):
         sources: List of Go source files
         go_mod: Optional go.mod file
         wit_file: Optional WIT file for binding generation
+        bindings_dir: Optional generated WIT bindings directory
+        go_binary: Optional hermetic Go binary for dependency resolution
 
     Returns:
         Prepared Go module directory
@@ -241,6 +292,7 @@ def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None):
         "sources": [{"source": src, "destination": None, "preserve_permissions": False} for src in sources],
         "headers": [],
         "dependencies": [],
+        "go_binary": go_binary,  # Pass Go binary for dependency resolution
     }
 
     if go_mod:
@@ -252,11 +304,21 @@ def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None):
 
     if wit_file:
         # CRITICAL FIX: TinyGo and wasm-tools expect WIT file in wit/ subdirectory
-        # with the original filename (file-operations.wit)
+        # with the original filename (preserve the actual file name)
         config["dependencies"].append({
             "source": wit_file,
-            "destination": "wit/file-operations.wit",
+            "destination": "wit/" + wit_file.basename,  # Use original filename
             "preserve_permissions": False,
+        })
+
+    if bindings_dir:
+        # Add generated WIT bindings directory to workspace root
+        # wit-bindgen-go creates internal/example/... structure, so copy to workspace root
+        config["dependencies"].append({
+            "source": bindings_dir,
+            "destination": ".",
+            "preserve_permissions": False,
+            "is_directory": True,  # Mark as directory for special handling
         })
 
     return prepare_workspace_action(ctx, config)
@@ -289,11 +351,11 @@ def setup_cpp_workspace_action(ctx, sources, headers, bindings_dir = None, dep_h
     # 2. Cross-package headers: "foundation/types.h" included as #include "foundation/types.h" → preserve directory
     for hdr in headers:
         relative_path = hdr.short_path
-        
+
         # Check if this is a cross-package header that needs directory structure preservation
         # Cross-package headers typically have multiple path components and contain package/directory names
         path_parts = relative_path.split("/")
-        
+
         if len(path_parts) >= 2 and ("test/" in relative_path or "/foundation/" in relative_path):
             # Cross-package header - preserve directory structure (e.g., "foundation/types.h")
             relative_path = "/".join(path_parts[-2:])
