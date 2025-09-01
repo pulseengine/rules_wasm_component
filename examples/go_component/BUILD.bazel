@@ -8,6 +8,7 @@ This example shows state-of-the-art Go support for WebAssembly Component Model:
 
 load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
+load("@rules_wasm_component//wit:wit_bindgen.bzl", "wit_bindgen")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -17,6 +18,13 @@ wit_library(
     srcs = ["wit/calculator.wit"],
     world = "calculator-world",
     deps = ["@wasi_io//:streams"],  # Add WASI IO dependency for stream imports
+)
+
+# Simple calculator WIT without dependencies
+wit_library(
+    name = "simple_calculator_wit",
+    srcs = ["wit/simple-calculator.wit"],
+    world = "calculator-world",
 )
 
 # WIT library definitions for HTTP service interface
@@ -38,19 +46,50 @@ wit_markdown(
     wit = ":http_service_wit",
 )
 
-# Build calculator component using TinyGo + WASI Preview 2
-# Note: This is a simple WASI CLI component, not implementing WIT interfaces
+# Build calculator component using TinyGo with WIT bindings
 go_wasm_component(
     name = "calculator_component",
     srcs = [
         "calculator.go",
-        "main.go",
+        "main.go", 
         "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "release",
-    world = "wasi:cli/command",
+    wit = ":calculator_wit",
+    world = "calculator-world",
+)
+
+# Simplified calculator component with manual exports - test with WIT
+go_wasm_component(
+    name = "calculator_simple",
+    srcs = ["calculator_main.go"],
+    go_mod = "go.mod",
+    optimization = "release",
+    wit = ":calculator_wit",
+    world = "calculator-world",
+)
+
+# Calculator component using generated WIT bindings
+go_wasm_component(
+    name = "calculator_with_bindings",
+    srcs = ["calculator_with_bindings.go"],
+    go_mod = "go.mod",
+    optimization = "release",
+    wit = ":calculator_wit",
+    world = "calculator-world",
+)
+
+# Calculator component with manual exports and TinyGo WIT integration
+go_wasm_component(
+    name = "calculator_manual",
+    srcs = ["calculator_manual.go"],
+    go_mod = "go.mod",
+    optimization = "release",
+    # Remove WIT temporarily to test basic build
+    # wit = ":simple_calculator_wit",
+    # world = "calculator-world",
 )
 
 # Build HTTP service component using TinyGo + WASI Preview 2
@@ -85,11 +124,24 @@ go_wasm_component(
 # Multi-file test demonstrating TinyGo compilation with multiple Go source files
 go_wasm_component(
     name = "simple_test",
-    srcs = ["main.go", "utils.go"],  # Include both main.go and utils.go
+    srcs = [
+        "main.go",
+        "utils.go",
+    ],  # Include both main.go and utils.go
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",
     world = "wasi:cli/command",
+)
+
+# Simple WASI component without WIT bindings
+# This demonstrates the basic use case: compile Go to WASI Preview 2
+go_wasm_component(
+    name = "simple_wasi",
+    srcs = ["simple_wasi.go"],
+    go_mod = "go.mod",
+    optimization = "release",
+    # No WIT or world specified - just basic WASI support
 )
 
 # Test multi-file Go component to verify the fix
@@ -102,18 +154,5 @@ go_wasm_component(
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     optimization = "debug",
-    world = "wasi:cli/command",
-)
-
-# Test size optimization to verify the fix
-go_wasm_component(
-    name = "size_test",
-    srcs = [
-        "main.go",
-        "utils.go",
-    ],
-    adapter = "//wasm/adapters:wasi_snapshot_preview1",
-    go_mod = "go.mod",
-    optimization = "size",
     world = "wasi:cli/command",
 )

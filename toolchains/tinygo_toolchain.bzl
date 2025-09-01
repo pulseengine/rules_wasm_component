@@ -32,7 +32,7 @@ def _detect_host_platform(repository_ctx):
 def _download_go(repository_ctx, version, platform):
     """Download hermetic Go SDK for TinyGo to use"""
 
-    go_version = "1.24.4"  # Match the version TinyGo expects
+    go_version = "1.25.0"  # Updated for TinyGo 0.39.0 support
 
     # Map platform to Go's naming convention
     go_platform_map = {
@@ -171,24 +171,73 @@ def _get_tinygo_platform_suffix(platform):
 
     return platform_map[platform]
 
-def _setup_go_wit_bindgen(repository_ctx):
-    """Set up wit-bindgen-go using Bazel's Go toolchain integration
-
-    Instead of trying to install wit-bindgen-go during repository setup,
-    we rely on Bazel's Go toolchain and rules_go to handle Go dependencies.
-    This eliminates the need for system Go during toolchain setup.
+def _setup_go_wit_bindgen(repository_ctx, go_binary):
+    """Install wit-bindgen-go Go tool for WIT binding generation
+    
+    Installs go.bytecodealliance.org/wit/bindgen which provides 'go tool wit-bindgen-go'
     """
 
-    print("Using Bazel's Go toolchain for wit-bindgen-go - no system Go required")
+    print("Installing Go WIT binding tools...")
 
-    # Create a placeholder that indicates Bazel will handle Go toolchain
-    repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
-# wit-bindgen-go is handled by Bazel's Go toolchain via rules_go
-# The actual tool is provided through go_binary rules in the build system
-echo "wit-bindgen-go integrated with Bazel Go toolchain"
-echo "Use go_wasm_component rule which handles WIT binding generation automatically"
-exit 0
+    # Create bin directory first
+    repository_ctx.file("bin/.gitkeep", "")
+
+    # Set up Go environment for tool installation
+    go_env = {
+        "GOCACHE": str(repository_ctx.path("go_cache")),
+        "GOPATH": str(repository_ctx.path("go_path")),
+        "CGO_ENABLED": "0", 
+        "GO111MODULE": "on",
+    }
+
+    # Install wit-bindgen-go using hermetic Go - this provides 'go tool wit-bindgen-go'
+    result = repository_ctx.execute(
+        [str(go_binary), "install", "go.bytecodealliance.org/cmd/wit-bindgen-go@latest"],
+        environment = go_env,
+        timeout = 300,  # 5 minute timeout
+    )
+
+    if result.return_code != 0:
+        print("Warning: Failed to install wit-bindgen-go Go tool")
+        print("Error: {}".format(result.stderr))
+        print("Stdout: {}".format(result.stdout))
+        # Create fallback that explains the issue
+        repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
+echo "Error: wit-bindgen-go installation failed during toolchain setup"
+echo "Manual installation: go install go.bytecodealliance.org/cmd/wit-bindgen-go@latest"
+exit 1
 """, executable = True)
+    else:
+        print("wit-bindgen-go Go tool installed successfully")
+        
+        # Test wit-bindgen-go as a standalone binary (installed via go install)
+        # The tool is installed in GOPATH/bin, not as a Go tool
+        wit_bindgen_binary = repository_ctx.path("go_path/bin/wit-bindgen-go")
+        
+        if wit_bindgen_binary.exists:
+            print("wit-bindgen-go found as standalone binary")
+            # Create wrapper that uses the installed binary directly
+            repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
+# wit-bindgen-go wrapper - uses installed binary
+exec "{wit_bindgen_binary}" "$@"
+""".format(wit_bindgen_binary = str(wit_bindgen_binary)), executable = True)
+        else:
+            print("Warning: wit-bindgen-go binary not found in expected location")
+            # Try go tool approach as fallback
+            test_result = repository_ctx.execute(
+                [str(go_binary), "tool", "wit-bindgen-go", "--help"],
+                environment = go_env,
+                timeout = 30,
+            )
+            
+            if test_result.return_code == 0:
+                print("wit-bindgen-go found as Go tool")
+                repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
+# wit-bindgen-go wrapper - uses Go tool
+exec "{go_binary}" tool wit-bindgen-go "$@"
+""".format(go_binary = str(go_binary)), executable = True)
+            else:
+                print("Warning: wit-bindgen-go not available as Go tool either")
 
 def _tinygo_toolchain_repository_impl(repository_ctx):
     """Implementation of TinyGo toolchain repository rule"""
@@ -207,8 +256,8 @@ def _tinygo_toolchain_repository_impl(repository_ctx):
     # Download and set up TinyGo
     tinygo_binary = _download_tinygo(repository_ctx, tinygo_version, platform)
 
-    # Set up wit-bindgen-go
-    _setup_go_wit_bindgen(repository_ctx)
+    # Set up wit-bindgen-go using hermetic Go binary
+    _setup_go_wit_bindgen(repository_ctx, go_binary)
 
     # wasm-tools will be provided by the wasm toolchain dependency
 
@@ -222,6 +271,13 @@ package(default_visibility = ["//visibility:public"])
 filegroup(
     name = "tinygo_files",
     srcs = glob(["tinygo/**/*"]),
+    visibility = ["//visibility:public"],
+)
+
+# wit-bindgen-go tool files  
+filegroup(
+    name = "wit_bindgen_go_files",
+    srcs = glob(["bin/*", "go_path/**/*"]),
     visibility = ["//visibility:public"],
 )
 
@@ -273,6 +329,7 @@ tinygo_toolchain(
     tinygo = ":tinygo_binary",
     tinygo_files = ":tinygo_files",
     wit_bindgen_go = ":wit_bindgen_go_binary",
+    wit_bindgen_go_files = ":wit_bindgen_go_files",
     go = ":go_binary",
     go_sdk_files = ":go_sdk_files",
     wasm_opt = ":wasm_opt_binary",
@@ -306,7 +363,7 @@ tinygo_toolchain_repository = repository_rule(
     attrs = {
         "tinygo_version": attr.string(
             doc = "TinyGo version to download and use",
-            default = "0.38.0",
+            default = "0.39.0",
         ),
     },
     # Remove environ to prevent system PATH inheritance
@@ -320,6 +377,7 @@ def _tinygo_toolchain_impl(ctx):
             tinygo = ctx.executable.tinygo,
             tinygo_files = ctx.attr.tinygo_files,
             wit_bindgen_go = ctx.executable.wit_bindgen_go,
+            wit_bindgen_go_files = ctx.attr.wit_bindgen_go_files if hasattr(ctx.attr, "wit_bindgen_go_files") else None,
             go = ctx.executable.go if hasattr(ctx.executable, "go") else None,
             go_sdk_files = ctx.attr.go_sdk_files if hasattr(ctx.attr, "go_sdk_files") else None,
             wasm_opt = ctx.executable.wasm_opt if hasattr(ctx.executable, "wasm_opt") else None,
@@ -352,6 +410,11 @@ tinygo_toolchain = rule(
             cfg = "exec",
             doc = "wit-bindgen-go tool",
             mandatory = True,
+        ),
+        "wit_bindgen_go_files": attr.label(
+            allow_files = True,
+            doc = "wit-bindgen-go tool files",
+            mandatory = False,
         ),
         "go": attr.label(
             allow_single_file = True,
