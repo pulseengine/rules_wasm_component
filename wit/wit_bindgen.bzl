@@ -391,7 +391,7 @@ wit_bindgen = rule(
     toolchains = [
         "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
         "@rules_wasm_component//toolchains:file_ops_toolchain_type",
-        "@rules_wasm_component//toolchains:tinygo_toolchain_type",
+        config_common.toolchain_type("@rules_wasm_component//toolchains:tinygo_toolchain_type", mandatory = False),
     ],
     doc = """
     Generates language bindings from WIT files.
