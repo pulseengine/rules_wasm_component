@@ -1,0 +1,97 @@
+"""Example demonstrating Wasmtime AOT compilation integration"""
+
+load("//rust:defs.bzl", "rust_wasm_component")
+load("//wasm:defs.bzl", "wasm_precompile", "wasm_run", "wasm_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Regular WASM component
+rust_wasm_component(
+    name = "hello_component",
+    srcs = ["src/lib.rs"],
+    crate_type = "cdylib",
+    deps = [
+        "@cargo//wit-bindgen:wit-bindgen",
+    ],
+    wit_files = ["wit/world.wit"],
+)
+
+# AOT precompiled version
+wasm_precompile(
+    name = "hello_component_aot",
+    component = ":hello_component",
+    optimization_level = 2,
+    debug_info = False,  # Production build
+    strip_symbols = True,  # Reduce size by ~25%
+)
+
+# High-performance AOT version
+wasm_precompile(
+    name = "hello_component_max_opt",
+    component = ":hello_component", 
+    optimization_level = 3,
+    debug_info = False,
+    strip_symbols = True,
+)
+
+# Development AOT version with debug info
+wasm_precompile(
+    name = "hello_component_debug",
+    component = ":hello_component",
+    optimization_level = 0,
+    debug_info = True,
+    strip_symbols = False,
+)
+
+# Executable that runs the component (JIT)
+wasm_run(
+    name = "run_jit",
+    component = ":hello_component",
+    prefer_aot = False,  # Force JIT mode
+)
+
+# Executable that runs the AOT compiled component
+wasm_run(
+    name = "run_aot",
+    component = ":hello_component_aot",
+    prefer_aot = True,  # Use AOT if available
+)
+
+# Executable that automatically chooses best version
+wasm_run(
+    name = "run_auto",
+    component = ":hello_component_aot", 
+    # Will use AOT version automatically
+)
+
+# Test that validates both JIT and AOT work
+wasm_test(
+    name = "hello_jit_test",
+    component = ":hello_component",
+    prefer_aot = False,
+)
+
+wasm_test(
+    name = "hello_aot_test", 
+    component = ":hello_component_aot",
+    prefer_aot = True,
+)
+
+# Cross-compilation example (if supported)
+wasm_precompile(
+    name = "hello_component_x86_64",
+    component = ":hello_component",
+    target_triple = "x86_64-unknown-linux-gnu",
+    optimization_level = 2,
+)
+
+# Direct WASM file execution
+wasm_run(
+    name = "run_direct_wasm",
+    wasm_file = ":hello_component",
+)
+
+wasm_run(
+    name = "run_direct_cwasm", 
+    cwasm_file = ":hello_component_aot",
+)

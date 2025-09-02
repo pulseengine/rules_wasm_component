@@ -1,0 +1,52 @@
+"""Test case for AOT compilation functionality"""
+
+load("//wasm:defs.bzl", "wasm_precompile", "wasm_run", "wasm_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Use basic Rust component for testing  
+# Test AOT precompilation
+wasm_precompile(
+    name = "hello_aot",
+    component = "//examples/basic:hello_component",
+    optimization_level = "2",
+    debug_info = False,
+)
+
+# Test execution rules
+wasm_run(
+    name = "run_jit",
+    component = "//examples/basic:hello_component",
+    prefer_aot = False,
+)
+
+wasm_run(
+    name = "run_aot", 
+    component = ":hello_aot",
+)
+
+# Test different optimization levels
+wasm_precompile(
+    name = "hello_opt_0",
+    component = "//examples/basic:hello_component",
+    optimization_level = "0",
+    debug_info = True,
+)
+
+wasm_precompile(
+    name = "hello_opt_size",
+    component = "//examples/basic:hello_component", 
+    optimization_level = "s",
+    debug_info = False,
+    strip_symbols = True,
+)
+
+wasm_test(
+    name = "aot_functionality_test",
+    component = "//examples/basic:hello_component",
+)
+
+wasm_test(
+    name = "aot_opt_levels_test",
+    component = ":hello_opt_size",
+)
