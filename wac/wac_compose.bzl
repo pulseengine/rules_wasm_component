@@ -132,6 +132,8 @@ def _wac_compose_impl(ctx):
             # Disable network access to prevent registry lookups
             "NO_PROXY": "*",
             "no_proxy": "*",
+            # Enable trace logging for debugging WAC issues
+            "RUST_LOG": "trace",
         },
     )
 

@@ -41,6 +41,10 @@ def _wac_plug_impl(ctx):
         outputs = [composed_wasm],
         mnemonic = "WacPlug",
         progress_message = "Plugging WASM components for %s" % ctx.label,
+        env = {
+            # Enable trace logging for debugging WAC issues
+            "RUST_LOG": "trace",
+        },
     )
 
     # Return provider
