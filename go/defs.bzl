@@ -346,6 +346,7 @@ def _prepare_go_module(ctx, tinygo_toolchain):
         ctx,
         sources = ctx.files.srcs,  # Use original sources, bindings handled separately
         go_mod = ctx.file.go_mod,
+        go_sum = ctx.file.go_sum,
         wit_file = wit_file,
         bindings_dir = bindings_dir_file,
         go_binary = go_binary,  # Pass Go binary for dependency resolution
@@ -608,6 +609,10 @@ go_wasm_component = rule(
         "go_mod": attr.label(
             allow_single_file = ["go.mod"],
             doc = "Go module file",
+        ),
+        "go_sum": attr.label(
+            allow_single_file = ["go.sum"],
+            doc = "Go module checksum file",
         ),
         "wit": attr.label(
             providers = [WitInfo],

@@ -51,11 +51,12 @@ go_wasm_component(
     name = "calculator_component",
     srcs = [
         "calculator.go",
-        "main.go",
+        "calculator_main.go",
         "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "release",
     wit = ":calculator_wit",
     world = "calculator-world",
@@ -66,6 +67,7 @@ go_wasm_component(
     name = "calculator_simple",
     srcs = ["calculator_main.go"],
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "release",
     wit = ":calculator_wit",
     world = "calculator-world",
@@ -76,6 +78,7 @@ go_wasm_component(
     name = "calculator_with_bindings",
     srcs = ["calculator_with_bindings.go"],
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "release",
     wit = ":calculator_wit",
     world = "calculator-world",
@@ -86,6 +89,7 @@ go_wasm_component(
     name = "calculator_simple_binding",
     srcs = ["calculator_simple_binding.go"],
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "release",
     wit = ":simple_calculator_wit",
     world = "calculator-world",
@@ -96,6 +100,7 @@ go_wasm_component(
     name = "calculator_manual",
     srcs = ["calculator_manual.go"],
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "release",
     # Remove WIT temporarily to test basic build
     # wit = ":simple_calculator_wit",
@@ -113,6 +118,7 @@ go_wasm_component(
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "release",
     world = "wasi:cli/command",
 )
@@ -127,6 +133,7 @@ go_wasm_component(
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "debug",
     world = "wasi:cli/command",
 )
@@ -140,6 +147,7 @@ go_wasm_component(
     ],  # Include simple_wasi.go (no WIT deps) and utils.go
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "debug",
     world = "wasi:cli/command",
 )
@@ -150,6 +158,7 @@ go_wasm_component(
     name = "simple_wasi",
     srcs = ["simple_wasi.go"],
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "release",
     # No WIT or world specified - just basic WASI support
 )
@@ -163,6 +172,7 @@ go_wasm_component(
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
+    go_sum = "go.sum",
     optimization = "debug",
     world = "wasi:cli/command",
 )
