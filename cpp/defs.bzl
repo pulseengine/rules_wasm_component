@@ -322,13 +322,29 @@ def _cpp_component_impl(ctx):
     compile_args.add(binding_obj_file.path)
     compile_args.add(binding_o_file)
 
-    # Add C++ standard library linking for C++ language (unless nostdlib is used)
-    if ctx.attr.language == "cpp" and not ctx.attr.nostdlib:
-        compile_args.add("-lc++")
-        compile_args.add("-lc++abi")
+    # Add library linking
+    if ctx.attr.nostdlib:
+        # When nostdlib is enabled, only link explicitly specified libraries
+        for lib in ctx.attr.libs:
+            if lib.startswith("-"):
+                compile_args.add(lib)  # Direct linker flag (e.g., "-lm", "-ldl")
+            else:
+                compile_args.add("-l" + lib)  # Library name (e.g., "m" -> "-lm")
+    else:
+        # Standard library linking for C++ language
+        if ctx.attr.language == "cpp":
+            compile_args.add("-lc++")
+            compile_args.add("-lc++abi")
 
-        # Add exception handling support if enabled
-        # Note: Exception handling symbols are typically in libc++abi which we already link
+            # Add exception handling support if enabled
+            # Note: Exception handling symbols are typically in libc++abi which we already link
+
+        # Add any additional libraries specified by user
+        for lib in ctx.attr.libs:
+            if lib.startswith("-"):
+                compile_args.add(lib)  # Direct linker flag
+            else:
+                compile_args.add("-l" + lib)  # Library name
 
     # Add dependency libraries for linking
     for lib in dep_libraries:
@@ -492,6 +508,10 @@ cpp_component = rule(
         "nostdlib": attr.bool(
             default = False,
             doc = "Disable standard library linking to create minimal components that match WIT specifications exactly",
+        ),
+        "libs": attr.string_list(
+            default = [],
+            doc = "Libraries to link. When nostdlib=True, only these libraries are linked. When nostdlib=False, these are added to standard libraries. Examples: ['m', 'dl'] or ['-lm', '-ldl']",
         ),
         "validate_wit": attr.bool(
             default = False,
@@ -887,6 +907,10 @@ cc_component_library = rule(
         "nostdlib": attr.bool(
             default = False,
             doc = "Disable standard library linking to create minimal components that match WIT specifications exactly",
+        ),
+        "libs": attr.string_list(
+            default = [],
+            doc = "Libraries to link. When nostdlib=True, only these libraries are linked. When nostdlib=False, these are added to standard libraries. Examples: ['m', 'dl'] or ['-lm', '-ldl']",
         ),
     },
     toolchains = [
