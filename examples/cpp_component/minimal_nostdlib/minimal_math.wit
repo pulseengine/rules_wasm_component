@@ -1,0 +1,13 @@
+package example:minimal-math@1.0.0;
+
+interface math-ops {
+    // Basic math operations using only math library
+    sqrt: func(x: f64) -> f64;
+    pow: func(base: f64, exp: f64) -> f64;
+    sin: func(x: f64) -> f64;
+    cos: func(x: f64) -> f64;
+}
+
+world minimal-math {
+    export math-ops;
+}

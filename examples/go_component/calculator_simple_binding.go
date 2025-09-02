@@ -2,7 +2,7 @@ package main
 
 import (
 	"math"
-	
+
 	// Import the generated bindings using full module path
 	calculator "example.com/calculator/example/calculator/calculator"
 )

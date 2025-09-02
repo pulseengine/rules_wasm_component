@@ -1,0 +1,11 @@
+package example:minimal-system@1.0.0;
+
+interface system-ops {
+    // System operations requiring basic C library
+    get-timestamp: func() -> u64;
+    compute-hash: func(data: string) -> u32;
+}
+
+world minimal-system {
+    export system-ops;
+}

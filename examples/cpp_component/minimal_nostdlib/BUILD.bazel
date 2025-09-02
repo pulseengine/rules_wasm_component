@@ -1,0 +1,52 @@
+"""Minimal C++ Component with nostdlib - Custom Library Linking Example"""
+
+load("@rules_wasm_component//cpp:defs.bzl", "cpp_component")
+
+package(default_visibility = ["//visibility:public"])
+
+# Minimal component using nostdlib with only math library
+cpp_component(
+    name = "minimal_math_component",
+    srcs = ["minimal_math.cpp"],
+    hdrs = ["minimal_math.h"],
+    cxx_std = "c++17",
+    language = "cpp",
+    libs = ["m"],  # Only link math library
+    nostdlib = True,
+    optimize = True,
+    validate_wit = False,  # Turn off for testing
+    wit = "minimal_math.wit",
+    world = "minimal-math",
+)
+
+# Component using nostdlib with multiple custom libraries
+cpp_component(
+    name = "minimal_system_component",
+    srcs = ["minimal_system.cpp"],
+    cxx_std = "c++17",
+    language = "cpp",
+    libs = [
+        "m",  # Math library
+        "c",  # Basic C library
+        "-Wl,--allow-undefined",  # Direct linker flag example
+    ],
+    nostdlib = True,
+    optimize = True,
+    validate_wit = False,  # Turn off for testing
+    wit = "minimal_system.wit",
+    world = "minimal-system",
+)
+
+# Standard component for comparison (nostdlib=False)
+cpp_component(
+    name = "standard_component",
+    srcs = ["standard_math.cpp"],
+    cxx_std = "c++17",
+    language = "cpp",
+    libs = ["m"],  # Additional library on top of standard libraries
+    nostdlib = False,
+    optimize = True,
+    validate_wit = False,  # Turn off for testing
+    wit = "minimal_math.wit",
+    world = "minimal-math",
+)
