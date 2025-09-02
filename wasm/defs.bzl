@@ -23,6 +23,20 @@ load(
     "//wasm:wasm_validate.bzl",
     _wasm_validate = "wasm_validate",
 )
+load(
+    "//wasm:wasm_precompile.bzl",
+    _wasm_precompile = "wasm_precompile",
+)
+load(
+    "//wasm:wasm_run.bzl",
+    _wasm_run = "wasm_run",
+    _wasm_test = "wasm_test",
+)
+load(
+    "//wasm:wasm_aot_aspect.bzl",
+    _wasm_aot_aspect = "wasm_aot_aspect",
+    _wasm_aot_config = "wasm_aot_config",
+)
 
 # Re-export public rules
 wasm_validate = _wasm_validate
@@ -35,3 +49,10 @@ multi_language_wasm_component = _multi_language_wasm_component
 wasm_keygen = _wasm_keygen
 wasm_sign = _wasm_sign
 wasm_verify = _wasm_verify
+
+# WebAssembly AOT compilation rules
+wasm_precompile = _wasm_precompile
+wasm_run = _wasm_run
+wasm_test = _wasm_test
+wasm_aot_aspect = _wasm_aot_aspect
+wasm_aot_config = _wasm_aot_config

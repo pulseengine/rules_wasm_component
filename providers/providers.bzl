@@ -166,3 +166,17 @@ WasmOciMetadataMappingInfo = provider(
         "metadata_sources": "List of metadata sources used",
     },
 )
+
+# Provider for precompiled WASM information
+WasmPrecompiledInfo = provider(
+    doc = "Information about precompiled WebAssembly modules",
+    fields = {
+        "cwasm_file": "Precompiled .cwasm file",
+        "source_wasm": "Original WASM file that was precompiled",
+        "wasmtime_version": "Version of Wasmtime used for compilation",
+        "target_arch": "Target architecture (x86_64, aarch64, etc.)",
+        "optimization_level": "Optimization level used",
+        "compilation_flags": "List of compilation flags used",
+        "compatibility_hash": "Hash for compatibility checking",
+    },
+)
