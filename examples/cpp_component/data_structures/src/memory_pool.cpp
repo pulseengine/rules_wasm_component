@@ -22,7 +22,11 @@ void MemoryPool::initialize_pool() {
     pool_memory_ = static_cast<uint8_t*>(std::aligned_alloc(config_.alignment, total_size_));
 
     if (!pool_memory_) {
-        throw std::bad_alloc();
+        // WASI-compatible: Set error state instead of throwing
+        // The pool will remain in an invalid state and operations will fail gracefully
+        pool_memory_ = nullptr;
+        total_size_ = 0;
+        return;
     }
 
     // Initialize the entire pool as one large free block
@@ -48,6 +52,11 @@ void MemoryPool::cleanup_pool() {
 
 void* MemoryPool::allocate(size_t size) {
     if (size == 0) return nullptr;
+    
+    // WASI-compatible: Check initialization before proceeding
+    if (!is_initialized()) {
+        return nullptr;  // Graceful failure instead of crash
+    }
 
     std::lock_guard<std::mutex> lock(config_.enable_thread_safety ? mutex_ :
                                     *reinterpret_cast<std::mutex*>(nullptr));
