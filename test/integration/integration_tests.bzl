@@ -3,7 +3,17 @@
 def _component_validation_test_impl(ctx):
     """Implementation for component validation test."""
 
-    component_file = ctx.file.component
+    # Handle components that produce multiple files (e.g., validation outputs)
+    # Extract just the .wasm file from the component target
+    component_files = ctx.attr.component[DefaultInfo].files.to_list()
+    component_file = None
+    for file in component_files:
+        if file.extension == "wasm":
+            component_file = file
+            break
+    
+    if not component_file:
+        fail("Component target must produce a .wasm file")
     test_script = ctx.actions.declare_file(ctx.label.name + "_test.sh")
 
     # Create test script content
@@ -98,7 +108,6 @@ component_validation_test = rule(
     test = True,
     attrs = {
         "component": attr.label(
-            allow_single_file = [".wasm"],
             mandatory = True,
             doc = "The WASM component to validate",
         ),
