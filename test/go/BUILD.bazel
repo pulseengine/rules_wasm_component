@@ -122,9 +122,9 @@ test_suite(
         ":test_debug_component_provides_info",
         ":test_simple_test_component_provides_info",
 
-        # WIT bindgen tests
-        ":test_calculator_bindings_generation",
-        ":test_http_service_bindings_generation",
+        # WIT bindgen tests (commented out until WIT-based examples are added)
+        # ":test_calculator_bindings_generation",
+        # ":test_http_service_bindings_generation",
 
         # Validation tests
         ":test_calculator_component_valid_wasm",
