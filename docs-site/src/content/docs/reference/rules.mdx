@@ -46,6 +46,9 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
 - [Component Tools](#component-tools)
   - [wasm_component_new](#wasm_component_new)
   - [wasm_component_wizer_library](#wasm_component_wizer_library)
+  - [wasm_precompile](#wasm_precompile)
+  - [wasm_run](#wasm_run)
+  - [wasm_test](#wasm_test)
   - [wasm_validate](#wasm_validate)
 - [Security & Signing](#security-signing)
   - [wasm_keygen](#wasm_keygen)
@@ -57,6 +60,7 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
 - [Providers](#providers)
   - [WacCompositionInfo](#waccompositioninfo)
   - [WasmComponentInfo](#wasmcomponentinfo)
+  - [WasmPrecompiledInfo](#wasmprecompiledinfo)
   - [WitInfo](#witinfo)
 
 ## WIT & Interface Rules
@@ -952,6 +956,117 @@ wasm_validate(
 )
 ```
 
+### wasm_precompile
+
+Ahead-of-time (AOT) compile WebAssembly components using Wasmtime for faster startup times and improved performance.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_precompile")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `component` | Label | ❌ | WasmComponent target to precompile |
+| `debug_info` | Boolean | ❌ | Include debug information (default: False) |
+| `name` | String | ✅ | A unique name for this target |
+| `optimization_level` | String | ❌ | Optimization level: "0", "1", "2", "s" (default: "2") |
+| `strip_symbols` | Boolean | ❌ | Strip symbol tables to reduce size (default: True) |
+| `target_triple` | String | ❌ | Target triple for cross-compilation |
+| `wasm_file` | Label | ❌ | Input WebAssembly file to precompile |
+
+**Examples:**
+
+Basic AOT compilation
+
+```python
+wasm_precompile(
+    name = "my_component_aot",
+    component = ":my_component",
+    optimization_level = "2",
+)
+```
+
+Size-optimized build
+
+```python
+wasm_precompile(
+    name = "my_component_size",
+    component = ":my_component",
+    optimization_level = "s",
+    strip_symbols = True,
+)
+```
+
+### wasm_run
+
+Execute WebAssembly components using Wasmtime runtime. Automatically uses AOT compiled versions when available.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_run")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `allow_wasi_filesystem` | Boolean | ❌ | Allow WASI filesystem access (default: True) |
+| `allow_wasi_net` | Boolean | ❌ | Allow WASI network access (default: False) |
+| `component` | Label | ❌ | WebAssembly component to run |
+| `cwasm_file` | Label | ❌ | Direct precompiled WebAssembly file |
+| `module_args` | List of strings | ❌ | Additional arguments to pass to module |
+| `name` | String | ✅ | A unique name for this target |
+| `prefer_aot` | Boolean | ❌ | Use AOT compiled version if available (default: True) |
+| `wasm_file` | Label | ❌ | Direct WebAssembly module file |
+
+**Examples:**
+
+Run component with AOT preference
+
+```python
+wasm_run(
+    name = "run_component",
+    component = ":my_component_aot",
+    allow_wasi_filesystem = True,
+)
+```
+
+### wasm_test
+
+Test WebAssembly components using Wasmtime runtime. Similar to wasm_run but designed for testing scenarios.
+
+**Load from:**
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_test")
+```
+
+**Attributes:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `allow_wasi_filesystem` | Boolean | ❌ | Allow WASI filesystem access (default: True) |
+| `allow_wasi_net` | Boolean | ❌ | Allow WASI network access (default: False) |
+| `component` | Label | ❌ | WebAssembly component to test |
+| `cwasm_file` | Label | ❌ | Direct precompiled WebAssembly file |
+| `module_args` | List of strings | ❌ | Additional arguments to pass to module |
+| `name` | String | ✅ | A unique name for this target |
+| `prefer_aot` | Boolean | ❌ | Use AOT compiled version if available (default: True) |
+| `wasm_file` | Label | ❌ | Direct WebAssembly module file |
+
+**Examples:**
+
+Test component functionality
+
+```python
+wasm_test(
+    name = "component_test",
+    component = ":my_component",
+)
+```
+
 ## Security & Signing
 
 ### wasm_keygen
@@ -1170,6 +1285,37 @@ def _my_rule_impl(ctx):
     wasm_file = component_info.wasm_file
     exports = component_info.exports
     # Use component_info...
+```
+
+### WasmPrecompiledInfo
+
+Provider that contains information about precompiled WebAssembly components (AOT compilation results).
+
+**Provider Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `compatibility_hash` | String | Hash for compatibility checking across builds |
+| `compilation_flags` | List of Strings | List of compilation flags used |
+| `cwasm_file` | File | Precompiled .cwasm file |
+| `optimization_level` | String | Optimization level used (0, 1, 2, s) |
+| `source_wasm` | File | Original WASM file that was precompiled |
+| `target_arch` | String | Target architecture (x86_64, aarch64, etc.) |
+| `wasmtime_version` | String | Version of Wasmtime used for compilation |
+
+**Examples:**
+
+Access precompiled component information
+
+```python
+def _my_rule_impl(ctx):
+    if WasmPrecompiledInfo in ctx.attr.component:
+        precompiled_info = ctx.attr.component[WasmPrecompiledInfo]
+        cwasm_file = precompiled_info.cwasm_file
+        optimization = precompiled_info.optimization_level
+        # Use precompiled version...
+    else:
+        # Fallback to regular component...
 ```
 
 ### WitInfo
