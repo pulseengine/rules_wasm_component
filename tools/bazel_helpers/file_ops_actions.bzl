@@ -272,13 +272,14 @@ def prepare_workspace_action(ctx, config):
 
     return workspace_dir
 
-def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None, bindings_dir = None, go_binary = None):
+def setup_go_module_action(ctx, sources, go_mod = None, go_sum = None, wit_file = None, bindings_dir = None, go_binary = None):
     """Set up a Go module workspace for TinyGo compilation
 
     Args:
         ctx: Bazel rule context
         sources: List of Go source files
         go_mod: Optional go.mod file
+        go_sum: Optional go.sum file
         wit_file: Optional WIT file for binding generation
         bindings_dir: Optional generated WIT bindings directory
         go_binary: Optional hermetic Go binary for dependency resolution
@@ -300,6 +301,13 @@ def setup_go_module_action(ctx, sources, go_mod = None, wit_file = None, binding
         config["dependencies"].append({
             "source": go_mod,
             "destination": "go.mod",
+            "preserve_permissions": False,
+        })
+
+    if go_sum:
+        config["dependencies"].append({
+            "source": go_sum,
+            "destination": "go.sum",
             "preserve_permissions": False,
         })
 

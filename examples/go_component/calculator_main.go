@@ -1,9 +1,5 @@
 package main
 
-import (
-	"go.bytecodealliance.org/cm"
-)
-
 // This will be replaced with proper generated bindings from wit-bindgen-go
 // For now, we'll use a simplified approach that works with TinyGo's WIT support
 
