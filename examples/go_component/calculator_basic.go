@@ -1,5 +1,7 @@
 package main
 
+import "math"
+
 // Basic Go component that exports calculator functions
 // This demonstrates the manual approach without complex generated bindings
 
@@ -22,7 +24,7 @@ func multiply(a, b float64) float64 {
 func divide(a, b float64) float64 {
 	if b == 0 {
 		// Return NaN for division by zero
-		return 0.0 / 0.0
+		return math.NaN()
 	}
 	return a / b
 }
