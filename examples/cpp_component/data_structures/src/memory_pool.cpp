@@ -58,8 +58,11 @@ void* MemoryPool::allocate(size_t size) {
         return nullptr;  // Graceful failure instead of crash
     }
 
-    std::lock_guard<std::mutex> lock(config_.enable_thread_safety ? mutex_ :
-                                    *reinterpret_cast<std::mutex*>(nullptr));
+    // WASI-compatible: Use proper conditional mutex locking
+    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock);
+    if (config_.enable_thread_safety) {
+        lock.lock();
+    }
 
     size = align_size(size);
 
@@ -118,8 +121,11 @@ void* MemoryPool::allocate_aligned(size_t size, size_t alignment) {
 void MemoryPool::deallocate(void* ptr) {
     if (!ptr) return;
 
-    std::lock_guard<std::mutex> lock(config_.enable_thread_safety ? mutex_ :
-                                    *reinterpret_cast<std::mutex*>(nullptr));
+    // WASI-compatible: Use proper conditional mutex locking
+    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock);
+    if (config_.enable_thread_safety) {
+        lock.lock();
+    }
 
     if (!is_valid_pointer(ptr)) {
         if (config_.enable_debug) {
@@ -313,8 +319,11 @@ bool MemoryPool::expand_pool(size_t additional_size) {
 }
 
 MemoryStats MemoryPool::get_stats() const {
-    std::lock_guard<std::mutex> lock(config_.enable_thread_safety ? mutex_ :
-                                    *reinterpret_cast<std::mutex*>(nullptr));
+    // WASI-compatible: Use proper conditional mutex locking
+    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock);
+    if (config_.enable_thread_safety) {
+        lock.lock();
+    }
 
     MemoryStats stats = {};
     stats.current_usage = static_cast<uint32_t>(used_size_);
@@ -391,8 +400,11 @@ void MemoryPool::check_corruption(const BlockHeader* block) const {
 }
 
 bool MemoryPool::validate_heap() const {
-    std::lock_guard<std::mutex> lock(config_.enable_thread_safety ? mutex_ :
-                                    *reinterpret_cast<std::mutex*>(nullptr));
+    // WASI-compatible: Use proper conditional mutex locking
+    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock);
+    if (config_.enable_thread_safety) {
+        lock.lock();
+    }
 
     // Validate all blocks in free list
     BlockHeader* current = free_list_head_;
