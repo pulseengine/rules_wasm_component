@@ -11,7 +11,7 @@ Map WIT interfaces to existing Rust modules instead of generating new code:
 ```starlark
 wit_bindgen(
     name = "advanced_bindings",
-    wit = ":api_interfaces", 
+    wit = ":api_interfaces",
     with_mappings = {
         # Map WASI interfaces to existing crates
         "wasi:http/types": "wasi::http::types",
@@ -24,6 +24,7 @@ wit_bindgen(
 ```
 
 **Benefits:**
+
 - Reduce code size by reusing existing implementations
 - Ensure compatibility with ecosystem crates
 - Control which interfaces are generated vs. mapped
@@ -73,6 +74,7 @@ generate_all = False  # Only generate interfaces not in with_mappings
 ## Example Configurations
 
 ### Basic Usage (No Mappings)
+
 ```starlark
 wit_bindgen(
     name = "basic_bindings",
@@ -82,14 +84,15 @@ wit_bindgen(
 ```
 
 ### Advanced with Interface Mappings
+
 ```starlark
 wit_bindgen(
-    name = "advanced_bindings", 
+    name = "advanced_bindings",
     language = "rust",
     wit = ":api_interfaces",
     with_mappings = {
         "wasi:http/types": "wasi::http::types",
-        "wasi:io/poll": "wasi::io::poll", 
+        "wasi:io/poll": "wasi::io::poll",
         "example:api/service": "generate",
     },
     ownership = "borrowing",
@@ -99,10 +102,11 @@ wit_bindgen(
 ```
 
 ### Comprehensive Configuration
+
 ```starlark
 wit_bindgen(
     name = "full_featured_bindings",
-    language = "rust", 
+    language = "rust",
     wit = ":api_interfaces",
     with_mappings = {
         "wasi:http/types": "http::types",
@@ -182,7 +186,7 @@ The example includes comprehensive tests that validate:
 
 1. **Compile-time validation**: Generated types exist and are usable
 2. **Custom derives**: Clone, Debug, PartialEq work correctly
-3. **Ownership models**: Borrowing patterns work as expected  
+3. **Ownership models**: Borrowing patterns work as expected
 4. **Interface mappings**: Mapped vs. generated interfaces behave correctly
 5. **Cross-binding comparison**: Different configurations produce equivalent core functionality
 
@@ -195,7 +199,7 @@ wit_bindgen(
     wit = ":interfaces",
 +   with_mappings = {
 +       "wasi:io/poll": "wasi::io::poll",
-+       "my:api/service": "generate", 
++       "my:api/service": "generate",
 +   },
 +   ownership = "borrowing",
 +   additional_derives = ["Clone", "Debug"],

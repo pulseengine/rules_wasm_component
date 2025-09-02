@@ -83,26 +83,26 @@ def _rust_wasm_component_impl(ctx):
     if ctx.attr.validate_wit and ctx.attr.wit:
         wasm_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
         wasm_tools = wasm_toolchain.wasm_tools
-        
+
         validation_log = ctx.actions.declare_file(ctx.attr.name + "_wit_validation.log")
         validation_outputs.append(validation_log)
 
         # Get WIT file from the wit library target
         wit_files = ctx.attr.wit[WitInfo].wit_files
         wit_file = wit_files.to_list()[0] if wit_files else None
-        
+
         if wit_file:
             # Validate component with proper wasm-tools validate command
             ctx.actions.run_shell(
                 command = '''
-                # Validate component with component model features  
+                # Validate component with component model features
                 "$1" validate --features component-model "$2" 2>&1
                 if [ $? -ne 0 ]; then
                     echo "ERROR: Component validation failed for $2" > "$3"
                     "$1" validate --features component-model "$2" >> "$3" 2>&1
                     exit 1
                 fi
-                
+
                 # Extract component WIT interface
                 "$1" component wit "$2" > "$3.component" 2>&1
                 if [ $? -ne 0 ]; then
@@ -110,7 +110,7 @@ def _rust_wasm_component_impl(ctx):
                     cat "$3.component" >> "$3"
                     exit 1
                 fi
-                
+
                 # Create validation report with comparison
                 echo "=== COMPONENT VALIDATION PASSED ===" > "$3"
                 echo "Component is valid WebAssembly with component model" >> "$3"
@@ -128,7 +128,7 @@ def _rust_wasm_component_impl(ctx):
                 inputs = [component_wasm, wit_file],
                 outputs = [validation_log],
                 tools = [wasm_tools],
-                mnemonic = "ValidateWasmComponent", 
+                mnemonic = "ValidateWasmComponent",
                 progress_message = "Validating WebAssembly component for %s" % ctx.label,
             )
         else:
@@ -142,7 +142,7 @@ def _rust_wasm_component_impl(ctx):
                     "$1" validate --features component-model "$2" >> "$3" 2>&1
                     exit 1
                 fi
-                
+
                 echo "=== COMPONENT VALIDATION PASSED ===" > "$3"
                 echo "Component is valid WebAssembly with component model" >> "$3"
                 echo "" >> "$3"

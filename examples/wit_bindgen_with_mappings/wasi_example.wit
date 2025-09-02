@@ -5,7 +5,7 @@ world wasi-demo {
     // Import WASI interfaces that we want to map to existing crates
     import wasi:io/streams@0.2.2;
     import wasi:io/poll@0.2.2;
-    
+
     // Export our custom interface
     export file-processor;
 }
@@ -14,18 +14,18 @@ world wasi-demo {
 interface file-processor {
     use wasi:io/streams.{input-stream, output-stream};
     use wasi:io/poll.{pollable};
-    
+
     // Function that processes data using WASI streams
     process-stream: func(
         input: borrow<input-stream>,
         output: borrow<output-stream>
     ) -> result<u64, string>;
-    
+
     // Function that polls for readiness
     wait-for-ready: func(
         pollable: borrow<pollable>
     ) -> bool;
-    
+
     // Simple function that doesn't use WASI types
     get-processor-version: func() -> string;
 }

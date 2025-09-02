@@ -7,7 +7,7 @@ import "fmt"
 func main() {
 	fmt.Println("Hello from simple Go WASI component!")
 	fmt.Println("This is a basic WASI Preview 2 component built with TinyGo")
-	
+
 	// Simple calculation
 	result := add(5, 3)
 	fmt.Printf("5 + 3 = %d\n", result)

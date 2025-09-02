@@ -12,7 +12,7 @@ func add(a, b float64) float64 {
 	return a + b
 }
 
-//export example_calculator_subtract  
+//export example_calculator_subtract
 func subtract(a, b float64) float64 {
 	return a - b
 }
@@ -40,11 +40,12 @@ func getCalculatorInfo() (string, string, []string) {
 
 // For complex operation struct, we'll need proper generated bindings
 // This is a simplified version for demonstration
+//
 //export example_calculator_calculate
 func calculate(opType int, a, b float64) (bool, *string, *float64) {
 	var result float64
 	var err *string
-	
+
 	switch opType {
 	case 0: // add
 		result = a + b
@@ -64,7 +65,7 @@ func calculate(opType int, a, b float64) (bool, *string, *float64) {
 		err = &errMsg
 		return false, err, nil
 	}
-	
+
 	return true, nil, &result
 }
 

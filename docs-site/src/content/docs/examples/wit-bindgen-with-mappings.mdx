@@ -36,7 +36,7 @@ wit_bindgen(
 
 # Enhanced wit-bindgen with advanced features
 wit_bindgen(
-    name = "advanced_bindings", 
+    name = "advanced_bindings",
     language = "rust",
     wit = ":api_interfaces",
     ownership = "borrowing",                        # Memory optimization
@@ -54,12 +54,12 @@ The example demonstrates different interface mapping strategies:
 wit_bindgen(
     name = "wasi_mapped_bindings",
     language = "rust",
-    wit = ":wasi_demo_interfaces", 
+    wit = ":wasi_demo_interfaces",
     with_mappings = {
         # Map WASI interfaces to existing ecosystem crates
         "wasi:io/streams": "wasi::io::streams",
         "wasi:io/poll": "wasi::io::poll",
-        
+
         # Generate custom interfaces fresh
         "example:wasi-demo/file-processor": "generate",
     },
@@ -88,7 +88,7 @@ wit_bindgen(
 **Development-Friendly Service:**
 ```starlark
 wit_bindgen(
-    name = "service_bindings", 
+    name = "service_bindings",
     ownership = "borrowing-duplicate-if-necessary",  # Balanced approach
     additional_derives = ["Clone", "Debug", "PartialEq"],  # Full debugging
     format_code = True,
@@ -168,19 +168,19 @@ package example:wasi-demo@1.0.0;
 world wasi-demo {
     import wasi:io/streams@0.2.2;
     import wasi:io/poll@0.2.2;
-    
+
     export file-processor;
 }
 
 interface file-processor {
     use wasi:io/streams.{input-stream, output-stream};
     use wasi:io/poll.{pollable};
-    
+
     process-stream: func(
         input: borrow<input-stream>,
         output: borrow<output-stream>
     ) -> result<u64, string>;
-    
+
     wait-for-ready: func(pollable: borrow<pollable>) -> bool;
     get-processor-version: func() -> string;
 }
@@ -256,10 +256,10 @@ fn test_custom_derives_available() {
 
     // Test Clone derive
     let config2 = config1.clone();
-    
+
     // Test PartialEq derive
     assert_eq!(config1, config2);
-    
+
     // Test Debug derive
     let debug_output = format!("{:?}", config1);
     assert!(debug_output.contains("ApiConfig"));
@@ -280,7 +280,7 @@ fn test_borrowing_ownership() {
 
     // This should work with borrowing ownership model
     let _connection = Connection::new(&config);
-    
+
     // We can still use config after borrowing it
     assert_eq!(config.endpoint, "test");
 }
@@ -433,7 +433,7 @@ wit_bindgen(
     name = "existing_bindings",
     language = "rust",
     wit = ":existing_interfaces",
-    
+
     # Add basic debugging support
     additional_derives = ["Debug"],
     format_code = True,
@@ -447,7 +447,7 @@ wit_bindgen(
     name = "optimized_bindings",
     language = "rust",
     wit = ":interfaces",
-    
+
     # Add performance optimization
     ownership = "borrowing-duplicate-if-necessary",
     additional_derives = ["Debug", "Clone"],
@@ -462,7 +462,7 @@ wit_bindgen(
     name = "mapped_bindings",
     language = "rust",
     wit = ":interfaces",
-    
+
     with_mappings = {
         "wasi:io/streams": "wasi::io::streams",  # Start with one mapping
         "my:custom/api": "generate",

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go.bytecodealliance.org/cm"
 	"github.com/example/calculator/internal/example/calculator/calculator"
+	"go.bytecodealliance.org/cm"
 )
 
 // Initialize the calculator component and export required functions

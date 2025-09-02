@@ -25,7 +25,7 @@ flowchart LR
     Map -->|No| Generate[Generate Normal]
     Check -->|No| Error[Unused Mapping Error]
     Check -->|Yes| Use[Use Mapping]
-    
+
     style Error fill:#ff5722
     style Use fill:#4caf50
     style Generate fill:#2196f3
@@ -79,17 +79,17 @@ graph TB
         R2[Interface#method]
         R3[all]
     end
-    
+
     subgraph "JavaScript Async Patterns"
         J1[Usually all async]
         J2[Promise-based by default]
     end
-    
+
     subgraph "Go Async Patterns"
         G1[Rarely needed]
         G2[Channels for concurrency]
     end
-    
+
     style R2 fill:#4caf50
     style J1 fill:#4caf50
     style G1 fill:#ff9800
@@ -131,7 +131,7 @@ sequenceDiagram
     participant C as Calling Code
     participant B as Generated Binding
     participant I as Implementation
-    
+
     Note over C: Owns String
     C->>B: process(data: String) [owning]
     Note over C: Loses ownership
@@ -139,7 +139,7 @@ sequenceDiagram
     I-->>B: Return result
     B-->>C: Return result
     Note over C: Cannot use data again
-    
+
     Note over C: Owns String
     C->>B: process(data: &str) [borrowing]
     Note over C: Retains ownership
@@ -184,13 +184,13 @@ graph LR
         D2[Clone/Debug] --> STD[std library]
         D3[Hash] --> STD
     end
-    
+
     subgraph "Other Languages"
         O1[JavaScript] --> O2[No derives concept]
         O3[Go] --> O4[Interfaces, not derives]
         O5[Python] --> O6[Duck typing]
     end
-    
+
     style S fill:#ffeb3b
     style STD fill:#4caf50
 ```
@@ -233,7 +233,7 @@ graph LR
     Input[&'a str] --> Generated[Generated Function]
     Generated --> Output[&'a T]
     Output --> Issue[Lifetime 'a not specified]
-    
+
     style Issue fill:#ff5722
 ```
 
@@ -271,16 +271,16 @@ classDiagram
         method process()
         drop()
     }
-    
+
     class Rust_Handle {
         handle: ResourceHandle
         +new(config) -> Self
         +process(&self)
         +Drop for Handle
     }
-    
+
     WIT_Resource --|> Rust_Handle : generates
-    
+
     note for Rust_Handle "RAII - automatic cleanup\nNo manual memory management"
 ```
 
@@ -311,9 +311,9 @@ sequenceDiagram
     participant JS as JavaScript Code
     participant WB as WASM Bindings
     participant WC as WASM Component
-    
+
     JS->>WB: call function()
-    
+
     alt Sync Configuration
         WB->>WC: Direct call
         WC-->>WB: Direct return
@@ -358,21 +358,21 @@ graph LR
         JS1[ArrayBuffer]
         JS2[TypedArray]
     end
-    
+
     subgraph "WASM Linear Memory"
         WM1[Raw Bytes]
         WM2[Fixed Size]
     end
-    
+
     subgraph "Binding Layer"
         BL[Copy/Convert]
     end
-    
+
     JS1 <--> BL
     JS2 <--> BL
     BL <--> WM1
     BL <--> WM2
-    
+
     style BL fill:#ffeb3b
 ```
 
@@ -405,17 +405,17 @@ graph TB
     subgraph "WIT Result Type"
         W[result~T, E~]
     end
-    
+
     subgraph "Go Implementation"
         G1[func() (T, error)]
         G2[if error != nil]
         G3[handle error]
     end
-    
+
     W --> G1
     G1 --> G2
     G2 --> G3
-    
+
     style G2 fill:#ff9800
 ```
 
@@ -443,13 +443,13 @@ sequenceDiagram
     participant Go as Go Code
     participant GC as Go GC
     participant WR as WASM Resource
-    
+
     Go->>WR: Create resource
     Note over GC: GC runs
     GC->>WR: May finalize
     Go->>WR: Try to use
     WR-->>Go: Error - finalized
-    
+
     Note over Go: Keep reference alive
     Go->>Go: runtime.KeepAlive(resource)
 ```
@@ -459,9 +459,9 @@ sequenceDiagram
 func processWithResource(data []byte) error {
     resource := NewMyResource(config)
     defer resource.Close()  // Explicit cleanup
-    
+
     result := resource.Process(data)
-    
+
     // Keep resource alive until here
     runtime.KeepAlive(resource)
     return nil
@@ -517,13 +517,13 @@ graph LR
         S2 --> S3[Resource Setup]
         S3 --> S4[First Call]
     end
-    
+
     subgraph "Optimization Points"
         O1[Smaller Binary] --> S1
         O2[Less Codegen] --> S2
         O3[Borrowing] --> S4
     end
-    
+
     style O1 fill:#4caf50
     style O2 fill:#4caf50
     style O3 fill:#4caf50
@@ -555,12 +555,12 @@ graph TB
         O1[Input: String] --> O2[Copy to Component]
         O2 --> O3[2x Memory Usage]
     end
-    
+
     subgraph "Borrowing Pattern"
         B1[Input: &str] --> B2[Reference Only]
         B2 --> B3[1x Memory Usage]
     end
-    
+
     style B3 fill:#4caf50
     style O3 fill:#ff9800
 ```
@@ -581,19 +581,19 @@ ownership = "borrowing-duplicate-if-necessary"  # Adaptive
 wit_bindgen(
     name = "library_bindings",
     language = "rust",
-    
+
     # Pure generation - no external dependencies
     with_mappings = {},
-    
+
     # Optimize for zero-copy
     ownership = "borrowing",
-    
+
     # Minimal derives for library code
     additional_derives = ["Clone"],  # Only what's needed
-    
+
     # Libraries usually synchronous
     async_interfaces = [],
-    
+
     # Clean code for library users
     format_code = True,
     generate_all = True,
@@ -605,23 +605,23 @@ wit_bindgen(
 wit_bindgen(
     name = "service_bindings",
     language = "rust",
-    
+
     # Map common interfaces
     with_mappings = {
         "wasi:http/types": "wasi::http::types",
         "wasi:io/streams": "wasi::io::streams",
         "my:service/api": "generate",  # Custom logic only
     },
-    
+
     # Balance performance and simplicity
     ownership = "borrowing-duplicate-if-necessary",
-    
+
     # Full debugging for services
     additional_derives = ["Clone", "Debug", "Serialize", "Deserialize"],
-    
+
     # Services often async
     async_interfaces = ["my:service/api"],
-    
+
     format_code = True,
     generate_all = False,
 )
@@ -632,23 +632,23 @@ wit_bindgen(
 wit_bindgen(
     name = "integration_bindings",
     language = "rust",
-    
+
     # Map external systems to existing crates
     with_mappings = {
         "wasi:http/types": "http::types",       # Use http crate
         "wasi:sockets/tcp": "tokio::net",       # Use tokio
         "my:integration/bridge": "generate",     # Custom bridge logic
     },
-    
+
     # Simple ownership for integration code
     ownership = "owning",
-    
+
     # Full debugging support
     additional_derives = ["Clone", "Debug", "PartialEq"],
-    
+
     # Mixed async patterns
     async_interfaces = ["my:integration/bridge#connect"],
-    
+
     format_code = True,
     generate_all = False,
 )

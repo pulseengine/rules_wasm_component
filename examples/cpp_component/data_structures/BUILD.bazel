@@ -60,10 +60,10 @@ cpp_component(
     srcs = ["src/data_structures.cpp"],
     hdrs = ["src/data_structures.h"],
     target_compatible_with = ["@platforms//cpu:wasm32"],
+    validate_wit = True,  # Enable WIT validation
     visibility = ["//visibility:public"],
     wit = "wit/data_structures.wit",
     world = "data-structures-world",
-    validate_wit = True,  # Enable WIT validation
 )
 
 # Performance benchmark

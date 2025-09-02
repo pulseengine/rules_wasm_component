@@ -8,7 +8,7 @@ func add(a, b float64) float64 {
 	return a + b
 }
 
-//export subtract  
+//export subtract
 func subtract(a, b float64) float64 {
 	return a - b
 }
@@ -35,5 +35,5 @@ func main() {
 // Prevent compiler from removing exports
 var _ = add
 var _ = subtract
-var _ = multiply  
+var _ = multiply
 var _ = divide

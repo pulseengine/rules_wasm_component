@@ -173,7 +173,7 @@ def _get_tinygo_platform_suffix(platform):
 
 def _setup_go_wit_bindgen(repository_ctx, go_binary):
     """Install wit-bindgen-go Go tool for WIT binding generation
-    
+
     Installs go.bytecodealliance.org/wit/bindgen which provides 'go tool wit-bindgen-go'
     """
 
@@ -186,7 +186,7 @@ def _setup_go_wit_bindgen(repository_ctx, go_binary):
     go_env = {
         "GOCACHE": str(repository_ctx.path("go_cache")),
         "GOPATH": str(repository_ctx.path("go_path")),
-        "CGO_ENABLED": "0", 
+        "CGO_ENABLED": "0",
         "GO111MODULE": "on",
     }
 
@@ -201,6 +201,7 @@ def _setup_go_wit_bindgen(repository_ctx, go_binary):
         print("Warning: Failed to install wit-bindgen-go Go tool")
         print("Error: {}".format(result.stderr))
         print("Stdout: {}".format(result.stdout))
+
         # Create fallback that explains the issue
         repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
 echo "Error: wit-bindgen-go installation failed during toolchain setup"
@@ -209,13 +210,14 @@ exit 1
 """, executable = True)
     else:
         print("wit-bindgen-go Go tool installed successfully")
-        
+
         # Test wit-bindgen-go as a standalone binary (installed via go install)
         # The tool is installed in GOPATH/bin, not as a Go tool
         wit_bindgen_binary = repository_ctx.path("go_path/bin/wit-bindgen-go")
-        
+
         if wit_bindgen_binary.exists:
             print("wit-bindgen-go found as standalone binary")
+
             # Create wrapper that uses the installed binary directly
             repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
 # wit-bindgen-go wrapper - uses installed binary
@@ -223,13 +225,14 @@ exec "{wit_bindgen_binary}" "$@"
 """.format(wit_bindgen_binary = str(wit_bindgen_binary)), executable = True)
         else:
             print("Warning: wit-bindgen-go binary not found in expected location")
+
             # Try go tool approach as fallback
             test_result = repository_ctx.execute(
                 [str(go_binary), "tool", "wit-bindgen-go", "--help"],
                 environment = go_env,
                 timeout = 30,
             )
-            
+
             if test_result.return_code == 0:
                 print("wit-bindgen-go found as Go tool")
                 repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
@@ -274,7 +277,7 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-# wit-bindgen-go tool files  
+# wit-bindgen-go tool files
 filegroup(
     name = "wit_bindgen_go_files",
     srcs = glob(["bin/*", "go_path/**/*"]),

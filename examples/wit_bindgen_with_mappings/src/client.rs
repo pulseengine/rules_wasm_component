@@ -1,4 +1,4 @@
-/*! 
+/*!
 Example client demonstrating wit-bindgen with interface mappings
 
 This example shows how the enhanced wit_bindgen rule with with_mappings
@@ -6,7 +6,7 @@ enables sophisticated interface mapping patterns:
 
 - Map WASI interfaces to existing crates (wasi::http::types)
 - Generate only custom interfaces ("generate")
-- Use ownership models (borrowing) 
+- Use ownership models (borrowing)
 - Add custom derives (Clone, Debug, PartialEq)
 - Enable async interfaces for better ergonomics
 */
@@ -15,9 +15,7 @@ use anyhow::Result;
 
 // Use the generated bindings with interface mappings
 use advanced_bindings::exports::example::api::{
-    auth::Guest as AuthGuest,
-    logging::Guest as LoggingGuest, 
-    service::Guest as ServiceGuest,
+    auth::Guest as AuthGuest, logging::Guest as LoggingGuest, service::Guest as ServiceGuest,
 };
 
 // Import the mapped types - these should resolve to existing crates
@@ -30,7 +28,7 @@ use advanced_bindings::{
     },
     // These should map to existing wasi crate types via with_mappings:
     // "wasi:http/types": "wasi::http::types",
-    // "wasi:io/poll": "wasi::io::poll", 
+    // "wasi:io/poll": "wasi::io::poll",
     // "wasi:filesystem/types": "wasi::filesystem::types",
 };
 
@@ -127,7 +125,7 @@ impl AuthClient {
         // AuthToken should have Clone, Debug, PartialEq derives thanks to additional_derives
         let cloned_token = token.clone();
         println!("Logging in with token: {:?}", cloned_token);
-        
+
         // Create session resource
         let session = Session::new(&token);
         self.session = Some(session);
@@ -164,7 +162,7 @@ pub fn demonstrate_custom_derives() {
     };
 
     let config2 = config1.clone(); // Clone derive working
-    
+
     println!("Config: {:?}", config1); // Debug derive working
     println!("Configs equal: {}", config1 == config2); // PartialEq derive working
 
@@ -175,7 +173,7 @@ pub fn demonstrate_custom_derives() {
     };
 
     let token2 = token1.clone(); // Clone derive working
-    println!("Token: {:?}", token1); // Debug derive working  
+    println!("Token: {:?}", token1); // Debug derive working
     println!("Tokens equal: {}", token1 == token2); // PartialEq derive working
 }
 
@@ -191,7 +189,7 @@ mod tests {
         assert_eq!(client.config.retry_attempts, 3);
     }
 
-    #[test] 
+    #[test]
     fn test_custom_derives() {
         // Test that custom derives are working
         demonstrate_custom_derives();
@@ -201,7 +199,7 @@ mod tests {
     async fn test_async_interface() {
         let mut client = ApiClient::new("https://test.example.com".to_string(), 1000);
         client.connect().unwrap();
-        
+
         // This should work thanks to async_interfaces configuration
         let result = client.process_async("test input").await;
         // Result depends on actual implementation, but interface should be async
