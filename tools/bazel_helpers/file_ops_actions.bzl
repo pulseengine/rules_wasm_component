@@ -174,6 +174,7 @@ def prepare_workspace_action(ctx, config):
         dep_file = dep_info["source"]
         dest_name = dep_info.get("destination") or dep_file.basename
         all_inputs.append(dep_file)
+
         # Include the full dep_info for directory handling
         file_mappings.append((dep_file, dest_name, dep_info))
 
@@ -194,7 +195,7 @@ def prepare_workspace_action(ctx, config):
         else:
             src_file, dest_name = mapping
             is_directory = False
-        
+
         # Ensure parent directory exists for nested paths
         if "/" in dest_name:
             parent_dir = "/".join(dest_name.split("/")[:-1])
@@ -219,7 +220,7 @@ def prepare_workspace_action(ctx, config):
             "echo \"Resolving Go module dependencies...\"",
             "cd \"$WORKSPACE_DIR\"",
             "export GOCACHE=\"$WORKSPACE_DIR/.gocache\"",
-            "export GOPATH=\"$WORKSPACE_DIR/.gopath\"", 
+            "export GOPATH=\"$WORKSPACE_DIR/.gopath\"",
             "mkdir -p \"$GOCACHE\" \"$GOPATH\"",
             "",
             "# Find the Go binary in execution root",

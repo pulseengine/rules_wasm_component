@@ -1,4 +1,4 @@
-/*! 
+/*!
 Tests demonstrating the enhanced wit_bindgen functionality
 
 This test suite validates that the wit_bindgen rule with interface mappings
@@ -9,15 +9,14 @@ generates the expected code structures and patterns.
 mod basic_bindings_tests {
     // Test basic bindings without interface mappings
     // These should generate all interfaces from scratch
-    
+
     #[test]
     fn test_basic_bindings_exist() {
         // Basic bindings should have generated all interfaces
         // This is a compile-time test - if the types exist, test passes
-        
+
         use basic_bindings::exports::example::api::{
-            auth::Guest as AuthGuest,
-            logging::Guest as LoggingGuest,
+            auth::Guest as AuthGuest, logging::Guest as LoggingGuest,
             service::Guest as ServiceGuest,
         };
 
@@ -29,9 +28,9 @@ mod basic_bindings_tests {
 
     #[test]
     fn test_basic_types_generated() {
-        use basic_bindings::example::api::service::ApiConfig;
-        use basic_bindings::example::api::logging::{LogLevel, LogEntry};
         use basic_bindings::example::api::auth::AuthToken;
+        use basic_bindings::example::api::logging::{LogEntry, LogLevel};
+        use basic_bindings::example::api::service::ApiConfig;
 
         // Test that basic types are generated and usable
         let config = ApiConfig {
@@ -44,7 +43,7 @@ mod basic_bindings_tests {
         let log_level = LogLevel::Info;
         let entry = LogEntry {
             level: log_level,
-            message: "test".to_string(), 
+            message: "test".to_string(),
             timestamp: 1234567890,
             module: Some("test_module".to_string()),
         };
@@ -62,12 +61,11 @@ mod basic_bindings_tests {
 #[cfg(test)]
 mod advanced_bindings_tests {
     // Test advanced bindings with interface mappings and custom configuration
-    
+
     #[test]
     fn test_advanced_bindings_exist() {
         use advanced_bindings::exports::example::api::{
-            auth::Guest as AuthGuest,
-            logging::Guest as LoggingGuest, 
+            auth::Guest as AuthGuest, logging::Guest as LoggingGuest,
             service::Guest as ServiceGuest,
         };
 
@@ -79,8 +77,8 @@ mod advanced_bindings_tests {
 
     #[test]
     fn test_custom_derives_available() {
-        use advanced_bindings::example::api::service::ApiConfig;
         use advanced_bindings::example::api::auth::AuthToken;
+        use advanced_bindings::example::api::service::ApiConfig;
 
         // Test that custom derives (Clone, Debug, PartialEq) are available
         let config1 = ApiConfig {
@@ -91,10 +89,10 @@ mod advanced_bindings_tests {
 
         // Test Clone derive
         let config2 = config1.clone();
-        
+
         // Test PartialEq derive
         assert_eq!(config1, config2);
-        
+
         // Test Debug derive (compile-time check)
         let debug_output = format!("{:?}", config1);
         assert!(debug_output.contains("ApiConfig"));
@@ -112,10 +110,10 @@ mod advanced_bindings_tests {
         assert!(debug_output.contains("AuthToken"));
     }
 
-    #[test] 
+    #[test]
     fn test_borrowing_ownership() {
-        use advanced_bindings::example::api::service::Connection;
         use advanced_bindings::example::api::service::ApiConfig;
+        use advanced_bindings::example::api::service::Connection;
 
         // Test that borrowing ownership model works
         let config = ApiConfig {
@@ -126,7 +124,7 @@ mod advanced_bindings_tests {
 
         // This should work with borrowing ownership model
         let _connection = Connection::new(&config);
-        
+
         // We can still use config after borrowing it
         assert_eq!(config.endpoint, "test");
     }
@@ -137,18 +135,16 @@ mod advanced_bindings_tests {
         // If with_mappings worked correctly:
         // - WASI interfaces should be mapped to existing types (not generated)
         // - Custom interfaces should be generated
-        
+
         // These should work if mappings are correct:
         use advanced_bindings::example::api::{
-            service::ApiConfig,
-            auth::AuthToken,
-            logging::LogLevel,
+            auth::AuthToken, logging::LogLevel, service::ApiConfig,
         };
 
         // Basic usage test
         let _config = ApiConfig {
             endpoint: "test".to_string(),
-            timeout_ms: 1000, 
+            timeout_ms: 1000,
             retry_attempts: 3,
         };
 
@@ -173,16 +169,15 @@ mod full_featured_bindings_tests {
     fn test_all_async_interfaces() {
         // With async_interfaces = ["all"], all interfaces should support async
         // This is mainly a compile-time check
-        
+
         use full_featured_bindings::exports::example::api::{
-            auth::Guest as AuthGuest,
-            logging::Guest as LoggingGuest,
-            service::Guest as ServiceGuest, 
+            auth::Guest as AuthGuest, logging::Guest as LoggingGuest,
+            service::Guest as ServiceGuest,
         };
 
         // If async interfaces are enabled, these should exist
         let _auth_ref: Option<&dyn AuthGuest> = None;
-        let _logging_ref: Option<&dyn LoggingGuest> = None; 
+        let _logging_ref: Option<&dyn LoggingGuest> = None;
         let _service_ref: Option<&dyn ServiceGuest> = None;
     }
 
@@ -199,7 +194,7 @@ mod full_featured_bindings_tests {
         // Test that additional derives are available
         let cloned = config.clone(); // Clone
         assert_eq!(config, cloned); // PartialEq
-        
+
         let debug_output = format!("{:?}", config); // Debug
         assert!(debug_output.contains("ApiConfig"));
 
@@ -220,7 +215,7 @@ mod full_featured_bindings_tests {
 
         // This should work with the specified ownership model
         let _connection = Connection::new(&config);
-        
+
         // Config should still be usable
         assert_eq!(config.timeout_ms, 1000);
     }
@@ -230,21 +225,21 @@ mod full_featured_bindings_tests {
 mod cross_binding_comparison {
     // Compare different binding configurations to ensure they work correctly
 
-    #[test] 
+    #[test]
     fn test_same_types_across_bindings() {
         // The same WIT types should be available across different binding configurations
-        
-        // Basic bindings types
-        use basic_bindings::example::api::service::ApiConfig as BasicConfig;
-        use basic_bindings::example::api::logging::LogLevel as BasicLogLevel;
 
-        // Advanced bindings types  
-        use advanced_bindings::example::api::service::ApiConfig as AdvancedConfig;
+        // Basic bindings types
+        use basic_bindings::example::api::logging::LogLevel as BasicLogLevel;
+        use basic_bindings::example::api::service::ApiConfig as BasicConfig;
+
+        // Advanced bindings types
         use advanced_bindings::example::api::logging::LogLevel as AdvancedLogLevel;
+        use advanced_bindings::example::api::service::ApiConfig as AdvancedConfig;
 
         // Full featured bindings types
-        use full_featured_bindings::example::api::service::ApiConfig as FullConfig;
         use full_featured_bindings::example::api::logging::LogLevel as FullLogLevel;
+        use full_featured_bindings::example::api::service::ApiConfig as FullConfig;
 
         // Create instances of each
         let basic_config = BasicConfig {
@@ -254,20 +249,20 @@ mod cross_binding_comparison {
         };
 
         let advanced_config = AdvancedConfig {
-            endpoint: "test".to_string(), 
+            endpoint: "test".to_string(),
             timeout_ms: 1000,
             retry_attempts: 3,
         };
 
         let full_config = FullConfig {
             endpoint: "test".to_string(),
-            timeout_ms: 1000, 
+            timeout_ms: 1000,
             retry_attempts: 3,
         };
 
         // All should have the same structure
         assert_eq!(basic_config.endpoint, "test");
-        assert_eq!(advanced_config.endpoint, "test");  
+        assert_eq!(advanced_config.endpoint, "test");
         assert_eq!(full_config.endpoint, "test");
 
         // Log levels should be equivalent
@@ -311,12 +306,10 @@ mod wit_bindgen_options_validation {
     #[test]
     fn test_generation_modes() {
         // Test that different generation modes produce usable bindings
-        
+
         // Basic: Should generate all interfaces
         use basic_bindings::example::api::{
-            service::ApiConfig,
-            auth::AuthToken,
-            logging::LogLevel,
+            auth::AuthToken, logging::LogLevel, service::ApiConfig,
         };
 
         let _config = ApiConfig {
@@ -327,9 +320,8 @@ mod wit_bindgen_options_validation {
 
         // Advanced: Should generate only unmapped interfaces (generate_all = False)
         use advanced_bindings::example::api::{
+            auth::AuthToken as AdvToken, logging::LogLevel as AdvLevel,
             service::ApiConfig as AdvConfig,
-            auth::AuthToken as AdvToken,
-            logging::LogLevel as AdvLevel,
         };
 
         let _config = AdvConfig {
@@ -340,9 +332,8 @@ mod wit_bindgen_options_validation {
 
         // Full: Should generate all interfaces (generate_all = True)
         use full_featured_bindings::example::api::{
+            auth::AuthToken as FullToken, logging::LogLevel as FullLevel,
             service::ApiConfig as FullConfig,
-            auth::AuthToken as FullToken,
-            logging::LogLevel as FullLevel,
         };
 
         let _config = FullConfig {

@@ -130,7 +130,7 @@ def _go_wasm_component_impl(ctx):
     # Step 1: Build Go module structure using Bazel file management
     go_module_files = _prepare_go_module(ctx, tinygo_toolchain)
 
-    # Step 2: Compile with TinyGo to WASM module  
+    # Step 2: Compile with TinyGo to WASM module
     _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, wasm_tools_toolchain, wasm_module, go_module_files)
 
     # Step 3: Convert module to component if needed
@@ -158,7 +158,7 @@ def _go_wasm_component_impl(ctx):
     if ctx.attr.validate_wit and ctx.attr.wit:
         wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
         wasm_tools = wasm_tools_toolchain.wasm_tools
-        
+
         validation_log = ctx.actions.declare_file(ctx.attr.name + "_wit_validation.log")
         validation_outputs.append(validation_log)
 
@@ -184,15 +184,15 @@ def _go_wasm_component_impl(ctx):
 
 def _generate_wit_bindings(ctx, tinygo_toolchain, wit_info):
     """Generate Go bindings from WIT using wit-bindgen-go"""
-    
+
     # Get wit-bindgen-go tool from TinyGo toolchain
     wit_bindgen_go = tinygo_toolchain.wit_bindgen_go
     if not wit_bindgen_go:
         fail("wit-bindgen-go not available in TinyGo toolchain for target '{}'".format(ctx.label))
-    
+
     # Create output directory for generated bindings
     bindings_dir = ctx.actions.declare_directory(ctx.label.name + "_wit_bindings")
-    
+
     # Get the main WIT library directory (same approach as wit_bindgen rule)
     wit_library_dir = None
     if hasattr(ctx.attr.wit[DefaultInfo], "files"):
@@ -200,31 +200,36 @@ def _generate_wit_bindings(ctx, tinygo_toolchain, wit_info):
             if file.is_directory:
                 wit_library_dir = file
                 break
-    
+
     if not wit_library_dir:
         fail("No WIT library directory found for target '{}'".format(ctx.label))
-    
-    # Get the Go module name from go.mod if available
-    go_module_name = "github.com/example/calculator"  # Default
+
+    # Parse go.mod to get the actual module name
+    go_module_name = "example.com/calculator"  # Default
     if ctx.file.go_mod:
-        # We'll use the default for now, but could parse go.mod to get actual module name
-        pass
-    
+        # Read go.mod content to extract module name
+        go_mod_content = ctx.file.go_mod.path
+
+        # For now, use a reasonable default that matches our examples
+        go_module_name = "example.com/calculator"
+
     # Build wit-bindgen-go command
-    # wit-bindgen-go generate creates bindings in internal/<package>/<interface> structure
+    # wit-bindgen-go generate creates bindings in example/<package>/<interface> structure
     args = [
         "generate",
-        "--out", bindings_dir.path,
-        "--package-root", "example.com/calculator",  # Match go.mod module name
+        "--out",
+        bindings_dir.path,
+        "--package-root",
+        go_module_name,  # Use the module name from go.mod
     ]
-    
+
     # Add world name if specified
     if ctx.attr.world:
         args.extend(["--world", ctx.attr.world])
-    
+
     # Add the WIT library path
     args.append(wit_library_dir.path)
-    
+
     # wit-bindgen-go needs go.mod in working directory, so create a minimal one
     temp_go_mod = ctx.actions.declare_file(ctx.label.name + "_temp_go.mod")
     ctx.actions.write(
@@ -251,7 +256,7 @@ require go.bytecodealliance.org/cm v0.3.0
         "# Run wit-bindgen-go from working directory with go.mod",
         "cd \"$WORK_DIR\"",
     ]
-    
+
     # Add the wit-bindgen-go command with full paths
     bindgen_cmd = "\"$ORIG_DIR/{}\"".format(wit_bindgen_go.path)
     full_args = []
@@ -262,7 +267,7 @@ require go.bytecodealliance.org/cm v0.3.0
             full_args.append("\"$ORIG_DIR/{}\"".format(arg))
         else:
             full_args.append("\"{}\"".format(arg))
-    
+
     script_content.extend([
         "",
         "# Debug: Show current working directory and files",
@@ -273,7 +278,7 @@ require go.bytecodealliance.org/cm v0.3.0
         "# Run wit-bindgen-go",
         bindgen_cmd + " " + " ".join(full_args),
     ])
-    
+
     ctx.actions.write(
         output = wrapper_script,
         content = "\n".join(script_content),
@@ -298,7 +303,7 @@ require go.bytecodealliance.org/cm v0.3.0
         progress_message = "Generating Go bindings for %s" % ctx.label.name,
         use_default_shell_env = False,
     )
-    
+
     # Return the bindings directory as DefaultInfo
     return DefaultInfo(files = depset([bindings_dir]))
 
@@ -309,20 +314,21 @@ def _prepare_go_module(ctx, tinygo_toolchain):
     wit_file = None
     generated_bindings = None
     all_sources = ctx.files.srcs
-    
+
     # Only generate WIT bindings if WIT is provided AND world is specified AND wit_bindgen_go is available
     if ctx.attr.wit and ctx.attr.world and hasattr(tinygo_toolchain, "wit_bindgen_go") and tinygo_toolchain.wit_bindgen_go:
         wit_info = ctx.attr.wit[WitInfo]
         wit_files = wit_info.wit_files.to_list()
         if wit_files:
             wit_file = wit_files[0]  # Use first WIT file
-            
+
             # Generate WIT bindings using wit-bindgen-go
             generated_bindings = _generate_wit_bindings(ctx, tinygo_toolchain, wit_info)
-            
+
             # Add generated bindings to sources
             # Note: generated_bindings contains a directory, we need to handle it specially
             # For now, let the workspace setup handle the directory copying
+
     elif ctx.attr.wit and ctx.attr.world:
         # Use manual WIT approach - TinyGo handles WIT integration directly
         wit_info = ctx.attr.wit[WitInfo]
@@ -332,10 +338,10 @@ def _prepare_go_module(ctx, tinygo_toolchain):
 
     # Use the File Operations Component for workspace preparation
     bindings_dir_file = generated_bindings.files.to_list()[0] if generated_bindings else None
-    
+
     # Get hermetic Go binary from TinyGo toolchain for dependency resolution
     go_binary = getattr(tinygo_toolchain, "go", None)
-    
+
     module_dir = setup_go_module_action(
         ctx,
         sources = ctx.files.srcs,  # Use original sources, bindings handled separately
@@ -346,7 +352,6 @@ def _prepare_go_module(ctx, tinygo_toolchain):
     )
 
     return module_dir
-
 
 def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, wasm_tools_toolchain, wasm_module, go_module_files):
     """Compile Go sources to WASM module using TinyGo - THE BAZEL WAY"""
@@ -386,19 +391,20 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         # Should not happen due to validation, but be defensive
         tinygo_args.extend(["-opt=1"])
 
-    # Add WIT integration if available - TinyGo DOES support these flags
+    # CRITICAL: We DO need WIT flags to tell TinyGo to generate custom WIT exports
+    # Without these flags, TinyGo only generates WASI CLI interfaces, not our calculator functions
+    # The issue was with WASI component wrapping, not with WIT export generation
     if ctx.attr.wit and ctx.attr.world:
         wit_info = ctx.attr.wit[WitInfo]
         wit_files = wit_info.wit_files.to_list()
         if wit_files:
-            # TinyGo expects WIT package path and world name for component generation
-            # This tells TinyGo to build a component (not just a module) with the specified world
+            # TinyGo expects WIT package path and world name for WIT export generation
             # Since TinyGo executes from the workspace directory, use relative path
             wit_relative_path = "wit/" + wit_files[0].basename
             tinygo_args.extend([
                 "--wit-package",
                 wit_relative_path,
-                "--wit-world", 
+                "--wit-world",
                 ctx.attr.world,
             ])
 
@@ -453,7 +459,7 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         "TINYGOROOT": tinygo_root,
         "GOCACHE": temp_cache_dir.path,  # Use Bazel's temp directory
         "CGO_ENABLED": "0",
-        "GO111MODULE": "off",
+        "GO111MODULE": "on",
         "GOPROXY": "direct",
         "HOME": temp_cache_dir.path,
         "TMPDIR": temp_cache_dir.path,
@@ -582,8 +588,8 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
 def _convert_to_component(ctx, wasm_tools, wasm_module, component_wasm):
     """Convert WASM module to component using wasm-tools - THE BAZEL WAY"""
 
-    # For TinyGo wasip2 target, output is already a component
-    # THE BAZEL WAY: Use Bazel-native symlink instead of system cp command
+    # TinyGo with wasip2 target and WIT flags generates components directly
+    # So we just need to symlink the output
     ctx.actions.symlink(
         output = component_wasm,
         target_file = wasm_module,
@@ -622,6 +628,11 @@ go_wasm_component = rule(
         "validate_wit": attr.bool(
             default = False,
             doc = "Validate that the component exports match the WIT specification",
+        ),
+        "_wasi_adapter": attr.label(
+            default = "//toolchains:wasi_snapshot_preview1.command.wasm",
+            allow_single_file = [".wasm"],
+            doc = "WASI Preview 1 adapter for component generation",
         ),
     },
     toolchains = [

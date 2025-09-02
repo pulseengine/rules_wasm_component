@@ -520,7 +520,7 @@ cpp_component(
 )
 
 cc_component_library(
-    name = "my_library", 
+    name = "my_library",
     # ... other attributes
     enable_exceptions = False,  # Required - must be False
 )
@@ -568,7 +568,7 @@ cpp_component(
 
 **Validation Process**:
 1. **WIT Interface Check**: Ensures component exports match WIT specification
-2. **Component Model Compliance**: Validates against WebAssembly Component Model format  
+2. **Component Model Compliance**: Validates against WebAssembly Component Model format
 3. **Type Safety**: Verifies that exported functions have correct signatures
 
 **Validation Output**:

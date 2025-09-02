@@ -14,14 +14,14 @@ When building WebAssembly components, you often encounter the same interfaces ac
 ```mermaid
 flowchart TD
     A[Component A] --> W1[WASI HTTP Types]
-    B[Component B] --> W2[WASI HTTP Types] 
+    B[Component B] --> W2[WASI HTTP Types]
     C[Component C] --> W3[WASI HTTP Types]
     D[Component D] --> W4[WASI HTTP Types]
-    
+
     A --> X1[WASI IO Streams]
     B --> X2[WASI IO Streams]
     C --> X3[WASI IO Streams]
-    
+
     style W1 fill:#ffeb3b,stroke:#f57f17
     style W2 fill:#ffeb3b,stroke:#f57f17
     style W3 fill:#ffeb3b,stroke:#f57f17
@@ -55,11 +55,11 @@ wit_bindgen(
     with_mappings = {
         # Map to existing crate
         "wasi:http/types": "wasi::http::types",
-        "wasi:io/streams": "wasi::io::streams", 
-        
+        "wasi:io/streams": "wasi::io::streams",
+
         # Generate custom interface
         "my:pkg/custom": "generate",
-        
+
         # Map to custom module
         "my:pkg/auth": "crate::auth::types",
     },
@@ -85,7 +85,7 @@ wit_bindgen(
 - ⚠️ Dependency on external crate versions
 - ⚠️ Must match interface versions exactly
 
-#### 2. **Custom Module Mapping** 
+#### 2. **Custom Module Mapping**
 ```starlark
 "my:company/auth": "crate::auth::types"
 ```
@@ -137,7 +137,7 @@ pub fn process_data(data: String) -> Vec<u8> {
 
 **Use when:**
 - Simple ownership patterns
-- Component boundaries require ownership transfer  
+- Component boundaries require ownership transfer
 - Performance is not critical
 - Learning/prototyping
 
@@ -216,7 +216,7 @@ pub struct ApiConfig { ... }
 
 **Use when:**
 - Types need to be duplicated
-- Shared between multiple component instances  
+- Shared between multiple component instances
 - Caching/memoization patterns
 
 **Implications:**
@@ -284,21 +284,21 @@ flowchart TD
     A[Type Analysis] --> B{Public API?}
     B -->|Yes| C[Add Debug, Clone]
     B -->|No| D{Internal Use?}
-    
+
     C --> E{Config/Data?}
     E -->|Yes| F[Add Serialize/Deserialize]
     E -->|No| G{Comparison?}
-    
+
     G -->|Yes| H[Add PartialEq]
     G -->|No| I[Basic Derives]
-    
+
     D --> J[Minimal Derives]
-    
+
     F --> K[Full Feature Set]
     H --> L[Comparison Ready]
     I --> M[Standard Set]
     J --> N[Bare Minimum]
-    
+
     style K fill:#4caf50,stroke:#2e7d32
     style L fill:#2196f3,stroke:#1565c0
     style M fill:#ff9800,stroke:#ef6c00
@@ -330,7 +330,7 @@ impl Guest for MyService {
     async fn process_data(&self, input: &str) -> String {
         // Method is async, others remain sync
     }
-    
+
     fn get_version(&self) -> String {
         // This method stays synchronous
     }
@@ -373,7 +373,7 @@ async_interfaces = ["all"]
 
 **Implications of Async:**
 - ✅ Non-blocking operations
-- ✅ Better concurrency patterns  
+- ✅ Better concurrency patterns
 - ✅ Integration with async ecosystem
 - ⚠️ Requires async runtime
 - ⚠️ More complex error handling
@@ -387,7 +387,7 @@ wit_bindgen(
     name = "api_service_bindings",
     language = "rust",
     wit = ":service_interfaces",
-    
+
     # Map standard interfaces to ecosystem crates
     with_mappings = {
         "wasi:http/types": "wasi::http::types",
@@ -395,16 +395,16 @@ wit_bindgen(
         "wasi:logging/logger": "log",
         "my:service/api": "generate",  # Custom business logic
     },
-    
+
     # Optimize for performance
     ownership = "borrowing-duplicate-if-necessary",
-    
+
     # Enable debugging and serialization
     additional_derives = ["Clone", "Debug", "Serialize", "Deserialize"],
-    
+
     # Async-first service
     async_interfaces = ["all"],
-    
+
     format_code = True,
     generate_all = False,  # Only generate unmapped interfaces
 )
@@ -419,22 +419,22 @@ wit_bindgen(
 ### Pattern 2: Library Component
 ```starlark
 wit_bindgen(
-    name = "crypto_lib_bindings", 
+    name = "crypto_lib_bindings",
     language = "rust",
     wit = ":crypto_interfaces",
-    
+
     # Generate everything fresh (no external deps)
     with_mappings = {},
-    
+
     # Optimize for zero-copy
     ownership = "borrowing",
-    
+
     # Minimal derives for security
     additional_derives = ["Clone"],  # No Debug to avoid exposing secrets
-    
+
     # Synchronous crypto operations
     async_interfaces = [],
-    
+
     format_code = True,
     generate_all = True,
 )
@@ -450,25 +450,25 @@ wit_bindgen(
 ```starlark
 wit_bindgen(
     name = "integration_bindings",
-    language = "rust", 
+    language = "rust",
     wit = ":integration_interfaces",
-    
+
     # Mix of mapped and generated
     with_mappings = {
         "wasi:http/types": "http::types",      # Use http crate
         "wasi:sockets/tcp": "tokio::net",      # Use tokio networking
         "my:integration/adapter": "generate",   # Custom integration logic
     },
-    
-    # Simple ownership for integration code  
+
+    # Simple ownership for integration code
     ownership = "owning",
-    
+
     # Full debugging support for integration
     additional_derives = ["Clone", "Debug", "PartialEq"],
-    
+
     # Mixed async patterns
     async_interfaces = ["my:integration/adapter#connect"],
-    
+
     format_code = True,
     generate_all = False,
 )
@@ -489,13 +489,13 @@ graph TD
     A[Interface Mapping Strategy] --> B[Generate All]
     A --> C[Map Common + Generate Custom]
     A --> D[Map Everything]
-    
+
     B --> E[Large Binary<br/>~500KB+ overhead]
-    C --> F[Medium Binary<br/>~100KB overhead] 
+    C --> F[Medium Binary<br/>~100KB overhead]
     D --> G[Small Binary<br/>~10KB overhead]
-    
+
     style E fill:#ff5722,stroke:#d84315
-    style F fill:#ff9800,stroke:#ef6c00  
+    style F fill:#ff9800,stroke:#ef6c00
     style G fill:#4caf50,stroke:#2e7d32
 ```
 
@@ -507,7 +507,7 @@ graph LR
     C[More Mappings] --> D[Faster Compilation]
     E[Generate All] --> F[Slower Compilation]
     G[Borrowing Ownership] --> H[Complex Compilation]
-    
+
     style B fill:#ff5722,stroke:#d84315
     style D fill:#4caf50,stroke:#2e7d32
     style F fill:#ff5722,stroke:#d84315
@@ -531,7 +531,7 @@ graph LR
 # Before: Basic wit-bindgen
 wit_bindgen(
     name = "basic_bindings",
-    language = "rust", 
+    language = "rust",
     wit = ":interfaces",
 )
 
@@ -540,15 +540,15 @@ wit_bindgen(
     name = "enhanced_bindings",
     language = "rust",
     wit = ":interfaces",
-+   
++
 +   # Start with simple mappings
 +   with_mappings = {
 +       "wasi:io/streams": "wasi::io::streams",
 +   },
-+   
++
 +   # Add basic debugging
 +   additional_derives = ["Debug"],
-+   
++
 +   # Keep simple ownership initially
 +   ownership = "owning",
 )

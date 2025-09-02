@@ -255,3 +255,6 @@ config_setting(
         ":file_ops_implementation": "auto",
     },
 )
+
+# WASI Preview 1 Component Adapter
+exports_files(["wasi_snapshot_preview1.command.wasm"])

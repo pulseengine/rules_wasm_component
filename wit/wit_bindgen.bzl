@@ -58,7 +58,7 @@ def _wit_bindgen_impl(ctx):
             fail("TinyGo toolchain not available. Go WIT binding generation requires TinyGo toolchain.")
         wit_bindgen = tinygo_toolchain.wit_bindgen_go
     else:
-        # Use standard wit-bindgen for other languages  
+        # Use standard wit-bindgen for other languages
         toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
         wit_bindgen = toolchain.wit_bindgen
 
@@ -231,7 +231,7 @@ if __name__ == "__main__":
         if wit_library_dir:
             # Run wit-bindgen-go directly on the WIT library directory
             bindgen_args = cmd_args + ["--out", out_file.path, wit_library_dir.path]
-            
+
             ctx.actions.run(
                 executable = wit_bindgen,
                 arguments = bindgen_args,
@@ -248,9 +248,9 @@ if __name__ == "__main__":
             wit_file = wit_info.wit_files.to_list()[0] if wit_info.wit_files.to_list() else None
             if not wit_file:
                 fail("No WIT files found")
-                
+
             bindgen_args = cmd_args + ["--out", out_file.path, wit_file.path]
-            
+
             ctx.actions.run(
                 executable = wit_bindgen,
                 arguments = bindgen_args,

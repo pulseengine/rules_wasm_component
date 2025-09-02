@@ -20,17 +20,17 @@ interface service {
     // Resource that benefits from custom type mapping
     resource connection {
         constructor(config: api-config);
-        
+
         // Sync method
         send-request: func(data: list<u8>) -> result<list<u8>, string>;
-        
+
         // Async method (good candidate for async_interfaces)
         async-process: func(input: string) -> result<string, string>;
-        
+
         close: func();
     }
 
-    // Function that uses WASI types (good for interface mapping demo)  
+    // Function that uses WASI types (good for interface mapping demo)
     process-http-request: func(
         request: string
     ) -> result<string, string>;
@@ -67,7 +67,7 @@ interface auth {
 
     resource session {
         constructor(token: auth-token);
-        
+
         validate: func() -> result<bool, string>;
         refresh: func() -> result<auth-token, string>;
         get-user-info: func() -> result<string, string>;
@@ -77,7 +77,7 @@ interface auth {
     load-credentials: func(
         path: string
     ) -> result<auth-token, string>;
-    
+
     save-credentials: func(
         path: string,
         token: auth-token

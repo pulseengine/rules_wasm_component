@@ -18,6 +18,6 @@ rust_wasm_component_bindgen(
     name = "world_export_component",
     srcs = ["src/lib.rs"],
     profiles = ["release"],
-    wit = ":world_export_wit",
     validate_wit = True,  # Enable WIT compliance validation
+    wit = ":world_export_wit",
 )

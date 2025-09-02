@@ -175,6 +175,7 @@ def _cpp_component_impl(ctx):
     # Standard library control
     if ctx.attr.nostdlib:
         compile_args.add("-nostdlib")
+
         # When using nostdlib, we need to be more selective about what we link
         compile_args.add("-Wl,--no-entry")  # Don't expect a main function
 
@@ -290,7 +291,7 @@ def _cpp_component_impl(ctx):
     else:
         binding_compile_args.add("-O0")
         binding_compile_args.add("-g")
-    
+
     # Exception handling for binding compilation (if C++ exceptions are enabled)
     if ctx.attr.language == "cpp" and ctx.attr.enable_exceptions:
         binding_compile_args.add("-fexceptions")
@@ -325,7 +326,7 @@ def _cpp_component_impl(ctx):
     if ctx.attr.language == "cpp" and not ctx.attr.nostdlib:
         compile_args.add("-lc++")
         compile_args.add("-lc++abi")
-        
+
         # Add exception handling support if enabled
         # Note: Exception handling symbols are typically in libc++abi which we already link
 
@@ -385,7 +386,7 @@ def _cpp_component_impl(ctx):
                 "$1" validate --features component-model "$2" >> "$3" 2>&1
                 exit 1
             fi
-            
+
             # Extract WIT interface for documentation
             echo "=== COMPONENT VALIDATION PASSED ===" > "$3"
             echo "Component is valid WebAssembly with component model" >> "$3"
@@ -397,7 +398,7 @@ def _cpp_component_impl(ctx):
             inputs = [component_wasm],
             outputs = [validation_log],
             tools = [wasm_tools],
-            mnemonic = "ValidateWasmComponent", 
+            mnemonic = "ValidateWasmComponent",
             progress_message = "Validating WebAssembly component for %s" % ctx.label,
         )
 

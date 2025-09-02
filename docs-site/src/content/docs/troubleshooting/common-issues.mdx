@@ -367,7 +367,7 @@ cpp_component(
 
 cc_component_library(
     name = "my_library",
-    # ... other attributes  
+    # ... other attributes
     enable_exceptions = False,  # Required - WASI SDK limitation
 )
 ```
@@ -382,7 +382,7 @@ std::variant<double, std::string> divide(double a, double b) {
     return a / b;
 }
 
-// ✅ Use optional types for operations that might fail  
+// ✅ Use optional types for operations that might fail
 std::optional<double> safe_operation(double input) {
     if (input < 0) {
         return std::nullopt;  // Instead of throwing
@@ -407,7 +407,7 @@ std::optional<double> safe_operation(double input) {
 
 ```python title="BUILD.bazel"
 cpp_component(
-    name = "validated_component", 
+    name = "validated_component",
     # ... other attributes
     validate_wit = True,  # Enable WIT compliance validation
 )
@@ -422,7 +422,7 @@ cat bazel-bin/my_component_wit_validation.log
 
 **Common validation errors**:
 - Export function names don't match WIT specification
-- Function parameter types don't match WIT types  
+- Function parameter types don't match WIT types
 - Missing implementation of WIT world exports
 
 **Verify the fix**:

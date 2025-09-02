@@ -20,7 +20,7 @@ wit_library(
     deps = ["@wasi_io//:streams"],  # Add WASI IO dependency for stream imports
 )
 
-# Simple calculator WIT without dependencies
+# Simple calculator WIT - pure interface, TinyGo handles WASI internally
 wit_library(
     name = "simple_calculator_wit",
     srcs = ["wit/simple-calculator.wit"],
@@ -51,7 +51,7 @@ go_wasm_component(
     name = "calculator_component",
     srcs = [
         "calculator.go",
-        "main.go", 
+        "main.go",
         "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
@@ -78,6 +78,16 @@ go_wasm_component(
     go_mod = "go.mod",
     optimization = "release",
     wit = ":calculator_wit",
+    world = "calculator-world",
+)
+
+# Simplified calculator using generated bindings
+go_wasm_component(
+    name = "calculator_simple_binding",
+    srcs = ["calculator_simple_binding.go"],
+    go_mod = "go.mod",
+    optimization = "release",
+    wit = ":simple_calculator_wit",
     world = "calculator-world",
 )
 
