@@ -17,7 +17,7 @@ wit_library(
     name = "calculator_wit",
     srcs = ["wit/calculator.wit"],
     world = "calculator-world",
-    deps = ["@wasi_io//:streams"],  # Add WASI IO dependency for stream imports
+    deps = ["@wasi_io_v020//:streams"],  # Add WASI IO 0.2.0 dependency required by TinyGo
 )
 
 # Simple calculator WIT - pure interface, TinyGo handles WASI internally
