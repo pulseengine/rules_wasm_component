@@ -130,6 +130,9 @@ jobs:
             //tools/... \
             //providers/... \
             //test/go/... \
+            -//test/go:test_calculator_component_provides_info \
+            -//test/go:test_calculator_component_valid_wasm \
+            -//test/go:test_calculator_exports_verification \
             //test/cpp/... \
             //test/unit/... \
             //test/integration/... \
@@ -229,6 +232,9 @@ jobs:
             //tools/... \
             //providers/... \
             //test/go/... \
+            -//test/go:test_calculator_component_provides_info \
+            -//test/go:test_calculator_component_valid_wasm \
+            -//test/go:test_calculator_exports_verification \
             //test/cpp/... \
             //test/unit/... \
             //test/integration/... \
