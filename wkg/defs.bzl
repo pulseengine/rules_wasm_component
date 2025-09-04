@@ -221,8 +221,14 @@ def _wkg_publish_impl(ctx):
     wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
     wkg = wkg_toolchain.wkg
 
-    # Component file to publish
-    component = ctx.file.component
+    # Get component file from WasmComponentInfo provider (like wkg_push does)
+    if ctx.attr.component:
+        component_info = ctx.attr.component[WasmComponentInfo]
+        component = component_info.wasm_file
+    elif ctx.file.wasm_file:
+        component = ctx.file.wasm_file
+    else:
+        fail("Either component (with WasmComponentInfo) or wasm_file must be specified")
 
     # Create wkg.toml metadata file
     metadata_content = """
@@ -314,9 +320,12 @@ wkg_publish = rule(
     implementation = _wkg_publish_impl,
     attrs = {
         "component": attr.label(
-            doc = "WebAssembly component file to publish",
+            providers = [WasmComponentInfo],
+            doc = "WebAssembly component to publish",
+        ),
+        "wasm_file": attr.label(
             allow_single_file = [".wasm"],
-            mandatory = True,
+            doc = "WebAssembly component file to publish (alternative to component)",
         ),
         "package_name": attr.string(
             doc = "Package name for publishing",
