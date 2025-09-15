@@ -23,5 +23,5 @@ sha2 = "0.10"
 tokio = { version = "1.0", features = ["full"] }
 chrono = { version = "0.4", features = ["serde"] }
 futures-util = "0.3"
-tempfile = "3.8"
+tempfile = "3.22"
 octocrab = { version = "0.32", features = ["stream"] }
