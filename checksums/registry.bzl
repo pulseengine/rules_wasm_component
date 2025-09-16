@@ -38,7 +38,7 @@ def _get_fallback_checksums(tool_name):
         "wasm-tools": {
             "tool_name": "wasm-tools",
             "github_repo": "bytecodealliance/wasm-tools",
-            "latest_version": "1.235.0",
+            "latest_version": "1.239.0",
             "versions": {
                 "1.235.0": {
                     "release_date": "2024-12-15",
@@ -83,6 +83,31 @@ def _get_fallback_checksums(tool_name):
                         "linux_arm64": {
                             "sha256": "c11b4d02bd730a8c3e60f4066602ce4264a752013d6c9ec58d70b7f276c3b794",
                             "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                    },
+                },
+                "1.239.0": {
+                    "release_date": "2024-09-09",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "d62482e2bfe65a05f4c313f2d57b09736054e37f4dfe94b4bdf7b4713b03fa02",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "b65777dcb9873b404e50774b54b61b703eb980cadb20ada175a8bf74bfe23706",
+                            "url_suffix": "aarch64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "be1764c1718a2ed90cdd3e1ed2fe6e4c6b3e2b69fb6ba9a85bcafdca5146a3b9",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "54bb0fdad016a115bde8dd7d2cd63e88d0b136a44ab23ae9c3ff4d4d48d5fa4d",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                            "url_suffix": "x86_64-windows.tar.gz",
                         },
                     },
                 },
@@ -723,6 +748,12 @@ def validate_tool_compatibility(tools_config):
             "wkg": ["0.11.0"],
             "wasmsign2": ["0.2.6"],
         },
+        "1.239.0": {
+            "wac": ["0.7.0", "0.8.0"],
+            "wit-bindgen": ["0.43.0", "0.46.0"],
+            "wkg": ["0.11.0"],
+            "wasmsign2": ["0.2.6"],
+        },
     }
 
     if "wasm-tools" in tools_config:
@@ -758,7 +789,7 @@ def get_recommended_versions(stability = "stable"):
     # Define default versions (sourced from tool_versions.bzl)
     default_versions = {
         "stable": {
-            "wasm-tools": "1.235.0",
+            "wasm-tools": "1.239.0",
             "wac": "0.8.0",
             "wit-bindgen": "0.46.0",
             "wkg": "0.11.0",
@@ -767,7 +798,7 @@ def get_recommended_versions(stability = "stable"):
             "jco": "1.4.0",
         },
         "latest": {
-            "wasm-tools": "1.235.0",
+            "wasm-tools": "1.239.0",
             "wac": "0.8.0",
             "wit-bindgen": "0.46.0",
             "wkg": "0.11.0",
