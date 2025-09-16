@@ -65,7 +65,7 @@ def _symmetric_wit_bindgen_repository_impl(repository_ctx):
 def _download_official_wit_bindgen(repository_ctx, platform):
     """Download official wit-bindgen from releases"""
 
-    version = "0.43.0"
+    version = "0.46.0"
 
     # Platform suffix mapping
     platform_suffixes = {
