@@ -1,0 +1,36 @@
+package microservices:user@1.0.0;
+
+interface user-management {
+    record user {
+        id: u32,
+        name: string,
+        email: string,
+        created-at: u64,
+        active: bool,
+    }
+
+    record auth-result {
+        success: bool,
+        user-id: option<u32>,
+        token: option<string>,
+        error: option<string>,
+    }
+
+    // Core user management functions
+    get-user: func(user-id: u32) -> option<user>;
+    create-user: func(name: string, email: string) -> result<u32, string>;
+    update-user: func(user-id: u32, name: option<string>, email: option<string>) -> result<_, string>;
+    delete-user: func(user-id: u32) -> result<_, string>;
+    
+    // Authentication functions
+    authenticate: func(user-id: u32, token: string) -> auth-result;
+    validate-token: func(token: string) -> result<u32, string>;
+    
+    // User lookup functions
+    find-user-by-email: func(email: string) -> option<user>;
+    list-users: func(offset: u32, limit: u32) -> list<user>;
+}
+
+world user-service {
+    export user-management;
+}

@@ -1,0 +1,55 @@
+package microservices:payment@1.0.0;
+
+interface payment-processing {
+    record payment-request {
+        amount: f64,
+        currency: string,
+        payment-method: string,
+        user-id: u32,
+        order-id: option<string>,
+        metadata: list<tuple<string, string>>,
+    }
+
+    record payment-result {
+        success: bool,
+        transaction-id: option<string>,
+        status: string,  // pending, completed, failed, refunded
+        amount-charged: option<f64>,
+        error-message: option<string>,
+        processing-fee: option<f64>,
+    }
+
+    record refund-request {
+        transaction-id: string,
+        amount: option<f64>,  // partial refund if specified
+        reason: string,
+    }
+
+    record payment-method-validation {
+        method: string,
+        valid: bool,
+        error: option<string>,
+        supported-currencies: list<string>,
+    }
+
+    // Core payment processing
+    process-payment: func(request: payment-request) -> payment-result;
+    get-payment-status: func(transaction-id: string) -> option<payment-result>;
+    refund-payment: func(request: refund-request) -> payment-result;
+    
+    // Payment method management
+    validate-payment-method: func(method: string) -> payment-method-validation;
+    get-supported-methods: func() -> list<string>;
+    get-supported-currencies: func() -> list<string>;
+    
+    // Transaction history and reporting
+    get-user-transactions: func(user-id: u32, offset: u32, limit: u32) -> list<payment-result>;
+    get-transaction-details: func(transaction-id: string) -> option<payment-result>;
+    
+    // Cross-service integration
+    user-validation: func(user-id: u32) -> result<bool, string>;
+}
+
+world payment-service {
+    export payment-processing;
+}

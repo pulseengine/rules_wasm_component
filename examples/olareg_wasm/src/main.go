@@ -2,12 +2,16 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"strings"
 	"time"
 )
 
 // Enhanced olareg implementation with in-memory storage for testing
+// CLI WASI version - uses command line arguments and standard I/O
 
 // Component represents a stored WASM component
 type Component struct {
@@ -94,7 +98,6 @@ func applyLatencySimulation(operation string) {
 
 // Basic server lifecycle exports
 
-//go:export start-server
 func startServer(addr, dataDir string, readOnlyFlag, enablePushFlag, enableDeleteFlag bool) (int32, string) {
 	if registryRunning {
 		return 0, "Registry is already running"
@@ -114,7 +117,6 @@ func startServer(addr, dataDir string, readOnlyFlag, enablePushFlag, enableDelet
 	return 1, "Registry started on " + addr + ", data dir: " + dataDir
 }
 
-//go:export stop-server
 func stopServer() (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -127,7 +129,6 @@ func stopServer() (int32, string) {
 	return 1, "Registry stopped successfully"
 }
 
-//go:export get-status
 func getStatus() string {
 	if !registryRunning {
 		return "stopped"
@@ -135,14 +136,12 @@ func getStatus() string {
 	return "running on " + registryAddr
 }
 
-//go:export health-check
 func healthCheck() bool {
 	return registryRunning
 }
 
 // Component operations exports
 
-//go:export upload-component
 func uploadComponent(name, tag string, componentData []byte) (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -170,7 +169,6 @@ func uploadComponent(name, tag string, componentData []byte) (int32, string) {
 	return 1, "Component uploaded successfully"
 }
 
-//go:export download-component
 func downloadComponent(name, tag string) (int32, string, []byte) {
 	if !registryRunning {
 		return 0, "Registry is not running", nil
@@ -192,7 +190,6 @@ func downloadComponent(name, tag string) (int32, string, []byte) {
 	return 1, "Component downloaded successfully", component.Data
 }
 
-//go:export list-components
 func listComponents() (int32, string, []string) {
 	if !registryRunning {
 		return 0, "Registry is not running", nil
@@ -206,7 +203,6 @@ func listComponents() (int32, string, []string) {
 	return 1, "Components listed successfully", componentList
 }
 
-//go:export component-exists
 func componentExists(name, tag string) bool {
 	if !registryRunning {
 		return false
@@ -217,7 +213,6 @@ func componentExists(name, tag string) bool {
 	return exists
 }
 
-//go:export delete-component
 func deleteComponent(name, tag string) (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -239,7 +234,6 @@ func deleteComponent(name, tag string) (int32, string) {
 
 // Manifest and blob operations exports
 
-//go:export upload-manifest
 func uploadManifest(name, tag string, manifestData []byte) (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -266,7 +260,6 @@ func uploadManifest(name, tag string, manifestData []byte) (int32, string) {
 	return 1, "Manifest uploaded successfully"
 }
 
-//go:export download-manifest
 func downloadManifest(name, tag string) (int32, string, []byte) {
 	if !registryRunning {
 		return 0, "Registry is not running", nil
@@ -285,7 +278,6 @@ func downloadManifest(name, tag string) (int32, string, []byte) {
 	return 1, "Manifest downloaded successfully", component.Manifest
 }
 
-//go:export upload-blob
 func uploadBlob(digest string, blobData []byte) (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -309,7 +301,6 @@ func uploadBlob(digest string, blobData []byte) (int32, string) {
 	return 1, "Blob uploaded successfully"
 }
 
-//go:export download-blob
 func downloadBlob(digest string) (int32, string, []byte) {
 	if !registryRunning {
 		return 0, "Registry is not running", nil
@@ -323,7 +314,6 @@ func downloadBlob(digest string) (int32, string, []byte) {
 	return 1, "Blob downloaded successfully", blob.Data
 }
 
-//go:export blob-exists
 func blobExists(digest string) bool {
 	if !registryRunning {
 		return false
@@ -335,7 +325,6 @@ func blobExists(digest string) bool {
 
 // Test lifecycle management exports
 
-//go:export create-test-data
 func createTestData(componentSpecs []string) (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -363,7 +352,6 @@ func createTestData(componentSpecs []string) (int32, string) {
 	return 1, fmt.Sprintf("Created %d test components", len(componentSpecs))
 }
 
-//go:export reset-registry
 func resetRegistry() (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -382,7 +370,6 @@ func resetRegistry() (int32, string) {
 	return 1, "Registry reset successfully"
 }
 
-//go:export get-metrics
 func getMetrics() (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -394,7 +381,6 @@ func getMetrics() (int32, string) {
 	return 1, metrics
 }
 
-//go:export get-component-count
 func getComponentCount() uint32 {
 	if !registryRunning {
 		return 0
@@ -402,7 +388,6 @@ func getComponentCount() uint32 {
 	return uint32(len(components))
 }
 
-//go:export get-blob-count
 func getBlobCount() uint32 {
 	if !registryRunning {
 		return 0
@@ -412,7 +397,6 @@ func getBlobCount() uint32 {
 
 // Error simulation exports
 
-//go:export simulate-failure
 func simulateFailure(operation, errorType string) (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -427,7 +411,6 @@ func simulateFailure(operation, errorType string) (int32, string) {
 	return 1, "Error simulation configured for " + operation
 }
 
-//go:export set-latency
 func setLatency(operation string, latencyMs uint32) (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -442,7 +425,6 @@ func setLatency(operation string, latencyMs uint32) (int32, string) {
 	return 1, "Latency simulation configured for " + operation
 }
 
-//go:export clear-simulations
 func clearSimulations() (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -456,7 +438,6 @@ func clearSimulations() (int32, string) {
 
 // Authentication and security exports
 
-//go:export set-auth-mode
 func setAuthMode(mode string) (int32, string) {
 	if !registryRunning {
 		return 0, "Registry is not running"
@@ -466,7 +447,6 @@ func setAuthMode(mode string) (int32, string) {
 	return 1, "Auth mode set to " + mode
 }
 
-//go:export validate-signature
 func validateSignature(componentData, signature []byte) bool {
 	if !registryRunning {
 		return false
@@ -476,7 +456,6 @@ func validateSignature(componentData, signature []byte) bool {
 	return len(signature) > 0 && len(componentData) > 0
 }
 
-//go:export get-component-signature
 func getComponentSignature(name, tag string) (int32, string, []byte) {
 	if !registryRunning {
 		return 0, "Registry is not running", nil
@@ -496,5 +475,238 @@ func getComponentSignature(name, tag string) (int32, string, []byte) {
 }
 
 func main() {
-	// Component entry point - TinyGo will handle the WASM exports
+	// Parse command line arguments
+	addr := ":5001"
+	if len(os.Args) > 1 {
+		addr = os.Args[1]
+	}
+
+	// Initialize registry
+	initRegistry()
+
+	// Setup HTTP routes
+	setupRoutes()
+
+	fmt.Printf("🚀 Olareg WASM Registry starting on %s\n", addr)
+	fmt.Println("📦 In-memory OCI registry for testing and development")
+	fmt.Println("🔗 Ready to accept OCI registry API calls")
+	
+	// Start HTTP server
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		fmt.Printf("❌ Server failed to start: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func initRegistry() {
+	// Initialize storage
+	components = make(map[string]*Component)
+	blobs = make(map[string]*Blob)
+	
+	// Set registry as running
+	registryRunning = true
+	registryAddr = ":5001"
+	registryDataDir = "/tmp"
+	readOnly = false
+	enablePush = true
+	enableDelete = true
+	
+	fmt.Println("✅ Registry initialized with in-memory storage")
+}
+
+func setupRoutes() {
+	// OCI Registry API routes
+	http.HandleFunc("/v2/", handleV2Root)
+	http.HandleFunc("/v2/_catalog", handleCatalog)
+	
+	// Health and status endpoints
+	http.HandleFunc("/health", handleHealth)
+	http.HandleFunc("/metrics", handleMetrics)
+	
+	// Test/debug endpoints
+	http.HandleFunc("/debug/components", handleDebugComponents)
+	http.HandleFunc("/debug/reset", handleDebugReset)
+}
+
+func printUsage() {
+	fmt.Println("Olareg WASM - In-memory OCI registry")
+	fmt.Println("Usage: olareg <command> [args...]")
+	fmt.Println()
+	fmt.Println("Commands:")
+	fmt.Println("  start-server <addr> <dataDir> <readOnly> <enablePush> <enableDelete>")
+	fmt.Println("  stop-server")
+	fmt.Println("  get-status")
+	fmt.Println("  health-check")
+	fmt.Println("  upload-component <name> <tag> <data>")
+	fmt.Println("  download-component <name> <tag>")
+	fmt.Println("  list-components")
+	fmt.Println("  component-exists <name> <tag>")
+	fmt.Println("  create-test-data <component1:tag1,component2:tag2,...>")
+	fmt.Println("  reset-registry")
+	fmt.Println("  get-metrics")
+}
+
+// CLI wrapper functions that call the original implementations
+func startServerCLI(addr, dataDir string, readOnlyFlag, enablePushFlag, enableDeleteFlag bool) (int32, string) {
+	return startServer(addr, dataDir, readOnlyFlag, enablePushFlag, enableDeleteFlag)
+}
+
+func stopServerCLI() (int32, string) {
+	return stopServer()
+}
+
+func getStatusCLI() string {
+	return getStatus()
+}
+
+func healthCheckCLI() bool {
+	return healthCheck()
+}
+
+func uploadComponentCLI(name, tag string, componentData []byte) (int32, string) {
+	return uploadComponent(name, tag, componentData)
+}
+
+func downloadComponentCLI(name, tag string) (int32, string, []byte) {
+	return downloadComponent(name, tag)
+}
+
+func listComponentsCLI() (int32, string, []string) {
+	return listComponents()
+}
+
+func componentExistsCLI(name, tag string) bool {
+	return componentExists(name, tag)
+}
+
+func createTestDataCLI(componentSpecs []string) (int32, string) {
+	return createTestData(componentSpecs)
+}
+
+func resetRegistryCLI() (int32, string) {
+	return resetRegistry()
+}
+
+func getMetricsCLI() (int32, string) {
+	return getMetrics()
+}
+
+// HTTP Handler Functions
+
+func handleV2Root(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/v2/" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "Olareg WASM Registry"}`))
+		return
+	}
+	http.NotFound(w, r)
+}
+
+func handleCatalog(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	_, _, componentList := listComponents()
+	
+	catalog := struct {
+		Repositories []string `json:"repositories"`
+	}{
+		Repositories: componentList,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(catalog)
+}
+
+func handleManifest(w http.ResponseWriter, r *http.Request) {
+	// Parse URL path to extract name and reference (tag/digest)
+	// Format: /v2/<name>/manifests/<reference>
+	
+	// This is a simplified implementation
+	// Full OCI registry would handle complex manifest operations
+	w.Header().Set("Content-Type", "application/vnd.docker.distribution.manifest.v2+json")
+	w.Write([]byte(`{"mediaType": "application/vnd.docker.distribution.manifest.v2+json"}`))
+}
+
+func handleBlob(w http.ResponseWriter, r *http.Request) {
+	// Parse URL path to extract name and digest
+	// Format: /v2/<name>/blobs/<digest>
+	
+	// This is a simplified implementation  
+	// Full OCI registry would handle blob upload/download
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Write([]byte("mock blob data"))
+}
+
+func handleHealth(w http.ResponseWriter, r *http.Request) {
+	healthy := healthCheck()
+	status := "unhealthy"
+	statusCode := http.StatusServiceUnavailable
+	
+	if healthy {
+		status = "healthy"
+		statusCode = http.StatusOK
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	
+	response := struct {
+		Status string `json:"status"`
+		Addr   string `json:"addr"`
+	}{
+		Status: status,
+		Addr:   registryAddr,
+	}
+	
+	json.NewEncoder(w).Encode(response)
+}
+
+func handleMetrics(w http.ResponseWriter, r *http.Request) {
+	_, metricsData := getMetrics()
+	
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(metricsData))
+}
+
+func handleDebugComponents(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		_, _, componentList := listComponents()
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"components": componentList,
+			"count":      len(componentList),
+		})
+		
+	case "POST":
+		// Create test data
+		specs := []string{"test:v1", "mock:v2", "demo:latest"}
+		result, msg := createTestData(specs)
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"result":  result,
+			"message": msg,
+		})
+	}
+}
+
+func handleDebugReset(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	result, msg := resetRegistry()
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"result":  result,
+		"message": msg,
+	})
 }
