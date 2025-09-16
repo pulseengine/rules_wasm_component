@@ -491,7 +491,7 @@ def _download_wasm_tools(repository_ctx):
 def _download_wac(repository_ctx):
     """Download wac only"""
     platform = _detect_host_platform(repository_ctx)
-    wac_version = "0.7.0"
+    wac_version = "0.8.0"
 
     # Get checksum and platform info from tool_versions.bzl
     tool_info = get_tool_info("wac", wac_version, platform)
@@ -513,7 +513,7 @@ def _download_wac(repository_ctx):
 def _download_wit_bindgen(repository_ctx):
     """Download wit-bindgen only"""
     platform = _detect_host_platform(repository_ctx)
-    wit_bindgen_version = "0.43.0"
+    wit_bindgen_version = "0.46.0"
 
     # Get checksum and platform info from tool_versions.bzl
     tool_info = get_tool_info("wit-bindgen", wit_bindgen_version, platform)
