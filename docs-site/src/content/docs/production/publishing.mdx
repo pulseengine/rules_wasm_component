@@ -10,6 +10,7 @@ Distribute WebAssembly components via OCI (Open Container Initiative) registries
 ## Overview
 
 The rules provide enterprise-grade OCI publishing with:
+
 - **Multiple OCI registries**: Docker Hub, GitHub Container Registry, AWS ECR, Azure Container Registry
 - **Component signing integration**: Automatic signing during publish
 - **Enhanced metadata**: Rich annotations and component information
@@ -330,6 +331,7 @@ wasm_component_oci_metadata_mapper(
 ### Common Issues
 
 **Authentication Failures**
+
 ```bash
 # Check Docker config
 cat ~/.docker/config.json
@@ -339,6 +341,7 @@ docker pull hello-world
 ```
 
 **Network Issues**
+
 ```bash
 # Test registry connectivity
 curl -I https://ghcr.io/v2/
@@ -349,6 +352,7 @@ echo $HTTPS_PROXY
 ```
 
 **Multi-Registry Failures**
+
 ```starlark
 # Use fail_fast = False to continue on individual failures
 wkg_multi_registry_publish(

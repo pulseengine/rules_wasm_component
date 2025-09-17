@@ -9,12 +9,12 @@ These rules handle **WebAssembly Interface Types (WIT)** - the interface definit
 
 ## Quick Reference
 
-| Rule | Purpose | Most Common Use |
-|------|---------|----------------|
-| **[wit_bindgen](#wit_bindgen)** | Generate language bindings from WIT | Essential for every component |
-| **[wit_library](#wit_library)** | Package WIT files for reuse | Interface libraries |
-| **[wit_deps_check](#wit_deps_check)** | Validate WIT dependencies | Troubleshooting |
-| **[wit_markdown](#wit_markdown)** | Generate docs from WIT | Documentation |
+| Rule                                  | Purpose                             | Most Common Use               |
+| ------------------------------------- | ----------------------------------- | ----------------------------- |
+| **[wit_bindgen](#wit_bindgen)**       | Generate language bindings from WIT | Essential for every component |
+| **[wit_library](#wit_library)**       | Package WIT files for reuse         | Interface libraries           |
+| **[wit_deps_check](#wit_deps_check)** | Validate WIT dependencies           | Troubleshooting               |
+| **[wit_markdown](#wit_markdown)**     | Generate docs from WIT              | Documentation                 |
 
 ---
 
@@ -37,21 +37,22 @@ wit_bindgen(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `language` | String<br/>*Values: rust, c, go, python, js* | ✅ | Target language for binding generation |
-| `name` | String | ✅ | A unique name for this target |
-| `options` | List of Strings | ❌ | Additional options for wit-bindgen |
-| `wit` | Label | ✅ | WIT library to generate bindings for |
-| `world` | String | ❌ | Specific world to generate bindings for |
-| `with_mappings` | String Dict | ❌ | Interface and type remappings (key=value pairs) |
-| `ownership` | String | ❌ | Type ownership model: "owning", "borrowing", "borrowing-duplicate-if-necessary" |
-| `additional_derives` | List of Strings | ❌ | Additional derive attributes for generated types |
-| `async_interfaces` | List of Strings | ❌ | Interfaces to generate with async support |
+| Name                 | Type                                         | Required | Description                                                                     |
+| -------------------- | -------------------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| `language`           | String<br/>_Values: rust, c, go, python, js_ | ✅       | Target language for binding generation                                          |
+| `name`               | String                                       | ✅       | A unique name for this target                                                   |
+| `options`            | List of Strings                              | ❌       | Additional options for wit-bindgen                                              |
+| `wit`                | Label                                        | ✅       | WIT library to generate bindings for                                            |
+| `world`              | String                                       | ❌       | Specific world to generate bindings for                                         |
+| `with_mappings`      | String Dict                                  | ❌       | Interface and type remappings (key=value pairs)                                 |
+| `ownership`          | String                                       | ❌       | Type ownership model: "owning", "borrowing", "borrowing-duplicate-if-necessary" |
+| `additional_derives` | List of Strings                              | ❌       | Additional derive attributes for generated types                                |
+| `async_interfaces`   | List of Strings                              | ❌       | Interfaces to generate with async support                                       |
 
 ### Language-Specific Options
 
 **Rust:**
+
 ```python
 wit_bindgen(
     name = "rust_bindings",
@@ -63,6 +64,7 @@ wit_bindgen(
 ```
 
 **Go:**
+
 ```python
 wit_bindgen(
     name = "go_bindings",
@@ -72,6 +74,7 @@ wit_bindgen(
 ```
 
 **JavaScript:**
+
 ```python
 wit_bindgen(
     name = "js_bindings",
@@ -83,6 +86,7 @@ wit_bindgen(
 ### Examples
 
 **Basic Interface Generation:**
+
 ```python
 wit_bindgen(
     name = "math_rust",
@@ -92,6 +96,7 @@ wit_bindgen(
 ```
 
 **Advanced Rust with Interface Mapping:**
+
 ```python
 wit_bindgen(
     name = "optimized_rust",
@@ -126,15 +131,16 @@ wit_library(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `srcs` | List of Labels | ✅ | WIT source files to include |
-| `deps` | List of Labels | ❌ | Other wit_library targets this depends on |
+| Name   | Type           | Required | Description                               |
+| ------ | -------------- | -------- | ----------------------------------------- |
+| `name` | String         | ✅       | A unique name for this target             |
+| `srcs` | List of Labels | ✅       | WIT source files to include               |
+| `deps` | List of Labels | ❌       | Other wit_library targets this depends on |
 
 ### Examples
 
 **Simple Interface Library:**
+
 ```python
 wit_library(
     name = "calculator_interfaces",
@@ -143,6 +149,7 @@ wit_library(
 ```
 
 **Library with Dependencies:**
+
 ```python
 wit_library(
     name = "http_service_interfaces",
@@ -173,10 +180,10 @@ wit_deps_check(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `wit_file` | Label | ✅ | WIT file to analyze |
+| Name       | Type   | Required | Description                   |
+| ---------- | ------ | -------- | ----------------------------- |
+| `name`     | String | ✅       | A unique name for this target |
+| `wit_file` | Label  | ✅       | WIT file to analyze           |
 
 ### When to Use
 
@@ -204,15 +211,16 @@ wit_markdown(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `wit` | Label | ✅ | WIT library to generate docs for |
-| `output_dir` | String | ❌ | Directory for generated markdown files |
+| Name         | Type   | Required | Description                            |
+| ------------ | ------ | -------- | -------------------------------------- |
+| `name`       | String | ✅       | A unique name for this target          |
+| `wit`        | Label  | ✅       | WIT library to generate docs for       |
+| `output_dir` | String | ❌       | Directory for generated markdown files |
 
 ### Examples
 
 **Basic Documentation:**
+
 ```python
 wit_markdown(
     name = "component_docs",
@@ -221,6 +229,7 @@ wit_markdown(
 ```
 
 **Custom Output Location:**
+
 ```python
 wit_markdown(
     name = "public_api_docs",
@@ -234,9 +243,11 @@ wit_markdown(
 ## Related Rules
 
 **Next Steps:**
+
 - **[Language Rules](/reference/language-rules/)** - Use generated bindings in components
 - **[Composition Rules](/reference/composition-rules/)** - Connect components together
 
 **See Also:**
+
 - **[WIT Bindgen Interface Mapping Guide](/build/patterns/wit-bindgen-interface-mapping/)** - Advanced wit_bindgen usage
 - **[WIT Interface Design](/learn/wit-interface-design/)** - Best practices for WIT interfaces

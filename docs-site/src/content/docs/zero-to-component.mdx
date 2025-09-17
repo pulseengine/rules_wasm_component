@@ -27,6 +27,7 @@ bazelisk version || bazel version
 ```
 
 **Don't have it?** Install bazelisk in 30 seconds:
+
 ```bash
 # macOS
 brew install bazelisk
@@ -46,6 +47,7 @@ cd rules_wasm_component/examples/basic
 ```
 
 **What's in here?** Just 3 simple files:
+
 - `hello.wit` - The interface (what your component does)
 - `src/lib.rs` - The implementation (7 lines of Rust)
 - `BUILD.bazel` - The build config (tells Bazel how to build it)
@@ -63,6 +65,7 @@ bazelisk build //:hello_component
 ```
 
 **What just happened?** Bazel automatically:
+
 - Downloaded Rust toolchain + WebAssembly tools
 - Compiled your 7-line Rust code to WebAssembly
 - Created `hello_component.wasm` - your finished component!
@@ -86,6 +89,7 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/hell
 ```
 
 **🎉 Congratulations!** You just built a WebAssembly component that:
+
 - Exports a `hello` function that takes a string and returns a string
 - Can be called from any language (JavaScript, Python, Go, etc.)
 - Runs in a secure sandbox with no access to your system
@@ -98,22 +102,27 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/hell
 ## Next Steps (Pick Your Adventure)
 
 ### 🚀 **Want to understand what you just did?**
+
 → [Code Explained Line by Line](/tutorials/code-explained/) - Deep dive into every line of code
 
 ### 💻 **Want to try different languages?**
+
 → [Go Components](/languages/go/) - Build the same thing with TinyGo
 → [C++ Components](/languages/cpp/) - Try native C++ development
 → [JavaScript Components](/languages/javascript/) - Use ComponentizeJS
 
 ### 🏗️ **Want to build something more complex?**
+
 → [Multi-Language Composition](/examples/multi-language-composition/) - Combine Rust, Go, and JavaScript components
 → [Microservices Architecture](/examples/microservices-architecture/) - Service composition patterns
 → [OCI Publishing](/examples/oci-publishing/) - Deploy to container registries
 
 ### 🐛 **Something not working?**
+
 → [Troubleshooting Guide](/troubleshooting/common-issues/) - Common issues and solutions
 
 ### 📚 **Want the full tutorial?**
+
 → [Guided Rust Tutorial](/tutorials/rust-guided-walkthrough/) - Complete step-by-step explanation
 
 ## Why This Matters

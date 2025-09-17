@@ -57,15 +57,15 @@ wasm_toolchain.register(
 
 ### Available Strategies by Toolchain
 
-| Toolchain | download | build | hybrid | npm | cargo |
-|-----------|----------|-------|--------|-----|-------|
-| wasm_toolchain | ✅ | ✅ | ✅ | ❌ | ❌ |
-| wasi_sdk | ✅ | ❌ | ❌ | ❌ | ❌ |
-| wkg_toolchain | ✅ | ✅ | ❌ | ❌ | ❌ |
-| jco_toolchain | ✅ | ❌ | ❌ | ✅ | ❌ |
-| cpp_component | ✅ | ✅ | ❌ | ❌ | ❌ |
-| wizer_toolchain | ✅ | ✅ | ❌ | ❌ | ✅ |
-| wasmtime | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Toolchain       | download | build | hybrid | npm | cargo |
+| --------------- | -------- | ----- | ------ | --- | ----- |
+| wasm_toolchain  | ✅       | ✅    | ✅     | ❌  | ❌    |
+| wasi_sdk        | ✅       | ❌    | ❌     | ❌  | ❌    |
+| wkg_toolchain   | ✅       | ✅    | ❌     | ❌  | ❌    |
+| jco_toolchain   | ✅       | ❌    | ❌     | ✅  | ❌    |
+| cpp_component   | ✅       | ✅    | ❌     | ❌  | ❌    |
+| wizer_toolchain | ✅       | ✅    | ❌     | ❌  | ✅    |
+| wasmtime        | ✅       | ❌    | ❌     | ❌  | ❌    |
 
 ### When to Use Each Strategy
 
@@ -188,13 +188,13 @@ wizer.register(
 
 ## Performance Comparison
 
-| Strategy | Initial Build | Incremental | Disk Usage | Network | Use Case |
-|----------|---------------|-------------|------------|---------|----------|
-| download | Fast (30s) | Fast | Small | One-time | **Production** |
-| build | Slow (5-10m) | Medium | Large | One-time | **Development** |
-| hybrid | Medium (2m) | Fast | Medium | One-time | **Best balance** |
-| npm | Fast (1m) | Fast | Small | Per package | **JS projects** |
-| cargo | Slow (3-5m) | Medium | Large | One-time | **Rust projects** |
+| Strategy | Initial Build | Incremental | Disk Usage | Network     | Use Case          |
+| -------- | ------------- | ----------- | ---------- | ----------- | ----------------- |
+| download | Fast (30s)    | Fast        | Small      | One-time    | **Production**    |
+| build    | Slow (5-10m)  | Medium      | Large      | One-time    | **Development**   |
+| hybrid   | Medium (2m)   | Fast        | Medium     | One-time    | **Best balance**  |
+| npm      | Fast (1m)     | Fast        | Small      | Per package | **JS projects**   |
+| cargo    | Slow (3-5m)   | Medium      | Large      | One-time    | **Rust projects** |
 
 ## Version Management
 
@@ -245,11 +245,11 @@ bazel build --extra_toolchains=@prod_tools_toolchains//:wasm_tools_toolchain //.
 
 Always check compatibility when upgrading:
 
-| rules_wasm_component | wasm-tools | wit-bindgen | wac | TinyGo | WASI SDK |
-|---------------------|------------|-------------|-----|--------|----------|
-| 1.0.x | 1.235.0+ | 0.43.0+ | 0.7.0+ | 0.38.0 | 25+ |
-| 0.9.x | 1.220.0+ | 0.40.0+ | 0.6.0+ | 0.37.0 | 24+ |
-| 0.8.x | 1.200.0+ | 0.35.0+ | 0.5.0+ | 0.36.0 | 23+ |
+| rules_wasm_component | wasm-tools | wit-bindgen | wac    | TinyGo | WASI SDK |
+| -------------------- | ---------- | ----------- | ------ | ------ | -------- |
+| 1.0.x                | 1.235.0+   | 0.43.0+     | 0.7.0+ | 0.38.0 | 25+      |
+| 0.9.x                | 1.220.0+   | 0.40.0+     | 0.6.0+ | 0.37.0 | 24+      |
+| 0.8.x                | 1.200.0+   | 0.35.0+     | 0.5.0+ | 0.36.0 | 23+      |
 
 ## Environment-Specific Configuration
 
@@ -265,12 +265,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Build with Bazel
-      run: |
-        # Uses download strategy by default - no tool installation needed
-        bazel build //...
-        bazel test //...
+      - uses: actions/checkout@v4
+      - name: Build with Bazel
+        run: |
+          # Uses download strategy by default - no tool installation needed
+          bazel build //...
+          bazel test //...
 ```
 
 ```python title="MODULE.bazel - CI"
@@ -626,8 +626,8 @@ use_repo(wasi_wit_ext, "wasi_io")  # Add more as needed
 
 ### Available WASI Packages
 
-| Package | Repository | Usage |
-|---------|------------|-------|
+| Package              | Repository      | Usage                       |
+| -------------------- | --------------- | --------------------------- |
 | `@wasi_io//:streams` | `wasi:io@0.2.3` | I/O streams, error handling |
 
 ### Using in WIT Files

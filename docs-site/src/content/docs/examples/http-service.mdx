@@ -244,11 +244,13 @@ func CORSMiddleware(req *Request, next func(*Request) *Response) *Response {
 ## Performance Considerations
 
 ### TinyGo Optimizations
+
 - Use leaking GC for better performance in short-lived components
 - Disable goroutine scheduler for single-threaded operations
 - Enable bulk memory operations for faster data transfers
 
 ### Memory Management
+
 ```go
 // Efficient byte slice handling
 func handleLargePayload(body []byte) *Response {

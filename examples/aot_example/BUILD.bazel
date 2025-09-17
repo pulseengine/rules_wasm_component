@@ -1,36 +1,42 @@
 """Example demonstrating Wasmtime AOT compilation integration"""
 
-load("//rust:defs.bzl", "rust_wasm_component")
+load("//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("//wasm:defs.bzl", "wasm_precompile", "wasm_run", "wasm_test")
+load("//wit:defs.bzl", "wit_library")
 
 package(default_visibility = ["//visibility:public"])
 
+# Define WIT interfaces
+wit_library(
+    name = "hello_interfaces",
+    package_name = "example:hello",
+    srcs = ["wit/world.wit"],
+    world = "hello",
+)
+
 # Regular WASM component
-rust_wasm_component(
+rust_wasm_component_bindgen(
     name = "hello_component",
     srcs = ["src/lib.rs"],
-    crate_type = "cdylib",
-    deps = [
-        "@cargo//wit-bindgen:wit-bindgen",
-    ],
-    wit_files = ["wit/world.wit"],
+    profiles = ["release"],
+    wit = ":hello_interfaces",
 )
 
 # AOT precompiled version
 wasm_precompile(
     name = "hello_component_aot",
     component = ":hello_component",
-    optimization_level = 2,
     debug_info = False,  # Production build
+    optimization_level = "2",
     strip_symbols = True,  # Reduce size by ~25%
 )
 
 # High-performance AOT version
 wasm_precompile(
     name = "hello_component_max_opt",
-    component = ":hello_component", 
-    optimization_level = 3,
+    component = ":hello_component",
     debug_info = False,
+    optimization_level = "s",
     strip_symbols = True,
 )
 
@@ -38,8 +44,8 @@ wasm_precompile(
 wasm_precompile(
     name = "hello_component_debug",
     component = ":hello_component",
-    optimization_level = 0,
     debug_info = True,
+    optimization_level = "0",
     strip_symbols = False,
 )
 
@@ -60,7 +66,7 @@ wasm_run(
 # Executable that automatically chooses best version
 wasm_run(
     name = "run_auto",
-    component = ":hello_component_aot", 
+    component = ":hello_component_aot",
     # Will use AOT version automatically
 )
 
@@ -72,7 +78,7 @@ wasm_test(
 )
 
 wasm_test(
-    name = "hello_aot_test", 
+    name = "hello_aot_test",
     component = ":hello_component_aot",
     prefer_aot = True,
 )
@@ -81,8 +87,8 @@ wasm_test(
 wasm_precompile(
     name = "hello_component_x86_64",
     component = ":hello_component",
+    optimization_level = "2",
     target_triple = "x86_64-unknown-linux-gnu",
-    optimization_level = 2,
 )
 
 # Direct WASM file execution
@@ -92,6 +98,6 @@ wasm_run(
 )
 
 wasm_run(
-    name = "run_direct_cwasm", 
+    name = "run_direct_cwasm",
     cwasm_file = ":hello_component_aot",
 )

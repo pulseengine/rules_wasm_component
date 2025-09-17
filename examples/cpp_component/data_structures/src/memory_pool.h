@@ -92,7 +92,7 @@ public:
     size_t get_free_size() const { return total_size_ - used_size_; }
     bool is_valid_pointer(void* ptr) const;
     size_t get_allocation_size(void* ptr) const;
-    
+
     // WASI-compatible initialization check
     bool is_initialized() const { return pool_memory_ != nullptr && total_size_ > 0; }
 

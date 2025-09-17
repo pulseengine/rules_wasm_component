@@ -7,7 +7,8 @@ function formatMessage(name) {
 
 // Component implementation matching the WIT interface
 function sayHello(name) {
-  const processedName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  const processedName =
+    name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   return formatMessage(processedName);
 }
 

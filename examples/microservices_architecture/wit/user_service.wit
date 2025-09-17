@@ -21,11 +21,11 @@ interface user-management {
     create-user: func(name: string, email: string) -> result<u32, string>;
     update-user: func(user-id: u32, name: option<string>, email: option<string>) -> result<_, string>;
     delete-user: func(user-id: u32) -> result<_, string>;
-    
+
     // Authentication functions
     authenticate: func(user-id: u32, token: string) -> auth-result;
     validate-token: func(token: string) -> result<u32, string>;
-    
+
     // User lookup functions
     find-user-by-email: func(email: string) -> option<user>;
     list-users: func(offset: u32, limit: u32) -> list<user>;

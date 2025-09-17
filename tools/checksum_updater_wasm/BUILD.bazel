@@ -57,7 +57,10 @@ rust_wasm_component_wizer(
     init_function_name = "wizer_initialize",
     profiles = ["release"],
     deps = [
+        "@crates//:anyhow",  # ✅ Error handling
+        "@crates//:chrono",  # ✅ Date/time handling
         "@crates//:clap",
+        "@crates//:hex",  # ✅ Hex encoding/decoding
         "@crates//:serde_json",
         "@crates//:tracing",
         "@crates//:tracing-subscriber",

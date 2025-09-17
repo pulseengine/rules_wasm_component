@@ -1,4 +1,4 @@
-#include "minimal_math.h" 
+#include "minimal_math.h"
 #include <cmath>
 #include <iostream>  // Uses full C++ standard library
 

@@ -82,7 +82,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Verify Bazel Installation
         run: bazel version
@@ -198,7 +198,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Verify Bazel Installation
         run: bazel version

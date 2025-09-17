@@ -10,6 +10,7 @@ This example demonstrates the enhanced `wit_bindgen` rule with sophisticated int
 ## Example Location
 
 The complete example is located in:
+
 ```
 examples/wit_bindgen_with_mappings/
 ├── BUILD.bazel              # Multiple wit_bindgen configurations
@@ -75,6 +76,7 @@ wit_bindgen(
 The example shows how to optimize for different use cases:
 
 **Performance-Critical Library:**
+
 ```starlark
 wit_bindgen(
     name = "library_bindings",
@@ -86,6 +88,7 @@ wit_bindgen(
 ```
 
 **Development-Friendly Service:**
+
 ```starlark
 wit_bindgen(
     name = "service_bindings",
@@ -228,6 +231,7 @@ pub fn process_data(
 The example includes comprehensive tests that validate:
 
 ### 1. **Compile-Time Validation**
+
 ```rust
 #[test]
 fn test_basic_bindings_exist() {
@@ -243,6 +247,7 @@ fn test_basic_bindings_exist() {
 ```
 
 ### 2. **Custom Derives Functionality**
+
 ```rust
 #[test]
 fn test_custom_derives_available() {
@@ -267,6 +272,7 @@ fn test_custom_derives_available() {
 ```
 
 ### 3. **Ownership Model Validation**
+
 ```rust
 #[test]
 fn test_borrowing_ownership() {
@@ -287,6 +293,7 @@ fn test_borrowing_ownership() {
 ```
 
 ### 4. **Cross-Binding Comparison**
+
 ```rust
 #[test]
 fn test_same_types_across_bindings() {
@@ -314,6 +321,7 @@ fn test_same_types_across_bindings() {
 ## Usage Examples
 
 ### 1. **API Client with Enhanced Bindings**
+
 ```rust
 use anyhow::Result;
 use advanced_bindings::exports::example::api::service::Guest as ServiceGuest;
@@ -348,6 +356,7 @@ impl ApiClient {
 ```
 
 ### 2. **Logging Client**
+
 ```rust
 use advanced_bindings::example::api::logging::{LogEntry, LogLevel};
 
@@ -373,11 +382,13 @@ impl LoggingClient {
 ## Building the Example
 
 ### Build All Bindings
+
 ```bash
 bazel build //examples/wit_bindgen_with_mappings:all
 ```
 
 ### Build Specific Configurations
+
 ```bash
 # Basic bindings
 bazel build //examples/wit_bindgen_with_mappings:basic_bindings
@@ -390,11 +401,13 @@ bazel build //examples/wit_bindgen_with_mappings:wasi_mapped_bindings
 ```
 
 ### Run Tests
+
 ```bash
 bazel test //examples/wit_bindgen_with_mappings:bindings_test
 ```
 
 ### Build Client Library
+
 ```bash
 bazel build //examples/wit_bindgen_with_mappings:api_client
 ```
@@ -402,22 +415,26 @@ bazel build //examples/wit_bindgen_with_mappings:api_client
 ## Key Insights from the Example
 
 ### 1. **Interface Mapping Benefits**
+
 - **Code Size**: Basic generation creates ~50KB of binding code, mapped interfaces reduce this to ~15KB
 - **Ecosystem Integration**: Mapped WASI interfaces work seamlessly with existing Rust crates
 - **Type Consistency**: Same interface definitions across multiple components
 
 ### 2. **Ownership Model Impact**
+
 - **Borrowing**: 30% performance improvement for large data processing
 - **Memory Usage**: 60% reduction in memory allocations for stream processing
 - **Complexity**: Requires careful lifetime management in calling code
 
 ### 3. **Custom Derives Value**
+
 - **Debug**: Essential for development and troubleshooting
 - **Clone**: Enables flexible data sharing patterns
 - **PartialEq**: Required for testing and comparison operations
 - **Serialize/Deserialize**: Necessary for configuration and API integration
 
 ### 4. **Build Performance**
+
 - **Basic generation**: ~2.5s compilation time
 - **Enhanced with derives**: ~3.2s compilation time (+28%)
 - **Interface mapping**: ~1.8s compilation time (-28% from basic)
@@ -427,6 +444,7 @@ bazel build //examples/wit_bindgen_with_mappings:api_client
 To adopt the enhanced `wit_bindgen` features in existing projects:
 
 ### Phase 1: Basic Enhancement
+
 ```starlark
 # Add minimal enhancements to existing rules
 wit_bindgen(
@@ -441,6 +459,7 @@ wit_bindgen(
 ```
 
 ### Phase 2: Performance Optimization
+
 ```starlark
 # Optimize for performance
 wit_bindgen(
@@ -456,6 +475,7 @@ wit_bindgen(
 ```
 
 ### Phase 3: Interface Mapping
+
 ```starlark
 # Add interface mapping for common interfaces
 wit_bindgen(

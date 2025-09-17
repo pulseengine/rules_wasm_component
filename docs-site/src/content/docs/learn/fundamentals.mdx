@@ -42,6 +42,7 @@ graph LR
 ```
 
 **Key Properties:**
+
 - **Universal**: Same component works in Python, JavaScript, Rust, Go, etc.
 - **Portable**: Runs on Windows, macOS, Linux, browsers, servers, IoT devices
 - **Secure**: Cannot access your filesystem or network unless explicitly allowed
@@ -79,12 +80,14 @@ graph TB
 ```
 
 **WebAssembly Module (Old Way):**
+
 - Raw binary with basic function exports
 - No type safety across language boundaries
 - Hard to compose with other modules
 - Manual memory management
 
 **WebAssembly Component (New Way):**
+
 - Rich interface definitions with types
 - Automatic type conversion between languages
 - Easy composition and dependency management
@@ -97,6 +100,7 @@ graph TB
 ### Example: A Simple Calculator Component
 
 **WIT Interface (calculator.wit):**
+
 ```wit
 package local:calculator@1.0.0;
 
@@ -112,6 +116,7 @@ world calculator {
 ```
 
 **What this means:**
+
 - **Package**: `local:calculator@1.0.0` - unique identifier and version
 - **Interface**: `math` - group of related functions
 - **Functions**: Type-safe function signatures
@@ -122,6 +127,7 @@ world calculator {
 **This same WIT interface generates different code for each language:**
 
 **Rust Implementation:**
+
 ```rust
 // Generated automatically from WIT
 impl Math for Component {
@@ -140,13 +146,14 @@ impl Math for Component {
 ```
 
 **JavaScript Usage:**
+
 ```javascript
 // Generated automatically from WIT
 import { calc } from './calculator.js';
 
-const result = calc.add(5.0, 3.0);       // Returns: 8.0
-const divided = calc.divide(10.0, 2.0);  // Returns: { success: true, error: null, value: 5.0 }
-const error = calc.divide(10.0, 0.0);    // Returns: { success: false, error: "Division by zero is not allowed", value: null }
+const result = calc.add(5.0, 3.0); // Returns: 8.0
+const divided = calc.divide(10.0, 2.0); // Returns: { success: true, error: null, value: 5.0 }
+const error = calc.divide(10.0, 0.0); // Returns: { success: false, error: "Division by zero is not allowed", value: null }
 ```
 
 **The magic:** You write the WIT once, implement it in any language, and it automatically works with every other language.
@@ -186,6 +193,7 @@ graph TB
 ```
 
 **Each component:**
+
 - Built in the best language for its purpose
 - Tested independently
 - Deployed and updated separately
@@ -227,6 +235,7 @@ flowchart LR
 ```
 
 **Security by Design:**
+
 - Components can only access what you explicitly grant
 - No surprise network calls or file system access
 - Capabilities can be limited (e.g., read-only access to specific directories)
@@ -254,6 +263,7 @@ sequenceDiagram
 ```
 
 **What happens at each step:**
+
 1. **Define interfaces** - Write WIT files describing what your component does
 2. **Generate bindings** - Tool creates language-specific interfaces
 3. **Implement logic** - Write your business logic in your chosen language

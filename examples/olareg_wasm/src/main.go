@@ -490,7 +490,7 @@ func main() {
 	fmt.Printf("🚀 Olareg WASM Registry starting on %s\n", addr)
 	fmt.Println("📦 In-memory OCI registry for testing and development")
 	fmt.Println("🔗 Ready to accept OCI registry API calls")
-	
+
 	// Start HTTP server
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		fmt.Printf("❌ Server failed to start: %v\n", err)
@@ -502,7 +502,7 @@ func initRegistry() {
 	// Initialize storage
 	components = make(map[string]*Component)
 	blobs = make(map[string]*Blob)
-	
+
 	// Set registry as running
 	registryRunning = true
 	registryAddr = ":5001"
@@ -510,7 +510,7 @@ func initRegistry() {
 	readOnly = false
 	enablePush = true
 	enableDelete = true
-	
+
 	fmt.Println("✅ Registry initialized with in-memory storage")
 }
 
@@ -518,11 +518,11 @@ func setupRoutes() {
 	// OCI Registry API routes
 	http.HandleFunc("/v2/", handleV2Root)
 	http.HandleFunc("/v2/_catalog", handleCatalog)
-	
+
 	// Health and status endpoints
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/metrics", handleMetrics)
-	
+
 	// Test/debug endpoints
 	http.HandleFunc("/debug/components", handleDebugComponents)
 	http.HandleFunc("/debug/reset", handleDebugReset)
@@ -610,7 +610,7 @@ func handleCatalog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _, componentList := listComponents()
-	
+
 	catalog := struct {
 		Repositories []string `json:"repositories"`
 	}{
@@ -624,7 +624,7 @@ func handleCatalog(w http.ResponseWriter, r *http.Request) {
 func handleManifest(w http.ResponseWriter, r *http.Request) {
 	// Parse URL path to extract name and reference (tag/digest)
 	// Format: /v2/<name>/manifests/<reference>
-	
+
 	// This is a simplified implementation
 	// Full OCI registry would handle complex manifest operations
 	w.Header().Set("Content-Type", "application/vnd.docker.distribution.manifest.v2+json")
@@ -634,8 +634,8 @@ func handleManifest(w http.ResponseWriter, r *http.Request) {
 func handleBlob(w http.ResponseWriter, r *http.Request) {
 	// Parse URL path to extract name and digest
 	// Format: /v2/<name>/blobs/<digest>
-	
-	// This is a simplified implementation  
+
+	// This is a simplified implementation
 	// Full OCI registry would handle blob upload/download
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write([]byte("mock blob data"))
@@ -645,7 +645,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	healthy := healthCheck()
 	status := "unhealthy"
 	statusCode := http.StatusServiceUnavailable
-	
+
 	if healthy {
 		status = "healthy"
 		statusCode = http.StatusOK
@@ -653,7 +653,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	
+
 	response := struct {
 		Status string `json:"status"`
 		Addr   string `json:"addr"`
@@ -661,13 +661,13 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 		Status: status,
 		Addr:   registryAddr,
 	}
-	
+
 	json.NewEncoder(w).Encode(response)
 }
 
 func handleMetrics(w http.ResponseWriter, r *http.Request) {
 	_, metricsData := getMetrics()
-	
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(metricsData))
@@ -682,12 +682,12 @@ func handleDebugComponents(w http.ResponseWriter, r *http.Request) {
 			"components": componentList,
 			"count":      len(componentList),
 		})
-		
+
 	case "POST":
 		// Create test data
 		specs := []string{"test:v1", "mock:v2", "demo:latest"}
 		result, msg := createTestData(specs)
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"result":  result,
@@ -701,9 +701,9 @@ func handleDebugReset(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	result, msg := resetRegistry()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"result":  result,

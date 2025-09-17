@@ -8,6 +8,7 @@ description: Quick start guide for building WebAssembly components with Bazel
 Ready to build software that's **portable**, **secure**, and **fast**? WebAssembly components let you write code once and run it anywhere - from web browsers to servers, IoT devices to desktop apps.
 
 Think of WebAssembly components as **smart LEGO blocks** for software:
+
 - **Plug-and-play**: Components from different languages work together seamlessly
 - **Secure by design**: Each component runs in its own sandbox
 - **Near-native speed**: Performance similar to compiled C/C++
@@ -100,18 +101,21 @@ Ready to build your first component? Choose your preferred approach:
 Now that you have your first component working, explore more advanced features:
 
 ### Language-Specific Guides
+
 - [**Rust Components**](/languages/rust/) - Advanced Rust patterns and optimization
 - [**Go Components**](/languages/go/) - TinyGo with WASI Preview 2
 - [**C++ Components**](/languages/cpp/) - Native C++ development
 - [**JavaScript Components**](/languages/javascript/) - ComponentizeJS integration
 
 ### Advanced Topics
+
 - [**Toolchain Configuration**](/guides/toolchain-configuration/) - Strategies, versions, CI/CD setup
 - [**Component Composition**](/composition/wac/) - Building multi-component systems
 - [**OCI Publishing**](/production/publishing/) - Distribute via container registries
 - [**Performance Optimization**](/production/performance/) - Wizer pre-initialization
 
 ### Examples
+
 - [**Basic Component**](/examples/basic/) - Simple hello world
 - [**Calculator (C++)**](/examples/calculator/) - Math operations with error handling
 - [**HTTP Service (Go)**](/examples/http-service/) - Web service component
@@ -126,11 +130,10 @@ Now that you have your first component working, explore more advanced features:
 
 ## Performance Note
 
-<div class="perf-indicator">
-Fast Builds: Bazel's incremental builds make iteration quick
-</div>
+<div class="perf-indicator">Fast Builds: Bazel's incremental builds make iteration quick</div>
 
 Components built with these rules benefit from:
+
 - **Bazel's build caching** - Only rebuild what changed
 - **Hermetic toolchains** - Consistent builds across environments
 - **Parallel compilation** - Build multiple components simultaneously

@@ -70,12 +70,12 @@ bazel test //examples/oci_signing:verify_secure_greeting
 
 ## Security Levels Comparison
 
-| Security Level | Component Signed | OCI Manifest Signed | Protection |
-|---------------|------------------|-------------------|------------|
-| **None** | ❌ | ❌ | Basic integrity only |
-| **Component Only** | ✅ | ❌ | WASM code integrity |
-| **OCI Only** | ❌ | ✅ | Container image integrity |
-| **Dual-Layer** | ✅ | ✅ | **Full supply chain security** |
+| Security Level     | Component Signed | OCI Manifest Signed | Protection                     |
+| ------------------ | ---------------- | ------------------- | ------------------------------ |
+| **None**           | ❌               | ❌                  | Basic integrity only           |
+| **Component Only** | ✅               | ❌                  | WASM code integrity            |
+| **OCI Only**       | ❌               | ✅                  | Container image integrity      |
+| **Dual-Layer**     | ✅               | ✅                  | **Full supply chain security** |
 
 ## Verification Workflow
 

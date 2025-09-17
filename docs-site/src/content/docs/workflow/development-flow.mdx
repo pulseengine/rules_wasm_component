@@ -28,6 +28,7 @@ bazel build //examples/basic:hello_wit
 ```
 
 The `wit_library` rule validates interfaces during build, catching:
+
 - Syntax errors in WIT files
 - Type resolution issues
 - World definition problems
@@ -115,6 +116,7 @@ bazel test //examples/basic:component_test
 Integration tests are configured in `test/integration/BUILD.bazel`:
 
 The test infrastructure provides:
+
 - **Component Validation**: Structural and semantic correctness
 - **Runtime Testing**: Execution with wasmtime
 - **Interface Compliance**: WIT interface conformance
@@ -132,6 +134,7 @@ bazel build //examples/wizer_example:optimized_component
 ```
 
 **Performance Impact:**
+
 - Startup time: 1.35-6x improvement
 - Memory efficiency: Pre-allocated runtime structures
 - Reduced initialization overhead
@@ -238,12 +241,12 @@ spec:
   template:
     spec:
       containers:
-      - name: wasmtime-runner
-        image: wasmtime/wasmtime:latest
-        command: ["wasmtime", "run", "--wasi", "preview2", "/app/component.wasm"]
-        volumeMounts:
-        - name: component-volume
-          mountPath: /app
+        - name: wasmtime-runner
+          image: wasmtime/wasmtime:latest
+          command: ['wasmtime', 'run', '--wasi', 'preview2', '/app/component.wasm']
+          volumeMounts:
+            - name: component-volume
+              mountPath: /app
 ```
 
 #### Serverless Functions

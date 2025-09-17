@@ -10,6 +10,7 @@ description: Secure your WebAssembly components with cryptographic signatures fo
 **Component signing is like a digital seal of authenticity** for your WebAssembly components. Just as you might verify a package delivery by checking the sender's signature, component signing lets you verify that a component came from a trusted source and hasn't been tampered with.
 
 **Real-world scenarios where this matters:**
+
 - **Public component distribution** - Users need to verify your components are authentic
 - **Enterprise environments** - IT policies require cryptographic verification of all deployed code
 - **Supply chain security** - Prevent malicious components from entering your system
@@ -21,6 +22,7 @@ description: Secure your WebAssembly components with cryptographic signatures fo
 ## How Component Signing Works
 
 **Think of it like notarizing a document:**
+
 1. **You create a signature** using your private key (like signing with a unique pen only you have)
 2. **Others verify the signature** using your public key (like having a reference signature to compare against)
 3. **The component is protected** - any changes break the signature, revealing tampering
@@ -30,6 +32,7 @@ Learn how to cryptographically sign and verify WebAssembly components for secure
 ## Key Benefits
 
 Component signing provides:
+
 - **Authenticity Verification** - Prove components come from trusted sources
 - **Integrity Protection** - Detect any tampering or corruption
 - **Non-repudiation** - Cryptographic proof of component origin
@@ -158,6 +161,7 @@ bazel build //:validate_signed_component
 **Two distinct approaches** with different trade-offs:
 
 **Method 1: Actual OpenSSH Keys (Recommended)**
+
 - Uses real `ssh-keygen` from the openssh Bazel module
 - Generates authentic OpenSSH Ed25519 keys
 - Compatible with GitHub SSH keys and existing infrastructure
@@ -165,6 +169,7 @@ bazel build //:validate_signed_component
 - Requires `bazel_dep(name = "openssh", version = "9.9p1.bcr.1")` in MODULE.bazel
 
 **Method 2: wasmsign2 Compact Keys**
+
 - Uses wasmsign2's built-in key generation
 - Generates compact format keys optimized for WebAssembly signing
 - Smaller key size and faster verification
@@ -173,6 +178,7 @@ bazel build //:validate_signed_component
 ### Key Generation Options
 
 **OpenSSH Format (Recommended for CI/CD):**
+
 ```python
 ssh_keygen(
     name = "github_compatible_keys",
@@ -184,6 +190,7 @@ ssh_keygen(
 ```
 
 **Compact Format (Optimal Performance):**
+
 ```python
 wasm_keygen(
     name = "performance_keys",
@@ -194,6 +201,7 @@ wasm_keygen(
 ```
 
 **Complete Example - Both Key Types:**
+
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen", "wasm_sign")
 load("@rules_wasm_component//wasm:ssh_keygen.bzl", "ssh_keygen")
@@ -231,6 +239,7 @@ wasm_sign(
 ### Key Storage Best Practices
 
 **Development Environment:**
+
 ```python
 ssh_keygen(
     name = "dev_keys",
@@ -242,6 +251,7 @@ ssh_keygen(
 ```
 
 **Production Environment:**
+
 ```bash
 # Store private keys securely
 export PRIVATE_KEY_PATH="/secure/path/private.pem"
@@ -258,6 +268,7 @@ wasm_sign(
 ### GitHub Integration
 
 **Using OpenSSH Keys for Signing:**
+
 ```python
 # Generate OpenSSH keys and use for signing
 ssh_keygen(
@@ -281,11 +292,13 @@ wasm_sign(
 ### Embedded Signatures
 
 **Advantages:**
+
 - Single file distribution
 - Cannot be separated from component
 - Automatic verification
 
 **Use Cases:**
+
 - Internal applications
 - Simple deployment scenarios
 - Development and testing
@@ -302,12 +315,14 @@ wasm_sign(
 ### Detached Signatures
 
 **Advantages:**
+
 - Original component unchanged
 - Multiple signatures possible
 - Flexible verification workflows
 - Better for OCI registries
 
 **Use Cases:**
+
 - Public component distribution
 - Multi-signature workflows
 - OCI registry publishing
@@ -329,6 +344,7 @@ wasm_sign(
 ### Multi-Environment Signing
 
 **Development, Staging, Production:**
+
 ```python
 # Development signing (compact keys)
 wasm_sign(
@@ -359,6 +375,7 @@ wasm_sign(
 ### Multi-Signature Support
 
 **Chain Multiple Signatures:**
+
 ```python
 # First signature (developer)
 wasm_sign(
@@ -388,6 +405,7 @@ wasm_sign(
 ### Conditional Verification
 
 **Different Verification for Different Environments:**
+
 ```python
 # Development - optional verification
 wasm_validate(
@@ -443,6 +461,7 @@ wasm_component_oci_publish(
 ```
 
 **Why dual signing matters:**
+
 - **Component signature**: Verifies the WebAssembly component's integrity and authenticity
 - **Container signature**: Verifies the OCI packaging, metadata, and distribution integrity
 - **Supply chain security**: Protects against attacks at both the component and distribution levels
@@ -630,12 +649,12 @@ echo "=== All signatures verified successfully! ==="
 
 **Different packaging approaches require different key management strategies:**
 
-| Package Type | Key Strategy | Verification Complexity |
-|--------------|--------------|------------------------|
-| **Embedded Resources** | Single component key | Simple - one signature |
-| **OCI Layers** | Component + OCI keys | Medium - two signatures |
-| **Bundle Archives** | Single bundle key | Simple - one signature |
-| **Sidecar Artifacts** | Multiple artifact keys | Complex - multiple signatures |
+| Package Type           | Key Strategy           | Verification Complexity       |
+| ---------------------- | ---------------------- | ----------------------------- |
+| **Embedded Resources** | Single component key   | Simple - one signature        |
+| **OCI Layers**         | Component + OCI keys   | Medium - two signatures       |
+| **Bundle Archives**    | Single bundle key      | Simple - one signature        |
+| **Sidecar Artifacts**  | Multiple artifact keys | Complex - multiple signatures |
 
 **Recommended key separation:**
 
@@ -840,6 +859,7 @@ pipeline {
 ### Zero-Trust Verification
 
 **Verify Everything, Trust Nothing:**
+
 ```python
 # Production rule that always verifies
 wasm_validate(
@@ -865,6 +885,7 @@ wac_compose_with_oci(
 ### Key Rotation Strategy
 
 **Planned Key Rotation:**
+
 ```python
 # Current production keys
 ssh_keygen(
@@ -891,6 +912,7 @@ wasm_verify(
 ### Compliance and Auditing
 
 **Audit Trail Generation:**
+
 ```python
 # Generate signing report
 genrule(
@@ -917,6 +939,7 @@ genrule(
 ### Common Signing Issues
 
 **Issue 1: Key format mismatch**
+
 ```bash
 # Error: Unsupported key format
 # Solution: Check if using ssh_keygen vs wasm_keygen correctly
@@ -936,6 +959,7 @@ wasm_keygen(
 ```
 
 **Issue 2: Permission denied on key files**
+
 ```bash
 # Error: Cannot read private key
 # Solution: Check file permissions
@@ -943,6 +967,7 @@ chmod 600 bazel-bin/keys/private.pem
 ```
 
 **Issue 3: Signature verification failed**
+
 ```bash
 # Debug signature verification
 wasm-tools component wit signed_component.wasm
@@ -955,11 +980,13 @@ wasmsign2 verify signed_component.wasm --public-key public.pem
 ### Performance Optimization
 
 **Signing Performance:**
+
 - Use compact keys for faster signing
 - Sign only release builds, not development
 - Cache signed components in CI/CD
 
 **Verification Performance:**
+
 - Embed signatures for single-file deployment
 - Use hardware security modules for high-volume signing
 - Batch verification in CI/CD pipelines

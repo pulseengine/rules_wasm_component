@@ -386,9 +386,9 @@ With rules_wasm_component installed, you're ready to:
 ## Version Compatibility
 
 | rules_wasm_component | Bazel | wasm-tools | wit-bindgen |
-|---------------------|-------|------------|-------------|
-| 1.0.x               | 7.0+  | 1.0.60+    | 0.30.0+     |
-| 0.9.x               | 6.0+  | 1.0.50+    | 0.25.0+     |
-| 0.8.x               | 6.0+  | 1.0.40+    | 0.20.0+     |
+| -------------------- | ----- | ---------- | ----------- |
+| 1.0.x                | 7.0+  | 1.0.60+    | 0.30.0+     |
+| 0.9.x                | 6.0+  | 1.0.50+    | 0.25.0+     |
+| 0.8.x                | 6.0+  | 1.0.40+    | 0.20.0+     |
 
 Always use the latest stable version for the best experience and newest features.

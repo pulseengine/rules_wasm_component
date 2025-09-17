@@ -23,6 +23,7 @@ This guide shows how to manage these dependencies using Bazel's hermetic, reprod
 There are several ways to obtain and use external WIT files in your project. Choose the method that best fits your source and requirements:
 
 ### Method 1: Local WIT Files
+
 **Best for:** Your own interfaces, local development, vendored dependencies
 
 ```python title="BUILD.bazel"
@@ -35,6 +36,7 @@ wit_library(
 ```
 
 ### Method 2: HTTP Archive (http_archive)
+
 **Best for:** GitHub releases, public repositories, versioned archives
 
 ```python title="MODULE.bazel or WORKSPACE"
@@ -58,6 +60,7 @@ wit_library(
 ```
 
 ### Method 3: WKG Registry
+
 **Best for:** Published component packages, official WASI interfaces, component ecosystem
 
 ```python title="BUILD.bazel"
@@ -76,6 +79,7 @@ wkg_wit_deps(
 ```
 
 ### Method 4: Git Repository
+
 **Best for:** Development versions, internal repositories, specific commits
 
 ```python title="MODULE.bazel"
@@ -98,6 +102,7 @@ wit_library(
 ```
 
 ### Method 5: HTTP File (Single WIT Files)
+
 **Best for:** Individual interface files, simple dependencies
 
 ```python title="MODULE.bazel"
@@ -120,13 +125,13 @@ wit_library(
 
 ### Comparison Matrix
 
-| Method | Use Case | Pros | Cons |
-|--------|----------|------|------|
-| **Local Files** | Own interfaces, development | Simple, fast iteration | No versioning, not shared |
-| **HTTP Archive** | GitHub releases, public repos | Versioned, cacheable, reproducible | Manual setup, SHA256 required |
-| **WKG Registry** | Published components | Official packages, automatic deps | Limited to published packages |
-| **Git Repository** | Development, internal repos | Latest code, flexible | Can break, slower builds |
-| **HTTP File** | Single files | Simple for single interfaces | Not suitable for packages |
+| Method             | Use Case                      | Pros                               | Cons                          |
+| ------------------ | ----------------------------- | ---------------------------------- | ----------------------------- |
+| **Local Files**    | Own interfaces, development   | Simple, fast iteration             | No versioning, not shared     |
+| **HTTP Archive**   | GitHub releases, public repos | Versioned, cacheable, reproducible | Manual setup, SHA256 required |
+| **WKG Registry**   | Published components          | Official packages, automatic deps  | Limited to published packages |
+| **Git Repository** | Development, internal repos   | Latest code, flexible              | Can break, slower builds      |
+| **HTTP File**      | Single files                  | Simple for single interfaces       | Not suitable for packages     |
 
 ### WIT Dependencies Flow
 
@@ -197,6 +202,7 @@ graph TB
 ```
 
 **Key Insights:**
+
 - **Multiple sources** can feed into the same project
 - **External repositories** (@name) isolate dependencies
 - **BUILD files** wire everything together with `wit_library` rules
@@ -271,31 +277,31 @@ The following WASI interfaces are pre-configured and available with dual version
 
 ### WASI 0.2.3 (Latest - Full Feature Set)
 
-| Package | Target | Interfaces | Description |
-|---------|--------|-------------|-------------|
-| `@wasi_io//:streams` | `wasi:io@0.2.3` | `error`, `poll`, `streams` | I/O streams, error handling, polling |
-| `@wasi_cli//:cli` | `wasi:cli@0.2.3` | `environment`, `exit`, `stdin`, `stdout`, `stderr`, `terminal-*` | CLI environment, standard I/O streams |
-| `@wasi_clocks//:clocks` | `wasi:clocks@0.2.3` | `wall-clock`, `monotonic-clock` | System time and timing operations |
-| `@wasi_random//:random` | `wasi:random@0.2.3` | `random`, `insecure`, `insecure-seed` | Random number generation |
-| `@wasi_filesystem//:filesystem` | `wasi:filesystem@0.2.3` | `types`, `preopens` | File system operations ⚠️ |
-| `@wasi_sockets//:sockets` | `wasi:sockets@0.2.3` | `network`, `udp`, `tcp`, `ip-name-lookup` | Network operations ⚠️ |
-| `@wasi_http//:http` | `wasi:http@0.2.3` | `types`, `handler`, `outgoing-handler`, `proxy` | HTTP client/server ⚠️ |
+| Package                         | Target                  | Interfaces                                                       | Description                           |
+| ------------------------------- | ----------------------- | ---------------------------------------------------------------- | ------------------------------------- |
+| `@wasi_io//:streams`            | `wasi:io@0.2.3`         | `error`, `poll`, `streams`                                       | I/O streams, error handling, polling  |
+| `@wasi_cli//:cli`               | `wasi:cli@0.2.3`        | `environment`, `exit`, `stdin`, `stdout`, `stderr`, `terminal-*` | CLI environment, standard I/O streams |
+| `@wasi_clocks//:clocks`         | `wasi:clocks@0.2.3`     | `wall-clock`, `monotonic-clock`                                  | System time and timing operations     |
+| `@wasi_random//:random`         | `wasi:random@0.2.3`     | `random`, `insecure`, `insecure-seed`                            | Random number generation              |
+| `@wasi_filesystem//:filesystem` | `wasi:filesystem@0.2.3` | `types`, `preopens`                                              | File system operations ⚠️             |
+| `@wasi_sockets//:sockets`       | `wasi:sockets@0.2.3`    | `network`, `udp`, `tcp`, `ip-name-lookup`                        | Network operations ⚠️                 |
+| `@wasi_http//:http`             | `wasi:http@0.2.3`       | `types`, `handler`, `outgoing-handler`, `proxy`                  | HTTP client/server ⚠️                 |
 
 ### WASI-NN (Neural Network / Machine Learning)
 
-| Package | Target | Interfaces | Description |
-|---------|--------|-------------|-------------|
-| `@wasi_nn//:nn` | `wasi:nn@0.2.0-rc-2024-10-28` | `tensor`, `graph`, `inference`, `errors` | Neural network inference (latest) |
-| `@wasi_nn_v0_2_0_rc_2024_08_19//:nn` | `wasi:nn@0.2.0-rc-2024-08-19` | `tensor`, `graph`, `inference`, `errors` | Neural network inference |
+| Package                              | Target                        | Interfaces                               | Description                        |
+| ------------------------------------ | ----------------------------- | ---------------------------------------- | ---------------------------------- |
+| `@wasi_nn//:nn`                      | `wasi:nn@0.2.0-rc-2024-10-28` | `tensor`, `graph`, `inference`, `errors` | Neural network inference (latest)  |
+| `@wasi_nn_v0_2_0_rc_2024_08_19//:nn` | `wasi:nn@0.2.0-rc-2024-08-19` | `tensor`, `graph`, `inference`, `errors` | Neural network inference           |
 | `@wasi_nn_v0_2_0_rc_2024_06_25//:nn` | `wasi:nn@0.2.0-rc-2024-06-25` | `tensor`, `graph`, `inference`, `errors` | Neural network inference (initial) |
 
 ### WASI 0.2.0 (Original - Maximum Compatibility)
 
-| Package | Target | Interfaces | Description |
-|---------|--------|-------------|-------------|
-| `@wasi_io_v020//:streams` | `wasi:io@0.2.0` | `error`, `poll`, `streams` | I/O streams (compatible version) |
-| `@wasi_cli_v020//:cli` | `wasi:cli@0.2.0` | `environment`, `exit`, `stdin`, `stdout`, `stderr` | CLI environment (compatible version) |
-| `@wasi_clocks_v020//:clocks` | `wasi:clocks@0.2.0` | `wall-clock`, `monotonic-clock` | System time (compatible version) |
+| Package                      | Target              | Interfaces                                         | Description                          |
+| ---------------------------- | ------------------- | -------------------------------------------------- | ------------------------------------ |
+| `@wasi_io_v020//:streams`    | `wasi:io@0.2.0`     | `error`, `poll`, `streams`                         | I/O streams (compatible version)     |
+| `@wasi_cli_v020//:cli`       | `wasi:cli@0.2.0`    | `environment`, `exit`, `stdin`, `stdout`, `stderr` | CLI environment (compatible version) |
+| `@wasi_clocks_v020//:clocks` | `wasi:clocks@0.2.0` | `wall-clock`, `monotonic-clock`                    | System time (compatible version)     |
 
 ### Status & Recommendations
 
@@ -309,6 +315,7 @@ The following WASI interfaces are pre-configured and available with dual version
 ### Usage Examples
 
 **Simple component (recommended start):**
+
 ```starlark
 wit_library(
     name = "basic_component",
@@ -321,6 +328,7 @@ wit_library(
 ```
 
 **CLI application:**
+
 ```starlark
 wit_library(
     name = "cli_app",
@@ -334,6 +342,7 @@ wit_library(
 ```
 
 **Machine learning component:**
+
 ```starlark
 wit_library(
     name = "ml_service",
@@ -347,6 +356,7 @@ wit_library(
 ```
 
 **Advanced component (when toolchain supports):**
+
 ```starlark
 wit_library(
     name = "web_service",
@@ -360,6 +370,7 @@ wit_library(
 ```
 
 **Maximum compatibility:**
+
 ```starlark
 wit_library(
     name = "compat_component",
@@ -373,6 +384,7 @@ wit_library(
 ```
 
 **WASI-NN version selection:**
+
 ```starlark
 # Latest features (recommended)
 wit_library(
@@ -503,6 +515,7 @@ wkg_publish(
 Here are real-world scenarios showing when and how to use each method:
 
 ### Scenario 1: Building a Machine Learning Inference Service
+
 **Goal:** Create an ML service that processes data using neural network models
 
 ```python title="MODULE.bazel"
@@ -575,6 +588,7 @@ impl Guest for Component {
 ```
 
 ### Scenario 2: Building a Web Service
+
 **Goal:** Create a web service that handles HTTP requests and accesses a database
 
 ```python title="MODULE.bazel"
@@ -614,6 +628,7 @@ wit_library(
 ```
 
 ### Scenario 2: Internal Company APIs
+
 **Goal:** Use shared interfaces from your company's internal systems
 
 ```python title="company-deps.bzl"
@@ -647,6 +662,7 @@ wit_library(
 ```
 
 ### Scenario 3: Rapid Prototyping
+
 **Goal:** Quickly grab a single interface file for experimentation
 
 ```python title="MODULE.bazel"
@@ -671,6 +687,7 @@ wit_library(
 ```
 
 ### Scenario 4: Production System with Multiple Sources
+
 **Goal:** Enterprise system using interfaces from multiple sources with proper versioning
 
 ```python title="production-deps.bzl"
@@ -721,6 +738,7 @@ wit_library(
 ```
 
 ### Scenario 5: Local Development with External Testing
+
 **Goal:** Develop interfaces locally but test against external implementations
 
 ```python title="BUILD.bazel"
@@ -962,21 +980,27 @@ rust_wasm_component_bindgen(
 ### Common Issues
 
 **Package version mismatch:**
+
 ```
 Error: package 'myorg:api@1.0.0' not found. known packages: myorg:api@1.1.0
 ```
+
 Solution: Update version in WIT import or dependency definition.
 
 **Missing dependency:**
+
 ```
 Error: failed to resolve directory while parsing WIT
 ```
+
 Solution: Add missing dependency to `deps` attribute in `wit_library`.
 
 **Checksum validation failed:**
+
 ```
 Error: Checksum was abc123... but wanted def456...
 ```
+
 Solution: Recalculate SHA256 checksum and update in `http_archive`.
 
 ### Debugging Steps

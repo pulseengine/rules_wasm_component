@@ -10,6 +10,7 @@ description: Strategies for packaging WebAssembly components with additional fil
 **Most real-world applications need more than just a WebAssembly component** - they need configuration files, static assets, documentation, and multiple related components working together. This guide shows you how to package these additional files effectively while maintaining security and performance.
 
 **What makes multi-file packaging challenging:**
+
 - **Distribution complexity** - How do you ship multiple files as a cohesive unit?
 - **Security coordination** - How do you sign and verify packages with multiple files?
 - **Runtime access** - How does your component access the additional files at runtime?
@@ -35,18 +36,19 @@ Multi-file packaging offers several strategies:
 
 ## Strategy Comparison
 
-| Approach | Best For | Complexity | Performance | Security |
-|----------|----------|------------|-------------|----------|
-| **Embedded Resources** | Config files, small assets | Low | Excellent | Simple |
-| **OCI Image Layers** | Large assets, dynamic files | Medium | Good | Complex |
-| **Bundle Archives** | Related file collections | Medium | Good | Medium |
-| **Sidecar Artifacts** | Independent file lifecycles | High | Variable | Complex |
+| Approach               | Best For                    | Complexity | Performance | Security |
+| ---------------------- | --------------------------- | ---------- | ----------- | -------- |
+| **Embedded Resources** | Config files, small assets  | Low        | Excellent   | Simple   |
+| **OCI Image Layers**   | Large assets, dynamic files | Medium     | Good        | Complex  |
+| **Bundle Archives**    | Related file collections    | Medium     | Good        | Medium   |
+| **Sidecar Artifacts**  | Independent file lifecycles | High       | Variable    | Complex  |
 
 ## 1. Embedded Resources (Recommended)
 
 **The simplest and most performant approach** - embed files directly into your WebAssembly component at build time. Perfect for configuration files, templates, small assets, and any files that don't change independently of your component.
 
 **When to use embedded resources:**
+
 - **Configuration files** that ship with your component
 - **Templates and schemas** your component needs at runtime
 - **Small static assets** like icons or default data
@@ -132,12 +134,14 @@ rust_wasm_component_bindgen(
 ```
 
 **Benefits of embedded resources:**
+
 - ✅ **Single artifact** - No coordination between multiple files
 - ✅ **Fast deployment** - Everything loads together
 - ✅ **Simple security** - Component signature covers all files
 - ✅ **No runtime dependencies** - Files always available
 
 **Limitations:**
+
 - ❌ **Rebuild required** for file changes
 - ❌ **Size bloat** for large files
 - ❌ **No dynamic updates** without redeployment
@@ -147,6 +151,7 @@ rust_wasm_component_bindgen(
 **Use traditional container patterns** when you need large files, dynamic content, or want to separate concerns into different layers. This approach creates proper OCI images with multiple layers.
 
 **When to use OCI layers:**
+
 - **Large static assets** (>1MB) that would bloat the component
 - **Dynamic content** that updates independently
 - **Shared files** used by multiple components
@@ -224,12 +229,14 @@ impl Guest for Component {
 ```
 
 **Benefits of OCI layers:**
+
 - ✅ **Large file support** - No component size limitations
 - ✅ **Independent updates** - Update files without rebuilding component
 - ✅ **Shared layers** - Reuse common files across components
 - ✅ **Standard tooling** - Works with existing OCI ecosystem
 
 **Limitations:**
+
 - ❌ **Complex deployment** - Multiple artifacts to coordinate
 - ❌ **Runtime dependencies** - WASI filesystem access required
 - ❌ **Security complexity** - Multiple signatures to verify
@@ -239,6 +246,7 @@ impl Guest for Component {
 **Pre-package everything into a single archive** that gets distributed as the component artifact. Good for collections of related files that should be versioned together.
 
 **When to use bundle archives:**
+
 - **Document collections** that belong together
 - **Multi-component systems** that should deploy as a unit
 - **Legacy integration** where you need specific archive formats
@@ -311,12 +319,14 @@ impl Guest for Component {
 ```
 
 **Benefits of bundle archives:**
+
 - ✅ **Single distribution** - Everything in one artifact
 - ✅ **Version coherence** - All files versioned together
 - ✅ **Format flexibility** - Support tar, zip, or custom formats
 - ✅ **Offline friendly** - Self-contained deployment
 
 **Limitations:**
+
 - ❌ **Extraction overhead** - Runtime unpacking required
 - ❌ **Memory usage** - Full bundle loaded into memory
 - ❌ **Update granularity** - Must update entire bundle for any change
@@ -326,6 +336,7 @@ impl Guest for Component {
 **Distribute different file types as separate OCI artifacts** that get coordinated during deployment. Best for complex systems where different teams manage different file types.
 
 **When to use sidecar artifacts:**
+
 - **Large shared assets** managed by different teams
 - **Independent lifecycles** for configuration vs code
 - **Compliance requirements** for separate artifact signatures
@@ -423,12 +434,14 @@ spec:
 ```
 
 **Benefits of sidecar artifacts:**
+
 - ✅ **Independent lifecycles** - Update files without touching code
 - ✅ **Team separation** - Different teams manage different artifacts
 - ✅ **Granular security** - Separate signatures for each artifact type
 - ✅ **Flexible composition** - Mix and match artifacts for different deployments
 
 **Limitations:**
+
 - ❌ **Coordination complexity** - Multiple artifacts to manage
 - ❌ **Deployment overhead** - More moving parts in production
 - ❌ **Version drift risk** - Artifacts can get out of sync
@@ -440,6 +453,7 @@ spec:
 **Each packaging approach has different security implications** that affect how you sign and verify your packages:
 
 #### Embedded Resources
+
 ```python title="BUILD.bazel"
 # Single signature covers component + embedded files
 wasm_component_signed_oci_image(
@@ -452,6 +466,7 @@ wasm_component_signed_oci_image(
 ```
 
 #### OCI Image Layers
+
 ```python title="BUILD.bazel"
 # Dual signing: component signature + OCI manifest signature
 wasm_component_signed_oci_image(
@@ -470,6 +485,7 @@ wasm_component_signed_oci_image(
 ```
 
 #### Sidecar Artifacts
+
 ```python title="BUILD.bazel"
 # Each artifact signed independently
 wasm_component_signed_oci_image(
@@ -515,12 +531,12 @@ cosign verify registry.example.com/apps/service-assets:v1.0.0 --key assets.pub
 
 **Keep your packages lean** for faster deployment and better performance:
 
-| Package Type | Recommended Size | Maximum Size | Optimization Strategy |
-|--------------|------------------|--------------|----------------------|
-| **Embedded Resources** | < 100KB | < 1MB | Compress files, use binary formats |
-| **OCI Layers** | < 10MB per layer | < 100MB | Layer sharing, delta compression |
-| **Bundle Archives** | < 5MB | < 50MB | Selective inclusion, compression |
-| **Sidecar Artifacts** | Variable | < 100MB | Granular splitting, caching |
+| Package Type           | Recommended Size | Maximum Size | Optimization Strategy              |
+| ---------------------- | ---------------- | ------------ | ---------------------------------- |
+| **Embedded Resources** | < 100KB          | < 1MB        | Compress files, use binary formats |
+| **OCI Layers**         | < 10MB per layer | < 100MB      | Layer sharing, delta compression   |
+| **Bundle Archives**    | < 5MB            | < 50MB       | Selective inclusion, compression   |
+| **Sidecar Artifacts**  | Variable         | < 100MB      | Granular splitting, caching        |
 
 ### Build-Time Optimization
 
@@ -629,6 +645,7 @@ copy_file(
 ```
 
 **Benefits of Bazel Skylib approach:**
+
 - ✅ **Cross-platform** - Works on Windows, macOS, Linux
 - ✅ **Hermetic** - No dependency on system shell or tools
 - ✅ **Cacheable** - Better incremental build performance
@@ -651,6 +668,7 @@ copy_file(
 ---
 
 **Next Steps:**
+
 - Try the [embedded resources example](../examples/multi-language#embedded-resources)
 - Learn about [OCI signing](../security/oci-signing) for multi-layer packages
 - Explore [production deployment](../production/deployment-guide) patterns

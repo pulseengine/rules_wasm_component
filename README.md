@@ -39,12 +39,14 @@ rust_wasm_component_bindgen(
 ## Known Limitations
 
 ### Go WIT Components (Temporary)
+
 - **Issue**: WIT-enabled Go components currently fail due to upstream TinyGo limitations
 - **Tracking**: [GitHub Issue #82](https://github.com/pulseengine/rules_wasm_component/issues/82)
 - **Status**: Excluded from CI until [TinyGo PR #4934](https://github.com/tinygo-org/tinygo/pull/4934) lands
 - **Workaround**: Basic Go components (without WIT) work perfectly
 
 ### C++ Exception Handling
+
 - **Design**: WASI disables C++ exceptions by default for size/performance
 - **Solution**: Components use error codes instead of exceptions ([Issue #83](https://github.com/pulseengine/rules_wasm_component/issues/83))
 - **Override**: Use `enable_exceptions = True` for components that require exceptions

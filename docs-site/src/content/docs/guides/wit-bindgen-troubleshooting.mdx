@@ -32,6 +32,7 @@ flowchart LR
 ```
 
 **Why this happens:**
+
 - Interface name doesn't match exactly
 - Interface is not actually in the WIT file
 - Typo in interface path
@@ -39,6 +40,7 @@ flowchart LR
 #### Solutions
 
 **Check interface names exactly:**
+
 ```bash
 # Debug: See what interfaces are actually available
 bazel build //your:target --verbose_failures
@@ -46,6 +48,7 @@ bazel build //your:target --verbose_failures
 ```
 
 **Correct interface paths:**
+
 ```starlark
 # ❌ Wrong: Missing package name
 with_mappings = {
@@ -59,6 +62,7 @@ with_mappings = {
 ```
 
 **Debug with WIT inspection:**
+
 ```bash
 # Use wasm-tools to inspect WIT files
 wasm-tools component wit your_component.wasm
@@ -98,6 +102,7 @@ graph TB
 **Solutions by language:**
 
 **Rust - Check function names:**
+
 ```starlark
 # ❌ Wrong: Function name mismatch
 async_interfaces = ["example:api/service#async-process"]
@@ -107,12 +112,14 @@ async_interfaces = ["example:api/service#process-async"]  # Note hyphen
 ```
 
 **JavaScript - Use broad async:**
+
 ```starlark
 # ✅ JavaScript is naturally async
 async_interfaces = ["all"]
 ```
 
 **Go - Usually avoid async:**
+
 ```starlark
 # ✅ Go uses goroutines, not async interfaces
 async_interfaces = []
@@ -152,18 +159,21 @@ sequenceDiagram
 **Solutions:**
 
 **For Rust beginners - use owning:**
+
 ```starlark
 # ✅ Simple but potentially slower
 ownership = "owning"
 ```
 
 **For performance - use borrowing correctly:**
+
 ```starlark
 # ✅ Fast but requires lifetime management
 ownership = "borrowing"
 ```
 
 **For mixed patterns - use adaptive:**
+
 ```starlark
 # ✅ Balances performance and simplicity
 ownership = "borrowing-duplicate-if-necessary"
@@ -198,6 +208,7 @@ graph LR
 **Solutions:**
 
 **Add serde dependency for Rust:**
+
 ```starlark
 rust_library(
     name = "my_component",
@@ -210,6 +221,7 @@ rust_library(
 ```
 
 **Use only std derives:**
+
 ```starlark
 # ✅ Safe - always available in Rust std
 additional_derives = ["Clone", "Debug", "PartialEq"]
@@ -223,11 +235,13 @@ additional_derives = ["Serialize", "Deserialize"]
 ### Rust-Specific Issues
 
 #### Issue: Lifetime Compilation Errors
+
 ```rust
 error[E0621]: explicit lifetime required
 ```
 
 **Root cause - borrowing ownership:**
+
 ```mermaid
 graph LR
     Input[&'a str] --> Generated[Generated Function]
@@ -240,11 +254,13 @@ graph LR
 **Solutions:**
 
 **Option 1: Use owning model:**
+
 ```starlark
 ownership = "owning"  # Eliminates lifetime issues
 ```
 
 **Option 2: Add explicit lifetimes:**
+
 ```rust
 // In your calling code
 fn process_data<'a>(input: &'a str) -> Result<SomeType<'a>, Error> {
@@ -253,16 +269,19 @@ fn process_data<'a>(input: &'a str) -> Result<SomeType<'a>, Error> {
 ```
 
 **Option 3: Use Cow pattern:**
+
 ```starlark
 ownership = "borrowing-duplicate-if-necessary"  # Handles lifetimes automatically
 ```
 
 #### Issue: Resource Management
+
 ```rust
 error: resource handle not properly managed
 ```
 
 **Understanding WIT resources in Rust:**
+
 ```mermaid
 classDiagram
     class WIT_Resource {
@@ -285,6 +304,7 @@ classDiagram
 ```
 
 **Solution - let Rust handle resources:**
+
 ```rust
 // ✅ Correct - RAII pattern
 {
@@ -301,11 +321,13 @@ resource.drop(); // Not necessary in Rust
 ### JavaScript-Specific Issues
 
 #### Issue: Promise Handling
+
 ```javascript
 TypeError: Cannot read property 'then' of undefined
 ```
 
 **Understanding JS async generation:**
+
 ```mermaid
 sequenceDiagram
     participant JS as JavaScript Code
@@ -329,6 +351,7 @@ sequenceDiagram
 **Solutions:**
 
 **Configure all interfaces as async:**
+
 ```starlark
 wit_bindgen(
     name = "js_bindings",
@@ -338,20 +361,23 @@ wit_bindgen(
 ```
 
 **Handle promises correctly:**
+
 ```javascript
 // ✅ Correct - await the result
 const result = await myBindings.process(data);
 
 // ❌ Wrong - not awaiting Promise
-const result = myBindings.process(data);  // Returns Promise object
+const result = myBindings.process(data); // Returns Promise object
 ```
 
 #### Issue: Memory Management
+
 ```javascript
 RangeError: Invalid array buffer length
 ```
 
 **Understanding JS/WASM memory boundary:**
+
 ```mermaid
 graph LR
     subgraph "JavaScript Heap"
@@ -377,29 +403,32 @@ graph LR
 ```
 
 **Solution - handle large data properly:**
+
 ```javascript
 // ✅ Correct - check sizes
 if (data.byteLength > MAX_WASM_MEMORY) {
-    // Process in chunks
-    const chunks = chunkArray(data, CHUNK_SIZE);
-    for (const chunk of chunks) {
-        await processChunk(chunk);
-    }
+  // Process in chunks
+  const chunks = chunkArray(data, CHUNK_SIZE);
+  for (const chunk of chunks) {
+    await processChunk(chunk);
+  }
 }
 
 // ❌ Wrong - passing huge arrays
-const hugeArray = new Uint8Array(1e9);  // 1GB
-await process(hugeArray);  // May fail
+const hugeArray = new Uint8Array(1e9); // 1GB
+await process(hugeArray); // May fail
 ```
 
 ### Go-Specific Issues
 
 #### Issue: Error Handling Patterns
+
 ```go
 panic: interface conversion: interface {} is nil, not string
 ```
 
 **Understanding Go error patterns:**
+
 ```mermaid
 graph TB
     subgraph "WIT Result Type"
@@ -420,6 +449,7 @@ graph TB
 ```
 
 **Solution - handle errors explicitly:**
+
 ```go
 // ✅ Correct - check errors
 result, err := myBinding.Process(data)
@@ -433,11 +463,13 @@ result, _ := myBinding.Process(data)  // Dangerous
 ```
 
 #### Issue: Resource Lifecycle
+
 ```go
 resource finalized while still in use
 ```
 
 **Go GC vs WASM resources:**
+
 ```mermaid
 sequenceDiagram
     participant Go as Go Code
@@ -455,6 +487,7 @@ sequenceDiagram
 ```
 
 **Solution - manage resource lifetime:**
+
 ```go
 func processWithResource(data []byte) error {
     resource := NewMyResource(config)
@@ -485,6 +518,7 @@ pie title Binary Size Breakdown
 **Solutions by configuration:**
 
 **Reduce interface duplication:**
+
 ```starlark
 # Before: 500KB binary
 with_mappings = {}
@@ -497,6 +531,7 @@ with_mappings = {
 ```
 
 **Optimize derives:**
+
 ```starlark
 # Before: Every derive adds ~5KB
 additional_derives = ["Clone", "Debug", "PartialEq", "Eq", "Hash", "Serialize", "Deserialize"]
@@ -510,6 +545,7 @@ additional_derives = ["Clone", "Debug"]
 #### Problem: Slow component startup
 
 **Performance analysis:**
+
 ```mermaid
 graph LR
     subgraph "Startup Phases"
@@ -532,6 +568,7 @@ graph LR
 **Solutions:**
 
 **Optimize for startup:**
+
 ```starlark
 wit_bindgen(
     name = "fast_startup",
@@ -549,6 +586,7 @@ wit_bindgen(
 #### Problem: High memory usage
 
 **Memory usage patterns by ownership:**
+
 ```mermaid
 graph TB
     subgraph "Owning Pattern"
@@ -566,6 +604,7 @@ graph TB
 ```
 
 **Solution - optimize ownership:**
+
 ```starlark
 # For memory-constrained environments
 ownership = "borrowing"  # Reduces memory copies
@@ -577,6 +616,7 @@ ownership = "borrowing-duplicate-if-necessary"  # Adaptive
 ## Best Practices by Use Case
 
 ### Library Component
+
 ```starlark
 wit_bindgen(
     name = "library_bindings",
@@ -601,6 +641,7 @@ wit_bindgen(
 ```
 
 ### Service Component
+
 ```starlark
 wit_bindgen(
     name = "service_bindings",
@@ -628,6 +669,7 @@ wit_bindgen(
 ```
 
 ### Integration Component
+
 ```starlark
 wit_bindgen(
     name = "integration_bindings",
@@ -657,6 +699,7 @@ wit_bindgen(
 ## Debugging Tools and Techniques
 
 ### Inspect Generated Code
+
 ```bash
 # See what actually gets generated
 bazel build //your:target
@@ -667,6 +710,7 @@ wasm-tools component wit bazel-bin/your/target.wasm
 ```
 
 ### Validate Configuration
+
 ```bash
 # Verbose build to see wit-bindgen command
 bazel build //your:target --verbose_failures
@@ -676,6 +720,7 @@ bazel build //your:target --verbose_failures
 ```
 
 ### Performance Profiling
+
 ```bash
 # Component size analysis
 wasm-tools component size bazel-bin/your/component.wasm

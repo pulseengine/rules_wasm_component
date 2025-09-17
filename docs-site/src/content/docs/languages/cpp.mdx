@@ -166,6 +166,7 @@ cpp_component(
 ```
 
 **Attributes:**
+
 - `name`: Target name
 - `package_name`: WIT package identifier
 - `srcs`: Source files (.c, .cpp, .cc)
@@ -378,12 +379,14 @@ public:
 ## C++ Standards and Features
 
 ### Supported Standards
+
 - **C++11**: Basic modern C++ features
 - **C++14**: Enhanced constexpr, variable templates
 - **C++17**: std::optional, std::variant, filesystem
 - **C++20**: Concepts, modules, coroutines (recommended)
 
 ### Language Features
+
 - **Templates**: Full template metaprogramming support
 - **STL**: Standard Template Library available
 - **Exceptions**: Currently not supported by WASI SDK (see limitations below)
@@ -391,6 +394,7 @@ public:
 - **Threading**: Limited threading support (single-threaded execution)
 
 ### Memory Management
+
 ```cpp
 // Smart pointers work well in components
 std::unique_ptr<Calculator> calc = std::make_unique<Calculator>();
@@ -408,6 +412,7 @@ public:
 ## Performance Optimization
 
 ### Compilation Flags
+
 ```python
 cpp_component(
     name = "optimized_component",
@@ -419,6 +424,7 @@ cpp_component(
 ```
 
 ### Best Practices
+
 1. **Minimize allocations**: Use stack allocation when possible
 2. **Use error codes or Result types**: Instead of exceptions (required)
 3. **Use const correctness**: Enable compiler optimizations
@@ -428,6 +434,7 @@ cpp_component(
 ## Integration Patterns
 
 ### Error Handling
+
 ```cpp
 // WIT result types map to C++ variants
 using CalculationResult = std::variant<double, std::string>;
@@ -441,6 +448,7 @@ CalculationResult divide(double a, double b) {
 ```
 
 ### String Handling
+
 ```cpp
 // WIT strings map to std::string
 std::string processText(const std::string& input) {
@@ -451,6 +459,7 @@ std::string processText(const std::string& input) {
 ```
 
 ### Collections
+
 ```cpp
 // WIT lists map to std::vector
 std::vector<double> processNumbers(const std::vector<double>& numbers) {
@@ -465,6 +474,7 @@ std::vector<double> processNumbers(const std::vector<double>& numbers) {
 ## Testing C++ Components
 
 ### Unit Testing
+
 ```cpp title="test/calculator_test.cpp"
 #include "calculator.h"
 #include <cassert>
@@ -489,6 +499,7 @@ void testBasicOperations() {
 ```
 
 ### Integration Testing
+
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//test:defs.bzl", "wasm_component_test")
 
@@ -507,11 +518,13 @@ wasm_component_test(
 **Current Status**: WASI SDK does not support C++ exceptions. Components must be built with `enable_exceptions = False`.
 
 **Technical Details**:
+
 - WASI SDK's libc++abi is compiled without exception handling support
 - Missing runtime symbols: `__cxa_allocate_exception`, `__cxa_throw`, `__cxa_free_exception`
 - WebAssembly exception handling proposal is available but not yet integrated in WASI SDK
 
 **Required Configuration**:
+
 ```python
 cpp_component(
     name = "my_component",
@@ -527,6 +540,7 @@ cc_component_library(
 ```
 
 **Error Handling Alternatives**:
+
 ```cpp
 // ✅ Use Result types or error codes instead of exceptions
 std::variant<double, std::string> divide(double a, double b) {
@@ -558,6 +572,7 @@ struct Result {
 Components built with rules_wasm_component include automatic validation to ensure they conform to the WebAssembly Component Model specification.
 
 **Enable Validation**:
+
 ```python
 cpp_component(
     name = "validated_component",
@@ -567,11 +582,13 @@ cpp_component(
 ```
 
 **Validation Process**:
+
 1. **WIT Interface Check**: Ensures component exports match WIT specification
 2. **Component Model Compliance**: Validates against WebAssembly Component Model format
 3. **Type Safety**: Verifies that exported functions have correct signatures
 
 **Validation Output**:
+
 ```bash
 # Validation creates a log file showing results
 bazel build //:my_component
@@ -579,6 +596,7 @@ bazel build //:my_component
 ```
 
 **Common Validation Errors**:
+
 - **Export mismatch**: Component doesn't export all functions declared in WIT
 - **Type signature mismatch**: Function parameters or return types don't match WIT
 - **Missing world implementation**: WIT world not properly implemented
@@ -588,32 +606,40 @@ bazel build //:my_component
 ### Common Issues
 
 **Linker errors with C++ exception symbols:**
+
 ```
 wasm-ld: error: undefined symbol: __cxa_allocate_exception
 wasm-ld: error: undefined symbol: __cxa_throw
 ```
+
 **Solution**: Set `enable_exceptions = False` (required for WASI SDK)
 
 **Memory allocation failures:**
+
 ```
 Error: out of memory
 ```
+
 - Reduce memory usage in component
 - Use stack allocation instead of heap when possible
 - Profile memory usage patterns
 
 **Missing standard library functions:**
+
 ```
 Error: 'pthread_create' undefined
 ```
+
 - Threading is limited in WebAssembly
 - Use single-threaded algorithms
 - Consider async patterns instead of threads
 
 **Validation failures:**
+
 ```
 Error: Component doesn't export function 'calculate'
 ```
+
 - Check WIT file matches component implementation
 - Ensure all exported functions are implemented
 - Verify function signatures match exactly
@@ -621,12 +647,14 @@ Error: Component doesn't export function 'calculate'
 ### Performance Issues
 
 **Large component size:**
+
 - Always use `enable_exceptions = False` (required)
 - Use smaller standard library subset
 - Enable optimization: `optimize = True`
 - Consider C instead of C++ for minimal components
 
 **Slow execution:**
+
 - Enable compiler optimization
 - Profile hot code paths
 - Minimize dynamic allocation

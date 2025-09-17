@@ -9,11 +9,11 @@ description: Rules for signing, verifying, and securing WebAssembly components
 
 ## Quick Reference
 
-| Rule | Purpose | Use Case |
-|------|---------|----------|
-| **[wasm_sign](#wasm_sign)** | Sign components | Production deployment |
-| **[wasm_verify](#wasm_verify)** | Verify signatures | Security validation |
-| **[wasm_keygen](#wasm_keygen)** | Generate key pairs | Key management |
+| Rule                            | Purpose            | Use Case              |
+| ------------------------------- | ------------------ | --------------------- |
+| **[wasm_sign](#wasm_sign)**     | Sign components    | Production deployment |
+| **[wasm_verify](#wasm_verify)** | Verify signatures  | Security validation   |
+| **[wasm_keygen](#wasm_keygen)** | Generate key pairs | Key management        |
 
 ---
 
@@ -36,26 +36,27 @@ wasm_sign(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `component` | Label | ✅ | WebAssembly component to sign |
-| `private_key` | Label | ✅ | Private key file for signing |
-| `algorithm` | String | ❌ | Signature algorithm ("ed25519", "rsa", "ecdsa") |
-| `metadata` | Dict[String, String] | ❌ | Additional metadata to include in signature |
-| `timestamp` | Boolean | ❌ | Include timestamp in signature (default: true) |
+| Name          | Type                 | Required | Description                                     |
+| ------------- | -------------------- | -------- | ----------------------------------------------- |
+| `name`        | String               | ✅       | A unique name for this target                   |
+| `component`   | Label                | ✅       | WebAssembly component to sign                   |
+| `private_key` | Label                | ✅       | Private key file for signing                    |
+| `algorithm`   | String               | ❌       | Signature algorithm ("ed25519", "rsa", "ecdsa") |
+| `metadata`    | Dict[String, String] | ❌       | Additional metadata to include in signature     |
+| `timestamp`   | Boolean              | ❌       | Include timestamp in signature (default: true)  |
 
 ### Supported Algorithms
 
-| Algorithm | Key Size | Performance | Security | Use Case |
-|-----------|----------|-------------|----------|----------|
-| **ed25519** | 256-bit | ⭐⭐⭐ Fast | ⭐⭐⭐ High | Recommended default |
-| **rsa** | 2048/4096-bit | ⭐⭐ Medium | ⭐⭐⭐ High | Enterprise compatibility |
-| **ecdsa** | 256/384-bit | ⭐⭐⭐ Fast | ⭐⭐⭐ High | Standards compliance |
+| Algorithm   | Key Size      | Performance | Security    | Use Case                 |
+| ----------- | ------------- | ----------- | ----------- | ------------------------ |
+| **ed25519** | 256-bit       | ⭐⭐⭐ Fast | ⭐⭐⭐ High | Recommended default      |
+| **rsa**     | 2048/4096-bit | ⭐⭐ Medium | ⭐⭐⭐ High | Enterprise compatibility |
+| **ecdsa**   | 256/384-bit   | ⭐⭐⭐ Fast | ⭐⭐⭐ High | Standards compliance     |
 
 ### Examples
 
 **Basic Component Signing:**
+
 ```python
 wasm_sign(
     name = "production_component",
@@ -66,6 +67,7 @@ wasm_sign(
 ```
 
 **Signed with Metadata:**
+
 ```python
 wasm_sign(
     name = "signed_with_metadata",
@@ -83,6 +85,7 @@ wasm_sign(
 ```
 
 **Development Signing:**
+
 ```python
 wasm_sign(
     name = "dev_signed_component",
@@ -117,18 +120,19 @@ wasm_verify(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `signed_component` | Label | ✅ | Signed component to verify |
-| `public_key` | Label | ✅ | Public key file for verification |
-| `fail_on_invalid` | Boolean | ❌ | Fail build if signature is invalid (default: true) |
-| `required_metadata` | Dict[String, String] | ❌ | Required metadata fields and values |
-| `max_age` | String | ❌ | Maximum signature age ("24h", "7d", "30d") |
+| Name                | Type                 | Required | Description                                        |
+| ------------------- | -------------------- | -------- | -------------------------------------------------- |
+| `name`              | String               | ✅       | A unique name for this target                      |
+| `signed_component`  | Label                | ✅       | Signed component to verify                         |
+| `public_key`        | Label                | ✅       | Public key file for verification                   |
+| `fail_on_invalid`   | Boolean              | ❌       | Fail build if signature is invalid (default: true) |
+| `required_metadata` | Dict[String, String] | ❌       | Required metadata fields and values                |
+| `max_age`           | String               | ❌       | Maximum signature age ("24h", "7d", "30d")         |
 
 ### Examples
 
 **Basic Verification:**
+
 ```python
 wasm_verify(
     name = "verify_production_component",
@@ -139,6 +143,7 @@ wasm_verify(
 ```
 
 **Verification with Requirements:**
+
 ```python
 wasm_verify(
     name = "strict_verification",
@@ -154,6 +159,7 @@ wasm_verify(
 ```
 
 **Development Verification:**
+
 ```python
 wasm_verify(
     name = "verify_dev_component",
@@ -184,18 +190,19 @@ wasm_keygen(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `algorithm` | String | ✅ | Key generation algorithm |
-| `private_key_output` | String | ✅ | Output filename for private key |
-| `public_key_output` | String | ✅ | Output filename for public key |
-| `key_size` | Integer | ❌ | Key size in bits (algorithm-dependent) |
-| `password_protect` | Boolean | ❌ | Password protect private key (default: false) |
+| Name                 | Type    | Required | Description                                   |
+| -------------------- | ------- | -------- | --------------------------------------------- |
+| `name`               | String  | ✅       | A unique name for this target                 |
+| `algorithm`          | String  | ✅       | Key generation algorithm                      |
+| `private_key_output` | String  | ✅       | Output filename for private key               |
+| `public_key_output`  | String  | ✅       | Output filename for public key                |
+| `key_size`           | Integer | ❌       | Key size in bits (algorithm-dependent)        |
+| `password_protect`   | Boolean | ❌       | Password protect private key (default: false) |
 
 ### Examples
 
 **Generate Ed25519 Keys (Recommended):**
+
 ```python
 wasm_keygen(
     name = "prod_keys",
@@ -206,6 +213,7 @@ wasm_keygen(
 ```
 
 **Generate RSA Keys:**
+
 ```python
 wasm_keygen(
     name = "enterprise_keys",
@@ -218,6 +226,7 @@ wasm_keygen(
 ```
 
 **Generate ECDSA Keys:**
+
 ```python
 wasm_keygen(
     name = "standards_keys",
@@ -335,6 +344,7 @@ wasm_verify(
 ## Key Management Best Practices
 
 ### Development Environment
+
 ```bash
 # Generate development keys (not for production!)
 bazel run //:dev_keygen
@@ -344,6 +354,7 @@ bazel build //:dev_signed_component
 ```
 
 ### Production Environment
+
 ```bash
 # Use hardware security module (HSM) or secure key storage
 export SIGNING_KEY_PATH="/secure/storage/prod_key.pem"
@@ -355,6 +366,7 @@ bazel build //:prod_component \\
 ```
 
 ### Key Rotation
+
 ```python
 # Support multiple verification keys
 wasm_verify(
@@ -372,12 +384,15 @@ wasm_verify(
 ## Related Rules
 
 **Prerequisites:**
+
 - **[Language Rules](/reference/language-rules/)** - Build components to sign
 - **[Composition Rules](/reference/composition-rules/)** - Compose signed components
 
 **Integration:**
+
 - **OCI Component Signing** - Sign components in OCI registries
 
 **See Also:**
+
 - **[Component Signing Guide](/build/security/component-signing/)** - Detailed signing workflows
 - **[Production Deployment](/build/deployment/production/)** - Secure deployment patterns

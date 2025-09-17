@@ -10,6 +10,7 @@ Learn how to build sophisticated distributed WebAssembly applications by composi
 ## Overview
 
 WAC + OCI integration enables:
+
 - **🌐 Distributed Architecture** - Compose local and remote components seamlessly
 - **📦 Component Reuse** - Share components across teams and organizations
 - **🔐 Secure Distribution** - Cryptographic verification of remote components
@@ -131,6 +132,7 @@ wac_compose_with_oci(
 ### Microservices Architecture
 
 **Complete E-commerce System:**
+
 ```python title="BUILD.bazel"
 wac_microservices_app(
     name = "ecommerce_platform",
@@ -156,6 +158,7 @@ wac_microservices_app(
 ### Multi-Registry IoT Platform
 
 **Edge + Cloud Architecture:**
+
 ```python title="BUILD.bazel"
 wac_distributed_system(
     name = "iot_platform",
@@ -184,6 +187,7 @@ wac_distributed_system(
 ### Enterprise System with External Composition
 
 **Using External WAC Files:**
+
 ```python title="BUILD.bazel"
 wac_compose_with_oci(
     name = "enterprise_system",
@@ -676,6 +680,7 @@ wac_compose_with_oci(
 ### Common Issues
 
 **Issue 1: Registry Authentication Failure**
+
 ```bash
 # Check environment variables
 echo $GITHUB_TOKEN
@@ -689,6 +694,7 @@ bazel build //config:registries --verbose_failures
 ```
 
 **Issue 2: Component Interface Mismatch**
+
 ```bash
 # Compare component interfaces
 wasm-tools component wit local_component.wasm
@@ -699,6 +705,7 @@ wac compose --dry-run composition.wac
 ```
 
 **Issue 3: Signature Verification Failure**
+
 ```bash
 # Check component signatures
 wasm-tools component section remote_component.wasm

@@ -10,6 +10,7 @@ description: Complete guide to deploying WebAssembly components securely in prod
 **Moving from "it works on my machine" to "it works reliably for thousands of users"** requires careful planning and robust processes. This guide shows you how to deploy WebAssembly components with enterprise-grade reliability and security.
 
 **What makes production deployment different:**
+
 - **Scale and reliability** - Your components need to handle real user load without failing
 - **Security requirements** - Production systems need cryptographic verification and access controls
 - **Compliance needs** - Many organizations require audit trails and signed code
@@ -27,6 +28,7 @@ Learn how to deploy WebAssembly components securely in production environments u
 ## Core Production Requirements
 
 Production deployment involves:
+
 - **Component Building** - Optimized builds with Bazel
 - **Component Signing** - Cryptographic integrity protection
 - **Registry Publishing** - Secure distribution via OCI registries
@@ -483,11 +485,11 @@ echo "=== All artifacts verified successfully! ==="
 
 **Choose deployment complexity based on your needs:**
 
-| Complexity | Approach | Best For | Deployment Overhead |
-|------------|----------|----------|-------------------|
-| **Simple** | Embedded Resources | Small configs, single team | Minimal |
-| **Medium** | Multi-Layer OCI | Shared files, moderate complexity | Low |
-| **Complex** | Sidecar Artifacts | Large files, multi-team | High |
+| Complexity  | Approach           | Best For                          | Deployment Overhead |
+| ----------- | ------------------ | --------------------------------- | ------------------- |
+| **Simple**  | Embedded Resources | Small configs, single team        | Minimal             |
+| **Medium**  | Multi-Layer OCI    | Shared files, moderate complexity | Low                 |
+| **Complex** | Sidecar Artifacts  | Large files, multi-team           | High                |
 
 **Deployment decision matrix:**
 
@@ -700,39 +702,39 @@ spec:
         app: wasm-microservices
     spec:
       containers:
-      - name: wasmtime-runtime
-        image: wasmtime/wasmtime:latest
-        command: ["wasmtime"]
-        args:
-          - "run"
-          - "--wasi"
-          - "preview2"
-          - "/app/production_system.wasm"
-        volumeMounts:
-        - name: wasm-components
-          mountPath: /app
-        - name: signing-keys
-          mountPath: /keys
-          readOnly: true
-        env:
-        - name: WASMTIME_BACKTRACE_DETAILS
-          value: "1"
-        - name: VERIFY_SIGNATURES
-          value: "true"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+        - name: wasmtime-runtime
+          image: wasmtime/wasmtime:latest
+          command: ['wasmtime']
+          args:
+            - 'run'
+            - '--wasi'
+            - 'preview2'
+            - '/app/production_system.wasm'
+          volumeMounts:
+            - name: wasm-components
+              mountPath: /app
+            - name: signing-keys
+              mountPath: /keys
+              readOnly: true
+          env:
+            - name: WASMTIME_BACKTRACE_DETAILS
+              value: '1'
+            - name: VERIFY_SIGNATURES
+              value: 'true'
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '200m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
       volumes:
-      - name: wasm-components
-        configMap:
-          name: wasm-components
-      - name: signing-keys
-        secret:
-          secretName: component-signing-keys
+        - name: wasm-components
+          configMap:
+            name: wasm-components
+        - name: signing-keys
+          secret:
+            secretName: component-signing-keys
 ---
 apiVersion: v1
 kind: Service
@@ -743,9 +745,9 @@ spec:
   selector:
     app: wasm-microservices
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8080
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
   type: LoadBalancer
 ```
 
@@ -877,43 +879,43 @@ spec:
     matchLabels:
       app: wasm-microservices
   endpoints:
-  - port: http
-    interval: 30s
-    path: /metrics
+    - port: http
+      interval: 30s
+      path: /metrics
 ```
 
 ### Alerting Configuration
 
 ```yaml title="alerts/component-alerts.yaml"
 groups:
-- name: wasm-components
-  rules:
-  - alert: ComponentSignatureVerificationFailed
-    expr: wasm_signature_verification_failures_total > 0
-    for: 0m
-    labels:
-      severity: critical
-    annotations:
-      summary: "Component signature verification failed"
-      description: "One or more WASM components failed signature verification"
+  - name: wasm-components
+    rules:
+      - alert: ComponentSignatureVerificationFailed
+        expr: wasm_signature_verification_failures_total > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Component signature verification failed'
+          description: 'One or more WASM components failed signature verification'
 
-  - alert: ComponentHealthCheckFailed
-    expr: wasm_component_health_status != 1
-    for: 2m
-    labels:
-      severity: warning
-    annotations:
-      summary: "Component health check failed"
-      description: "Component {{ $labels.component }} health check failed"
+      - alert: ComponentHealthCheckFailed
+        expr: wasm_component_health_status != 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Component health check failed'
+          description: 'Component {{ $labels.component }} health check failed'
 
-  - alert: HighComponentMemoryUsage
-    expr: wasm_component_memory_usage_bytes > 500000000  # 500MB
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      summary: "High memory usage in WASM component"
-      description: "Component {{ $labels.component }} memory usage is above 500MB"
+      - alert: HighComponentMemoryUsage
+        expr: wasm_component_memory_usage_bytes > 500000000 # 500MB
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High memory usage in WASM component'
+          description: 'Component {{ $labels.component }} memory usage is above 500MB'
 ```
 
 ---
@@ -960,26 +962,26 @@ spec:
     matchLabels:
       app: wasm-microservices
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          name: ingress-nginx
-    ports:
-    - protocol: TCP
-      port: 8080
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          name: kube-system
-    ports:
-    - protocol: TCP
-      port: 53
-    - protocol: UDP
-      port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
 ```
 
 ### Audit Configuration
@@ -988,15 +990,15 @@ spec:
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-- level: Metadata
-  namespaces: ["production"]
-  resources:
-  - group: ""
-    resources: ["pods", "services"]
-  - group: "apps"
-    resources: ["deployments"]
-  omitStages:
-  - RequestReceived
+  - level: Metadata
+    namespaces: ['production']
+    resources:
+      - group: ''
+        resources: ['pods', 'services']
+      - group: 'apps'
+        resources: ['deployments']
+    omitStages:
+      - RequestReceived
 ```
 
 ---

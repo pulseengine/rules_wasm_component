@@ -101,14 +101,14 @@ rust_wasm_component(
 
 ### Rule Selection Guide
 
-| Use Case | Rule | Entry Point | Exports Interfaces | Executable |
-|----------|------|-------------|-------------------|------------|
-| **Component Library** | `rust_wasm_component_bindgen` | `lib.rs` | ✅ Yes | ❌ No |
-| **CLI Application** | `rust_wasm_binary` | `main.rs` | ❌ No | ✅ Yes |
-| **Microservice** | `rust_wasm_component_bindgen` | `lib.rs` | ✅ Yes | ❌ No |
-| **File Processor Tool** | `rust_wasm_binary` | `main.rs` | ❌ No | ✅ Yes |
-| **API Server** | `rust_wasm_component_bindgen` | `lib.rs` | ✅ Yes | ❌ No |
-| **Data Converter Library** | `rust_wasm_component` | `lib.rs` | ❌ No | ❌ No |
+| Use Case                   | Rule                          | Entry Point | Exports Interfaces | Executable |
+| -------------------------- | ----------------------------- | ----------- | ------------------ | ---------- |
+| **Component Library**      | `rust_wasm_component_bindgen` | `lib.rs`    | ✅ Yes             | ❌ No      |
+| **CLI Application**        | `rust_wasm_binary`            | `main.rs`   | ❌ No              | ✅ Yes     |
+| **Microservice**           | `rust_wasm_component_bindgen` | `lib.rs`    | ✅ Yes             | ❌ No      |
+| **File Processor Tool**    | `rust_wasm_binary`            | `main.rs`   | ❌ No              | ✅ Yes     |
+| **API Server**             | `rust_wasm_component_bindgen` | `lib.rs`    | ✅ Yes             | ❌ No      |
+| **Data Converter Library** | `rust_wasm_component`         | `lib.rs`    | ❌ No              | ❌ No      |
 
 **Quick decisions**:
 

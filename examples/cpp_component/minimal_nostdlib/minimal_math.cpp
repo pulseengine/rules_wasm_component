@@ -10,7 +10,7 @@ double exports_example_minimal_math_math_ops_sqrt(double x) {
 }
 
 double exports_example_minimal_math_math_ops_pow(double base, double exp) {
-    return base * exp;  // Simple implementation to test linking  
+    return base * exp;  // Simple implementation to test linking
 }
 
 double exports_example_minimal_math_math_ops_sin(double x) {

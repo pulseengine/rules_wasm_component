@@ -12,6 +12,7 @@ This guide helps you quickly fix the most common problems when building WebAssem
 ### "rules_wasm_component not found" or "No such package"
 
 **Symptom**:
+
 ```
 ERROR: Skipping '//...': no such package '@rules_wasm_component//':
 Repository '@rules_wasm_component' is not defined
@@ -20,12 +21,14 @@ Repository '@rules_wasm_component' is not defined
 **Cause**: Missing or incorrect rules_wasm_component dependency
 
 **Solution**:
+
 ```python title="MODULE.bazel"
 # Add this to your MODULE.bazel file
 bazel_dep(name = "rules_wasm_component", version = "1.0.0")
 ```
 
 **Verify the fix**:
+
 ```bash
 bazel mod deps  # Check module dependencies
 bazel query '@rules_wasm_component//...' >/dev/null  # Verify rules are available
@@ -36,6 +39,7 @@ bazel query '@rules_wasm_component//...' >/dev/null  # Verify rules are availabl
 ### "No such file or directory: cargo"
 
 **Symptom**:
+
 ```
 ERROR: /path/to/BUILD.bazel:10:1: Action failed to execute: No such file or directory: cargo
 ```
@@ -45,6 +49,7 @@ ERROR: /path/to/BUILD.bazel:10:1: Action failed to execute: No such file or dire
 **Solutions**:
 
 1. **Add rules_rust dependency**:
+
 ```python title="MODULE.bazel"
 bazel_dep(name = "rules_rust", version = "0.62.0")
 
@@ -59,6 +64,7 @@ use_repo(crate, "crates")
 ```
 
 2. **Create Cargo.toml**:
+
 ```toml title="Cargo.toml"
 [package]
 name = "my-component"
@@ -70,11 +76,13 @@ wit-bindgen = { version = "0.30.0", default-features = false, features = ["reall
 ```
 
 3. **Generate lock file**:
+
 ```bash
 cargo generate-lockfile
 ```
 
 **Verify the fix**:
+
 ```bash
 ls Cargo.lock  # Should exist
 bazel build //:your_component  # Should work now
@@ -85,6 +93,7 @@ bazel build //:your_component  # Should work now
 ### "wit-bindgen generate!() macro failed"
 
 **Symptom**:
+
 ```
 error: procedural macro `generate` panicked
   --> src/lib.rs:1:1
@@ -98,6 +107,7 @@ error: procedural macro `generate` panicked
 **Solutions**:
 
 1. **Check WIT file path**:
+
 ```rust title="src/lib.rs"
 // ❌ Wrong - looks for world.wit in src/
 wit_bindgen::generate!();
@@ -109,6 +119,7 @@ wit_bindgen::generate!({
 ```
 
 2. **Verify WIT library setup**:
+
 ```python title="BUILD.bazel"
 wit_library(
     name = "hello_interfaces",
@@ -124,6 +135,7 @@ rust_wasm_component_bindgen(
 ```
 
 **Verify the fix**:
+
 ```bash
 # Check WIT file syntax
 cat hello.wit  # Look for syntax errors
@@ -133,6 +145,7 @@ bazel build //:hello_interfaces  # Should build successfully
 ### "Target triple mismatch" with bindings
 
 **Symptom**:
+
 ```
 error[E0461]: couldn't find crate 'my_component_bindings' with expected target triple aarch64-apple-darwin
 note: the following crate versions were found:
@@ -170,6 +183,7 @@ rust_binary(
 **Solutions**:
 
 1. **Check export macro**:
+
 ```rust title="src/lib.rs"
 wit_bindgen::generate!();
 
@@ -186,6 +200,7 @@ export!(Component);
 ```
 
 2. **Verify WIT world definition**:
+
 ```wit title="hello.wit"
 package hello:component@0.1.0;
 
@@ -199,6 +214,7 @@ world hello {
 ```
 
 **Verify the fix**:
+
 ```bash
 # Check what your component actually exports
 bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/your_component.wasm
@@ -209,6 +225,7 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/your
 ### "wasmtime: component is not valid"
 
 **Symptom**:
+
 ```
 Error: component is not a valid component
 ```
@@ -218,6 +235,7 @@ Error: component is not a valid component
 **Solutions**:
 
 1. **Use component model rules**:
+
 ```python title="BUILD.bazel"
 # ✅ Use component-aware rules
 rust_wasm_component_bindgen(
@@ -235,12 +253,14 @@ rust_wasm_component_bindgen(
 ```
 
 2. **Check component validity**:
+
 ```bash
 # Validate the component
 bazelisk run @wasm_tools_toolchains//:wasm_tools -- validate --features component-model bazel-bin/my_component.wasm
 ```
 
 **Verify the fix**:
+
 ```bash
 # This should show component info, not error
 bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/my_component.wasm
@@ -259,12 +279,14 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/my_c
 **Solutions**:
 
 1. **Clean and rebuild**:
+
 ```bash
 bazel clean
 bazel build //:your_component
 ```
 
 2. **Check for cached bindings**:
+
 ```bash
 # Look for stale generated files
 find . -name "*_bindings.rs" -delete
@@ -272,6 +294,7 @@ bazel build //:your_component
 ```
 
 3. **Verify WIT changes took effect**:
+
 ```bash
 # Check the component interface matches your WIT
 bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/your_component.wasm
@@ -282,6 +305,7 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/your
 ### "Multiple targets with the same name"
 
 **Symptom**:
+
 ```
 ERROR: Target name 'my_component' is duplicated in BUILD file
 ```
@@ -289,6 +313,7 @@ ERROR: Target name 'my_component' is duplicated in BUILD file
 **Cause**: Conflicting target names in BUILD.bazel
 
 **Solution**:
+
 ```python title="BUILD.bazel"
 # ✅ Use unique names for each target
 wit_library(
@@ -317,6 +342,7 @@ rust_wasm_component_test(
 **Symptom**: Build fails on macOS with Xcode-related errors
 
 **Solution**:
+
 ```bash
 # Install Xcode Command Line Tools
 xcode-select --install
@@ -332,6 +358,7 @@ xcode-select -p
 **Symptom**: Paths with spaces or backslashes cause issues
 
 **Solution**:
+
 ```bash
 # Use forward slashes in BUILD files
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
@@ -345,9 +372,10 @@ load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 
 ## C++ Exception Handling Issues
 
-### "Undefined symbol: __cxa_allocate_exception"
+### "Undefined symbol: \_\_cxa_allocate_exception"
 
 **Symptom**:
+
 ```
 wasm-ld: error: undefined symbol: __cxa_allocate_exception
 wasm-ld: error: undefined symbol: __cxa_throw
@@ -373,6 +401,7 @@ cc_component_library(
 ```
 
 **Alternative Error Handling**:
+
 ```cpp title="src/component.cpp"
 // ✅ Use Result types instead of exceptions
 std::variant<double, std::string> divide(double a, double b) {
@@ -414,6 +443,7 @@ cpp_component(
 ```
 
 **Check validation results**:
+
 ```bash
 # Build creates validation log
 bazel build //:my_component
@@ -421,11 +451,13 @@ cat bazel-bin/my_component_wit_validation.log
 ```
 
 **Common validation errors**:
+
 - Export function names don't match WIT specification
 - Function parameter types don't match WIT types
 - Missing implementation of WIT world exports
 
 **Verify the fix**:
+
 ```bash
 # Check component exports match WIT
 bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/my_component.wasm
@@ -438,11 +470,13 @@ bazelisk run @wasm_tools_toolchains//:wasm_tools -- component wit bazel-bin/my_c
 ### "Version conflict in crate dependencies"
 
 **Symptom**:
+
 ```
 ERROR: Multiple versions of crate 'wit-bindgen' found
 ```
 
 **Solution**:
+
 ```toml title="Cargo.toml"
 [dependencies]
 # ✅ Use exact versions to avoid conflicts
@@ -453,6 +487,7 @@ wit-bindgen = { version = "=0.30.0", default-features = false, features = ["real
 ```
 
 Then regenerate:
+
 ```bash
 cargo generate-lockfile
 bazel clean

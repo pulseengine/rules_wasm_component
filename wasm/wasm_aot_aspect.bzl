@@ -4,17 +4,17 @@ load("//providers:providers.bzl", "WasmComponentInfo", "WasmPrecompiledInfo")
 
 def _wasm_aot_aspect_impl(target, ctx):
     """Automatically create AOT compiled versions of WASM components"""
-    
+
     # Only process targets that provide WasmComponentInfo
     if WasmComponentInfo not in target:
         return []
 
     component_info = target[WasmComponentInfo]
-    
+
     # Skip if already precompiled or if AOT is disabled
     if WasmPrecompiledInfo in target:
         return []
-    
+
     if not ctx.attr._enable_aot:
         return []
 
@@ -49,11 +49,11 @@ wasm_aot_aspect = aspect(
     toolchains = ["@rules_wasm_component//toolchains:wasmtime_toolchain_type"],
     doc = """
     Aspect that automatically creates AOT compiled versions of WASM components.
-    
+
     This aspect can be applied to any target that provides WasmComponentInfo
-    to automatically generate a precompiled .cwasm version alongside the 
+    to automatically generate a precompiled .cwasm version alongside the
     original .wasm file.
-    
+
     Usage:
         bazel build --aspects=//wasm:wasm_aot_aspect.bzl%wasm_aot_aspect :my_component
     """,
@@ -86,11 +86,11 @@ wasm_aot_config = rule(
     },
     doc = """
     Configuration for AOT compilation defaults.
-    
+
     Example:
         wasm_aot_config(
             name = "aot_config_prod",
-            optimization_level = 3,
+            optimization_level = "s",
             debug_info = False,
             strip_symbols = True,
         )

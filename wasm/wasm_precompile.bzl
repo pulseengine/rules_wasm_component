@@ -4,7 +4,7 @@ load("//providers:providers.bzl", "WasmComponentInfo", "WasmPrecompiledInfo")
 
 def _wasm_precompile_impl(ctx):
     """Implementation of wasm_precompile rule"""
-    
+
     # Get input WASM file
     if ctx.file.wasm_file:
         input_wasm = ctx.file.wasm_file
@@ -26,27 +26,27 @@ def _wasm_precompile_impl(ctx):
     # Build compilation arguments
     args = ctx.actions.args()
     args.add("compile")
-    
-    # Optimization level  
+
+    # Optimization level
     args.add("-O")
     args.add("opt-level={}".format(ctx.attr.optimization_level))
-    
+
     # Debug info control
     if ctx.attr.debug_info:
         args.add("-D")
         args.add("debug-info")
-    
+
     # Remove symbol table for production (saves ~25% size)
     if ctx.attr.strip_symbols:
         # Note: This would require a custom wasmtime build or post-processing
         # For now, we'll document this as future enhancement
         pass
-    
+
     # Target specification (for cross-compilation)
     if ctx.attr.target_triple:
         args.add("--target")
         args.add(ctx.attr.target_triple)
-    
+
     # Add input and output
     args.add(input_wasm)
     args.add("-o")
@@ -55,7 +55,7 @@ def _wasm_precompile_impl(ctx):
     # Create version info for cache key stability
     wasmtime_version = ctx.attr._wasmtime_version
     target_arch = ctx.attr.target_triple or "host"
-    
+
     # Run Wasmtime compilation
     ctx.actions.run(
         executable = wasmtime,
@@ -149,19 +149,19 @@ wasm_precompile = rule(
     toolchains = ["@rules_wasm_component//toolchains:wasmtime_toolchain_type"],
     doc = """
     Ahead-of-Time (AOT) compile WebAssembly modules using Wasmtime.
-    
+
     This rule precompiles WASM modules into native machine code (.cwasm files)
     for faster startup times. The output is cached by Bazel based on:
     - Source WASM content
-    - Wasmtime version  
+    - Wasmtime version
     - Compilation settings
     - Target architecture
-    
+
     Example:
         wasm_precompile(
             name = "my_component_aot",
             component = ":my_component",
-            optimization_level = 2,
+            optimization_level = "2",
             debug_info = False,
         )
     """,

@@ -145,14 +145,14 @@ bazel build //examples/symmetric_example:test_symmetric_compilation # Test suite
 
 ## Official vs Fork Feature Matrix
 
-| Feature | Official wit-bindgen | cpetig's Fork |
-|---------|---------------------|---------------|
-| **Rust guest** | ✅ | ✅ |
-| **Rust host** | ✅ (native-guest) | ✅ |
-| **Rust symmetric** | ❌ | ✅ |
-| **C++ symmetric** | ✅ | ✅ (enhanced) |
-| **Feature flags** | Standard | `symmetric`, `invert_direction` |
-| **Runtime** | Component only | Native + Component |
+| Feature            | Official wit-bindgen | cpetig's Fork                   |
+| ------------------ | -------------------- | ------------------------------- |
+| **Rust guest**     | ✅                   | ✅                              |
+| **Rust host**      | ✅ (native-guest)    | ✅                              |
+| **Rust symmetric** | ❌                   | ✅                              |
+| **C++ symmetric**  | ✅                   | ✅ (enhanced)                   |
+| **Feature flags**  | Standard             | `symmetric`, `invert_direction` |
+| **Runtime**        | Component only       | Native + Component              |
 
 ## Conclusion
 

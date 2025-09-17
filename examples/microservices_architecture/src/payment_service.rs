@@ -1,7 +1,7 @@
 // Mock Payment Service implementation for local microservices architecture
 
 use payment_service_bindings::exports::microservices::payment::payment_processing::{
-    Guest as PaymentGuest, PaymentRequest, PaymentResult, RefundRequest, PaymentMethodValidation
+    Guest as PaymentGuest, PaymentMethodValidation, PaymentRequest, PaymentResult, RefundRequest,
 };
 use std::collections::HashMap;
 
@@ -13,26 +13,32 @@ fn get_transactions() -> &'static mut HashMap<String, PaymentResult> {
     unsafe {
         TRANSACTIONS.get_or_insert_with(|| {
             let mut transactions = HashMap::new();
-            
+
             // Pre-populate with some test transactions
-            transactions.insert("txn_98765".to_string(), PaymentResult {
-                success: true,
-                transaction_id: Some("txn_98765".to_string()),
-                status: "completed".to_string(),
-                amount_charged: Some(159.99),
-                error_message: None,
-                processing_fee: Some(4.79),
-            });
-            
-            transactions.insert("txn_98764".to_string(), PaymentResult {
-                success: false,
-                transaction_id: Some("txn_98764".to_string()),
-                status: "failed".to_string(),
-                amount_charged: None,
-                error_message: Some("Insufficient funds".to_string()),
-                processing_fee: None,
-            });
-            
+            transactions.insert(
+                "txn_98765".to_string(),
+                PaymentResult {
+                    success: true,
+                    transaction_id: Some("txn_98765".to_string()),
+                    status: "completed".to_string(),
+                    amount_charged: Some(159.99),
+                    error_message: None,
+                    processing_fee: Some(4.79),
+                },
+            );
+
+            transactions.insert(
+                "txn_98764".to_string(),
+                PaymentResult {
+                    success: false,
+                    transaction_id: Some("txn_98764".to_string()),
+                    status: "failed".to_string(),
+                    amount_charged: None,
+                    error_message: Some("Insufficient funds".to_string()),
+                    processing_fee: None,
+                },
+            );
+
             transactions
         })
     }
@@ -103,10 +109,10 @@ impl PaymentGuest for PaymentService {
         // Mock payment processing logic - simulate some failures
         let success = match request.payment_method.as_str() {
             "credit_card" => request.amount < 10000.0, // Fail large transactions
-            "debit_card" => request.user_id != 999,     // Fail for test user 999
-            "bank_transfer" => true,                     // Always succeed
+            "debit_card" => request.user_id != 999,    // Fail for test user 999
+            "bank_transfer" => true,                   // Always succeed
             "digital_wallet" => request.amount < 5000.0, // Fail very large transactions
-            _ => false, // Unknown payment methods fail
+            _ => false,                                // Unknown payment methods fail
         };
 
         let result = if success {
@@ -147,29 +153,35 @@ impl PaymentGuest for PaymentService {
 
     fn refund_payment(request: RefundRequest) -> PaymentResult {
         let transactions = get_transactions();
-        
+
         let original_transaction = match transactions.get(&request.transaction_id) {
             Some(txn) if txn.success => txn.clone(),
-            Some(_) => return PaymentResult {
-                success: false,
-                transaction_id: None,
-                status: "failed".to_string(),
-                amount_charged: None,
-                error_message: Some("Cannot refund failed transaction".to_string()),
-                processing_fee: None,
-            },
-            None => return PaymentResult {
-                success: false,
-                transaction_id: None,
-                status: "failed".to_string(),
-                amount_charged: None,
-                error_message: Some("Original transaction not found".to_string()),
-                processing_fee: None,
-            },
+            Some(_) => {
+                return PaymentResult {
+                    success: false,
+                    transaction_id: None,
+                    status: "failed".to_string(),
+                    amount_charged: None,
+                    error_message: Some("Cannot refund failed transaction".to_string()),
+                    processing_fee: None,
+                }
+            }
+            None => {
+                return PaymentResult {
+                    success: false,
+                    transaction_id: None,
+                    status: "failed".to_string(),
+                    amount_charged: None,
+                    error_message: Some("Original transaction not found".to_string()),
+                    processing_fee: None,
+                }
+            }
         };
 
-        let refund_amount = request.amount.unwrap_or(original_transaction.amount_charged.unwrap_or(0.0));
-        
+        let refund_amount = request
+            .amount
+            .unwrap_or(original_transaction.amount_charged.unwrap_or(0.0));
+
         if refund_amount > original_transaction.amount_charged.unwrap_or(0.0) {
             return PaymentResult {
                 success: false,
@@ -219,7 +231,12 @@ impl PaymentGuest for PaymentService {
                 method,
                 valid: true,
                 error: None,
-                supported_currencies: vec!["USD".to_string(), "EUR".to_string(), "GBP".to_string(), "JPY".to_string()],
+                supported_currencies: vec![
+                    "USD".to_string(),
+                    "EUR".to_string(),
+                    "GBP".to_string(),
+                    "JPY".to_string(),
+                ],
             },
             _ => PaymentMethodValidation {
                 method,
@@ -266,8 +283,8 @@ impl PaymentGuest for PaymentService {
     fn user_validation(user_id: u32) -> Result<bool, String> {
         // Mock user validation - in real implementation would call user service
         match user_id {
-            1..=1000 => Ok(true),  // Valid user ID range
-            999 => Ok(false),      // Test user that fails validation
+            1..=1000 => Ok(true), // Valid user ID range
+            999 => Ok(false),     // Test user that fails validation
             _ => Err("User not found".to_string()),
         }
     }

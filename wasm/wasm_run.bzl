@@ -4,7 +4,7 @@ load("//providers:providers.bzl", "WasmComponentInfo", "WasmPrecompiledInfo")
 
 def _wasm_run_impl(ctx):
     """Implementation of wasm_run rule - Bazel-native execution"""
-    
+
     # Determine what we're running
     wasm_file = None
     use_precompiled = False
@@ -17,7 +17,7 @@ def _wasm_run_impl(ctx):
             precompiled_info = ctx.attr.component[WasmPrecompiledInfo]
             wasm_file = precompiled_info.cwasm_file
             use_precompiled = ctx.attr.prefer_aot
-        
+
         if WasmComponentInfo in ctx.attr.component:
             component_info = ctx.attr.component[WasmComponentInfo]
             if not use_precompiled:
@@ -41,15 +41,15 @@ def _wasm_run_impl(ctx):
     # Build runtime arguments
     args = ctx.actions.args()
     args.add("run")
-    
+
     if use_precompiled:
         args.add("--allow-precompiled")
-    
+
     # Add WASI permissions if needed
     if ctx.attr.allow_wasi_filesystem:
         args.add("--dir")
         args.add(".")
-    
+
     if ctx.attr.allow_wasi_net:
         args.add("--allow-ip-name-lookup")
         args.add("--allow-tcp")
@@ -65,7 +65,7 @@ def _wasm_run_impl(ctx):
     # Full execution requires proper WASI interface setup
     validation_args = ctx.actions.args()
     validation_args.add("--version")
-    
+
     ctx.actions.run_shell(
         command = '"{}" --version > "{}"'.format(wasmtime.path, run_output.path),
         inputs = [],
@@ -78,14 +78,13 @@ def _wasm_run_impl(ctx):
         ),
         use_default_shell_env = True,
     )
-    
+
     return [
         DefaultInfo(
             files = depset([run_output]),
             runfiles = ctx.runfiles(files = [wasm_file, wasmtime]),
         ),
     ]
-
 
 wasm_run = rule(
     implementation = _wasm_run_impl,
@@ -122,14 +121,14 @@ wasm_run = rule(
     toolchains = ["@rules_wasm_component//toolchains:wasmtime_toolchain_type"],
     doc = """
     Execute WebAssembly components using Wasmtime runtime.
-    
+
     This rule can run either:
-    - Regular .wasm files (JIT compiled at runtime)  
+    - Regular .wasm files (JIT compiled at runtime)
     - Precompiled .cwasm files (AOT compiled, faster startup)
-    
-    If a target has both regular and precompiled versions, 
+
+    If a target has both regular and precompiled versions,
     it will prefer the precompiled version by default.
-    
+
     Example:
         wasm_run(
             name = "run_component",
@@ -141,23 +140,23 @@ wasm_run = rule(
 
 def _wasm_test_impl(ctx):
     """Implementation of wasm_test rule - similar to wasm_run but for testing"""
-    
+
     # Create test executable script that just validates the WASM file
     test_script = ctx.actions.declare_file(ctx.label.name + "_test.sh")
-    
+
     script_content = '''#!/bin/bash
 set -e
 echo "WASM Component Test: PASSED"
 echo "AOT compilation and validation working correctly"
 exit 0
 '''
-    
+
     ctx.actions.write(
         output = test_script,
         content = script_content,
         is_executable = True,
     )
-    
+
     return [
         DefaultInfo(
             executable = test_script,
@@ -201,10 +200,10 @@ wasm_test = rule(
     toolchains = ["@rules_wasm_component//toolchains:wasmtime_toolchain_type"],
     doc = """
     Test WebAssembly components using Wasmtime runtime.
-    
+
     Similar to wasm_run but designed for testing scenarios.
     Supports both JIT and AOT execution modes.
-    
+
     Example:
         wasm_test(
             name = "component_test",

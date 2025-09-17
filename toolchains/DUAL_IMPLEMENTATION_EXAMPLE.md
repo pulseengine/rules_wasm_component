@@ -99,15 +99,15 @@ build:dev --//toolchains:file_ops_implementation=auto
 
 ## Implementation Comparison
 
-| Feature | TinyGo | Rust | Use Case |
-|---------|--------|------|----------|
-| **Binary Size** | ✅ Compact (~100KB) | ⚠️ Larger (~500KB) | Edge/Embedded |
-| **Security** | ✅ Minimal Attack Surface | ✅ Memory Safe | High Security |
-| **Performance** | ⚠️ Standard | ✅ Optimized | Batch Processing |
-| **Streaming I/O** | ❌ Basic | ✅ Advanced Buffering | Large Files |
-| **Parallel Processing** | ❌ Sequential | ✅ Concurrent | Multi-file Ops |
-| **WASI Preview 2** | ✅ Native Support | ✅ Full Support | Modern Runtime |
-| **JSON Batch API** | ✅ Compatible | ✅ Enhanced | Legacy Integration |
+| Feature                 | TinyGo                    | Rust                  | Use Case           |
+| ----------------------- | ------------------------- | --------------------- | ------------------ |
+| **Binary Size**         | ✅ Compact (~100KB)       | ⚠️ Larger (~500KB)    | Edge/Embedded      |
+| **Security**            | ✅ Minimal Attack Surface | ✅ Memory Safe        | High Security      |
+| **Performance**         | ⚠️ Standard               | ✅ Optimized          | Batch Processing   |
+| **Streaming I/O**       | ❌ Basic                  | ✅ Advanced Buffering | Large Files        |
+| **Parallel Processing** | ❌ Sequential             | ✅ Concurrent         | Multi-file Ops     |
+| **WASI Preview 2**      | ✅ Native Support         | ✅ Full Support       | Modern Runtime     |
+| **JSON Batch API**      | ✅ Compatible             | ✅ Enhanced           | Legacy Integration |
 
 ## Usage in Build Rules
 

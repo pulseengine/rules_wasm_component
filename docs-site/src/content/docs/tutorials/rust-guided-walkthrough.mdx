@@ -10,6 +10,7 @@ This guided walkthrough takes you from zero to a working WebAssembly component, 
 ## What We're Building
 
 We'll create a simple "Hello World" WebAssembly component that:
+
 - Takes a name as input
 - Returns a greeting message
 - Can be called from any WebAssembly runtime
@@ -55,6 +56,7 @@ world hello {
 ```wit
 package hello:interfaces@0.1.0;
 ```
+
 - **Package name:** `hello:interfaces` (namespace:package format)
 - **Version:** `@0.1.0` (semantic versioning for interface compatibility)
 - **Why this matters:** Other components can import this specific version
@@ -64,6 +66,7 @@ interface greeting {
     hello: func(name: string) -> string;
 }
 ```
+
 - **Interface:** Groups related functions together
 - **Function signature:** `hello` takes a `string`, returns a `string`
 - **Type safety:** WebAssembly Component Model ensures type checking
@@ -73,11 +76,13 @@ world hello-world {
     export greeting;
 }
 ```
+
 - **World:** Defines what this component exports/imports
 - **Export:** Our component provides the `greeting` interface to others
 - **Import would be:** External interfaces our component depends on
 
 ### Key Concepts:
+
 - **Interfaces** are like TypeScript interfaces or Java interfaces
 - **Worlds** define the complete "shape" of a component
 - **Types** are checked at both compile-time and runtime
@@ -99,6 +104,7 @@ For the complete BUILD.bazel example, see the [basic example](/examples/basic/) 
 3. **[`rust_wasm_component_test()`](/reference/rules/#rust_wasm_component_test)** - Creates tests to verify your component works
 
 **What happens behind the scenes:**
+
 - **Stage 1:** WIT Interface Definition → Validated Interface (Internal Bazel representation)
 - **Stage 2:** Multiple stages in one rule:
   1. Generate Rust traits/types from WIT
@@ -108,10 +114,12 @@ For the complete BUILD.bazel example, see the [basic example](/examples/basic/) 
 - **Stage 3:** Test framework integration
 
 **Generated files:**
+
 - Rust bindings (cached by Bazel)
 - `hello_component.wasm` (your final component)
 
 ### Why Bazel?
+
 - **Hermetic builds:** Same result every time, anywhere
 - **Incremental:** Only rebuilds what changed
 - **Dependency management:** Automatically downloads tools
@@ -149,6 +157,7 @@ hello_component_bindings::export!(Component with_types_in hello_component_bindin
 ```rust
 use hello_component_bindings::exports::hello::interfaces::greeting::Guest;
 ```
+
 **What happens:** Import the generated bindings
 **Where this comes from:** The `rust_wasm_component_bindgen` rule generated this
 **Key insight:** You never write these bindings manually - they're generated from WIT
@@ -156,6 +165,7 @@ use hello_component_bindings::exports::hello::interfaces::greeting::Guest;
 ```rust
 struct Component;
 ```
+
 **What:** Your component implementation
 **Pattern:** Empty struct that implements the generated trait
 
@@ -166,6 +176,7 @@ impl Guest for Component {
     }
 }
 ```
+
 **What happens:** Implement the interface defined in WIT
 **Type safety:** Function signature must exactly match `hello.wit`
 **Business logic:** Your actual component behavior
@@ -173,10 +184,12 @@ impl Guest for Component {
 ```rust
 hello_component_bindings::export!(Component with_types_in hello_component_bindings);
 ```
+
 **What happens:** Export this implementation as the component's public interface
 **Generated macro:** Creates all the WebAssembly component model plumbing
 
 ### Key Insights:
+
 - **Generated bindings** handle all the WebAssembly details
 - **Your code** focuses on business logic only
 - **Type safety** is enforced from WIT through to implementation
@@ -191,37 +204,47 @@ hello_component_bindings::export!(Component with_types_in hello_component_bindin
 **What Bazel does behind the scenes:**
 
 ### Stage 1: WIT Processing
+
 ```bash
 # Bazel runs wit-bindgen internally
 wit-bindgen rust --out-dir $GENERATED_DIR examples/basic/wit/hello.wit
 ```
+
 **Generated files:**
+
 - `bindings.rs` - Rust traits matching your WIT interface
 - Type definitions for all WIT types
 - Export macros for component model integration
 
 ### Stage 2: Rust Compilation
+
 ```bash
 # Bazel runs rustc with WebAssembly target
 rustc --target wasm32-wasi --crate-type cdylib src/lib.rs
 ```
+
 **What happens:**
+
 - Compiles your Rust code + generated bindings
 - Produces a WebAssembly core module
 - Includes WASI (WebAssembly System Interface) support
 
 ### Stage 3: Component Wrapping
+
 ```bash
 # Bazel runs wasm-tools to create component
 wasm-tools component new $CORE_MODULE -o hello_component.wasm
 ```
+
 **What happens:**
+
 - Takes the core WebAssembly module
 - Wraps it with Component Model metadata
 - Adds interface type information
 - Creates final `.wasm` component
 
 ### Build Output:
+
 ```
 bazel-bin/
 └── hello_component.wasm  # Your final component!
@@ -242,12 +265,14 @@ wasmtime run --wasi preview2 bazel-bin/hello_component.wasm
 ```
 
 **What you should see:**
+
 - Component validation passes
 - Component can be instantiated by a runtime
 
 ### Understanding the Output:
 
 **Component metadata:**
+
 ```
 Component: hello_component.wasm
 ├── Exports: hello:interfaces/greeting@0.1.0
@@ -263,6 +288,7 @@ Component: hello_component.wasm
 ### Using Your Component:
 
 **From another component:**
+
 ```wit
 // In another component's WIT file
 import hello:interfaces/greeting@0.1.0;
@@ -274,6 +300,7 @@ world my-app {
 ```
 
 **From a host application:**
+
 ```rust
 // In a Rust host application using wasmtime
 let greeting = instance.call_hello("World")?;
@@ -281,6 +308,7 @@ println!("{}", greeting); // "Hello, World!"
 ```
 
 ### Composition with WAC:
+
 ```shell
 // Combine multiple components
 package my:app@1.0.0;
@@ -296,17 +324,21 @@ import http:server@1.0.0 from registry.example.com/http-server:v1.0.0;
 ## Common Issues and Debugging
 
 ### Issue 1: Build Fails with "WIT validation error"
+
 **Symptom:** Error when running `bazel build`
 **Cause:** Syntax error in `hello.wit`
 **Fix:** Check WIT syntax - common issues:
+
 - Missing semicolons
 - Incorrect type names
 - Package name format
 
 ### Issue 2: "Function signature mismatch"
+
 **Symptom:** Rust compilation error
 **Cause:** Your Rust function doesn't match the WIT interface
 **Fix:** Ensure exact type matching:
+
 ```rust
 // WIT: hello: func(name: string) -> string;
 // Rust must be:
@@ -314,9 +346,11 @@ fn hello(name: String) -> String { ... }
 ```
 
 ### Issue 3: Component won't run
+
 **Symptom:** `wasmtime` fails to load component
 **Cause:** Component model format issue
 **Debug:**
+
 ```bash
 # Check component structure
 wasm-tools validate bazel-bin/hello_component.wasm
@@ -324,9 +358,11 @@ wasm-tools component wit bazel-bin/hello_component.wasm
 ```
 
 ### Issue 4: "Module not found" errors
+
 **Symptom:** Bazel can't find rules or dependencies
 **Cause:** Missing dependencies in `MODULE.bazel`
 **Fix:** Ensure you have:
+
 ```python
 bazel_dep(name = "rules_wasm_component", version = "1.0.0")
 bazel_dep(name = "rules_rust", version = "0.48.0")
@@ -337,6 +373,7 @@ bazel_dep(name = "rules_rust", version = "0.48.0")
 ## Next Steps: Building on This Foundation
 
 ### 1. Add More Complex Types
+
 ```wit
 record person {
     name: string,
@@ -349,6 +386,7 @@ interface advanced-greeting {
 ```
 
 ### 2. Error Handling
+
 ```wit
 interface safe-math {
     divide: func(a: f64, b: f64) -> result<f64, string>;
@@ -356,11 +394,13 @@ interface safe-math {
 ```
 
 ### 3. Multi-Component Systems
+
 - Build multiple components
 - Use WAC composition
 - Deploy to registries
 
 ### 4. Performance Optimization
+
 - Add Wizer pre-initialization
 - Optimize for binary size
 - Profile memory usage
@@ -370,16 +410,19 @@ interface safe-math {
 ## Key Takeaways
 
 **For Component Model beginners:**
+
 - WIT defines interfaces, Rust implements them
 - Generated bindings handle all WebAssembly details
 - Components are like libraries that work across languages
 
 **For Bazel beginners:**
+
 - Rules automate the entire pipeline
 - Hermetic builds ensure reproducibility
 - Incremental builds speed up development
 
 **For the complete workflow:**
+
 1. Design interfaces first (WIT)
 2. Configure build (BUILD.bazel)
 3. Implement logic (Rust)

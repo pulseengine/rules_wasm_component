@@ -9,12 +9,12 @@ description: Rules for connecting and composing WebAssembly components into larg
 
 ## Quick Reference
 
-| Rule | Purpose | Use Case |
-|------|---------|----------|
-| **[wac_compose](#wac_compose)** | Main composition rule | Connecting multiple components |
-| **[wac_bundle](#wac_bundle)** | Package compositions | Self-contained applications |
-| **[wac_plug](#wac_plug)** | Plugin architecture | Extensible systems |
-| **[wac_remote_compose](#wac_remote_compose)** | Remote composition | Distributed systems |
+| Rule                                          | Purpose               | Use Case                       |
+| --------------------------------------------- | --------------------- | ------------------------------ |
+| **[wac_compose](#wac_compose)**               | Main composition rule | Connecting multiple components |
+| **[wac_bundle](#wac_bundle)**                 | Package compositions  | Self-contained applications    |
+| **[wac_plug](#wac_plug)**                     | Plugin architecture   | Extensible systems             |
+| **[wac_remote_compose](#wac_remote_compose)** | Remote composition    | Distributed systems            |
 
 ---
 
@@ -40,12 +40,12 @@ wac_compose(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `composition_file` | Label | ✅ | WAC file defining component relationships |
-| `components` | Dict[String, Label] | ✅ | Map of component names to targets |
-| `registry_config` | Label | ❌ | OCI registry configuration for remote dependencies |
+| Name               | Type                | Required | Description                                        |
+| ------------------ | ------------------- | -------- | -------------------------------------------------- |
+| `name`             | String              | ✅       | A unique name for this target                      |
+| `composition_file` | Label               | ✅       | WAC file defining component relationships          |
+| `components`       | Dict[String, Label] | ✅       | Map of component names to targets                  |
+| `registry_config`  | Label               | ❌       | OCI registry configuration for remote dependencies |
 
 ### WAC Composition File
 
@@ -68,6 +68,7 @@ export api.http_handler as http;
 ### Examples
 
 **Simple 2-Component System:**
+
 ```python
 wac_compose(
     name = "calculator_with_ui",
@@ -80,6 +81,7 @@ wac_compose(
 ```
 
 **Complex Multi-Service Architecture:**
+
 ```python
 wac_compose(
     name = "ecommerce_system",
@@ -118,16 +120,17 @@ wac_bundle(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `composition` | Label | ✅ | wac_compose target to bundle |
-| `metadata` | Dict[String, String] | ❌ | Additional metadata for the bundle |
-| `compress` | Boolean | ❌ | Whether to compress the bundle (default: true) |
+| Name          | Type                 | Required | Description                                    |
+| ------------- | -------------------- | -------- | ---------------------------------------------- |
+| `name`        | String               | ✅       | A unique name for this target                  |
+| `composition` | Label                | ✅       | wac_compose target to bundle                   |
+| `metadata`    | Dict[String, String] | ❌       | Additional metadata for the bundle             |
+| `compress`    | Boolean              | ❌       | Whether to compress the bundle (default: true) |
 
 ### Examples
 
 **Production Application Bundle:**
+
 ```python
 wac_bundle(
     name = "production_app",
@@ -142,6 +145,7 @@ wac_bundle(
 ```
 
 **Development Bundle:**
+
 ```python
 wac_bundle(
     name = "dev_app",
@@ -179,17 +183,18 @@ wac_plug(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `core_component` | Label | ✅ | Main component that loads plugins |
-| `plugin_interface` | Label | ✅ | WIT interface that plugins must implement |
-| `plugins` | List of Labels | ❌ | Optional bundled plugins |
-| `plugin_discovery` | String | ❌ | Plugin discovery mechanism ("static", "dynamic") |
+| Name               | Type           | Required | Description                                      |
+| ------------------ | -------------- | -------- | ------------------------------------------------ |
+| `name`             | String         | ✅       | A unique name for this target                    |
+| `core_component`   | Label          | ✅       | Main component that loads plugins                |
+| `plugin_interface` | Label          | ✅       | WIT interface that plugins must implement        |
+| `plugins`          | List of Labels | ❌       | Optional bundled plugins                         |
+| `plugin_discovery` | String         | ❌       | Plugin discovery mechanism ("static", "dynamic") |
 
 ### Examples
 
 **Text Editor with Plugins:**
+
 ```python
 wac_plug(
     name = "code_editor",
@@ -205,6 +210,7 @@ wac_plug(
 ```
 
 **Game Engine with Mods:**
+
 ```python
 wac_plug(
     name = "game_with_mods",
@@ -245,13 +251,13 @@ wac_remote_compose(
 
 ### Attributes
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `composition_file` | Label | ✅ | WAC file defining component relationships |
-| `local_components` | Dict[String, Label] | ❌ | Locally built components |
-| `remote_components` | Dict[String, String] | ❌ | Components from OCI registries |
-| `registry_config` | Label | ✅ | Registry authentication and configuration |
+| Name                | Type                 | Required | Description                               |
+| ------------------- | -------------------- | -------- | ----------------------------------------- |
+| `name`              | String               | ✅       | A unique name for this target             |
+| `composition_file`  | Label                | ✅       | WAC file defining component relationships |
+| `local_components`  | Dict[String, Label]  | ❌       | Locally built components                  |
+| `remote_components` | Dict[String, String] | ❌       | Components from OCI registries            |
+| `registry_config`   | Label                | ✅       | Registry authentication and configuration |
 
 ### Registry Configuration
 
@@ -277,6 +283,7 @@ wkg_registry_config(
 ### Examples
 
 **Hybrid Local/Remote System:**
+
 ```python
 wac_remote_compose(
     name = "saas_application",
@@ -295,6 +302,7 @@ wac_remote_compose(
 ```
 
 **Microservices with Shared Services:**
+
 ```python
 wac_remote_compose(
     name = "team_microservice",
@@ -371,12 +379,15 @@ export core.application as app;
 ## Related Rules
 
 **Prerequisites:**
+
 - **[WIT & Interface Rules](/reference/wit-interface-rules/)** - Define component interfaces
 - **[Language Rules](/reference/language-rules/)** - Build individual components
 
 **Related:**
+
 - **[Security Rules](/reference/security-rules/)** - Sign and verify composed systems
 
 **See Also:**
+
 - **[WAC Composition Guide](/build/composition/wac/)** - Detailed composition patterns
 - **[OCI Publishing](/build/deployment/oci-publishing/)** - Deploy composed systems

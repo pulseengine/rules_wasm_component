@@ -142,6 +142,7 @@ bazel run //tools:wasm-tools -- validate \\
 ## Advanced Features
 
 ### Error Handling
+
 The component demonstrates proper error handling using C++23's `std::expected`:
 
 ```cpp
@@ -152,7 +153,9 @@ if (!result) {
 ```
 
 ### Standard Library Usage
+
 Uses modern C++ features:
+
 - `<cmath>` for mathematical functions
 - `<limits>` for epsilon comparisons
 - Exception handling for robust error management

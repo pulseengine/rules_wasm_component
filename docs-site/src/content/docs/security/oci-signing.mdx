@@ -10,6 +10,7 @@ description: Secure your WebAssembly components in OCI registries with cryptogra
 OCI component signing provides **secure supply chain management** for WebAssembly components distributed via container registries. This focuses on the **security aspects** of signing components for OCI distribution.
 
 **Key Security Benefits:**
+
 - **Supply chain integrity** - Verify components during registry operations
 - **Multi-registry security** - Consistent signing across different registries
 - **Policy enforcement** - Organization-wide signing requirements
@@ -337,6 +338,7 @@ genrule(
 ### Common Security Problems
 
 **Policy Violations**
+
 ```bash
 # Error: Component violates security policy
 # Solution: Check signing requirements
@@ -344,6 +346,7 @@ bazel build //security:production_policy --verbose_failures
 ```
 
 **Key Format Issues**
+
 ```bash
 # Error: Unsupported key format for policy
 # Solution: Ensure key format matches policy requirements
@@ -352,6 +355,7 @@ bazel build //security:production_policy --verbose_failures
 ```
 
 **Registry Authentication**
+
 ```bash
 # Error: Authentication failed for secure registry
 # Solution: Check credentials and permissions

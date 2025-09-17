@@ -153,10 +153,7 @@
         "required": false,
         "default": "'cpp'",
         "description": "Language variant (c or cpp)",
-        "allowed_values": [
-          "c",
-          "cpp"
-        ]
+        "allowed_values": ["c", "cpp"]
       },
       "name": {
         "type": "string",
@@ -238,11 +235,7 @@
         "type": "string",
         "required": false,
         "description": "String encoding to use in generated bindings",
-        "allowed_values": [
-          "utf8",
-          "utf16",
-          "compact-utf16"
-        ]
+        "allowed_values": ["utf8", "utf16", "compact-utf16"]
       },
       "stubs_only": {
         "type": "bool",
@@ -294,10 +287,7 @@
         "required": false,
         "default": "'release'",
         "description": "Build optimization level",
-        "allowed_values": [
-          "debug",
-          "release"
-        ]
+        "allowed_values": ["debug", "release"]
       },
       "srcs": {
         "type": "label_list",
@@ -500,11 +490,7 @@
         "required": false,
         "default": "['release']",
         "description": "Build profiles to generate",
-        "allowed_values": [
-          "debug",
-          "release",
-          "custom"
-        ]
+        "allowed_values": ["debug", "release", "custom"]
       },
       "srcs": {
         "type": "label_list",
@@ -911,13 +897,7 @@
         "type": "string",
         "required": true,
         "description": "Target language for binding generation",
-        "allowed_values": [
-          "rust",
-          "c",
-          "go",
-          "python",
-          "js"
-        ]
+        "allowed_values": ["rust", "c", "go", "python", "js"]
       },
       "name": {
         "type": "string",
@@ -1099,10 +1079,7 @@
         "required": false,
         "default": "'rust'",
         "description": "Target language for bindings",
-        "allowed_values": [
-          "rust",
-          "go"
-        ]
+        "allowed_values": ["rust", "go"]
       },
       "name": {
         "type": "string",
@@ -1155,10 +1132,7 @@
         "required": false,
         "default": "'tcp'",
         "description": "Transport protocol",
-        "allowed_values": [
-          "tcp",
-          "nats"
-        ]
+        "allowed_values": ["tcp", "nats"]
       }
     },
     "examples": [
@@ -1196,10 +1170,7 @@
         "required": false,
         "default": "'tcp'",
         "description": "Transport protocol",
-        "allowed_values": [
-          "tcp",
-          "nats"
-        ]
+        "allowed_values": ["tcp", "nats"]
       }
     },
     "examples": [

@@ -11,7 +11,7 @@ def _component_validation_test_impl(ctx):
         if file.extension == "wasm":
             component_file = file
             break
-    
+
     if not component_file:
         fail("Component target must produce a .wasm file")
     test_script = ctx.actions.declare_file(ctx.label.name + "_test.sh")

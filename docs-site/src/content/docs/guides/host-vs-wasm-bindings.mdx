@@ -69,6 +69,7 @@ To understand this architecture, it's important to know the WebAssembly Componen
 - **WIT**: WebAssembly Interface Type definitions that describe component interfaces
 
 Our binding system creates:
+
 - **Native-guest bindings**: For native applications that need to understand component interfaces
 - **Guest bindings**: For actual guest component implementations that run in a host runtime
 
@@ -79,6 +80,7 @@ Our binding system creates:
 Use `{name}_bindings_host` for native-guest applications:
 
 ### Test Applications
+
 ```python
 rust_test(
     name = "component_integration_test",
@@ -88,6 +90,7 @@ rust_test(
 ```
 
 ### Benchmarking Tools
+
 ```python
 rust_binary(
     name = "component_benchmark",
@@ -97,6 +100,7 @@ rust_binary(
 ```
 
 ### Development Utilities
+
 ```python
 rust_binary(
     name = "schema_validator",
@@ -106,6 +110,7 @@ rust_binary(
 ```
 
 ### Mock Implementations
+
 ```rust
 // In your test file - runs natively, not in WebAssembly
 use calculator_bindings_host::exports::calculator::math::Guest;
@@ -123,6 +128,7 @@ impl Guest for MockCalculator {
 Use `{name}_bindings` for:
 
 ### Guest Component Implementations
+
 ```rust
 // Guest component source code (src/lib.rs) - compiles to WebAssembly
 use calculator_bindings::exports::calculator::math::Guest;
@@ -139,6 +145,7 @@ calculator_bindings::export!(Calculator with_types_in calculator_bindings);
 ```
 
 This is automatically handled by `rust_wasm_component_bindgen`:
+
 ```python
 rust_wasm_component_bindgen(
     name = "calculator",
@@ -184,6 +191,7 @@ rust_wasm_component_bindgen(
 ## Common Error and Solution
 
 ### The Error
+
 ```bash
 error[E0461]: couldn't find crate 'my_component_bindings' with expected target triple aarch64-apple-darwin
 
@@ -192,9 +200,11 @@ note: the following crate versions were found:
 ```
 
 ### The Problem
+
 You're trying to use guest component bindings (`my_component_bindings`) in a native application that expects native platform target triples.
 
 ### The Solution
+
 Use native platform bindings instead:
 
 ```python
@@ -300,15 +310,18 @@ fn test_calculator_interface() {
 ## Best Practices
 
 ### 1. Choose the Right Binding Type
+
 - **Host bindings** for development tools, tests, benchmarks
 - **WASM bindings** for component implementations (handled automatically)
 
 ### 2. Naming Convention
+
 - Host bindings: `{name}_bindings_host`
 - WASM bindings: `{name}_bindings`
 - Component: `{name}`
 
 ### 3. Testing Strategy
+
 ```python
 # Test the component interface with host bindings
 rust_test(
@@ -324,6 +337,7 @@ rust_wasm_component_test(
 ```
 
 ### 4. Development Workflow
+
 1. **Design**: Define WIT interfaces
 2. **Implement**: Create guest components with guest bindings
 3. **Test**: Build test tools with native bindings

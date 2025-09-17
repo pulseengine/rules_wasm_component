@@ -11,13 +11,13 @@ on:
   workflow_dispatch:
     inputs:
       test_target:
-        description: 'Specific target to test (default: //examples/basic:hello_component)'
+        description: "Specific target to test (default: //examples/basic:hello_component)"
         required: false
-        default: '//examples/basic:hello_component'
+        default: "//examples/basic:hello_component"
       timeout_minutes:
-        description: 'Timeout in minutes (default: 15)'
+        description: "Timeout in minutes (default: 15)"
         required: false
-        default: '15'
+        default: "15"
 
 env:
   DOCKER_IMAGE: gcr.io/bazel-public/ubuntu2204

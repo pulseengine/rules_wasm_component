@@ -52,7 +52,7 @@ void MemoryPool::cleanup_pool() {
 
 void* MemoryPool::allocate(size_t size) {
     if (size == 0) return nullptr;
-    
+
     // WASI-compatible: Check initialization before proceeding
     if (!is_initialized()) {
         return nullptr;  // Graceful failure instead of crash

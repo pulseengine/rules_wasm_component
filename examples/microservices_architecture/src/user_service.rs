@@ -1,7 +1,9 @@
 // Mock User Service implementation for local microservices architecture
 
-use user_service_bindings::exports::microservices::user::user_management::{Guest as UserServiceGuest, User, AuthResult};
 use std::collections::HashMap;
+use user_service_bindings::exports::microservices::user::user_management::{
+    AuthResult, Guest as UserServiceGuest, User,
+};
 
 // Mock user database
 static mut USERS: Option<HashMap<u32, User>> = None;
@@ -12,27 +14,36 @@ fn get_users() -> &'static mut HashMap<u32, User> {
         USERS.get_or_insert_with(|| {
             let mut users = HashMap::new();
             // Pre-populate with test users
-            users.insert(1, User {
-                id: 1,
-                name: "Alice Johnson".to_string(),
-                email: "alice@example.com".to_string(),
-                created_at: 1672531200, // Jan 1, 2023
-                active: true,
-            });
-            users.insert(2, User {
-                id: 2,
-                name: "Bob Smith".to_string(),
-                email: "bob@example.com".to_string(),
-                created_at: 1672617600, // Jan 2, 2023
-                active: true,
-            });
-            users.insert(3, User {
-                id: 3,
-                name: "Carol Wilson".to_string(),
-                email: "carol@example.com".to_string(),
-                created_at: 1672704000, // Jan 3, 2023
-                active: false,
-            });
+            users.insert(
+                1,
+                User {
+                    id: 1,
+                    name: "Alice Johnson".to_string(),
+                    email: "alice@example.com".to_string(),
+                    created_at: 1672531200, // Jan 1, 2023
+                    active: true,
+                },
+            );
+            users.insert(
+                2,
+                User {
+                    id: 2,
+                    name: "Bob Smith".to_string(),
+                    email: "bob@example.com".to_string(),
+                    created_at: 1672617600, // Jan 2, 2023
+                    active: true,
+                },
+            );
+            users.insert(
+                3,
+                User {
+                    id: 3,
+                    name: "Carol Wilson".to_string(),
+                    email: "carol@example.com".to_string(),
+                    created_at: 1672704000, // Jan 3, 2023
+                    active: false,
+                },
+            );
             users
         })
     }
@@ -78,9 +89,13 @@ impl UserServiceGuest for UserService {
         }
     }
 
-    fn update_user(user_id: u32, name: Option<String>, email: Option<String>) -> Result<(), String> {
+    fn update_user(
+        user_id: u32,
+        name: Option<String>,
+        email: Option<String>,
+    ) -> Result<(), String> {
         let users = get_users();
-        
+
         // Check if user exists first
         if !users.contains_key(&user_id) {
             return Err("User not found".to_string());
@@ -184,7 +199,10 @@ impl UserServiceGuest for UserService {
     }
 
     fn find_user_by_email(email: String) -> Option<User> {
-        get_users().values().find(|user| user.email == email).cloned()
+        get_users()
+            .values()
+            .find(|user| user.email == email)
+            .cloned()
     }
 
     fn list_users(offset: u32, limit: u32) -> Vec<User> {

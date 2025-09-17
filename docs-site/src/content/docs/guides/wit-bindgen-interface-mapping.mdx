@@ -32,12 +32,14 @@ flowchart TD
 ```
 
 **Problems with naive generation:**
+
 - **Code duplication**: Each component generates identical WASI interface code
 - **Dependency conflicts**: Different versions of generated interfaces
 - **Binary bloat**: Redundant code in every component
 - **Type incompatibility**: Generated types don't work with ecosystem crates
 
 **Solution: Interface Mapping**
+
 - **Map common interfaces** to existing ecosystem crates
 - **Generate only custom interfaces** specific to your component
 - **Reuse established implementations** for better compatibility
@@ -69,16 +71,19 @@ wit_bindgen(
 ### Mapping Strategies
 
 #### 1. **Ecosystem Crate Mapping**
+
 ```starlark
 "wasi:http/types": "wasi::http::types"
 ```
 
 **Use when:**
+
 - Standard WASI interfaces exist as published crates
 - You want ecosystem compatibility
 - Multiple components share the same interfaces
 
 **Implications:**
+
 - ✅ Smaller binaries (no duplicate code generation)
 - ✅ Better ecosystem integration
 - ✅ Consistent type definitions across components
@@ -86,16 +91,19 @@ wit_bindgen(
 - ⚠️ Must match interface versions exactly
 
 #### 2. **Custom Module Mapping**
+
 ```starlark
 "my:company/auth": "crate::auth::types"
 ```
 
 **Use when:**
+
 - You have existing type definitions
 - Sharing types across multiple components
 - Custom business logic types
 
 **Implications:**
+
 - ✅ Code reuse across your components
 - ✅ Centralized type definitions
 - ✅ Custom derive implementations
@@ -103,16 +111,19 @@ wit_bindgen(
 - ⚠️ Breaking changes affect multiple components
 
 #### 3. **Generate Fresh**
+
 ```starlark
 "my:pkg/service": "generate"
 ```
 
 **Use when:**
+
 - Component-specific interfaces
 - Rapid prototyping
 - No existing implementation available
 
 **Implications:**
+
 - ✅ Full control over generated code
 - ✅ No external dependencies
 - ✅ Optimal for component-specific logic
@@ -124,11 +135,13 @@ wit_bindgen(
 The `ownership` attribute controls how wit-bindgen handles memory management and borrowing:
 
 ### `owning` (Default)
+
 ```starlark
 ownership = "owning"
 ```
 
 **Generated code pattern:**
+
 ```rust
 pub fn process_data(data: String) -> Vec<u8> {
     // Takes ownership of input, returns owned output
@@ -136,23 +149,27 @@ pub fn process_data(data: String) -> Vec<u8> {
 ```
 
 **Use when:**
+
 - Simple ownership patterns
 - Component boundaries require ownership transfer
 - Performance is not critical
 - Learning/prototyping
 
 **Implications:**
+
 - ✅ Simplest to use and understand
 - ✅ No lifetime management complexity
 - ⚠️ More memory allocations
 - ⚠️ Cannot zero-copy in many cases
 
 ### `borrowing`
+
 ```starlark
 ownership = "borrowing"
 ```
 
 **Generated code pattern:**
+
 ```rust
 pub fn process_data(data: &str) -> &[u8] {
     // Borrows input, returns borrowed output where possible
@@ -160,12 +177,14 @@ pub fn process_data(data: &str) -> &[u8] {
 ```
 
 **Use when:**
+
 - Performance-critical applications
 - Large data processing
 - Memory-constrained environments
 - Zero-copy patterns desired
 
 **Implications:**
+
 - ✅ Minimal memory allocations
 - ✅ Zero-copy optimizations possible
 - ✅ Better performance characteristics
@@ -174,11 +193,13 @@ pub fn process_data(data: &str) -> &[u8] {
 - ⚠️ Compilation can be more complex
 
 ### `borrowing-duplicate-if-necessary`
+
 ```starlark
 ownership = "borrowing-duplicate-if-necessary"
 ```
 
 **Generated code pattern:**
+
 ```rust
 pub fn process_data(data: &str) -> String {
     // Borrows when possible, clones when necessary
@@ -186,12 +207,14 @@ pub fn process_data(data: &str) -> String {
 ```
 
 **Use when:**
+
 - Balancing performance and simplicity
 - Mixed usage patterns in same component
 - Gradual optimization approach
 - Complex interface requirements
 
 **Implications:**
+
 - ✅ Best of both worlds approach
 - ✅ Optimizes where possible, works everywhere
 - ✅ Easier migration from owning model
@@ -209,68 +232,80 @@ additional_derives = ["Clone", "Debug", "PartialEq", "Serialize", "Deserialize"]
 ### Common Derives and Use Cases
 
 #### `Clone`
+
 ```rust
 #[derive(Clone)]
 pub struct ApiConfig { ... }
 ```
 
 **Use when:**
+
 - Types need to be duplicated
 - Shared between multiple component instances
 - Caching/memoization patterns
 
 **Implications:**
+
 - ✅ Flexible data sharing patterns
 - ⚠️ Potential memory overhead if overused
 - ⚠️ Deep cloning of nested structures
 
 #### `Debug`
+
 ```rust
 #[derive(Debug)]
 pub struct ApiConfig { ... }
 ```
 
 **Use when:**
+
 - Development and debugging
 - Logging and error reporting
 - Testing and diagnostics
 
 **Implications:**
+
 - ✅ Better debugging experience
 - ✅ Easier troubleshooting
 - ⚠️ May expose sensitive data in logs
 - ⚠️ Small code size increase
 
 #### `PartialEq` / `Eq`
+
 ```rust
 #[derive(PartialEq, Eq)]
 pub struct ApiConfig { ... }
 ```
 
 **Use when:**
+
 - Comparing instances for equality
 - Using types in collections (HashMap keys)
 - Testing and validation
 
 **Implications:**
+
 - ✅ Enables comparison operations
 - ✅ Hashmap/set usage possible
 - ⚠️ Structural equality only
 - ⚠️ Performance impact for large types
 
 #### `Serialize` / `Deserialize` (serde)
+
 ```rust
 #[derive(Serialize, Deserialize)]
 pub struct ApiConfig { ... }
 ```
 
 **Use when:**
+
 - JSON/YAML/TOML configuration
 - Network protocol serialization
 - Persistent storage requirements
 - API integration
 
 **Implications:**
+
 - ✅ Easy serialization to multiple formats
 - ✅ Network and storage integration
 - ⚠️ Additional dependency on serde
@@ -320,11 +355,13 @@ async_interfaces = [
 ### Async Patterns and Implications
 
 #### Specific Method Async
+
 ```starlark
 async_interfaces = ["my:pkg/service#process-data"]
 ```
 
 **Generated code:**
+
 ```rust
 impl Guest for MyService {
     async fn process_data(&self, input: &str) -> String {
@@ -338,16 +375,19 @@ impl Guest for MyService {
 ```
 
 **Use when:**
+
 - Only specific operations are inherently async
 - Mixed sync/async patterns in same interface
 - Gradual async adoption
 
 #### Interface-Level Async
+
 ```starlark
 async_interfaces = ["my:pkg/service"]
 ```
 
 **Generated code:**
+
 ```rust
 impl Guest for MyService {
     async fn process_data(&self, input: &str) -> String { ... }
@@ -357,21 +397,25 @@ impl Guest for MyService {
 ```
 
 **Use when:**
+
 - Entire interface involves async operations
 - Consistent async patterns
 - Future-proofing for async adoption
 
 #### Global Async
+
 ```starlark
 async_interfaces = ["all"]
 ```
 
 **Use when:**
+
 - Component is entirely async-first
 - Integration with async runtime (tokio)
 - Modern async/await patterns throughout
 
 **Implications of Async:**
+
 - ✅ Non-blocking operations
 - ✅ Better concurrency patterns
 - ✅ Integration with async ecosystem
@@ -382,6 +426,7 @@ async_interfaces = ["all"]
 ## Real-World Configuration Patterns
 
 ### Pattern 1: Microservice Component
+
 ```starlark
 wit_bindgen(
     name = "api_service_bindings",
@@ -411,12 +456,14 @@ wit_bindgen(
 ```
 
 **Benefits:**
+
 - Reuses WASI ecosystem types
 - Optimizes for performance with borrowing
 - Full debugging and serialization support
 - Modern async patterns throughout
 
 ### Pattern 2: Library Component
+
 ```starlark
 wit_bindgen(
     name = "crypto_lib_bindings",
@@ -441,12 +488,14 @@ wit_bindgen(
 ```
 
 **Benefits:**
+
 - No external dependencies
 - Zero-copy optimizations
 - Security-conscious (no Debug derive)
 - Predictable synchronous behavior
 
 ### Pattern 3: Integration Component
+
 ```starlark
 wit_bindgen(
     name = "integration_bindings",
@@ -475,6 +524,7 @@ wit_bindgen(
 ```
 
 **Benefits:**
+
 - Leverages existing networking crates
 - Simple ownership for easier integration
 - Selective async for connection logic
@@ -516,12 +566,12 @@ graph LR
 
 ### Runtime Performance
 
-| Configuration | Memory Usage | CPU Usage | Complexity |
-|---------------|--------------|-----------|------------|
-| `owning` + `Clone` | High | Medium | Low |
-| `borrowing` + No derives | Low | Low | High |
-| `borrowing-duplicate-if-necessary` + Selected derives | Medium | Low-Medium | Medium |
-| Async everywhere | Medium | Low (with runtime) | Medium |
+| Configuration                                         | Memory Usage | CPU Usage          | Complexity |
+| ----------------------------------------------------- | ------------ | ------------------ | ---------- |
+| `owning` + `Clone`                                    | High         | Medium             | Low        |
+| `borrowing` + No derives                              | Low          | Low                | High       |
+| `borrowing-duplicate-if-necessary` + Selected derives | Medium       | Low-Medium         | Medium     |
+| Async everywhere                                      | Medium       | Low (with runtime) | Medium     |
 
 ## Migration Strategies
 
@@ -557,6 +607,7 @@ wit_bindgen(
 ### Performance Optimization Path
 
 1. **Phase 1: Add mappings**
+
    ```starlark
    with_mappings = {
        "wasi:http/types": "wasi::http::types",  # Reduce duplication
@@ -564,11 +615,13 @@ wit_bindgen(
    ```
 
 2. **Phase 2: Optimize ownership**
+
    ```starlark
    ownership = "borrowing-duplicate-if-necessary"  # Performance boost
    ```
 
 3. **Phase 3: Add selective derives**
+
    ```starlark
    additional_derives = ["Clone", "Debug"]  # As needed
    ```
@@ -581,6 +634,7 @@ wit_bindgen(
 ## Common Pitfalls and Solutions
 
 ### Pitfall 1: Over-mapping
+
 ```starlark
 # ❌ Mapping everything might not help
 with_mappings = {
@@ -591,6 +645,7 @@ with_mappings = {
 **Solution:** Only map interfaces that truly benefit from existing implementations.
 
 ### Pitfall 2: Derive Overload
+
 ```starlark
 # ❌ Adding every derive "just in case"
 additional_derives = ["Clone", "Debug", "PartialEq", "Eq", "PartialOrd", "Ord", "Hash", "Serialize", "Deserialize"]
@@ -599,6 +654,7 @@ additional_derives = ["Clone", "Debug", "PartialEq", "Eq", "PartialOrd", "Ord", 
 **Solution:** Add derives only when you need the functionality.
 
 ### Pitfall 3: Async Everything
+
 ```starlark
 # ❌ Making everything async without reason
 async_interfaces = ["all"]
@@ -607,6 +663,7 @@ async_interfaces = ["all"]
 **Solution:** Use async only where you have genuinely async operations.
 
 ### Pitfall 4: Wrong Ownership Model
+
 ```starlark
 # ❌ Using borrowing for simple cases
 ownership = "borrowing"  # When you don't need the complexity

@@ -41,7 +41,7 @@ try {
     const ranges = lines.split(',');
     for (const range of ranges) {
       if (range.includes('-')) {
-        const [start, end] = range.split('-').map(n => parseInt(n.trim()));
+        const [start, end] = range.split('-').map((n) => parseInt(n.trim()));
         for (let i = Math.max(0, start - 1); i < Math.min(allLines.length, end); i++) {
           selectedLines.push(allLines[i]);
         }
@@ -55,50 +55,66 @@ try {
 
     content = selectedLines.join('\n');
   }
-
 } catch (e) {
   error = `Error reading file ${file}: ${e instanceof Error ? e.message : String(e)}`;
   content = error;
 }
 
 // Auto-detect language from file extension if not provided
-const autoLang = lang || (() => {
-  const ext = file.split('.').pop()?.toLowerCase();
-  switch (ext) {
-    case 'rs': return 'rust';
-    case 'go': return 'go';
-    case 'cpp':
-    case 'cc':
-    case 'cxx': return 'cpp';
-    case 'js': return 'javascript';
-    case 'ts': return 'typescript';
-    case 'wit': return 'wit';
-    case 'bzl': return 'starlark';
-    case 'toml': return 'toml';
-    case 'yaml':
-    case 'yml': return 'yaml';
-    case 'json': return 'json';
-    default: return 'text';
-  }
-})();
+const autoLang =
+  lang ||
+  (() => {
+    const ext = file.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'rs':
+        return 'rust';
+      case 'go':
+        return 'go';
+      case 'cpp':
+      case 'cc':
+      case 'cxx':
+        return 'cpp';
+      case 'js':
+        return 'javascript';
+      case 'ts':
+        return 'typescript';
+      case 'wit':
+        return 'wit';
+      case 'bzl':
+        return 'starlark';
+      case 'toml':
+        return 'toml';
+      case 'yaml':
+      case 'yml':
+        return 'yaml';
+      case 'json':
+        return 'json';
+      default:
+        return 'text';
+    }
+  })();
 
 const displayTitle = title || file;
 ---
 
 <div class="code-from-file">
-  {error ? (
-    <div class="error-message">
-      <pre>{error}</pre>
-    </div>
-  ) : (
-    <div class="code-block">
-      <div class="code-header">
-        <span class="file-path">{displayTitle}</span>
-        <span class="file-lang">{autoLang}</span>
+  {
+    error ? (
+      <div class="error-message">
+        <pre>{error}</pre>
       </div>
-      <pre class={`language-${autoLang}`}><code set:html={content} /></pre>
-    </div>
-  )}
+    ) : (
+      <div class="code-block">
+        <div class="code-header">
+          <span class="file-path">{displayTitle}</span>
+          <span class="file-lang">{autoLang}</span>
+        </div>
+        <pre class={`language-${autoLang}`}>
+          <code set:html={content} />
+        </pre>
+      </div>
+    )
+  }
 </div>
 
 <style>

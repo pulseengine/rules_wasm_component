@@ -10,6 +10,7 @@ This guided walkthrough shows you how to build WebAssembly components using Tiny
 ## What We're Building
 
 We'll create a calculator WebAssembly component that:
+
 - Demonstrates TinyGo compilation to WebAssembly
 - Uses WASI Preview 2 for system interface access
 - Shows multi-file Go component architecture
@@ -52,22 +53,26 @@ require github.com/bytecodealliance/wasm-tools-go v0.3.0
 ```go
 module github.com/example/calculator
 ```
+
 **What:** Go module identifier
 **Why:** Required for TinyGo to understand package structure
 
 ```go
 go 1.21
 ```
+
 **What:** Go version requirement
 **Why:** TinyGo has specific Go version compatibility requirements
 
 ```go
 require github.com/bytecodealliance/wasm-tools-go v0.3.0
 ```
+
 **What:** WebAssembly Component Model support for Go
 **Why:** Provides the runtime support for component model features
 
 ### TinyGo vs Standard Go:
+
 - **TinyGo:** Subset of Go designed for embedded/WebAssembly
 - **WASI Preview 2:** Built-in support in recent TinyGo versions
 - **Smaller binaries:** Optimized for WebAssembly output
@@ -129,11 +134,13 @@ go_wasm_component(
     optimization = "release",
 )
 ```
+
 **What happens:** Compiles Go code to WebAssembly using TinyGo
 **Generated files:** Final .wasm component file
 **Pipeline step:** Go Source Files → TinyGo → WebAssembly Component
 
 **Key features of go_wasm_component:**
+
 1. **TinyGo compilation** - Optimized for WebAssembly output
 2. **WASI Preview 2 support** - Modern system interface
 3. **Multi-file support** - Handles multiple Go source files
@@ -142,16 +149,19 @@ go_wasm_component(
 ```python
 world = "wasi:cli/command"
 ```
+
 **What:** Uses the standard WASI CLI world for command-line style programs
 **Why:** This allows the component to run like a regular CLI program with WASI system access
 
 ```python
 adapter = "//wasm/adapters:wasi_snapshot_preview1"
 ```
+
 **What:** Compatibility adapter for WASI
 **Why:** Bridges WASI Preview 1 and Preview 2 interfaces
 
 ### Build Features:
+
 - **TinyGo optimization** for small binary size
 - **WASI Preview 2 support** built-in
 - **Multi-file Go compilation** with proper module support
@@ -220,6 +230,7 @@ func ValidateOperation(op string, a, b float64) error {
 ### Key Go Patterns:
 
 **Struct Methods:**
+
 ```go
 type MathUtils struct{}
 
@@ -227,11 +238,13 @@ func (m *MathUtils) Power(a, b float64) float64 {
     return math.Pow(a, b)
 }
 ```
+
 **What:** Go's approach to object-oriented programming
 **Why:** Groups related functionality together
 **Component Model:** These become internal implementation details
 
 **Error Handling:**
+
 ```go
 func (m *MathUtils) SquareRoot(a float64) (float64, error) {
     if a < 0 {
@@ -240,10 +253,12 @@ func (m *MathUtils) SquareRoot(a float64) (float64, error) {
     return math.Sqrt(a), nil
 }
 ```
+
 **What:** Go's explicit error handling pattern
 **Component Model:** Errors are handled through WIT result types
 
 **Validation Logic:**
+
 ```go
 func ValidateOperation(op string, a, b float64) error {
     if !utils.IsValidNumber(a) || !utils.IsValidNumber(b) {
@@ -252,6 +267,7 @@ func ValidateOperation(op string, a, b float64) error {
     // ...
 }
 ```
+
 **What:** Input validation and error checking
 **Why:** Ensures component robustness and proper error reporting
 
@@ -286,11 +302,13 @@ func main() {
 ### Understanding the Entry Point:
 
 **Why a main function?**
+
 - **WASI CLI pattern:** This runs like a regular command-line program
 - **Component entry point:** main() is called when the component starts
 - **Multi-file demo:** Shows how to use functions from other Go files
 
 **What happens at runtime:**
+
 1. Component is instantiated by WASI runtime (like wasmtime)
 2. main() function is called as the program entry point
 3. Component can use standard I/O (fmt.Println, fmt.Printf)
@@ -303,28 +321,35 @@ func main() {
 **Command:** `bazel build //examples/go_component:calculator_component`
 
 ### Stage 1: TinyGo Compilation
+
 ```bash
 # Bazel runs TinyGo with WASI Preview 2 target
 tinygo build -target=wasip2 -o calculator.wasm calculator.go main.go utils.go
 ```
+
 **What happens:**
+
 - Compiles all Go source files to WebAssembly
 - Links with WASI Preview 2 runtime
 - Includes Component Model support
 - Optimizes for size and performance
 
 ### Stage 2: Component Wrapping
+
 ```bash
 # Bazel creates final component
 wasm-tools component new calculator.wasm -o calculator_component.wasm
 ```
+
 **What happens:**
+
 - Wraps core module as Component Model component
 - Adds WASI CLI world metadata
 - Creates proper WASI exports/imports
 - Validates component structure
 
 ### Build Output:
+
 ```
 bazel-bin/examples/go_component/
 └── calculator_component.wasm  # Your final Go component!
@@ -348,6 +373,7 @@ wasmtime run --wasi preview2 bazel-bin/examples/go_component/calculator_componen
 ```
 
 **Expected output:**
+
 ```
 Component: calculator_component.wasm
 ├── Exports: wasi:cli/command world
@@ -358,12 +384,14 @@ Component: calculator_component.wasm
 ```
 
 **Running the component:**
+
 ```bash
 # Run with wasmtime
 wasmtime run --wasi preview2 bazel-bin/examples/go_component/calculator_component.wasm
 ```
 
 **Expected runtime output:**
+
 ```
 Multi-file Go component test
 Add(5, 3) = 8
@@ -371,6 +399,7 @@ Multiply(4, 6) = 24
 ```
 
 **Understanding Component Structure:**
+
 - This is a WASI CLI component that runs like a regular program
 - It has access to standard I/O (println, printf work)
 - Functions from multiple Go files are available
@@ -383,6 +412,7 @@ Multiply(4, 6) = 24
 ### Using Your Go Component:
 
 **As a WASI CLI application:**
+
 ```bash
 # Run directly with wasmtime
 wasmtime run --wasi preview2 calculator_component.wasm
@@ -393,6 +423,7 @@ docker run --rm -v $(pwd):/app wasmtime:latest \
 ```
 
 **From host applications:**
+
 ```rust
 // In a Rust application using wasmtime
 use wasmtime::*;
@@ -405,6 +436,7 @@ instance.get_func(&mut store, "_start")?.call(&mut store, &[], &mut [])?;
 ```
 
 **Container deployment:**
+
 ```yaml
 # Kubernetes deployment for WASI components
 apiVersion: apps/v1
@@ -415,12 +447,13 @@ spec:
   template:
     spec:
       containers:
-      - name: wasmtime
-        image: wasmtime/wasmtime:latest
-        command: ["wasmtime", "run", "--wasi", "preview2", "/app/calculator_component.wasm"]
+        - name: wasmtime
+          image: wasmtime/wasmtime:latest
+          command: ['wasmtime', 'run', '--wasi', 'preview2', '/app/calculator_component.wasm']
 ```
 
 ### Composition with WAC:
+
 ```shell
 // Combine Go calculator with other components
 package my:math-service@1.0.0;
@@ -438,16 +471,19 @@ import ui:web-server@1.0.0 from registry.example.com/web-ui:v1.0.0;
 ### Advantages of TinyGo for WebAssembly:
 
 **Native WASI Preview 2 Support:**
+
 - Built-in support for latest WASI standards
 - No adapter layers needed
 - Direct system interface access
 
 **Small Binary Size:**
+
 - Optimized for embedded/WebAssembly targets
 - Dead code elimination
 - Minimal runtime overhead
 
 **Go Language Familiarity:**
+
 - Standard Go syntax and patterns
 - Familiar error handling
 - Strong type system
@@ -455,6 +491,7 @@ import ui:web-server@1.0.0 from registry.example.com/web-ui:v1.0.0;
 ### Limitations to Consider:
 
 **Standard Library Subset:**
+
 ```go
 // Available: math, fmt, strings (basic operations)
 import "math"     // ✅ Available
@@ -464,12 +501,14 @@ import "os"       // ❌ Limited WASI-only operations
 ```
 
 **Reflection Limitations:**
+
 ```go
 // Limited reflection support
 reflect.TypeOf(x) // ❌ May not work as expected
 ```
 
 **Concurrency:**
+
 ```go
 // Goroutines have limited support
 go func() { ... }() // ⚠️ Limited scheduler
@@ -487,31 +526,38 @@ go func() { ... }() // ⚠️ Limited scheduler
 ## Step 10: Common Issues and Debugging
 
 ### Issue 1: "TinyGo build failed"
+
 **Symptom:** Build error during compilation
 **Common causes:**
+
 - Using unsupported standard library packages
 - Reflection usage
 - Goroutine-heavy code
 
 **Debug approach:**
+
 ```bash
 # Test with simplified code
 tinygo build -target=wasip2 -o test.wasm simple_main.go
 ```
 
 ### Issue 2: "Component validation failed"
+
 **Symptom:** wasm-tools validation error
 **Cause:** WIT interface mismatch with Go implementation
 **Fix:** Ensure generated bindings are used correctly
 
 ### Issue 3: "WASI interface not found"
+
 **Symptom:** Runtime error when calling component
 **Cause:** WASI Preview 1 vs Preview 2 mismatch
 **Fix:** Use compatible runtimes (wasmtime 14+)
 
 ### Issue 4: "Import resolution failed"
+
 **Symptom:** Module not found during build
 **Debug:**
+
 ```bash
 # Check go.mod is correctly configured
 go mod tidy
@@ -523,12 +569,14 @@ go mod verify
 ## Step 11: Performance Optimization
 
 ### Binary Size Optimization:
+
 ```bash
 # TinyGo optimization flags
 tinygo build -target=wasip2 -opt=2 -no-debug -o optimized.wasm
 ```
 
 ### Memory Usage:
+
 ```go
 // Efficient memory patterns for WebAssembly
 func processLargeData(data []float64) []float64 {
@@ -550,6 +598,7 @@ func processLargeData(data []float64) []float64 {
 ```
 
 ### Startup Performance:
+
 - TinyGo components have fast startup times
 - No JIT compilation needed
 - Minimal runtime initialization
@@ -560,6 +609,7 @@ func processLargeData(data []float64) []float64 {
 ## Step 12: Advanced Features
 
 ### Error Handling with WIT Results:
+
 ```wit
 divide: func(a: f64, b: f64) -> result<f64, string>;
 ```
@@ -589,6 +639,7 @@ func stringPtr(s string) *string {
 ```
 
 ### Complex Data Structures:
+
 ```wit
 record matrix {
     rows: u32,
@@ -628,18 +679,21 @@ func MultiplyMatrices(a, b Matrix) (Matrix, error) {
 ## Key Takeaways
 
 **For TinyGo WebAssembly Development:**
+
 - TinyGo provides the most direct path to WebAssembly components in Go
 - WASI Preview 2 support is built-in and mature
 - Binary sizes are optimized for WebAssembly deployment
 - Standard Go patterns work within TinyGo's constraints
 
 **For Component Model Development:**
+
 - WIT interfaces provide strong typing across language boundaries
 - Generated bindings handle all WebAssembly specifics
 - Components are truly polyglot - can be used from any language
 - Error handling follows Go patterns but maps to WIT result types
 
 **For the Complete Workflow:**
+
 1. Design rich interfaces with WIT (records, variants, results)
 2. Configure Bazel build with Go-specific rules
 3. Implement using familiar Go patterns and error handling

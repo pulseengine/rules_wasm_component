@@ -10,6 +10,7 @@ description: Complete WebAssembly component development workflow and toolchain a
 Think of WebAssembly components as **intelligent LEGO blocks for software**. Each block has clear interfaces (the "studs" and "holes"), can be built in any language, and connects perfectly with blocks built in other languages.
 
 **What makes this architecture special:**
+
 - **Language Freedom** - Write each component in the best language for the job
 - **True Portability** - Same component runs everywhere WebAssembly is supported
 - **Safe Composition** - Components can't interfere with each other
@@ -64,6 +65,7 @@ graph TD
 **Behind every component build is an orchestra of specialized tools.** Each tool has one job and does it well - the build system coordinates them all so you don't have to think about it:
 
 **How the tools work together:**
+
 - **Interface tools** parse your WIT files and validate the API contracts
 - **Code generators** create language-specific bindings so your code can implement the interfaces
 - **Language compilers** turn your implementation into WebAssembly modules

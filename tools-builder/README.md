@@ -134,12 +134,12 @@ tools-builder/
 
 ## Comparison with Alternatives
 
-| Approach | Hermeticity | BCR Compatible | Cross-Platform | Maintenance |
-|----------|-------------|----------------|----------------|-------------|
-| **Self-hosted builds** | ✅ Complete | ✅ Yes | ✅ Full | Medium |
-| Pre-built binaries only | ✅ Complete | ✅ Yes | ⚠️ Limited | Low |
-| Cargo in rules_rust | ❌ Registry deps | ❌ Sandbox issues | ✅ Full | High |
-| rules_nixpkgs | ❌ Nix requirement | ❌ Not hermetic | ✅ Full | High |
+| Approach                | Hermeticity        | BCR Compatible    | Cross-Platform | Maintenance |
+| ----------------------- | ------------------ | ----------------- | -------------- | ----------- |
+| **Self-hosted builds**  | ✅ Complete        | ✅ Yes            | ✅ Full        | Medium      |
+| Pre-built binaries only | ✅ Complete        | ✅ Yes            | ⚠️ Limited     | Low         |
+| Cargo in rules_rust     | ❌ Registry deps   | ❌ Sandbox issues | ✅ Full        | High        |
+| rules_nixpkgs           | ❌ Nix requirement | ❌ Not hermetic   | ✅ Full        | High        |
 
 ## Development Workflow
 

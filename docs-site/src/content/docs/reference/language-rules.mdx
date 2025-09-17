@@ -9,12 +9,12 @@ Build **WebAssembly components in your preferred language** using these language
 
 ## Quick Reference
 
-| Language | Primary Rule | Use For | Performance |
-|----------|-------------|---------|-------------|
-| **Rust** | [rust_wasm_component_bindgen](#rust-rules) | Most components | ⭐⭐⭐ Excellent |
-| **Go** | [go_wasm_component](#go-rules) | Services, CLI tools | ⭐⭐⭐ Very Good |
-| **C++** | [cpp_component](#c-rules) | Legacy integration | ⭐⭐⭐ Excellent |
-| **JavaScript** | [js_component](#javascript-rules) | Web integration | ⭐⭐ Good |
+| Language       | Primary Rule                               | Use For             | Performance      |
+| -------------- | ------------------------------------------ | ------------------- | ---------------- |
+| **Rust**       | [rust_wasm_component_bindgen](#rust-rules) | Most components     | ⭐⭐⭐ Excellent |
+| **Go**         | [go_wasm_component](#go-rules)             | Services, CLI tools | ⭐⭐⭐ Very Good |
+| **C++**        | [cpp_component](#c-rules)                  | Legacy integration  | ⭐⭐⭐ Excellent |
+| **JavaScript** | [js_component](#javascript-rules)          | Web integration     | ⭐⭐ Good        |
 
 ---
 
@@ -39,15 +39,15 @@ rust_wasm_component_bindgen(
 
 **Attributes:**
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `srcs` | List of Labels | ✅ | Rust source files |
-| `wit` | Label | ✅ | WIT library for interface generation |
-| `profiles` | List of Strings | ❌ | Build profiles ("debug", "release") |
-| `deps` | List of Labels | ❌ | Rust crate dependencies |
-| `rustc_flags` | List of Strings | ❌ | Additional Rust compiler flags |
-| `edition` | String | ❌ | Rust edition (default: "2021") |
+| Name          | Type            | Required | Description                          |
+| ------------- | --------------- | -------- | ------------------------------------ |
+| `name`        | String          | ✅       | A unique name for this target        |
+| `srcs`        | List of Labels  | ✅       | Rust source files                    |
+| `wit`         | Label           | ✅       | WIT library for interface generation |
+| `profiles`    | List of Strings | ❌       | Build profiles ("debug", "release")  |
+| `deps`        | List of Labels  | ❌       | Rust crate dependencies              |
+| `rustc_flags` | List of Strings | ❌       | Additional Rust compiler flags       |
+| `edition`     | String          | ❌       | Rust edition (default: "2021")       |
 
 ### rust_wasm_component
 
@@ -102,14 +102,14 @@ go_wasm_component(
 
 **Attributes:**
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `srcs` | List of Labels | ✅ | Go source files |
-| `wit` | Label | ✅ | WIT library for interface generation |
-| `deps` | List of Labels | ❌ | Go module dependencies |
-| `goarch` | String | ❌ | Target architecture (default: "wasm") |
-| `goos` | String | ❌ | Target OS (default: "wasip2") |
+| Name     | Type           | Required | Description                           |
+| -------- | -------------- | -------- | ------------------------------------- |
+| `name`   | String         | ✅       | A unique name for this target         |
+| `srcs`   | List of Labels | ✅       | Go source files                       |
+| `wit`    | Label          | ✅       | WIT library for interface generation  |
+| `deps`   | List of Labels | ❌       | Go module dependencies                |
+| `goarch` | String         | ❌       | Target architecture (default: "wasm") |
+| `goos`   | String         | ❌       | Target OS (default: "wasip2")         |
 
 ### go_wit_bindgen
 
@@ -163,14 +163,14 @@ cpp_component(
 
 **Attributes:**
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `srcs` | List of Labels | ✅ | C++ source files |
-| `hdrs` | List of Labels | ❌ | C++ header files |
-| `wit` | Label | ✅ | WIT library for interface generation |
-| `deps` | List of Labels | ❌ | C++ library dependencies |
-| `copts` | List of Strings | ❌ | Additional compiler options |
+| Name    | Type            | Required | Description                          |
+| ------- | --------------- | -------- | ------------------------------------ |
+| `name`  | String          | ✅       | A unique name for this target        |
+| `srcs`  | List of Labels  | ✅       | C++ source files                     |
+| `hdrs`  | List of Labels  | ❌       | C++ header files                     |
+| `wit`   | Label           | ✅       | WIT library for interface generation |
+| `deps`  | List of Labels  | ❌       | C++ library dependencies             |
+| `copts` | List of Strings | ❌       | Additional compiler options          |
 
 ### cpp_wit_bindgen
 
@@ -224,13 +224,13 @@ js_component(
 
 **Attributes:**
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | String | ✅ | A unique name for this target |
-| `srcs` | List of Labels | ✅ | JavaScript/TypeScript source files |
-| `wit` | Label | ✅ | WIT library for interface generation |
-| `deps` | List of Labels | ❌ | npm package dependencies |
-| `typescript` | Boolean | ❌ | Enable TypeScript support |
+| Name         | Type           | Required | Description                          |
+| ------------ | -------------- | -------- | ------------------------------------ |
+| `name`       | String         | ✅       | A unique name for this target        |
+| `srcs`       | List of Labels | ✅       | JavaScript/TypeScript source files   |
+| `wit`        | Label          | ✅       | WIT library for interface generation |
+| `deps`       | List of Labels | ❌       | npm package dependencies             |
+| `typescript` | Boolean        | ❌       | Enable TypeScript support            |
 
 ### jco_transpile
 
@@ -267,24 +267,28 @@ npm_install(
 ### When to Choose Each Language
 
 **Choose Rust when:**
+
 - Building high-performance components
 - Memory safety is critical
 - Component will be widely reused
 - You need zero-cost abstractions
 
 **Choose Go when:**
+
 - Building microservices or API servers
 - Team is familiar with Go patterns
 - You need good concurrency primitives
 - Simple deployment is important
 
 **Choose C++ when:**
+
 - Porting existing C/C++ applications
 - Maximum performance is required
 - Integration with hardware or legacy systems
 - Using existing C++ libraries
 
 **Choose JavaScript when:**
+
 - Building web-facing components
 - Integrating with browser APIs
 - Team expertise is in web development
@@ -292,21 +296,23 @@ npm_install(
 
 ### Performance Characteristics
 
-| Language | Binary Size | Startup Time | Runtime Performance | Memory Usage |
-|----------|-------------|-------------|-------------------|--------------|
-| **Rust** | ⭐⭐⭐ Small | ⭐⭐⭐ Fast | ⭐⭐⭐ Excellent | ⭐⭐⭐ Low |
-| **Go** | ⭐⭐ Medium | ⭐⭐ Good | ⭐⭐⭐ Very Good | ⭐⭐ Medium |
-| **C++** | ⭐⭐⭐ Small | ⭐⭐⭐ Fast | ⭐⭐⭐ Excellent | ⭐⭐⭐ Low |
-| **JavaScript** | ⭐ Large | ⭐ Slow | ⭐⭐ Good | ⭐ High |
+| Language       | Binary Size  | Startup Time | Runtime Performance | Memory Usage |
+| -------------- | ------------ | ------------ | ------------------- | ------------ |
+| **Rust**       | ⭐⭐⭐ Small | ⭐⭐⭐ Fast  | ⭐⭐⭐ Excellent    | ⭐⭐⭐ Low   |
+| **Go**         | ⭐⭐ Medium  | ⭐⭐ Good    | ⭐⭐⭐ Very Good    | ⭐⭐ Medium  |
+| **C++**        | ⭐⭐⭐ Small | ⭐⭐⭐ Fast  | ⭐⭐⭐ Excellent    | ⭐⭐⭐ Low   |
+| **JavaScript** | ⭐ Large     | ⭐ Slow      | ⭐⭐ Good           | ⭐ High      |
 
 ---
 
 ## Related Rules
 
 **Next Steps:**
+
 - **[WIT & Interface Rules](/reference/wit-interface-rules/)** - Define component interfaces
 - **[Composition Rules](/reference/composition-rules/)** - Connect components together
 
 **See Also:**
+
 - **[Multi-Language Development](/learn/multi-language/)** - Choosing the right language for each component
 - **[Language Development Guides](/build/languages/)** - Detailed guides for each language

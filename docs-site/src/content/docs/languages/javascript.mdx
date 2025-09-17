@@ -122,6 +122,7 @@ js_component(
 ```
 
 **Attributes:**
+
 - `name`: Target name
 - `package_name`: WIT package identifier (e.g., "org:component@1.0.0")
 - `srcs`: JavaScript/TypeScript source files
@@ -206,7 +207,7 @@ export function divide(a: number, b: number): CalculationResult {
   if (b === 0) {
     return {
       success: false,
-      error: "Division by zero",
+      error: 'Division by zero',
     };
   }
 
@@ -220,7 +221,7 @@ export function sqrt(x: number): CalculationResult {
   if (x < 0) {
     return {
       success: false,
-      error: "Cannot compute square root of negative number",
+      error: 'Cannot compute square root of negative number',
     };
   }
 
@@ -297,11 +298,11 @@ import { calculator } from './calculator_bindings.js';
 async function testCalculator() {
   const instance = await calculator();
 
-  console.assert(instance.add(2, 3) === 5, "Addition test failed");
-  console.assert(instance.subtract(5, 3) === 2, "Subtraction test failed");
-  console.assert(instance.multiply(4, 3) === 12, "Multiplication test failed");
+  console.assert(instance.add(2, 3) === 5, 'Addition test failed');
+  console.assert(instance.subtract(5, 3) === 2, 'Subtraction test failed');
+  console.assert(instance.multiply(4, 3) === 12, 'Multiplication test failed');
 
-  console.log("All tests passed!");
+  console.log('All tests passed!');
 }
 
 testCalculator().catch(console.error);
@@ -335,25 +336,31 @@ testCalculator().catch(console.error);
 ### Common Issues
 
 **Module resolution errors in multi-file components:**
+
 ```
 Error: Cannot resolve module './utils.js'
 ```
+
 - Ensure all source files are listed in `srcs`
 - Use relative imports from the entry point perspective
 - Check file paths and naming consistency
 
 **NPM dependency issues:**
+
 ```
 Error: Cannot find module 'lodash'
 ```
+
 - Verify `npm_dependencies` are correctly specified
 - Ensure `npm_install` rule is properly configured
 - Check package.json if using npm_install
 
 **WIT interface mismatches:**
+
 ```
 Error: Function 'calculate' not found in exports
 ```
+
 - Verify JavaScript function names match WIT interface exactly
 - Check export statements in your JavaScript files
 - Ensure function signatures match WIT types

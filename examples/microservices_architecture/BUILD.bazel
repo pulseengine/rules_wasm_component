@@ -27,7 +27,7 @@ wit_library(
 )
 
 wit_library(
-    name = "product_catalog_interfaces", 
+    name = "product_catalog_interfaces",
     package_name = "microservices:catalog",
     srcs = ["wit/product_catalog.wit"],
     world = "product-catalog",
@@ -36,7 +36,7 @@ wit_library(
 wit_library(
     name = "payment_service_interfaces",
     package_name = "microservices:payment",
-    srcs = ["wit/payment_service.wit"], 
+    srcs = ["wit/payment_service.wit"],
     world = "payment-service",
 )
 
@@ -73,7 +73,7 @@ genrule(
     name = "ecommerce_platform_local",
     srcs = [
         ":api_gateway",
-        ":user_service", 
+        ":user_service",
         ":product_catalog",
         ":payment_service",
     ],
@@ -81,13 +81,13 @@ genrule(
     cmd = "echo 'All microservices components built successfully - no external dependencies!' > $@",
 )
 
-# Simple test runner for IoT example  
+# Simple test runner for IoT example
 genrule(
     name = "iot_platform_local",
     srcs = [
         ":api_gateway",
         ":user_service",  # Reused as device registry
-        ":product_catalog", # Reused as data processor
+        ":product_catalog",  # Reused as data processor
     ],
     outs = ["iot_success.txt"],
     cmd = "echo 'IoT platform components built successfully using local services!' > $@",

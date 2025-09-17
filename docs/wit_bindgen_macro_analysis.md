@@ -101,16 +101,16 @@ impl Guest for Component {
 
 ## Comparison Matrix
 
-| Aspect | Current (Separate Crates) | Proposed (Macros) |
-|--------|---------------------------|-------------------|
-| **Developer Experience** | Import external crate | Inline generation |
-| **File Organization** | Clear separation | Everything in one file |
-| **Build Complexity** | Medium (separate targets) | High (env var setup) |
-| **IDE Support** | Good (separate files) | Variable (macro expansion) |
-| **Debugging** | Easy (real files) | Harder (generated code) |
-| **Compile Times** | Incremental builds | Macro re-expansion |
-| **Bazel Integration** | Native | Workarounds needed |
-| **Flexibility** | Limited by CLI | Full macro features |
+| Aspect                   | Current (Separate Crates) | Proposed (Macros)          |
+| ------------------------ | ------------------------- | -------------------------- |
+| **Developer Experience** | Import external crate     | Inline generation          |
+| **File Organization**    | Clear separation          | Everything in one file     |
+| **Build Complexity**     | Medium (separate targets) | High (env var setup)       |
+| **IDE Support**          | Good (separate files)     | Variable (macro expansion) |
+| **Debugging**            | Easy (real files)         | Harder (generated code)    |
+| **Compile Times**        | Incremental builds        | Macro re-expansion         |
+| **Bazel Integration**    | Native                    | Workarounds needed         |
+| **Flexibility**          | Limited by CLI            | Full macro features        |
 
 ## Implementation Phases
 

@@ -121,23 +121,23 @@ ls bazel-bin/examples/multi_file_packaging/
 
 ### Signature Coverage
 
-| Approach | Component Signature | Additional Protection |
-|----------|-------------------|---------------------|
-| **Embedded** | ✅ Covers all files | Single signature |
-| **Layered** | ✅ Component only | + OCI manifest signature |
-| **Bundle** | ✅ Entire archive | Single signature |
-| **Sidecar** | ✅ Component only | + Individual artifact signatures |
+| Approach     | Component Signature | Additional Protection            |
+| ------------ | ------------------- | -------------------------------- |
+| **Embedded** | ✅ Covers all files | Single signature                 |
+| **Layered**  | ✅ Component only   | + OCI manifest signature         |
+| **Bundle**   | ✅ Entire archive   | Single signature                 |
+| **Sidecar**  | ✅ Component only   | + Individual artifact signatures |
 
 ## 📊 Comparison Matrix
 
-| Factor | Embedded | Layered | Bundle | Sidecar |
-|--------|----------|---------|--------|---------|
-| **Simplicity** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
-| **Performance** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
-| **Flexibility** | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **File Size Limit** | < 1MB | No limit | < 50MB | No limit |
-| **Update Granularity** | All-or-nothing | Per layer | All-or-nothing | Per artifact |
-| **Team Coordination** | Single team | Single team | Single team | Multi-team |
+| Factor                 | Embedded       | Layered     | Bundle         | Sidecar      |
+| ---------------------- | -------------- | ----------- | -------------- | ------------ |
+| **Simplicity**         | ⭐⭐⭐⭐⭐     | ⭐⭐⭐      | ⭐⭐⭐⭐       | ⭐⭐         |
+| **Performance**        | ⭐⭐⭐⭐⭐     | ⭐⭐⭐⭐    | ⭐⭐⭐         | ⭐⭐⭐       |
+| **Flexibility**        | ⭐⭐           | ⭐⭐⭐⭐    | ⭐⭐⭐         | ⭐⭐⭐⭐⭐   |
+| **File Size Limit**    | < 1MB          | No limit    | < 50MB         | No limit     |
+| **Update Granularity** | All-or-nothing | Per layer   | All-or-nothing | Per artifact |
+| **Team Coordination**  | Single team    | Single team | Single team    | Multi-team   |
 
 ## 🛠 Development Workflow
 

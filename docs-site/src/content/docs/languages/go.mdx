@@ -8,12 +8,14 @@ description: Build WebAssembly components with Go using TinyGo and WASI Preview 
 Go components let you use **familiar Go syntax** to build portable, efficient WebAssembly services. With TinyGo, you get the developer experience of Go with the performance and portability of WebAssembly.
 
 **Perfect for Go developers who want:**
+
 - **Familiar tooling** - Use standard Go patterns, just compile to WebAssembly instead of native binaries
 - **Microservices without containers** - Deploy lightweight services that start in milliseconds
 - **Cross-platform compatibility** - Write once, run on any platform that supports WebAssembly
 - **Easy HTTP services** - Build web APIs with the same patterns you already know
 
 **TinyGo advantages:**
+
 - **Small binaries** - Typical components are 1-2MB vs 50MB+ for containerized Go apps
 - **Fast startup** - Sub-10ms startup times vs seconds for traditional containers
 - **Low memory usage** - Optimized garbage collector for WebAssembly environments
@@ -511,6 +513,7 @@ func TestCalculatorComponent(t *testing.T) {
 ### Common Issues
 
 **TinyGo target mismatch:**
+
 ```bash
 # Check TinyGo version and targets
 tinygo version
@@ -518,6 +521,7 @@ tinygo targets | grep wasi
 ```
 
 **Missing WASI adapter:**
+
 ```python
 # Ensure adapter is specified
 go_wasm_component(
@@ -526,6 +530,7 @@ go_wasm_component(
 ```
 
 **Go module dependencies:**
+
 ```go
 // Use BytecodeAlliance official modules
 go.bytecodealliance.org/cm v0.1.0
@@ -533,7 +538,10 @@ go.bytecodealliance.org/wit-bindgen v0.1.0
 ```
 
 <div class="demo-buttons">
-  <a href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/go_component" class="demo-button">
+  <a
+    href="https://stackblitz.com/github/pulseengine/rules_wasm_component/tree/main/examples/go_component"
+    class="demo-button"
+  >
     Try Go Example
   </a>
   <a href="/examples/http-service/" class="demo-button">
@@ -548,6 +556,7 @@ go.bytecodealliance.org/wit-bindgen v0.1.0
 <div class="perf-indicator">Low memory usage with leaking GC</div>
 
 Go components with TinyGo offer:
+
 - **Familiar Go syntax** - Use standard Go patterns and libraries
 - **WASI Preview 2** - Latest WebAssembly system interface
 - **Component Model** - Full interoperability with other languages

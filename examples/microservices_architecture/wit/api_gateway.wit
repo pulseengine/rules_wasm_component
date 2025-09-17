@@ -187,6 +187,6 @@ interface monitoring {
 world api-gateway {
     // Simplified gateway with only routing capability
     export routing;
-    
+
     // Removed auth import for simplified development environment
 }

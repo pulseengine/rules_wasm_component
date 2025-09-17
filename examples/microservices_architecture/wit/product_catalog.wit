@@ -30,18 +30,18 @@ interface catalog-management {
     create-product: func(name: string, description: string, price: f64, category: string, stock: u32) -> result<u32, string>;
     update-product: func(product-id: u32, name: option<string>, description: option<string>, price: option<f64>) -> result<_, string>;
     delete-product: func(product-id: u32) -> result<_, string>;
-    
+
     // Search and discovery
     search-products: func(query: string, filter: option<search-filter>) -> list<u32>;
     get-products-by-category: func(category: string) -> list<u32>;
     get-featured-products: func(limit: u32) -> list<u32>;
-    
+
     // Pricing and inventory
     get-price: func(product-id: u32) -> option<f64>;
     update-price: func(update: price-update) -> result<_, string>;
     check-stock: func(product-id: u32) -> option<u32>;
     update-stock: func(product-id: u32, quantity: u32) -> result<_, string>;
-    
+
     // Cross-service integration
     user-lookup: func(user-id: u32) -> option<string>;
 }

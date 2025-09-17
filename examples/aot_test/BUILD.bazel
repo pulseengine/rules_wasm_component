@@ -4,13 +4,13 @@ load("//wasm:defs.bzl", "wasm_precompile", "wasm_run", "wasm_test")
 
 package(default_visibility = ["//visibility:public"])
 
-# Use basic Rust component for testing  
+# Use basic Rust component for testing
 # Test AOT precompilation
 wasm_precompile(
     name = "hello_aot",
     component = "//examples/basic:hello_component",
-    optimization_level = "2",
     debug_info = False,
+    optimization_level = "2",
 )
 
 # Test execution rules
@@ -21,7 +21,7 @@ wasm_run(
 )
 
 wasm_run(
-    name = "run_aot", 
+    name = "run_aot",
     component = ":hello_aot",
 )
 
@@ -29,15 +29,15 @@ wasm_run(
 wasm_precompile(
     name = "hello_opt_0",
     component = "//examples/basic:hello_component",
-    optimization_level = "0",
     debug_info = True,
+    optimization_level = "0",
 )
 
 wasm_precompile(
     name = "hello_opt_size",
-    component = "//examples/basic:hello_component", 
-    optimization_level = "s",
+    component = "//examples/basic:hello_component",
     debug_info = False,
+    optimization_level = "s",
     strip_symbols = True,
 )
 

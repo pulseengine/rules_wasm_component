@@ -29,6 +29,7 @@ wasm_component_wizer_library(
 ### Performance Gains
 
 Wizer can provide:
+
 - **1.35-6x faster startup** for typical components
 - Reduced cold start latency
 - Pre-computed initialization state
@@ -75,7 +76,7 @@ wasm_run(
 ```starlark
 # Development builds with debug info
 wasm_precompile(
-    name = "component_debug", 
+    name = "component_debug",
     component = ":my_component",
     optimization_level = "0",
     debug_info = True,
@@ -84,7 +85,7 @@ wasm_precompile(
 # Production builds optimized for speed
 wasm_precompile(
     name = "component_speed",
-    component = ":my_component", 
+    component = ":my_component",
     optimization_level = "2",
 )
 
@@ -146,11 +147,13 @@ rust_wasm_component(
 ## Runtime Performance
 
 ### Memory Management
+
 - Use appropriate memory allocation strategies
 - Profile memory usage with tools like `wasm-profiler`
 - Consider memory pre-allocation for performance-critical paths
 
 ### Function Call Optimization
+
 - Minimize host function calls
 - Batch operations when possible
 - Use efficient data serialization
@@ -158,6 +161,7 @@ rust_wasm_component(
 ## Measurement and Profiling
 
 Track key metrics:
+
 - Component load time
 - First function call latency
 - Memory usage

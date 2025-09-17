@@ -194,43 +194,45 @@ import { render, html } from 'lit-html';
 
 // Export functions for the component interface
 export function renderDashboard(userData, mathResults) {
-    const template = html`
-        <div class="dashboard">
-            <header class="user-info">
-                <h1>Welcome, ${userData.username}!</h1>
-                <button @click=${logout}>Logout</button>
-            </header>
+  const template = html`
+    <div class="dashboard">
+      <header class="user-info">
+        <h1>Welcome, ${userData.username}!</h1>
+        <button @click=${logout}>Logout</button>
+      </header>
 
-            <section class="math-results">
-                <h2>Computation Results</h2>
-                ${mathResults.map(result => html`
-                    <div class="result-card">
-                        <h3>${result.operation}</h3>
-                        <p>Result: ${result.value}</p>
-                        <small>Computed in ${result.duration}ms</small>
-                    </div>
-                `)}
-            </section>
-        </div>
-    `;
+      <section class="math-results">
+        <h2>Computation Results</h2>
+        ${mathResults.map(
+          (result) => html`
+            <div class="result-card">
+              <h3>${result.operation}</h3>
+              <p>Result: ${result.value}</p>
+              <small>Computed in ${result.duration}ms</small>
+            </div>
+          `
+        )}
+      </section>
+    </div>
+  `;
 
-    return template.strings.join('');
+  return template.strings.join('');
 }
 
 export function handleUserAction(action, data) {
-    switch (action) {
-        case 'compute':
-            return { type: 'math-request', payload: data };
-        case 'refresh':
-            return { type: 'data-refresh' };
-        default:
-            return { type: 'unknown-action', error: 'Unknown action' };
-    }
+  switch (action) {
+    case 'compute':
+      return { type: 'math-request', payload: data };
+    case 'refresh':
+      return { type: 'data-refresh' };
+    default:
+      return { type: 'unknown-action', error: 'Unknown action' };
+  }
 }
 
 function logout() {
-    // Clear local state and redirect
-    return { type: 'logout' };
+  // Clear local state and redirect
+  return { type: 'logout' };
 }
 ```
 
@@ -344,12 +346,12 @@ bazel run //tools:wac -- validate \\
 
 ### Language-Specific Optimizations
 
-| Language | Use Case | Performance Benefit |
-|----------|----------|-------------------|
-| **Rust** | Security, Memory Safety | Zero-cost abstractions, memory safety |
-| **C++** | Compute-Heavy Operations | Native performance, SIMD optimization |
-| **Go** | Networking, Concurrency | Efficient HTTP handling, fast compilation |
-| **JavaScript** | UI Logic, DOM Operations | Familiar APIs, rapid development |
+| Language       | Use Case                 | Performance Benefit                       |
+| -------------- | ------------------------ | ----------------------------------------- |
+| **Rust**       | Security, Memory Safety  | Zero-cost abstractions, memory safety     |
+| **C++**        | Compute-Heavy Operations | Native performance, SIMD optimization     |
+| **Go**         | Networking, Concurrency  | Efficient HTTP handling, fast compilation |
+| **JavaScript** | UI Logic, DOM Operations | Familiar APIs, rapid development          |
 
 ### System-Level Benefits
 
