@@ -1,6 +1,8 @@
 # WebAssembly Tools Builder
 
-This workspace provides a self-hosted solution for building WebAssembly toolchain components from source. It addresses the fundamental problem of cargo filesystem sandbox restrictions in Bazel Central Registry (BCR) testing while maintaining complete hermeticity.
+This workspace provides a self-hosted solution for building WebAssembly toolchain components from source. It addresses
+the fundamental problem of cargo filesystem sandbox restrictions in Bazel Central Registry (BCR) testing while
+maintaining complete hermeticity.
 
 ## Architecture
 
@@ -14,11 +16,12 @@ The main rules_wasm_component workspace faces cargo sandbox issues when building
 
 ### Solution: Self-Hosted Tool Builder
 
-This workspace builds all required WebAssembly tools from source and publishes them as GitHub releases, which the main workspace consumes via http_archive with verified checksums.
+This workspace builds all required WebAssembly tools from source and publishes them as GitHub releases, which the
+main workspace consumes via http_archive with verified checksums.
 
 ## Workflow
 
-```
+```text
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │ tools-builder/  │───▶│ GitHub Releases  │───▶│ main workspace │
 │ (this workspace)│    │ (built binaries) │    │ (hermetic deps) │
@@ -115,7 +118,7 @@ wizer.register(
 
 ## File Structure
 
-```
+```text
 tools-builder/
 ├── MODULE.bazel              # Workspace configuration with cross-compilation
 ├── BUILD.bazel               # Main orchestration targets

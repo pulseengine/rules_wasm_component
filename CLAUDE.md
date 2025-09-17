@@ -208,7 +208,8 @@ let initialized = wizer.run(&core_module)?;           // ⏳ Placeholder
 let final_component = wrap_as_component(&initialized)?; // ⏳ Placeholder
 ```
 
-**Key Achievement**: The Bazel integration and component detection work perfectly. The remaining work is adding the specific crate dependencies for:
+**Key Achievement**: The Bazel integration and component detection work perfectly. The remaining work is adding the
+specific crate dependencies for:
 
 1. `wasm-tools` for component parsing/wrapping
 2. `wizer` crate for actual pre-initialization
@@ -240,7 +241,8 @@ let final_component = wrap_as_component(&initialized)?; // ⏳ Placeholder
 | Wizer Library Calls    | ⏳ Placeholder | Requires complex dependency resolution |
 | Component Parsing      | ⏳ Placeholder | Requires wasm-tools or wasmtime crates |
 
-**Bottom Line**: The architecture is complete and proven. The remaining work is purely dependency management for the Wizer/Wasmtime ecosystem in Bazel.
+**Bottom Line**: The architecture is complete and proven. The remaining work is purely dependency management for the
+Wizer/Wasmtime ecosystem in Bazel.
 
 #### 📋 Implementation Guidelines
 

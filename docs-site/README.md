@@ -104,4 +104,5 @@ The site automatically deploys to Netcup hosting when changes are pushed to the 
 
 **Status**: ✅ Ready for production deployment to `https://rules_wasm_component.pulseengine.eu`
 
-The documentation site is fully functional, performance-optimized, and ready to serve the WebAssembly component development community!
+The documentation site is fully functional, performance-optimized, and ready to serve the WebAssembly component
+development community!

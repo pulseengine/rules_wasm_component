@@ -24,7 +24,8 @@ bazel build //...
 bazel test //...
 ```
 
-> **Note**: All WASM tools (`wasm-tools`, `wac-cli`, `wit-bindgen-cli`, etc.) are now downloaded automatically by Bazel for truly hermetic builds. No manual installation required!
+> **Note**: All WASM tools (`wasm-tools`, `wac-cli`, `wit-bindgen-cli`, etc.) are now downloaded automatically by Bazel
+> for truly hermetic builds. No manual installation required!
 
 ## Contributing Guidelines
 
@@ -325,7 +326,7 @@ my_rule = rule(
 
 ## Project Structure
 
-```
+```text
 rules_wasm_component/
 ├── BUILD.bazel          # Root build file
 ├── MODULE.bazel         # Bazel module definition

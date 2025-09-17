@@ -5,9 +5,12 @@ description: Build complex multi-component systems using WebAssembly Composition
 
 ## Building Applications from Components
 
-Think of **WAC (WebAssembly Composition)** as "wiring" for your WebAssembly components. Just like connecting electronic components on a circuit board, you can connect software components to create complete applications.
+Think of **WAC (WebAssembly Composition)** as "wiring" for your WebAssembly components. Just like connecting
+electronic components on a circuit board, you can connect software components to create complete applications.
 
-**The magic of composition:** You can take a Rust authentication service, a Go database connector, a JavaScript frontend, and a C++ data processor - all built as separate WebAssembly components - and wire them together into a single application.
+**The magic of composition:** You can take a Rust authentication service, a Go database connector, a JavaScript
+frontend, and a C++ data processor - all built as separate WebAssembly components - and wire them together into a
+single application.
 
 **Why this matters:**
 
@@ -16,7 +19,8 @@ Think of **WAC (WebAssembly Composition)** as "wiring" for your WebAssembly comp
 - **Easy testing** - Test components in isolation, then test the composition
 - **Flexible deployment** - Swap components without rebuilding everything
 
-**How it works:** You write a simple "composition script" that describes which components to instantiate and how to connect their interfaces. WAC handles all the complexity of making them work together.
+**How it works:** You write a simple "composition script" that describes which components to instantiate and how to
+connect their interfaces. WAC handles all the complexity of making them work together.
 
 ## Key Concepts
 
@@ -33,9 +37,12 @@ Let's start with a simple example to understand the fundamentals of component co
 
 ### Simple Two-Component System
 
-**What we're building:** A web application where a frontend component talks to a backend component. The frontend handles user interaction while the backend processes requests.
+**What we're building:** A web application where a frontend component talks to a backend component. The frontend
+handles user interaction while the backend processes requests.
 
-**The composition process:** We'll define interfaces for both components, implement them separately, then use WAC to wire them together. The beauty is that you could swap either component for a different implementation without changing the other.
+**The composition process:** We'll define interfaces for both components, implement them separately, then use WAC to wire
+them together. The beauty is that you could swap either component for a different implementation without changing the
+other.
 
 ```python title="BUILD.bazel"
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
@@ -90,7 +97,8 @@ wac_compose(
 )
 ```
 
-> **📋 Rule Reference:** For complete details on composition rule attributes, see [`wac_compose`](/reference/rules/#wac_compose) and [`wac_remote_compose`](/reference/rules/#wac_remote_compose).
+> **📋 Rule Reference:** For complete details on composition rule attributes, see [`wac_compose`](/reference/rules/#wac_compose)
+> and [`wac_remote_compose`](/reference/rules/#wac_remote_compose).
 
 ### Component Interface Definitions
 
@@ -486,4 +494,5 @@ WAC compositions provide:
 - **Memory Isolation** - Components can't access each other's memory
 - **Type Safety** - Interface contracts enforced at composition time
 
-WAC composition enables building sophisticated, modular WebAssembly applications while maintaining the security and performance benefits of the Component Model.
+WAC composition enables building sophisticated, modular WebAssembly applications while maintaining the security and
+performance benefits of the Component Model.

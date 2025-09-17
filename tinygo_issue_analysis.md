@@ -36,7 +36,7 @@ The TinyGo v0.38.0 toolchain is properly installed and working, but there are in
 
 #### 1. Missing Symbol in go/defs.bzl
 
-```
+```text
 Error: file '@rules_wasm_component//go:defs.bzl' does not contain symbol 'go_wit_bindgen'
 ```
 
@@ -112,7 +112,7 @@ The original requirement was for a **Go component to handle HTTP operations**:
 
 ## Architecture Gap
 
-```
+```text
 ┌─────────────────────────┬──────────────────────────┐
 │ CURRENT STATE          │ REQUIRED STATE           │
 ├─────────────────────────┼──────────────────────────┤

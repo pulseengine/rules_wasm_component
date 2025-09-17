@@ -2,7 +2,8 @@
 
 ## Purpose
 
-This document defines the clear content hierarchy for the docs-site to prevent duplication and ensure proper cross-referencing between pages.
+This document defines the clear content hierarchy for the docs-site to prevent duplication and ensure proper
+cross-referencing between pages.
 
 ## Content Ownership Structure
 
@@ -91,7 +92,8 @@ This document defines the clear content hierarchy for the docs-site to prevent d
 **C++:** `/languages/cpp/`
 **JavaScript:** `/languages/javascript/`
 
-**Pattern:** Each language guide owns its specific patterns and advanced features. Getting started provides overview, language guides provide depth.
+**Pattern:** Each language guide owns its specific patterns and advanced features. Getting started provides overview,
+language guides provide depth.
 
 ### 6. Reference Documentation
 

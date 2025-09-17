@@ -37,7 +37,7 @@ Add the following secrets to your GitHub repository:
 
 Example values:
 
-```
+```env
 NETCUP_URI: wp123.netcup-webspace.de
 NETCUP_USER: wp123-username
 NETCUP_PASSWORD: your-ftp-password
@@ -147,7 +147,7 @@ After deployment, check:
 
 ## Directory Structure
 
-```
+```text
 docs-site/
 ├── .github/
 │   └── workflows/
@@ -262,4 +262,5 @@ Add to `.htaccess` in webhosting root:
 </Files>
 ```
 
-Your documentation site should now be automatically deployed to `https://rules_wasm_component.pulseengine.eu` whenever you push changes to the main branch!
+Your documentation site should now be automatically deployed to `https://rules_wasm_component.pulseengine.eu` whenever you
+push changes to the main branch!

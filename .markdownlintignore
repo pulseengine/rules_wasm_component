@@ -1,0 +1,7 @@
+# Ignore node_modules directories
+**/node_modules/**
+
+# Ignore generated files
+**/dist/**
+**/build/**
+**/.next/**
