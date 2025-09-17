@@ -2,6 +2,54 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+## [2.0.0] - TBD
+
+### 🎉 Major Milestone: Official rules_rust Integration
+
+This release represents a significant achievement - transitioning from custom patches to official upstream support for WebAssembly Component Model development.
+
+### ⚠️ BREAKING CHANGES
+
+- **rules_rust dependency**: Upgrade from git_override to official rules_rust 0.65.0
+  - **Migration required**: Remove git_override and update to `bazel_dep(name = "rules_rust", version = "0.65.0")`
+  - **Benefit**: No more custom patches, official WASI Preview 2 support included
+
+### ✨ Features
+
+- **Official WASI Preview 2 Support**: Now included in rules_rust 0.65.0 by default
+- **BCR Publication Ready**: Unblocked Bazel Central Registry publication
+- **Enhanced Stability**: Official upstream support vs custom forks
+- **Simplified Installation**: Clean, straightforward dependency management
+
+### 🔧 Improvements
+
+- Update rules_cc to 0.2.4 (eliminates version warnings)
+- Comprehensive documentation updates for official rules_rust integration
+- BCR publication workflow ready for deployment
+
+### 📦 Migration Guide
+
+**Before (1.x.x)**:
+```starlark
+bazel_dep(name = "rules_rust", version = "0.62.0")
+git_override(
+    module_name = "rules_rust",
+    commit = "7d7d3ac...",
+    remote = "https://github.com/bazelbuild/rules_rust.git",
+)
+```
+
+**After (2.0.0)**:
+```starlark
+bazel_dep(name = "rules_rust", version = "0.65.0")
+```
+
+### 🎯 Impact
+
+This release marks the success of contributing WASI Preview 2 support upstream to rules_rust, enabling the entire Bazel ecosystem to benefit from enhanced WebAssembly capabilities.
+
 ## [0.1.0] - 2025-07-09
 
 ### Features

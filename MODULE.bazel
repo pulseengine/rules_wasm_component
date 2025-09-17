@@ -7,18 +7,11 @@ module(
 )
 
 # Dependencies for WebAssembly tooling
-bazel_dep(name = "rules_rust", version = "0.62.0")
-
-# Git override to use upstream rules_rust with WASI Preview 2 support
-git_override(
-    module_name = "rules_rust",
-    commit = "7d7d3ac00ad013c94e7a9d0db0732c20ffe8eab7",  # WASI Preview 2 support
-    remote = "https://github.com/bazelbuild/rules_rust.git",
-)
+bazel_dep(name = "rules_rust", version = "0.65.0")
 
 bazel_dep(name = "bazel_skylib", version = "1.8.1")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_cc", version = "0.2.0")
+bazel_dep(name = "rules_cc", version = "0.2.4")
 bazel_dep(name = "rules_go", version = "0.57.0")
 
 # OCI image signing capabilities

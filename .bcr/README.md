@@ -2,10 +2,10 @@
 
 This directory contains template files for publishing `rules_wasm_component` to the Bazel Central Registry.
 
-## Status: 🚧 Blocked
+## Status: ✅ Ready for Publication
 
-**Current Issue**: Publication is blocked due to `git_override` dependency in `MODULE.bazel`.
-See [Issue #7](https://github.com/pulseengine/rules_wasm_component/issues/7) for details.
+**Previous Issue Resolved**: The `git_override` dependency has been removed from `MODULE.bazel` - now using official rules_rust 0.65.0.
+See [Issue #7](https://github.com/pulseengine/rules_wasm_component/issues/7) for historical context.
 
 ## Files
 
@@ -27,8 +27,8 @@ Once the dependency issue is resolved:
 
 ## Prerequisites for BCR Publication
 
-- [ ] Remove `git_override` for `rules_rust` from `MODULE.bazel`
-- [ ] Use only official registry dependencies
+- [x] Remove `git_override` for `rules_rust` from `MODULE.bazel`
+- [x] Use only official registry dependencies
 - [ ] Set up `BCR_PUBLISH_TOKEN` secret in repository settings
 - [ ] Create fork of `bazel-central-registry` in the `pulseengine` organization
 

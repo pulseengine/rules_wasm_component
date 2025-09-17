@@ -128,14 +128,7 @@ wasm_toolchain.register(
 For Rust WebAssembly components, add rules_rust and configure dependencies:
 
 ```python title="MODULE.bazel"
-bazel_dep(name = "rules_rust", version = "0.62.0")
-
-# Git override for WASI Preview 2 support
-git_override(
-    module_name = "rules_rust",
-    commit = "7d7d3ac00ad013c94e7a9d0db0732c20ffe8eab7",
-    remote = "https://github.com/bazelbuild/rules_rust.git",
-)
+bazel_dep(name = "rules_rust", version = "0.65.0")
 
 # Configure Rust crate dependencies
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
