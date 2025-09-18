@@ -550,38 +550,22 @@ exit 1
 """, executable = True)
 
 def _download_wasmsign2(repository_ctx):
-    """Download wasmsign2 using modernized git_repository approach"""
+    """Setup wasmsign2 placeholder - use bazel strategy for full functionality"""
 
-    print("Using modernized wasmsign2 from @wasmsign2_src git repository")
+    print("Setting up wasmsign2 placeholder for download strategy")
 
-    # Create wasmsign2 wrapper that executes the Bazel-built binary
-    # This approach maintains full security functionality via proper dependency management
+    # Create a stub that explains the limitation and recommends the bazel strategy
     repository_ctx.file("wasmsign2", """#!/bin/bash
-# wasmsign2 wrapper that executes the Bazel-native rust_binary
-# This ensures proper dependency resolution through @wasmsign2_crates
-
-set -euo pipefail
-
-# Get the directory where this script is located (toolchain repository)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Use relative path to find the wasmsign2_bazel binary built by Bazel
-# The actual binary will be built by @wasmsign2_src//:wasmsign2_bazel
-WASMSIGN2_BINARY="${SCRIPT_DIR}/../wasmsign2_src/bazel-bin/wasmsign2_bazel"
-
-# If the binary doesn't exist, try to build it
-if [[ ! -f "$WASMSIGN2_BINARY" ]]; then
-    echo "Building wasmsign2 using Bazel-native approach..." >&2
-    cd "${SCRIPT_DIR}/.."
-    bazel build @wasmsign2_src//:wasmsign2_bazel >&2
-fi
-
-# Execute the built binary with all arguments
-exec "$WASMSIGN2_BINARY" "$@"
+# wasmsign2 stub for download strategy
+# The download strategy cannot build Rust binaries from source
+echo "wasmsign2: Not available in download strategy" >&2
+echo "For signing functionality, use strategy = 'bazel' in your MODULE.bazel:" >&2
+echo "  wasm_toolchain.register(strategy = 'bazel')" >&2
+echo "This enables Bazel-native rust_binary builds with full signing support." >&2
+exit 1
 """, executable = True)
 
-    print("Created wasmsign2 wrapper for Bazel-native rust_binary build")
-    print("Security functionality fully maintained via proper dependency management")
+    print("Created wasmsign2 stub - use bazel strategy for full signing functionality")
 
 def _setup_bazel_native_tools(repository_ctx):
     """Setup tools using Bazel-native rust_binary builds instead of cargo"""

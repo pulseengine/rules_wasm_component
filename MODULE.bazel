@@ -73,7 +73,7 @@ use_repo(wasi_wit_ext, "wasi_cli", "wasi_cli_v020", "wasi_clocks", "wasi_clocks_
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
-    strategy = "download",
+    strategy = "download",  # Download strategy with improved error messages for signing
     version = "1.235.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")

@@ -1036,6 +1036,49 @@ wasmsign2 verify signed_component.wasm --public-key public.pem
 
 Component signing provides enterprise-grade security for WebAssembly components, ensuring authenticity and integrity from development through production deployment.
 
+## Troubleshooting
+
+### Common Issues
+
+**"wasmsign2: Not available in download strategy"**
+
+This error occurs when trying to use signing with the default toolchain strategy. To enable full signing functionality:
+
+```python title="MODULE.bazel"
+wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
+wasm_toolchain.register(
+    name = "wasm_tools",
+    strategy = "bazel",  # Required for signing functionality
+    version = "1.235.0",
+)
+```
+
+The `bazel` strategy enables Bazel-native rust_binary builds with complete signing support.
+
+**SSH Key Generation Errors**
+
+If you encounter dependency conflicts with ssh_keygen:
+
+1. **Check rand versions** - Ensure compatible rand_core versions
+2. **Use provided ssh_keygen component** - The hermetic WASM component avoids system dependencies
+3. **Alternative: Use system ssh-keygen** - For compatibility with existing workflows
+
+**OCI Signature Verification**
+
+Current OCI signature verification uses post-pull verification:
+
+1. **Component is pulled** from OCI registry
+2. **Signature verified** using wasmsign2 after download
+3. **Build fails** if verification fails
+
+This provides the same security guarantees as inline verification.
+
+### Performance Considerations
+
+- **OpenSSH keys**: Slightly larger signatures but better ecosystem compatibility
+- **Compact keys**: Smaller signatures, optimized for WebAssembly use cases
+- **Detached signatures**: Keep signatures separate for better caching
+
 ## Next Steps
 
 - [OCI Component Signing](/security/oci-signing/) - Sign components in OCI registries with Cosign and Sigstore

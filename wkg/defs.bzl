@@ -2974,13 +2974,11 @@ def _wasm_component_from_oci_impl(ctx):
         args.add("--insecure")
         args.add("localhost:5001")
 
-    # Optional: signature verification (not supported in wkg oci pull yet)
-    # TODO: Add signature verification when wkg supports it
-    if ctx.attr.verify_signature and ctx.attr.public_key:
-        # args.add("--verify")
-        # args.add("--public-key", ctx.attr.public_key.files.to_list()[0].path)
-        # config_inputs.extend(ctx.attr.public_key.files.to_list())
-        fail("Signature verification not yet supported with wkg oci pull")
+    # Optional: signature verification - implemented as post-pull verification
+    verify_after_pull = ctx.attr.verify_signature and ctx.attr.public_key
+    verification_inputs = []
+    if verify_after_pull:
+        verification_inputs.extend(ctx.attr.public_key.files.to_list())
 
     # Run wkg pull
     ctx.actions.run(
@@ -2991,6 +2989,28 @@ def _wasm_component_from_oci_impl(ctx):
         mnemonic = "WkgPullOCI",
         progress_message = "Pulling WebAssembly component from OCI registry: {}".format(image_ref),
     )
+
+    # Post-pull signature verification if requested
+    if verify_after_pull:
+        # Get wasmsign2 toolchain for verification
+        wasm_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
+        wasmsign2 = wasm_toolchain.wasmsign2
+
+        # Build verification arguments
+        verify_args = ctx.actions.args()
+        verify_args.add("verify")
+        verify_args.add(component_file)
+        verify_args.add("--public-key", ctx.attr.public_key.files.to_list()[0])
+
+        # Run signature verification
+        ctx.actions.run(
+            executable = wasmsign2,
+            arguments = [verify_args],
+            inputs = [component_file] + verification_inputs,
+            outputs = [],  # Verification doesn't produce output files
+            mnemonic = "WasmVerifySignature",
+            progress_message = "Verifying component signature: {}".format(image_ref),
+        )
 
     # Create WasmComponentInfo provider
     component_info = WasmComponentInfo(
@@ -3048,7 +3068,10 @@ wasm_component_from_oci = rule(
             doc = "Public key for signature verification",
         ),
     },
-    toolchains = ["//toolchains:wkg_toolchain_type"],
+    toolchains = [
+        "//toolchains:wkg_toolchain_type",
+        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",  # For signature verification
+    ],
     doc = """
     Pull a WebAssembly component from an OCI registry and make it available for use.
 
