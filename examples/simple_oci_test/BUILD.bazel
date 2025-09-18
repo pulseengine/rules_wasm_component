@@ -53,6 +53,7 @@ rust_wasm_component_bindgen(
 wasm_keygen(
     name = "test_keys",
     openssh_format = False,
+    tags = ["manual"],  # Temporarily disable - signing toolchain issue
 )
 
 # Simple registry config for local testing

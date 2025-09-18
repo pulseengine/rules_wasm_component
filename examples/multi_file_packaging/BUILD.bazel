@@ -37,6 +37,7 @@ wasm_keygen(
     openssh_format = False,
     public_key_name = "example.public",
     secret_key_name = "example.secret",
+    tags = ["manual"],  # Temporarily disable - signing toolchain issue
 )
 
 # =============================================================================
@@ -406,7 +407,7 @@ wasm_component_oci_image(
         "com.example.bundle.format=tar",
         "com.example.files.docs=bundled",
     ],
-    component = ":service_bundle",  # Archive as component
+    component = ":bundled_service_component",  # Use actual component
     description = "Complete service bundle with documentation and config",
     namespace = "examples",
     registry = "localhost:5000",

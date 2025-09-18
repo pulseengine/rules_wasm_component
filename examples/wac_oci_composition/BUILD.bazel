@@ -104,6 +104,7 @@ wasm_component_from_oci(
     public_key = ":verification_keys",
     registry_config = ":example_registries",
     verify_signature = True,
+    tags = ["manual"],  # Temporarily disable - signature verification not yet supported
 )
 
 # Example 3: Basic WAC composition with OCI components

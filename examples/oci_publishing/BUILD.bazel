@@ -366,7 +366,7 @@ wasm_component_secure_publish(
     license = "MIT",
     namespace = "wasm-examples",
     registry_config = ":production_registries",
-    security_policy = ":enterprise_security_policy",
+    security_policy = ":strict_security_policy",
     signing_keys = ":oci_openssh_keys",  # OpenSSH format required by enterprise policy
     tag = "secure-enterprise-v1.0.0",
     target_registries = [
