@@ -17,6 +17,7 @@ wkg_fetch(
 # Example: Generate lock file for dependencies
 wkg_lock(
     name = "dependencies_lock",
+    package_name = "example:dependencies",
     dependencies = [
         "wasi:http:0.2.0",
         "wasi:clocks:0.2.0",

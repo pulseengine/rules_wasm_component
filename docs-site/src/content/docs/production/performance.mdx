@@ -49,12 +49,11 @@ WebAssembly components can be precompiled to native machine code using Wasmtime'
 ```starlark
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_precompile", "wasm_run")
 
-# Precompile component for production
+# Precompile component for production (default: no debug info)
 wasm_precompile(
     name = "my_component_aot",
     component = ":my_component",
     optimization_level = "2",    # Speed + size optimization
-    strip_symbols = True,        # Reduce size by ~25%
 )
 
 # Runtime execution uses AOT automatically
@@ -67,34 +66,34 @@ wasm_run(
 ### AOT Performance Benefits
 
 - **Zero JIT compilation** - Skip translation and codegen at runtime
-- **7x size reduction** - Optimized builds (2.7MB → 388KB)
+- **87% size reduction** - Production builds exclude debug info (2.8MB → 343KB)
 - **Faster startup** - Immediate execution of native code
+- **Cross-platform compilation** - Build for any architecture without QEMU
 - **Bazel cache friendly** - Share precompiled modules across teams
 
-### Optimization Levels
+### Debug Info vs Production Builds
 
 ```starlark
-# Development builds with debug info
+# Development builds with debug info (~8x larger but debuggable)
 wasm_precompile(
     name = "component_debug",
     component = ":my_component",
     optimization_level = "0",
-    debug_info = True,
+    debug_info = True,  # Include DWARF debug information
 )
 
-# Production builds optimized for speed
+# Production builds (default: no debug info, 87% smaller)
 wasm_precompile(
-    name = "component_speed",
+    name = "component_production",
     component = ":my_component",
-    optimization_level = "2",
+    optimization_level = "2",  # debug_info = False by default
 )
 
 # Production builds optimized for size
 wasm_precompile(
     name = "component_size",
     component = ":my_component",
-    optimization_level = "s",
-    strip_symbols = True,
+    optimization_level = "s",  # Size-optimized + no debug info
 )
 ```
 
@@ -116,6 +115,71 @@ wasm_precompile(
 - **Edge computing** - Minimize cold start latency
 - **High-frequency execution** - Startup cost amortizes quickly
 - **Resource-constrained environments** - Smaller memory footprint
+
+## AOT Embedding for Multi-Architecture Deployment
+
+**Embed multiple AOT artifacts as custom sections** within a single WebAssembly component for universal deployment. This enables signing and distributing one component that contains optimized native code for multiple architectures.
+
+### Basic AOT Embedding
+
+```starlark
+load("@rules_wasm_component//wasm:defs.bzl",
+     "wasm_precompile", "wasm_embed_aot", "wasm_extract_aot")
+
+# Create AOT artifacts for different architectures
+wasm_precompile(
+    name = "component_x64",
+    component = ":my_component",
+    target_triple = "x86_64-unknown-linux-gnu",
+    optimization_level = "2",
+)
+
+wasm_precompile(
+    name = "component_arm64",
+    component = ":my_component",
+    target_triple = "aarch64-unknown-linux-gnu",
+    optimization_level = "2",
+)
+
+wasm_precompile(
+    name = "component_portable",
+    component = ":my_component",
+    target_triple = "pulley64",  # Architecture-independent
+    optimization_level = "2",
+)
+
+# Embed all AOT artifacts into single component
+wasm_embed_aot(
+    name = "universal_component",
+    component = ":my_component",
+    aot_artifacts = {
+        "linux_x64": ":component_x64",
+        "linux_arm64": ":component_arm64",
+        "portable": ":component_portable",
+    },
+)
+```
+
+### Runtime Extraction
+
+```starlark
+# Extract specific architecture at runtime
+wasm_extract_aot(
+    name = "extracted_x64",
+    component = ":universal_component",
+    target_name = "linux_x64",
+)
+```
+
+### AOT Embedding Benefits
+
+- **Single artifact distribution** - One component works everywhere
+- **Signature compatibility** - Maintains WebAssembly format for signing
+- **Architecture-specific optimization** - Each platform gets optimal native code
+- **Fallback support** - Include portable bytecode for unknown architectures
+- **87% size reduction** - Production builds exclude debug symbols
+
+> **📋 Rule Reference:** For complete details on AOT embedding rules, see [`wasm_embed_aot`](/reference/rules/#wasm_embed_aot) and [`wasm_extract_aot`](/reference/rules/#wasm_extract_aot).
 
 ## Build Optimizations
 

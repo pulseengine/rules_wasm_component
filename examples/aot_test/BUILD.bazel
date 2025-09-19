@@ -1,6 +1,6 @@
 """Test case for AOT compilation functionality"""
 
-load("//wasm:defs.bzl", "wasm_precompile", "wasm_run", "wasm_test")
+load("//wasm:defs.bzl", "wasm_precompile", "wasm_precompile_multi", "wasm_run", "wasm_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -49,4 +49,64 @@ wasm_test(
 wasm_test(
     name = "aot_opt_levels_test",
     component = ":hello_opt_size",
+)
+
+# Cross-compilation tests
+wasm_precompile(
+    name = "hello_x86_64",
+    component = "//examples/basic:hello_component",
+    target_triple = "x86_64-unknown-linux-gnu",
+    optimization_level = "2",
+)
+
+wasm_precompile(
+    name = "hello_aarch64",
+    component = "//examples/basic:hello_component",
+    target_triple = "aarch64-unknown-linux-gnu",
+    optimization_level = "2",
+)
+
+wasm_precompile(
+    name = "hello_pulley",
+    component = "//examples/basic:hello_component",
+    target_triple = "pulley64",
+    optimization_level = "2",
+)
+
+# Multi-architecture compilation test
+wasm_precompile_multi(
+    name = "hello_multi_arch_test",
+    component = "//examples/basic:hello_component",
+    targets = {
+        "linux_x64": "x86_64-unknown-linux-gnu",
+        "linux_arm64": "aarch64-unknown-linux-gnu",
+        "darwin_x64": "x86_64-apple-darwin",
+        "darwin_arm64": "aarch64-apple-darwin",
+        "pulley64": "pulley64",
+    },
+    optimization_level = "2",
+    debug_info = False,
+)
+
+# Minimal multi-arch test (for faster CI)
+wasm_precompile_multi(
+    name = "hello_minimal_multi_arch",
+    component = "//examples/basic:hello_component",
+    targets = {
+        "x64": "x86_64-unknown-linux-gnu",
+        "arm64": "aarch64-unknown-linux-gnu",
+        "portable": "pulley64",
+    },
+    optimization_level = "s",
+)
+
+# Cross-compilation functionality tests
+wasm_test(
+    name = "cross_compilation_test",
+    component = ":hello_x86_64",
+)
+
+wasm_test(
+    name = "multi_arch_test",
+    component = ":hello_multi_arch_test",
 )

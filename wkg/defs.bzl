@@ -71,7 +71,9 @@ default_registry = "{registry}"
 
     # For component file: assume standard naming pattern (package.wasm or similar)
     # This is more predictable than dynamic discovery
-    expected_component = "{}/{}.wasm".format(output_dir.path, ctx.attr.package.split("/")[-1])
+    # Replace : with - to make valid filename from package name like "wasi:http" -> "wasi-http.wasm"
+    package_name = ctx.attr.package.split("/")[-1].replace(":", "-")
+    expected_component = "{}/{}.wasm".format(output_dir.path, package_name)
 
     # Use file_ops tool for cross-platform file copying
     file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
@@ -79,8 +81,9 @@ default_registry = "{registry}"
     ctx.actions.run(
         executable = file_ops_toolchain.file_ops_component,
         arguments = [
-            "-json",
-            '{"operations":[{"type":"copy_file","src_path":"%s","dest_path":"%s"}]}' % (expected_component, component_file.path),
+            "copy_file",
+            "--src", expected_component,
+            "--dest", component_file.path,
         ],
         inputs = [output_dir],
         outputs = [component_file],
@@ -95,8 +98,9 @@ default_registry = "{registry}"
     ctx.actions.run(
         executable = file_ops_toolchain.file_ops_component,
         arguments = [
-            "-json",
-            '{"operations":[{"type":"copy_directory_contents","src_path":"%s","dest_path":"%s"}]}' % (wit_source, wit_dir.path),
+            "copy_directory",
+            "--src", wit_source,
+            "--dest", wit_dir.path,
         ],
         inputs = [output_dir],
         outputs = [wit_dir],
@@ -135,57 +139,100 @@ wkg_fetch = rule(
 )
 
 def _wkg_lock_impl(ctx):
-    """Implementation of wkg_lock rule to generate lock files"""
+    """Implementation of wkg_lock rule to generate lock files using wkg wit fetch"""
 
     wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
     wkg = wkg_toolchain.wkg
 
-    # Output lock file
+    # Output files
     lock_file = ctx.actions.declare_file("wkg.lock")
+    deps_dir = ctx.actions.declare_directory(ctx.attr.name + "_deps")
+    wit_dir = ctx.actions.declare_directory(ctx.attr.name + "_wit")
 
-    # Create wkg.toml file with dependencies
-    deps_content = "[dependencies]\n"
+    # Create WIT directory structure with dependencies
+    # WKG expects a wit directory with world definitions that import dependencies
+    wit_content = "package " + ctx.attr.package_name + ";\n\n"
+
+    # Create a world that imports the specified dependencies
+    wit_content += "world " + ctx.attr.world_name + " {\n"
     for dep in ctx.attr.dependencies:
+        # Parse dependency format: "namespace:package:version" -> "import namespace:package@version;"
         parts = dep.split(":")
-        if len(parts) >= 2:
-            name = ":".join(parts[:-1])
-            version = parts[-1]
-            deps_content += '{} = "{}"\n'.format(name, version)
-        else:
-            deps_content += '{} = "*"\n'.format(dep)
+        if len(parts) >= 3:
+            namespace = parts[0]
+            package = parts[1]
+            version = parts[2]
+            wit_content += "  import {namespace}:{package}@{version};\n".format(
+                namespace = namespace, package = package, version = version
+            )
+        elif len(parts) == 2:
+            namespace = parts[0]
+            package = parts[1]
+            wit_content += "  import {namespace}:{package};\n".format(
+                namespace = namespace, package = package
+            )
+    wit_content += "}\n"
 
-    wkg_toml = ctx.actions.declare_file(ctx.attr.name + "_wkg.toml")
+    # Create the WIT file in the wit directory
+    wit_file = ctx.actions.declare_file(ctx.attr.name + "_world.wit")
     ctx.actions.write(
-        output = wkg_toml,
-        content = deps_content,
+        output = wit_file,
+        content = wit_content,
     )
 
-    # Registry config
-    config_content = ""
+    # Create registry config if specified
+    config_file = None
     if ctx.attr.registry:
         config_content = """
 default_registry = "{registry}"
 """.format(registry = ctx.attr.registry)
-
-    config_file = None
-    if config_content:
         config_file = ctx.actions.declare_file("wkg_config.toml")
         ctx.actions.write(
             output = config_file,
             content = config_content,
         )
 
-    # Build command arguments
+    # Create wit directory structure using file operations
+    file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
+
+    # First create the wit directory
+    ctx.actions.run(
+        executable = file_ops_toolchain.file_ops_component,
+        arguments = [
+            "create_directory",
+            "--path", wit_dir.path,
+        ],
+        outputs = [wit_dir],
+        mnemonic = "CreateWitDir",
+        progress_message = "Creating WIT directory structure",
+    )
+
+    # Copy the WIT file into the wit directory
+    wit_target = ctx.actions.declare_file(ctx.attr.name + "_wit_world.wit")
+    ctx.actions.run(
+        executable = file_ops_toolchain.file_ops_component,
+        arguments = [
+            "copy_file",
+            "--src", wit_file.path,
+            "--dest", wit_target.path,
+        ],
+        inputs = [wit_file, wit_dir],
+        outputs = [wit_target],
+        mnemonic = "CopyWitFile",
+        progress_message = "Copying WIT file to directory",
+    )
+
+    # Build command arguments for wkg wit fetch
     args = ctx.actions.args()
-    args.add("lock")
-    args.add("--manifest", wkg_toml.path)
-    args.add("--output", lock_file.path)
+    args.add("wit")
+    args.add("fetch")
+    args.add("--wit-dir", wit_dir.path)
 
     if config_file:
         args.add("--config", config_file.path)
 
-    # Run wkg lock
-    inputs = [wkg_toml]
+    # Run wkg wit fetch to generate dependencies and lock file
+    inputs = [wit_dir, wit_target]
     if config_file:
         inputs.append(config_file)
 
@@ -193,26 +240,43 @@ default_registry = "{registry}"
         executable = wkg,
         arguments = [args],
         inputs = inputs,
-        outputs = [lock_file],
-        mnemonic = "WkgLock",
-        progress_message = "Generating wkg.lock file",
+        outputs = [deps_dir, lock_file],
+        mnemonic = "WkgWitFetch",
+        progress_message = "Fetching WIT dependencies and generating lock file",
     )
 
-    return [DefaultInfo(files = depset([lock_file]))]
+    return [
+        DefaultInfo(files = depset([lock_file, deps_dir])),
+        OutputGroupInfo(
+            lock = depset([lock_file]),
+            dependencies = depset([deps_dir]),
+        ),
+    ]
 
 wkg_lock = rule(
     implementation = _wkg_lock_impl,
     attrs = {
         "dependencies": attr.string_list(
-            doc = "List of dependencies in 'name:version' format",
+            doc = "List of dependencies in 'namespace:package:version' format",
             default = [],
+        ),
+        "package_name": attr.string(
+            doc = "Name of the package for WIT world definition",
+            mandatory = True,
+        ),
+        "world_name": attr.string(
+            doc = "Name of the WIT world to create",
+            default = "main",
         ),
         "registry": attr.string(
             doc = "Registry URL to resolve dependencies from (optional)",
         ),
     },
-    toolchains = ["//toolchains:wkg_toolchain_type"],
-    doc = "Generate a wkg.lock file for reproducible dependency resolution",
+    toolchains = [
+        "//toolchains:wkg_toolchain_type",
+        "//toolchains:file_ops_toolchain_type",
+    ],
+    doc = "Generate WIT dependencies and lock file using wkg wit fetch",
 )
 
 def _wkg_publish_impl(ctx):
@@ -275,7 +339,13 @@ default_registry = "{registry}"
     publish_result = ctx.actions.declare_file(ctx.attr.name + "_publish_result.json")
 
     # Build argument list for wkg publish
-    wkg_args = ["publish", "--component", component.path, "--manifest", wkg_toml.path]
+    # Format: wkg publish <FILE> --package <package_spec>
+    package_spec = "{}@{}".format(ctx.attr.package_name, ctx.attr.version)
+    wkg_args = ["publish", component.path, "--package", package_spec]
+
+    # Add registry if specified
+    if ctx.attr.registry:
+        wkg_args.extend(["--registry", ctx.attr.registry])
 
     # Add config file if present
     if config_file:
@@ -285,7 +355,7 @@ default_registry = "{registry}"
     ctx.actions.run(
         executable = wkg,
         arguments = wkg_args,
-        inputs = [component, wkg_toml] + ([config_file] if config_file else []),
+        inputs = [component] + ([config_file] if config_file else []),
         outputs = [publish_result],
         mnemonic = "WkgPublish",
         progress_message = "Publishing WebAssembly component {}:{}".format(ctx.attr.package_name, ctx.attr.version),
@@ -601,58 +671,33 @@ def _wkg_push_impl(ctx):
 
     image_ref = "{}/{}/{}:{}".format(registry, namespace, name, tag)
 
-    # Create metadata file for the component
-    metadata_content = """
-[package]
-name = "{}"
-version = "{}"
-""".format(ctx.attr.package_name, ctx.attr.version or tag)
-
-    if ctx.attr.description:
-        metadata_content += 'description = "{}"\n'.format(ctx.attr.description)
-    if ctx.attr.authors:
-        authors_str = ", ".join(['"{}"'.format(a) for a in ctx.attr.authors])
-        metadata_content += "authors = [{}]\n".format(authors_str)
-    if ctx.attr.license:
-        metadata_content += 'license = "{}"\n'.format(ctx.attr.license)
-
-    # Add OCI-specific annotations
-    if ctx.attr.annotations:
-        metadata_content += "\n[package.metadata.oci]\n"
-        for annotation in ctx.attr.annotations:
-            key, value = annotation.split("=", 1)
-            metadata_content += '{} = "{}"\n'.format(key, value)
-
-    wkg_toml = ctx.actions.declare_file(ctx.label.name + "_metadata.toml")
-    ctx.actions.write(
-        output = wkg_toml,
-        content = metadata_content,
-    )
-
-    # Execute wkg push using Bazel-native approach (replaces shell script)
+    # Execute wkg oci push using Bazel-native approach (replaces shell script)
     push_result = ctx.actions.declare_file(ctx.label.name + "_push_result.json")
 
-    # Build argument list for wkg push
-    wkg_args = ["push", "--component", component_file.path, "--package", ctx.attr.package_name]
+    # Build argument list for wkg oci push
+    wkg_args = ["oci", "push", image_ref, component_file.path]
 
-    # Add version if specified
-    if ctx.attr.version:
-        wkg_args.extend(["--version", ctx.attr.version])
+    # Add annotations if specified
+    if ctx.attr.annotations:
+        for annotation in ctx.attr.annotations:
+            wkg_args.extend(["--annotation", annotation])
 
-    # Add config file if present
-    if config_file:
-        wkg_args.extend(["--config", config_file.path])
+    # Add authors if specified
+    if ctx.attr.authors:
+        for author in ctx.attr.authors:
+            wkg_args.extend(["--author", author])
 
-    # Add registry and tag information
-    wkg_args.extend(["--registry", registry, "--tag", tag])
+    # Add insecure flag for localhost registries
+    if image_ref.startswith("localhost"):
+        wkg_args.extend(["--insecure", "localhost"])
 
-    # Execute wkg push using Bazel-native ctx.actions.run
+    # Execute wkg oci push using Bazel-native ctx.actions.run
     ctx.actions.run(
         executable = wkg,
         arguments = wkg_args,
-        inputs = [component_file, wkg_toml] + ([config_file] if config_file else []),
+        inputs = [component_file] + ([config_file] if config_file else []),
         outputs = [push_result],
-        mnemonic = "WkgPush",
+        mnemonic = "WkgOciPush",
         progress_message = "Pushing WebAssembly component to OCI registry: {}".format(image_ref),
         use_default_shell_env = True,  # Needed for registry authentication
     )
@@ -690,7 +735,7 @@ echo "Component: {}"
     return [
         oci_info,
         DefaultInfo(
-            files = depset([push_script, wkg_toml, push_result]),
+            files = depset([push_script, push_result]),
             executable = push_script,
         ),
     ]

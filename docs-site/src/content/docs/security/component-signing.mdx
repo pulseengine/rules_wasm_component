@@ -685,6 +685,86 @@ wasm_keygen(
 
 For more details on packaging strategies, see the [Multi-File Packaging Guide](../guides/multi-file-packaging).
 
+### Signing Components with Embedded AOT Artifacts
+
+**WebAssembly components with embedded AOT artifacts maintain full signing compatibility** since they remain in the WebAssembly format. This enables universal deployment with both performance optimization and security verification.
+
+#### AOT Embedding + Signing Workflow
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl",
+     "wasm_precompile", "wasm_embed_aot", "wasm_sign")
+
+# Create AOT artifacts for multiple architectures
+wasm_precompile(
+    name = "service_x64_aot",
+    component = ":my_service",
+    target_triple = "x86_64-unknown-linux-gnu",
+    optimization_level = "2",
+)
+
+wasm_precompile(
+    name = "service_arm64_aot",
+    component = ":my_service",
+    target_triple = "aarch64-unknown-linux-gnu",
+    optimization_level = "2",
+)
+
+wasm_precompile(
+    name = "service_portable_aot",
+    component = ":my_service",
+    target_triple = "pulley64",  # Architecture-independent fallback
+    optimization_level = "2",
+)
+
+# Embed all AOT artifacts into single component
+wasm_embed_aot(
+    name = "universal_service",
+    component = ":my_service",
+    aot_artifacts = {
+        "linux_x64": ":service_x64_aot",
+        "linux_arm64": ":service_arm64_aot",
+        "portable": ":service_portable_aot",
+    },
+)
+
+# Sign the universal component (protects component + all embedded AOT artifacts)
+wasm_sign(
+    name = "signed_universal_service",
+    component = ":universal_service",
+    keys = ":production_keys",
+    detached = True,
+)
+```
+
+#### Security Benefits of AOT Embedding + Signing
+
+- **Complete package protection** - Single signature covers WebAssembly component and all embedded native code
+- **Architecture-specific verification** - Each platform gets verified optimized code
+- **Universal distribution** - One signed artifact works on all supported architectures
+- **Fallback security** - Portable bytecode provides compatibility with signature verification
+- **Performance + security** - 87% size reduction with cryptographic integrity
+
+#### Verification of Embedded AOT Components
+
+```python
+# Verify the universal component (validates signature for entire package)
+wasm_verify(
+    name = "verify_universal_service",
+    signed_component = ":signed_universal_service",
+    keys = ":trusted_production_keys",
+)
+
+# Extract architecture-specific artifacts after verification
+wasm_extract_aot(
+    name = "verified_x64_service",
+    component = ":signed_universal_service",  # Pre-verified
+    target_name = "linux_x64",
+)
+```
+
+**Security guarantee:** The signature verification covers the entire embedded package, so extracted AOT artifacts inherit the trust of the verified universal component.
+
 ### Publishing Signed Components
 
 ```python
@@ -701,15 +781,15 @@ wasm_component_oci_publish(
     # Signature is preserved in OCI layers
 )
 
-# Push with container signing
+# Push signed universal component with embedded AOT
 wasm_component_oci_publish(
-    name = "push_dual_signed",
-    component = ":signed_component",
+    name = "push_universal_signed",
+    component = ":signed_universal_service",
     registry = "ghcr.io",
     namespace = "my-org",
-    component_name = "secure-service",
+    component_name = "universal-service",
     tag = "v1.0.0",
-    # Enhanced publishing features available
+    # Universal component with signature covers all architectures
 )
 ```
 

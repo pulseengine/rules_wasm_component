@@ -46,6 +46,8 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
 - [Component Tools](#component-tools)
   - [wasm_component_new](#wasm_component_new)
   - [wasm_component_wizer_library](#wasm_component_wizer_library)
+  - [wasm_embed_aot](#wasm_embed_aot)
+  - [wasm_extract_aot](#wasm_extract_aot)
   - [wasm_precompile](#wasm_precompile)
   - [wasm_run](#wasm_run)
   - [wasm_test](#wasm_test)
@@ -987,6 +989,116 @@ wasm_validate(
 )
 ```
 
+### wasm_embed_aot
+
+Embed AOT-compiled WebAssembly artifacts as custom sections in a component. This rule takes a WebAssembly component and embeds multiple AOT-compiled versions (.cwasm files) as custom sections, enabling universal deployment with architecture-specific optimization.
+
+**Load from:**
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_embed_aot")
+```
+
+**Attributes:**
+
+| Name            | Type                    | Required | Description                                           |
+| --------------- | ----------------------- | -------- | ----------------------------------------------------- |
+| `aot_artifacts` | String-keyed label dict | ✅       | Dictionary mapping target names to precompiled AOT artifacts |
+| `component`     | Label                   | ✅       | Base WebAssembly component to embed AOT artifacts into |
+| `name`          | String                  | ✅       | A unique name for this target                         |
+
+**Examples:**
+
+Multi-architecture AOT embedding
+
+```python
+wasm_embed_aot(
+    name = "universal_component",
+    component = ":my_component",
+    aot_artifacts = {
+        "linux_x64": ":component_x64_aot",
+        "linux_arm64": ":component_arm64_aot",
+        "portable": ":component_portable_aot",
+    },
+)
+```
+
+Production deployment with embedded optimizations
+
+```python
+# Create AOT artifacts for different platforms
+wasm_precompile(
+    name = "production_x64",
+    component = ":service",
+    target_triple = "x86_64-unknown-linux-gnu",
+    optimization_level = "2",
+)
+
+wasm_precompile(
+    name = "production_arm64",
+    component = ":service",
+    target_triple = "aarch64-unknown-linux-gnu",
+    optimization_level = "2",
+)
+
+# Embed for universal deployment
+wasm_embed_aot(
+    name = "production_service",
+    component = ":service",
+    aot_artifacts = {
+        "prod_x64": ":production_x64",
+        "prod_arm64": ":production_arm64",
+    },
+)
+```
+
+### wasm_extract_aot
+
+Extract an AOT-compiled artifact from a WebAssembly component. This rule extracts a specific AOT artifact that was previously embedded as a custom section, allowing runtime code to access the appropriate compiled version for the current architecture.
+
+**Load from:**
+
+```python
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_extract_aot")
+```
+
+**Attributes:**
+
+| Name          | Type   | Required | Description                                           |
+| ------------- | ------ | -------- | ----------------------------------------------------- |
+| `component`   | Label  | ✅       | WebAssembly component with embedded AOT artifacts    |
+| `name`        | String | ✅       | A unique name for this target                         |
+| `target_name` | String | ✅       | Target architecture name to extract (e.g., "linux_x64") |
+
+**Examples:**
+
+Extract specific architecture
+
+```python
+wasm_extract_aot(
+    name = "extracted_x64_optimized",
+    component = ":universal_component",
+    target_name = "linux_x64",
+)
+```
+
+Runtime architecture selection
+
+```python
+# Extract different architectures as needed
+wasm_extract_aot(
+    name = "runtime_x64",
+    component = ":production_service",
+    target_name = "prod_x64",
+)
+
+wasm_extract_aot(
+    name = "runtime_arm64",
+    component = ":production_service",
+    target_name = "prod_arm64",
+)
+```
+
 ### wasm_precompile
 
 Ahead-of-time (AOT) compile WebAssembly components using Wasmtime for faster startup times and improved performance.
@@ -1002,16 +1114,15 @@ load("@rules_wasm_component//wasm:defs.bzl", "wasm_precompile")
 | Name                 | Type    | Required | Description                                           |
 | -------------------- | ------- | -------- | ----------------------------------------------------- |
 | `component`          | Label   | ❌       | WasmComponent target to precompile                    |
-| `debug_info`         | Boolean | ❌       | Include debug information (default: False)            |
+| `debug_info`         | Boolean | ❌       | Include DWARF debug information (increases size ~8x)  |
 | `name`               | String  | ✅       | A unique name for this target                         |
 | `optimization_level` | String  | ❌       | Optimization level: "0", "1", "2", "s" (default: "2") |
-| `strip_symbols`      | Boolean | ❌       | Strip symbol tables to reduce size (default: True)    |
 | `target_triple`      | String  | ❌       | Target triple for cross-compilation                   |
 | `wasm_file`          | Label   | ❌       | Input WebAssembly file to precompile                  |
 
 **Examples:**
 
-Basic AOT compilation
+Production build (default: no debug info, 87% smaller)
 
 ```python
 wasm_precompile(
@@ -1021,14 +1132,25 @@ wasm_precompile(
 )
 ```
 
-Size-optimized build
+Debug build with DWARF debug information
 
 ```python
 wasm_precompile(
-    name = "my_component_size",
+    name = "my_component_debug",
     component = ":my_component",
-    optimization_level = "s",
-    strip_symbols = True,
+    optimization_level = "0",
+    debug_info = True,
+)
+```
+
+Cross-compilation for specific architecture
+
+```python
+wasm_precompile(
+    name = "my_component_x64",
+    component = ":my_component",
+    target_triple = "x86_64-unknown-linux-gnu",
+    optimization_level = "2",
 )
 ```
 
