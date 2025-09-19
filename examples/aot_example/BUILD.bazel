@@ -109,6 +109,8 @@ wasm_precompile(
 wasm_precompile_multi(
     name = "hello_component_multi_arch",
     component = ":hello_component",
+    debug_info = False,
+    optimization_level = "2",
     targets = {
         "linux_x64": "x86_64-unknown-linux-gnu",
         "linux_arm64": "aarch64-unknown-linux-gnu",
@@ -116,21 +118,19 @@ wasm_precompile_multi(
         "darwin_arm64": "aarch64-apple-darwin",
         "pulley64": "pulley64",  # Portable bytecode
     },
-    optimization_level = "2",
-    debug_info = False,
 )
 
 # High-performance multi-arch version
 wasm_precompile_multi(
     name = "hello_component_multi_arch_size_opt",
     component = ":hello_component",
+    optimization_level = "s",  # Size optimization
+    strip_symbols = True,
     targets = {
         "linux_x64": "x86_64-unknown-linux-gnu",
         "linux_arm64": "aarch64-unknown-linux-gnu",
         "pulley64": "pulley64",
     },
-    optimization_level = "s",  # Size optimization
-    strip_symbols = True,
 )
 
 # Direct WASM file execution

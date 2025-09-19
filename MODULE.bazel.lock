@@ -4273,7 +4273,7 @@
           "@@//tools/ssh_keygen/Cargo.lock": "9205014210a8735dc6c27d60b31ce5747134915b4f8295e548d20fe7867111b3",
           "@@//tools/ssh_keygen/Cargo.toml": "64d0307087a2b20816ef755fb4051e2aac5c8940ebf203e1a6dfd080908efc7a",
           "@@//tools/wasm_embed_aot/Cargo.lock": "04e1fae00cd26b53e576218d6ad92ef0509c722889413c7e8e594795bbcc28df",
-          "@@//tools/wasm_embed_aot/Cargo.toml": "00c15dff04a60c5bd15c703ebddeeab14430be0266b3d98f5c9705f5424dba4d",
+          "@@//tools/wasm_embed_aot/Cargo.toml": "924098ea5adce554e02fd9ff4f42081ea712feb514c762adde47864a1bb6106a",
           "@@//tools/wizer_initializer/Cargo.lock": "6af146e5a57c209e815b755965140db401ffe14eff0a299715a10ede81977cdb",
           "@@//tools/wizer_initializer/Cargo.toml": "9dc1cc5f493de349bc3104642f08d725817988ddf40d2c79baf3ca6158ab25d6"
         },

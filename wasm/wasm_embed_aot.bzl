@@ -56,7 +56,8 @@ def _wasm_embed_aot_impl(ctx):
         component_type = component_info.component_type,
         imports = component_info.imports,
         exports = component_info.exports,
-        metadata = dict(component_info.metadata,
+        metadata = dict(
+            component_info.metadata,
             aot_embedded = True,
             aot_targets = list(precompiled_files.keys()),
         ),

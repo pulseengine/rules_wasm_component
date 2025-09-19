@@ -1001,11 +1001,11 @@ load("@rules_wasm_component//wasm:defs.bzl", "wasm_embed_aot")
 
 **Attributes:**
 
-| Name            | Type                    | Required | Description                                           |
-| --------------- | ----------------------- | -------- | ----------------------------------------------------- |
+| Name            | Type                    | Required | Description                                                  |
+| --------------- | ----------------------- | -------- | ------------------------------------------------------------ |
 | `aot_artifacts` | String-keyed label dict | ✅       | Dictionary mapping target names to precompiled AOT artifacts |
-| `component`     | Label                   | ✅       | Base WebAssembly component to embed AOT artifacts into |
-| `name`          | String                  | ✅       | A unique name for this target                         |
+| `component`     | Label                   | ✅       | Base WebAssembly component to embed AOT artifacts into       |
+| `name`          | String                  | ✅       | A unique name for this target                                |
 
 **Examples:**
 
@@ -1064,10 +1064,10 @@ load("@rules_wasm_component//wasm:defs.bzl", "wasm_extract_aot")
 
 **Attributes:**
 
-| Name          | Type   | Required | Description                                           |
-| ------------- | ------ | -------- | ----------------------------------------------------- |
-| `component`   | Label  | ✅       | WebAssembly component with embedded AOT artifacts    |
-| `name`        | String | ✅       | A unique name for this target                         |
+| Name          | Type   | Required | Description                                             |
+| ------------- | ------ | -------- | ------------------------------------------------------- |
+| `component`   | Label  | ✅       | WebAssembly component with embedded AOT artifacts       |
+| `name`        | String | ✅       | A unique name for this target                           |
 | `target_name` | String | ✅       | Target architecture name to extract (e.g., "linux_x64") |
 
 **Examples:**
@@ -1436,12 +1436,12 @@ load("@rules_wasm_component//wkg:defs.bzl", "wkg_lock")
 
 **Attributes:**
 
-| Name           | Type            | Required | Description                             |
-| -------------- | --------------- | -------- | --------------------------------------- |
-| `dependencies` | List of Strings | ✅       | List of package dependencies to lock    |
-| `name`         | String          | ✅       | A unique name for this target           |
-| `package_name` | String          | ✅       | Name of the package being locked        |
-| `registry`     | String          | ❌       | Custom registry URL                     |
+| Name           | Type            | Required | Description                          |
+| -------------- | --------------- | -------- | ------------------------------------ |
+| `dependencies` | List of Strings | ✅       | List of package dependencies to lock |
+| `name`         | String          | ✅       | A unique name for this target        |
+| `package_name` | String          | ✅       | Name of the package being locked     |
+| `registry`     | String          | ❌       | Custom registry URL                  |
 
 **Examples:**
 
@@ -1471,16 +1471,16 @@ load("@rules_wasm_component//wkg:defs.bzl", "wkg_publish")
 
 **Attributes:**
 
-| Name           | Type            | Required | Description                       |
-| -------------- | --------------- | -------- | --------------------------------- |
-| `authors`      | List of Strings | ✅       | List of component authors         |
-| `component`    | Label           | ✅       | WebAssembly component to publish  |
-| `description`  | String          | ✅       | Component description             |
-| `license`      | String          | ✅       | License identifier                |
-| `name`         | String          | ✅       | A unique name for this target     |
-| `package_name` | String          | ✅       | Package name for publication      |
-| `registry`     | String          | ❌       | Custom registry URL               |
-| `version`      | String          | ✅       | Package version                   |
+| Name           | Type            | Required | Description                      |
+| -------------- | --------------- | -------- | -------------------------------- |
+| `authors`      | List of Strings | ✅       | List of component authors        |
+| `component`    | Label           | ✅       | WebAssembly component to publish |
+| `description`  | String          | ✅       | Component description            |
+| `license`      | String          | ✅       | License identifier               |
+| `name`         | String          | ✅       | A unique name for this target    |
+| `package_name` | String          | ✅       | Package name for publication     |
+| `registry`     | String          | ❌       | Custom registry URL              |
+| `version`      | String          | ✅       | Package version                  |
 
 **Examples:**
 
@@ -1510,12 +1510,12 @@ load("@rules_wasm_component//wkg:defs.bzl", "wkg_push")
 
 **Attributes:**
 
-| Name              | Type   | Required | Description                       |
-| ----------------- | ------ | -------- | --------------------------------- |
-| `component`       | Label  | ✅       | WebAssembly component to push     |
+| Name              | Type   | Required | Description                                 |
+| ----------------- | ------ | -------- | ------------------------------------------- |
+| `component`       | Label  | ✅       | WebAssembly component to push               |
 | `image_reference` | String | ✅       | OCI image reference (registry/org/name:tag) |
-| `name`            | String | ✅       | A unique name for this target     |
-| `registry_config` | Label  | ❌       | Registry configuration            |
+| `name`            | String | ✅       | A unique name for this target               |
+| `registry_config` | Label  | ❌       | Registry configuration                      |
 
 **Examples:**
 

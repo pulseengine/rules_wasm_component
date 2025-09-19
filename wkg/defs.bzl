@@ -82,8 +82,10 @@ default_registry = "{registry}"
         executable = file_ops_toolchain.file_ops_component,
         arguments = [
             "copy_file",
-            "--src", expected_component,
-            "--dest", component_file.path,
+            "--src",
+            expected_component,
+            "--dest",
+            component_file.path,
         ],
         inputs = [output_dir],
         outputs = [component_file],
@@ -99,8 +101,10 @@ default_registry = "{registry}"
         executable = file_ops_toolchain.file_ops_component,
         arguments = [
             "copy_directory",
-            "--src", wit_source,
-            "--dest", wit_dir.path,
+            "--src",
+            wit_source,
+            "--dest",
+            wit_dir.path,
         ],
         inputs = [output_dir],
         outputs = [wit_dir],
@@ -163,13 +167,16 @@ def _wkg_lock_impl(ctx):
             package = parts[1]
             version = parts[2]
             wit_content += "  import {namespace}:{package}@{version};\n".format(
-                namespace = namespace, package = package, version = version
+                namespace = namespace,
+                package = package,
+                version = version,
             )
         elif len(parts) == 2:
             namespace = parts[0]
             package = parts[1]
             wit_content += "  import {namespace}:{package};\n".format(
-                namespace = namespace, package = package
+                namespace = namespace,
+                package = package,
             )
     wit_content += "}\n"
 
@@ -200,7 +207,8 @@ default_registry = "{registry}"
         executable = file_ops_toolchain.file_ops_component,
         arguments = [
             "create_directory",
-            "--path", wit_dir.path,
+            "--path",
+            wit_dir.path,
         ],
         outputs = [wit_dir],
         mnemonic = "CreateWitDir",
@@ -213,8 +221,10 @@ default_registry = "{registry}"
         executable = file_ops_toolchain.file_ops_component,
         arguments = [
             "copy_file",
-            "--src", wit_file.path,
-            "--dest", wit_target.path,
+            "--src",
+            wit_file.path,
+            "--dest",
+            wit_target.path,
         ],
         inputs = [wit_file, wit_dir],
         outputs = [wit_target],

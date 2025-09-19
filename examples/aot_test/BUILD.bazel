@@ -55,28 +55,30 @@ wasm_test(
 wasm_precompile(
     name = "hello_x86_64",
     component = "//examples/basic:hello_component",
-    target_triple = "x86_64-unknown-linux-gnu",
     optimization_level = "2",
+    target_triple = "x86_64-unknown-linux-gnu",
 )
 
 wasm_precompile(
     name = "hello_aarch64",
     component = "//examples/basic:hello_component",
-    target_triple = "aarch64-unknown-linux-gnu",
     optimization_level = "2",
+    target_triple = "aarch64-unknown-linux-gnu",
 )
 
 wasm_precompile(
     name = "hello_pulley",
     component = "//examples/basic:hello_component",
-    target_triple = "pulley64",
     optimization_level = "2",
+    target_triple = "pulley64",
 )
 
 # Multi-architecture compilation test
 wasm_precompile_multi(
     name = "hello_multi_arch_test",
     component = "//examples/basic:hello_component",
+    debug_info = False,
+    optimization_level = "2",
     targets = {
         "linux_x64": "x86_64-unknown-linux-gnu",
         "linux_arm64": "aarch64-unknown-linux-gnu",
@@ -84,20 +86,18 @@ wasm_precompile_multi(
         "darwin_arm64": "aarch64-apple-darwin",
         "pulley64": "pulley64",
     },
-    optimization_level = "2",
-    debug_info = False,
 )
 
 # Minimal multi-arch test (for faster CI)
 wasm_precompile_multi(
     name = "hello_minimal_multi_arch",
     component = "//examples/basic:hello_component",
+    optimization_level = "s",
     targets = {
         "x64": "x86_64-unknown-linux-gnu",
         "arm64": "aarch64-unknown-linux-gnu",
         "portable": "pulley64",
     },
-    optimization_level = "s",
 )
 
 # Cross-compilation functionality tests

@@ -54,15 +54,23 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Embed { input, output, artifacts } => {
+        Commands::Embed {
+            input,
+            output,
+            artifacts,
+        } => {
             embed_artifacts(&input, &output, &artifacts)?;
-        },
-        Commands::Extract { input, output, section } => {
+        }
+        Commands::Extract {
+            input,
+            output,
+            section,
+        } => {
             extract_artifact(&input, &output, &section)?;
-        },
+        }
         Commands::List { input } => {
             list_artifacts(&input)?;
-        },
+        }
     }
 
     Ok(())
@@ -79,14 +87,21 @@ fn embed_artifacts(input: &PathBuf, output: &PathBuf, artifacts: &[String]) -> R
     for artifact in artifacts {
         let parts: Vec<&str> = artifact.splitn(2, ':').collect();
         if parts.len() != 2 {
-            anyhow::bail!("Invalid artifact format '{}'. Expected 'name:path'", artifact);
+            anyhow::bail!(
+                "Invalid artifact format '{}'. Expected 'name:path'",
+                artifact
+            );
         }
 
         let section_name = format!("aot-{}", parts[0]);
         let artifact_data = fs::read(parts[1])
             .with_context(|| format!("Failed to read artifact file: {}", parts[1]))?;
 
-        println!("Embedding {} bytes as section '{}'", artifact_data.len(), section_name);
+        println!(
+            "Embedding {} bytes as section '{}'",
+            artifact_data.len(),
+            section_name
+        );
         aot_artifacts.push((section_name, artifact_data));
     }
 
@@ -96,7 +111,11 @@ fn embed_artifacts(input: &PathBuf, output: &PathBuf, artifacts: &[String]) -> R
     fs::write(output, &enhanced_wasm)
         .with_context(|| format!("Failed to write output file: {}", output.display()))?;
 
-    println!("Created {} with {} embedded AOT sections", output.display(), artifacts.len());
+    println!(
+        "Created {} with {} embedded AOT sections",
+        output.display(),
+        artifacts.len()
+    );
     println!("Final WASM size: {} bytes", enhanced_wasm.len());
 
     Ok(())
@@ -106,7 +125,11 @@ fn extract_artifact(input: &PathBuf, output: &PathBuf, section_name: &str) -> Re
     let wasm_data = fs::read(input)
         .with_context(|| format!("Failed to read input file: {}", input.display()))?;
 
-    println!("Searching for section '{}' in {} byte WASM file", section_name, wasm_data.len());
+    println!(
+        "Searching for section '{}' in {} byte WASM file",
+        section_name,
+        wasm_data.len()
+    );
 
     let parser = WasmParser::new(0);
     for payload in parser.parse_all(&wasm_data) {
@@ -117,10 +140,15 @@ fn extract_artifact(input: &PathBuf, output: &PathBuf, section_name: &str) -> Re
 
             if reader.name() == section_name {
                 let section_data = reader.data();
-                fs::write(output, section_data)
-                    .with_context(|| format!("Failed to write output file: {}", output.display()))?;
+                fs::write(output, section_data).with_context(|| {
+                    format!("Failed to write output file: {}", output.display())
+                })?;
 
-                println!("Extracted {} bytes to {}", section_data.len(), output.display());
+                println!(
+                    "Extracted {} bytes to {}",
+                    section_data.len(),
+                    output.display()
+                );
                 return Ok(());
             }
         }
@@ -158,7 +186,10 @@ fn list_artifacts(input: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn add_custom_sections(wasm_data: Vec<u8>, aot_artifacts: Vec<(String, Vec<u8>)>) -> Result<Vec<u8>> {
+fn add_custom_sections(
+    wasm_data: Vec<u8>,
+    aot_artifacts: Vec<(String, Vec<u8>)>,
+) -> Result<Vec<u8>> {
     // For simplicity, we'll use the same approach as the Python version:
     // insert custom sections after the WASM header (first 8 bytes)
 

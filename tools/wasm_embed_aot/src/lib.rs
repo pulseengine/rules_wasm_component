@@ -17,10 +17,7 @@ impl Guest for EmbedAot {
         Ok(wasm_data)
     }
 
-    fn extract_artifact(
-        _wasm_data: Vec<u8>,
-        _section_name: String,
-    ) -> Result<Vec<u8>, String> {
+    fn extract_artifact(_wasm_data: Vec<u8>, _section_name: String) -> Result<Vec<u8>, String> {
         // For now, return empty data
         // TODO: Implement actual extraction
         Ok(vec![])

@@ -1,6 +1,6 @@
 """Test case for AOT embedding functionality"""
 
-load("//wasm:defs.bzl", "wasm_precompile", "wasm_embed_aot", "wasm_extract_aot")
+load("//wasm:defs.bzl", "wasm_embed_aot", "wasm_extract_aot", "wasm_precompile")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -8,69 +8,69 @@ package(default_visibility = ["//visibility:public"])
 wasm_precompile(
     name = "hello_linux_x64_debug",
     component = "//examples/basic:hello_component",
-    target_triple = "x86_64-unknown-linux-gnu",
-    optimization_level = "2",
     debug_info = True,
+    optimization_level = "2",
+    target_triple = "x86_64-unknown-linux-gnu",
 )
 
 wasm_precompile(
     name = "hello_linux_arm64_debug",
     component = "//examples/basic:hello_component",
-    target_triple = "aarch64-unknown-linux-gnu",
-    optimization_level = "2",
     debug_info = True,
+    optimization_level = "2",
+    target_triple = "aarch64-unknown-linux-gnu",
 )
 
 wasm_precompile(
     name = "hello_portable_debug",
     component = "//examples/basic:hello_component",
-    target_triple = "pulley64",
-    optimization_level = "2",
     debug_info = True,
+    optimization_level = "2",
+    target_triple = "pulley64",
 )
 
 # Create production AOT artifacts for embedding (default - no debug info)
 wasm_precompile(
     name = "hello_linux_x64",
     component = "//examples/basic:hello_component",
-    target_triple = "x86_64-unknown-linux-gnu",
     optimization_level = "2",
+    target_triple = "x86_64-unknown-linux-gnu",
 )
 
 wasm_precompile(
     name = "hello_linux_arm64",
     component = "//examples/basic:hello_component",
-    target_triple = "aarch64-unknown-linux-gnu",
     optimization_level = "2",
+    target_triple = "aarch64-unknown-linux-gnu",
 )
 
 wasm_precompile(
     name = "hello_portable",
     component = "//examples/basic:hello_component",
-    target_triple = "pulley64",
     optimization_level = "2",
+    target_triple = "pulley64",
 )
 
 # Test embedding stripped AOT artifacts (production)
 wasm_embed_aot(
     name = "hello_with_embedded_aot",
-    component = "//examples/basic:hello_component",
     aot_artifacts = {
         "linux_x64": ":hello_linux_x64",
         "linux_arm64": ":hello_linux_arm64",
         "portable": ":hello_portable",
     },
+    component = "//examples/basic:hello_component",
 )
 
 # Test embedding debug AOT artifacts (with debug info)
 wasm_embed_aot(
     name = "hello_with_embedded_aot_debug",
-    component = "//examples/basic:hello_component",
     aot_artifacts = {
         "linux_x64": ":hello_linux_x64_debug",
         "linux_arm64": ":hello_linux_arm64_debug",
         "portable": ":hello_portable_debug",
     },
+    component = "//examples/basic:hello_component",
 )
 
 # Test extraction

@@ -32,6 +32,7 @@ This release represents a significant achievement - transitioning from custom pa
 ### 📦 Migration Guide
 
 **Before (1.x.x)**:
+
 ```starlark
 bazel_dep(name = "rules_rust", version = "0.62.0")
 git_override(
@@ -42,6 +43,7 @@ git_override(
 ```
 
 **After (2.0.0)**:
+
 ```starlark
 bazel_dep(name = "rules_rust", version = "0.65.0")
 ```
