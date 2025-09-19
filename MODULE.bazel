@@ -8,7 +8,6 @@ module(
 
 # Dependencies for WebAssembly tooling
 bazel_dep(name = "rules_rust", version = "0.65.0")
-
 bazel_dep(name = "bazel_skylib", version = "1.8.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.4")
@@ -234,7 +233,19 @@ crate.from_cargo(
         "x86_64-pc-windows-msvc",
     ],
 )
-use_repo(crate, "crates", "ssh_keygen_crates", "wasmsign2_crates", "wizer_crates")
+crate.from_cargo(
+    name = "wasm_embed_aot_crates",
+    cargo_lockfile = "//tools/wasm_embed_aot:Cargo.lock",
+    manifests = ["//tools/wasm_embed_aot:Cargo.toml"],
+    supported_platform_triples = [
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+    ],
+)
+use_repo(crate, "crates", "ssh_keygen_crates", "wasm_embed_aot_crates", "wasmsign2_crates", "wizer_crates")
 
 # Modernized WASM tool repositories using git_repository + rules_rust
 wasm_tool_repos = use_extension("//toolchains:extensions.bzl", "wasm_tool_repositories")

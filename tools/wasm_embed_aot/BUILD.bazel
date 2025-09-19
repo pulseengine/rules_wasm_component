@@ -1,0 +1,18 @@
+"""WebAssembly AOT embedding tool as a hermetic CLI"""
+
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Hermetic Rust CLI tool for AOT embedding and extraction
+rust_binary(
+    name = "wasm_embed_aot",
+    srcs = ["src/main.rs"],
+    edition = "2021",
+    deps = [
+        "@wasm_embed_aot_crates//:anyhow",
+        "@wasm_embed_aot_crates//:clap",
+        "@wasm_embed_aot_crates//:wasm-encoder",
+        "@wasm_embed_aot_crates//:wasmparser",
+    ],
+)

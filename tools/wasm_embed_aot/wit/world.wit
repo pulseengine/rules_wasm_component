@@ -1,0 +1,32 @@
+package wasm-tools:embed-aot@0.1.0;
+
+/// WebAssembly AOT embedding and extraction utilities
+world embed-aot {
+    /// Embed AOT artifacts as custom sections in a WebAssembly component
+    export embed-artifacts: func(
+        /// Original WebAssembly component bytes
+        wasm-data: list<u8>,
+        /// AOT artifacts to embed, mapping section name to binary data
+        aot-artifacts: list<tuple<string, list<u8>>>
+    ) -> result<list<u8>, string>;
+
+    /// Extract a specific AOT artifact from a WebAssembly component
+    export extract-artifact: func(
+        /// WebAssembly component with embedded AOT artifacts
+        wasm-data: list<u8>,
+        /// Section name to extract (e.g., "aot-linux-x64")
+        section-name: string
+    ) -> result<list<u8>, string>;
+
+    /// List all embedded AOT artifacts in a WebAssembly component
+    export list-artifacts: func(
+        /// WebAssembly component bytes
+        wasm-data: list<u8>
+    ) -> result<list<string>, string>;
+
+    /// Verify the integrity of embedded AOT artifacts
+    export verify-integrity: func(
+        /// WebAssembly component with embedded AOT artifacts
+        wasm-data: list<u8>
+    ) -> result<bool, string>;
+}

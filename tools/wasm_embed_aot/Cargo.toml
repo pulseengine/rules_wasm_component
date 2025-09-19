@@ -1,0 +1,14 @@
+[package]
+name = "wasm-embed-aot"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "wasm-embed-aot"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+wasm-encoder = "0.220"
+wasmparser = "0.220"
