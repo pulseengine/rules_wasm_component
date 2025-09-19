@@ -57,6 +57,10 @@ Complete reference documentation for all Bazel rules provided by rules_wasm_comp
 - [Registry & Distribution](#registry-distribution)
   - [wasm_component_from_oci](#wasm_component_from_oci)
   - [wkg_registry_config](#wkg_registry_config)
+  - [wkg_fetch](#wkg_fetch)
+  - [wkg_lock](#wkg_lock)
+  - [wkg_publish](#wkg_publish)
+  - [wkg_push](#wkg_push)
 - [Providers](#providers)
   - [WacCompositionInfo](#waccompositioninfo)
   - [WasmComponentInfo](#wasmcomponentinfo)
@@ -1264,6 +1268,143 @@ wkg_registry_config(
         "docker|docker.io|oci|env|DOCKER_TOKEN",
     ],
     default_registry = "github",
+)
+```
+
+### wkg_fetch
+
+Fetches WebAssembly components from WKG (WebAssembly Package Tools) registries. Downloads components and their dependencies for use in builds.
+
+**Load from:**
+
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_fetch")
+```
+
+**Attributes:**
+
+| Name       | Type   | Required | Description                   |
+| ---------- | ------ | -------- | ----------------------------- |
+| `name`     | String | ✅       | A unique name for this target |
+| `package`  | String | ✅       | Package name to fetch         |
+| `registry` | String | ❌       | Custom registry URL           |
+| `version`  | String | ✅       | Package version to fetch      |
+
+**Examples:**
+
+Fetch a component from WKG registry
+
+```python
+wkg_fetch(
+    name = "wasi_http_component",
+    package = "wasi:http",
+    version = "0.2.0",
+)
+```
+
+### wkg_lock
+
+Generates WKG lock files for dependency management. Creates lock files that pin specific versions of WebAssembly component dependencies.
+
+**Load from:**
+
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_lock")
+```
+
+**Attributes:**
+
+| Name           | Type            | Required | Description                             |
+| -------------- | --------------- | -------- | --------------------------------------- |
+| `dependencies` | List of Strings | ✅       | List of package dependencies to lock    |
+| `name`         | String          | ✅       | A unique name for this target           |
+| `package_name` | String          | ✅       | Name of the package being locked        |
+| `registry`     | String          | ❌       | Custom registry URL                     |
+
+**Examples:**
+
+Generate lock file for dependencies
+
+```python
+wkg_lock(
+    name = "dependencies_lock",
+    package_name = "example:dependencies",
+    dependencies = [
+        "wasi:http:0.2.0",
+        "wasi:clocks:0.2.0",
+        "wasi:filesystem:0.2.0",
+    ],
+)
+```
+
+### wkg_publish
+
+Publishes WebAssembly components to WKG registries. Uploads components with metadata to package registries for distribution.
+
+**Load from:**
+
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_publish")
+```
+
+**Attributes:**
+
+| Name           | Type            | Required | Description                       |
+| -------------- | --------------- | -------- | --------------------------------- |
+| `authors`      | List of Strings | ✅       | List of component authors         |
+| `component`    | Label           | ✅       | WebAssembly component to publish  |
+| `description`  | String          | ✅       | Component description             |
+| `license`      | String          | ✅       | License identifier                |
+| `name`         | String          | ✅       | A unique name for this target     |
+| `package_name` | String          | ✅       | Package name for publication      |
+| `registry`     | String          | ❌       | Custom registry URL               |
+| `version`      | String          | ✅       | Package version                   |
+
+**Examples:**
+
+Publish component to WKG registry
+
+```python
+wkg_publish(
+    name = "publish_example",
+    package_name = "example:my-component",
+    authors = ["Example Developer"],
+    component = ":example_component_release",
+    description = "An example WebAssembly component",
+    license = "Apache-2.0",
+    version = "1.0.0",
+)
+```
+
+### wkg_push
+
+Pushes WebAssembly components to OCI registries using WKG. Uploads components to container registries for OCI-based distribution.
+
+**Load from:**
+
+```python
+load("@rules_wasm_component//wkg:defs.bzl", "wkg_push")
+```
+
+**Attributes:**
+
+| Name              | Type   | Required | Description                       |
+| ----------------- | ------ | -------- | --------------------------------- |
+| `component`       | Label  | ✅       | WebAssembly component to push     |
+| `image_reference` | String | ✅       | OCI image reference (registry/org/name:tag) |
+| `name`            | String | ✅       | A unique name for this target     |
+| `registry_config` | Label  | ❌       | Registry configuration            |
+
+**Examples:**
+
+Push component to OCI registry
+
+```python
+wkg_push(
+    name = "push_to_github",
+    component = ":my_component",
+    image_reference = "ghcr.io/myorg/my-component:v1.0.0",
+    registry_config = ":registries",
 )
 ```
 
