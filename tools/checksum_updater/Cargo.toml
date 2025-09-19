@@ -6,6 +6,10 @@ description = "Automated tool for updating WebAssembly tool checksums"
 license = "Apache-2.0"
 repository = "https://github.com/rules-wasm-component/rules_wasm_component"
 
+[lib]
+name = "checksum_updater"
+path = "src/lib.rs"
+
 [[bin]]
 name = "checksum_updater"
 path = "src/main.rs"

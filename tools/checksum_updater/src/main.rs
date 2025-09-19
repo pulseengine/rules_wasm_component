@@ -34,7 +34,7 @@ use serde_json;
 use std::path::PathBuf;
 use tracing::{info, warn};
 
-use checksum_updater_lib::{
+use checksum_updater::{
     ChecksumManager, ChecksumValidator, UpdateConfig, UpdateEngine, UpdateResults,
     ValidationResults,
 };
