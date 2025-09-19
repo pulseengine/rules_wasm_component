@@ -28,8 +28,9 @@ permissions:
   issues: write
 
 env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
+  # Bazel cache optimization
+  USE_BAZEL_VERSION: 8.0.0
+  BAZEL_CXXOPTS: "-std=c++17"
 
 jobs:
   checksum-update:
@@ -43,16 +44,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@0.8.7
         with:
-          components: rustfmt, clippy
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "tools/checksum_updater"
-          cache-on-failure: true
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
 
       - name: Install system dependencies
         run: |
@@ -61,9 +58,8 @@ jobs:
 
       - name: Build checksum updater tool
         run: |
-          cd tools/checksum_updater
-          cargo build --release
-          cargo test --release
+          bazel build //tools/checksum_updater:checksum_updater_bin
+          bazel test //tools/checksum_updater:checksum_updater_test //tools/checksum_updater:integration_test //tools/checksum_updater:json_validation_test
 
       - name: Configure Git
         run: |
@@ -83,8 +79,6 @@ jobs:
       - name: Run checksum updates
         id: update
         run: |
-          cd tools/checksum_updater
-
           # Determine which tools to update
           TOOLS="${{ github.event.inputs.tools || 'all' }}"
           FORCE_FLAG=""
@@ -101,9 +95,9 @@ jobs:
 
           # Run the updater and capture output
           if [ "$TOOLS" = "all" ]; then
-            ./target/release/checksum_updater update-all $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json
+            bazel run //tools/checksum_updater:checksum_updater_bin -- update-all $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json
           else
-            ./target/release/checksum_updater update --tools "$TOOLS" $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json
+            bazel run //tools/checksum_updater:checksum_updater_bin -- update --tools "$TOOLS" $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json
           fi
 
           # Check if any updates were made
@@ -116,10 +110,10 @@ jobs:
           echo "errors_count=$ERRORS_COUNT" >> $GITHUB_OUTPUT
 
           # Store results for later steps
-          cp update_results.json ../../update_results.json
+          cp update_results.json ./update_results.json
 
           # Generate summary for PR description
-          ./target/release/checksum_updater generate-summary update_results.json > ../../update_summary.md
+          bazel run //tools/checksum_updater:checksum_updater_bin -- generate-summary update_results.json > ./update_summary.md
 
       - name: Validate updated checksums
         if: steps.update.outputs.updates_count > 0
@@ -136,8 +130,7 @@ jobs:
           done
 
           # Test that registry.bzl loads correctly
-          cd tools/checksum_updater
-          ./target/release/checksum_updater validate --all
+          bazel run //tools/checksum_updater:checksum_updater_bin -- validate --all
 
           echo "✅ All checksums validated successfully"
 
@@ -177,7 +170,6 @@ jobs:
         run: |
           # Add all changed files
           git add checksums/
-          git add tools/checksum_updater/
 
           # Create detailed commit message
           cat > commit_message.txt << 'EOF'
