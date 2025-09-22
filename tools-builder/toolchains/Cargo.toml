@@ -16,7 +16,7 @@ env_logger = "0.11"
 log = "0.4"
 
 # WebAssembly parsing and manipulation
-wasmparser = "0.237"
+wasmparser = "0.239"
 wasm-encoder = "0.237"
 wat = "1.239"
 
