@@ -44,6 +44,7 @@ wkg_component_test(
 # TODO: Upgrade to wkg 0.12.0+ when binaries are available (needs 'lock' subcommand)
 wkg_lock(
     name = "test_lock_dependencies",
+    package_name = "test:lock-test",
     dependencies = [
         "test:hello-world:1.0.0",
         "test:calculator:1.0.0",

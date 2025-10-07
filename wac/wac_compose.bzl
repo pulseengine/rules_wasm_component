@@ -3,7 +3,64 @@
 load("//providers:providers.bzl", "WacCompositionInfo", "WasmComponentInfo")
 
 def _wac_compose_impl(ctx):
-    """Implementation of wac_compose rule"""
+    """Implementation of wac_compose rule for component composition.
+
+    Composes multiple WebAssembly components into a single unified component
+    using WAC (WebAssembly Composition) tool. Supports multi-profile builds,
+    dependency management, and memory-efficient symlinks.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.attr.components: Dict mapping component names to targets
+            - ctx.attr.composition: Inline WAC composition code (optional)
+            - ctx.file.composition_file: External .wac composition file (optional)
+            - ctx.attr.profile: Default build profile (debug/release/custom)
+            - ctx.attr.component_profiles: Per-component profile overrides
+            - ctx.attr.use_symlinks: Use symlinks instead of copying files
+
+    Returns:
+        List of providers:
+        - WacCompositionInfo: Composition metadata with component info
+        - DefaultInfo: Composed .wasm component file
+
+    The implementation:
+    1. Collects component files from WasmComponentInfo providers
+    2. Selects appropriate profile variant for each component
+    3. Creates or uses provided composition file
+    4. Sets up deps directory structure using wac_deps tool
+    5. Runs wac compose with:
+       - --dep overrides (package=path mapping)
+       - --no-validate (skip registry lookups)
+       - --import-dependencies (allow WASI imports)
+    6. Creates WacCompositionInfo provider
+
+    Profile Selection:
+        Each component can use a different build profile:
+        - Global profile: ctx.attr.profile (default: "release")
+        - Per-component override: ctx.attr.component_profiles["component_name"]
+        - Falls back to component's default if profile variant not available
+
+    Composition Auto-Generation:
+        If no composition is provided, generates simple composition that:
+        - Instantiates all components with WASI import pass-through
+        - Exports first component as main
+
+    Example:
+        wac_compose(
+            name = "full_system",
+            components = {
+                "frontend": ":frontend_component",
+                "backend": ":backend_component",
+            },
+            profile = "release",
+            component_profiles = {"frontend": "debug"},  # Override for debugging
+            composition = '''
+                let frontend = new frontend:component { ... };
+                let backend = new backend:component { ... };
+                export frontend as main;
+            ''',
+        )
+    """
 
     # Get toolchain
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
@@ -152,7 +209,26 @@ def _wac_compose_impl(ctx):
     ]
 
 def _generate_composition(components):
-    """Generate a simple WAC composition from components"""
+    """Generate a simple WAC composition from components.
+
+    Creates a basic composition file that instantiates all components
+    and exports the first one as main. Uses ... syntax to allow
+    WASI import pass-through.
+
+    Args:
+        components: Dict mapping component names to targets
+
+    Returns:
+        String: Generated WAC composition code
+
+    Generated composition structure:
+        let component1 = new component1:component { ... };
+        let component2 = new component2:component { ... };
+        export component1 as main;
+
+    The ... syntax allows missing WASI imports to be satisfied
+    automatically by the runtime environment.
+    """
 
     lines = []
     lines.append("// Auto-generated WAC composition")
@@ -178,7 +254,27 @@ def _generate_composition(components):
     return "\n".join(lines)
 
 def _generate_component_manifest(selected_components):
-    """Generate component manifest for WAC"""
+    """Generate component manifest for WAC composition metadata.
+
+    Creates a TOML-formatted manifest file describing all components
+    in the composition with their profiles and WIT packages.
+
+    Args:
+        selected_components: Dict mapping component names to component data
+                           (file, info, profile, wit_package)
+
+    Returns:
+        String: TOML-formatted component manifest
+
+    Manifest format:
+        [components]
+        [components.component_name]
+        path = "component_name.wasm"
+        profile = "release"
+        wit_package = "namespace:package@version"
+
+    Used for debugging and documentation of composition structure.
+    """
 
     lines = []
     lines.append("# Component manifest for WAC composition")
@@ -196,7 +292,26 @@ def _generate_component_manifest(selected_components):
     return "\n".join(lines)
 
 def _generate_profile_info(selected_components):
-    """Generate profile information for debugging"""
+    """Generate profile information for debugging composition builds.
+
+    Creates a human-readable summary of which profile variant was
+    selected for each component in the composition.
+
+    Args:
+        selected_components: Dict mapping component names to component data
+                           (file, info, profile, wit_package)
+
+    Returns:
+        String: Human-readable profile selection summary
+
+    Output format:
+        component_name:
+          profile: release
+          file: path/to/component_release.wasm
+
+    Useful for understanding which build variants were composed together
+    and troubleshooting profile selection issues.
+    """
 
     lines = []
     lines.append("# Profile selection information")

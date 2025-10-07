@@ -47,7 +47,10 @@ wkg_registry_config(
 # Enhanced registry configuration with advanced features
 wkg_registry_config(
     name = "production_registries",
-    cache_dir = "/tmp/wkg_cache",
+    # Note: cache_dir is optional. If needed, use a platform-agnostic path:
+    # - Linux/macOS: Use environment variable or absolute path
+    # - Windows: Use %TEMP% or absolute path (e.g., "C:/temp/wkg_cache")
+    # cache_dir = "/tmp/wkg_cache",  # Example - remove hardcoded path for cross-platform compatibility
     credential_files = [
         "docker:docker_config",
         "kubernetes:kubernetes",

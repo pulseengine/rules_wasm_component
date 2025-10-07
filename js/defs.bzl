@@ -44,7 +44,39 @@ load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 
 def _js_component_impl(ctx):
-    """Implementation of js_component rule"""
+    """Implementation of js_component rule for JavaScript/TypeScript components.
+
+    Compiles JavaScript or TypeScript source code into WebAssembly components
+    using jco (JavaScript Component Compiler). Handles package.json generation,
+    module resolution, and component creation.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.files.srcs: JavaScript/TypeScript source files
+            - ctx.file.wit: WIT interface definition file
+            - ctx.attr.entry_point: Main entry point file (default: "index.js")
+            - ctx.file.package_json: Optional package.json file
+            - ctx.attr.npm_dependencies: NPM dependencies to include
+            - ctx.attr.world: WIT world to target
+            - ctx.attr.optimize: Enable optimizations
+            - ctx.attr.minify: Minify generated code
+
+    Returns:
+        List of providers:
+        - WasmComponentInfo: Component metadata for JavaScript
+        - DefaultInfo: Component .wasm file
+
+    The implementation:
+    1. Sets up jco toolchain (jco, node, npm)
+    2. Creates or uses provided package.json
+    3. Creates temporary workspace with all source files
+    4. Runs jco componentize from workspace directory for proper module resolution
+    5. Creates WasmComponentInfo provider with JavaScript-specific metadata
+
+    Module Resolution:
+        jco requires running from the directory containing source files
+        to properly resolve ES6 module imports.
+    """
 
     # Get jco toolchain
     jco_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:jco_toolchain_type"]
@@ -276,7 +308,38 @@ js_component = rule(
 )
 
 def _jco_transpile_impl(ctx):
-    """Implementation of jco_transpile rule"""
+    """Implementation of jco_transpile rule for component-to-JavaScript conversion.
+
+    Transpiles a compiled WebAssembly component back to JavaScript bindings
+    for use in Node.js or browser environments. This is the reverse of
+    js_component - it takes a .wasm component and generates .js/.ts files.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.file.component: WebAssembly component file to transpile
+            - ctx.attr.name_override: Override component name in generated code
+            - ctx.attr.no_typescript: Disable TypeScript definition generation
+            - ctx.attr.instantiation: Component instantiation mode (async/sync)
+            - ctx.attr.map: Interface mappings for module resolution
+            - ctx.attr.world_name: Name for generated world interface
+
+    Returns:
+        List of providers:
+        - DefaultInfo: Generated transpiled JavaScript directory
+        - OutputGroupInfo: Organized output (transpiled group)
+
+    Generated output structure:
+        <name>_transpiled/
+            index.js              # Main entry point
+            types.d.ts           # TypeScript definitions (if enabled)
+            interfaces/          # Generated interface bindings
+            ...
+
+    Use cases:
+        - Creating JavaScript bindings for WASM components
+        - Integrating components into existing JS projects
+        - Generating TypeScript definitions for type safety
+    """
 
     # Get jco toolchain
     jco_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:jco_toolchain_type"]
@@ -372,7 +435,35 @@ jco_transpile = rule(
 )
 
 def _npm_install_impl(ctx):
-    """Implementation of npm_install rule for JavaScript components"""
+    """Implementation of npm_install rule for JavaScript component dependencies.
+
+    Installs NPM dependencies from a package.json file into a node_modules
+    directory for use in JavaScript component builds.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.file.package_json: package.json file with dependencies
+
+    Returns:
+        List of providers:
+        - DefaultInfo: node_modules directory with installed packages
+        - OutputGroupInfo: Organized output (node_modules group)
+
+    The implementation:
+    1. Creates temporary workspace
+    2. Copies package.json to workspace
+    3. Runs npm install from workspace
+    4. Copies resulting node_modules to output directory
+
+    Execution requirements:
+        - local: NPM install requires network access to fetch packages
+        - This is NOT hermetic but necessary for NPM ecosystem
+
+    Use cases:
+        - Installing dependencies for js_component builds
+        - Caching NPM packages in Bazel's output directory
+        - Managing JavaScript dependencies declaratively
+    """
 
     # Get jco toolchain
     jco_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:jco_toolchain_type"]

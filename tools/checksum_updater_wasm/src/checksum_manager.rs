@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-// use tokio::fs; // Native WASIP2 uses std::fs instead
+use tokio::fs;
 use tracing::{debug, info, warn};
 
 /// Tool information from the JSON registry

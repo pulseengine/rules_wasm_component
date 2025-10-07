@@ -3,7 +3,50 @@
 load("//providers:providers.bzl", "WitInfo")
 
 def _wit_library_impl(ctx):
-    """Implementation of wit_library rule"""
+    """Implementation of wit_library rule for WIT interface definitions.
+
+    Processes WIT (WebAssembly Interface Types) files and organizes them into
+    a proper directory structure with dependency resolution for use in component
+    builds and binding generation.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.files.srcs: WIT source files (.wit)
+            - ctx.attr.deps: WIT dependencies (other wit_library targets)
+            - ctx.attr.package_name: WIT package name (defaults to target name)
+            - ctx.attr.world: Optional world name to export
+            - ctx.attr.interfaces: List of interface names defined
+
+    Returns:
+        List of providers:
+        - WitInfo: WIT metadata including files, dependencies, and package info
+        - DefaultInfo: Organized WIT directory with deps/ structure
+
+    The implementation:
+    1. Collects all WIT files and transitive dependencies
+    2. Builds dependency mapping for deps/ directory structure
+    3. Creates deps.toml for wit-deps compatibility
+    4. Runs wit_structure tool to create proper directory layout:
+       - <name>_wit/
+           - *.wit (source files)
+           - deps/ (dependency WIT files)
+           - deps.toml (dependency metadata)
+    5. Optionally runs wit_dependency_analyzer for dependency suggestions
+    6. Returns WitInfo provider with package metadata
+
+    Directory Structure:
+        calculator_wit/
+            calculator.wit          # Main WIT file
+            deps/
+                wasi-cli/           # Dependency WIT files
+                    cli.wit
+                external-lib/
+                    types.wit
+            deps.toml              # Dependency configuration
+
+    The deps/ structure allows wit-bindgen and other tools to resolve
+    transitive WIT dependencies correctly.
+    """
 
     # Collect all WIT files
     wit_files = depset(ctx.files.srcs)

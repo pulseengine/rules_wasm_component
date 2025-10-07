@@ -54,7 +54,46 @@ load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
 
 def _cpp_component_impl(ctx):
-    """Implementation of cpp_component rule"""
+    """Implementation of cpp_component rule for C/C++ WebAssembly components.
+
+    Compiles C/C++ source code into a WebAssembly component using WASI SDK with
+    native Preview2 support, WIT binding generation, and component model integration.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.files.srcs: C/C++ source files to compile
+            - ctx.files.hdrs: Header files for the component
+            - ctx.attr.deps: Dependencies (cc_component_library and external libraries)
+            - ctx.file.wit: WIT interface definition file
+            - ctx.attr.world: WIT world to target
+            - ctx.attr.language: Either "c" or "cpp"
+            - ctx.attr.cxx_std: C++ standard (c++17/20/23)
+            - ctx.attr.enable_exceptions: Enable C++ exception handling
+            - ctx.attr.optimize: Enable optimizations (-O3, -flto)
+
+    Returns:
+        List of providers:
+        - WasmComponentInfo: Component metadata with language and toolchain info
+        - DefaultInfo: Component .wasm file and validation logs
+        - OutputGroupInfo: Organized outputs (bindings, wasm_module, validation)
+
+    The implementation follows these steps:
+    1. Generate C/C++ bindings from WIT using wit-bindgen
+    2. Set up compilation workspace with proper header staging
+    3. Compile WIT bindings separately (C compilation to avoid C++ flags)
+    4. Compile application sources with dependency headers and includes
+    5. Link everything together with C++ standard library (if needed)
+    6. Embed WIT metadata and create component using wasm-tools
+    7. Optionally validate the component against WIT specification
+
+    Key features:
+    - Cross-package header dependency resolution using CcInfo
+    - Proper staging of local vs external headers
+    - Support for modern C++ standards (C++17/20/23)
+    - Exception handling support (increases binary size)
+    - LTO optimization for size reduction
+    - WASI SDK Preview2 native compilation
+    """
 
     # Get C/C++ toolchain
     cpp_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:cpp_component_toolchain_type"]
@@ -543,7 +582,36 @@ cpp_component = rule(
 )
 
 def _cpp_wit_bindgen_impl(ctx):
-    """Implementation of cpp_wit_bindgen rule"""
+    """Implementation of cpp_wit_bindgen rule for standalone WIT binding generation.
+
+    Generates C/C++ bindings from WIT interface definitions without building
+    a complete component. Useful for creating reusable binding libraries.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.file.wit: WIT interface definition file
+            - ctx.attr.world: WIT world to generate bindings for
+            - ctx.attr.stubs_only: Generate only stub functions
+            - ctx.attr.string_encoding: String encoding (utf8/utf16/compact-utf16)
+
+    Returns:
+        List of providers:
+        - DefaultInfo: Generated bindings directory
+        - OutputGroupInfo: Organized output (bindings group)
+
+    Generated files include:
+    - <world>.h: Header file with interface declarations
+    - <world>.c: Implementation file with binding code
+    - <world>_component_type.o: Pre-compiled component type object
+
+    Example:
+        cpp_wit_bindgen(
+            name = "http_bindings",
+            wit = "http.wit",
+            world = "http-handler",
+            string_encoding = "utf8",
+        )
+    """
 
     # Get C/C++ toolchain
     cpp_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:cpp_component_toolchain_type"]
@@ -629,7 +697,49 @@ cpp_wit_bindgen = rule(
 )
 
 def _cc_component_library_impl(ctx):
-    """Implementation of cc_component_library rule"""
+    """Implementation of cc_component_library rule for reusable C/C++ component libraries.
+
+    Compiles C/C++ source files into a static library (.a) that can be linked
+    into WebAssembly components. Provides proper header staging and dependency
+    propagation through CcInfo provider.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.files.srcs: C/C++ source files to compile
+            - ctx.files.hdrs: Public header files
+            - ctx.attr.deps: Dependencies (other cc_component_library targets)
+            - ctx.attr.language: Either "c" or "cpp"
+            - ctx.attr.cxx_std: C++ standard for compilation
+            - ctx.attr.optimize: Enable optimizations
+            - ctx.attr.includes: Additional include directories
+
+    Returns:
+        List of providers:
+        - DefaultInfo: Static library file and public headers
+        - CcInfo: Compilation and linking contexts for transitive dependencies
+        - OutputGroupInfo: Organized outputs (library, objects, headers)
+
+    The implementation:
+    1. Sets up workspace with proper cross-package header staging
+    2. Compiles each source file to object file (.o)
+    3. Creates static library from object files using llvm-ar
+    4. Builds CcInfo with:
+       - Compilation context (headers + include paths)
+       - Linking context (static library for linking)
+    5. Propagates transitive dependencies correctly
+
+    CcInfo Provider Details:
+        compilation_context:
+            - headers: All headers (direct + transitive)
+            - includes: Include paths for compiler
+        linking_context:
+            - linker_inputs: Static library for final linking
+
+    Critical for cross-package dependencies:
+        - Stages local headers for relative includes
+        - Uses original paths for external library headers
+        - Propagates include paths transitively
+    """
 
     # Get C/C++ toolchain
     cpp_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:cpp_component_toolchain_type"]

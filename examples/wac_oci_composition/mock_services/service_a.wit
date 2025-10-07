@@ -1,0 +1,11 @@
+package test:service-a@1.0.0;
+
+/// Service A interface for composition testing
+interface storage {
+    store: func(key: string, value: string);
+    retrieve: func(key: string) -> option<string>;
+}
+
+world service-a {
+    export storage;
+}

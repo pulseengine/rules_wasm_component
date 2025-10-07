@@ -12,3 +12,4 @@ anyhow = "1.0"
 clap = { version = "4.0", features = ["derive"] }
 wasm-encoder = "0.220"
 wasmparser = "0.220"
+wit-bindgen = "0.46.0"

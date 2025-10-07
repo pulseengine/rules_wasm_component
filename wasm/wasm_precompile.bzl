@@ -3,7 +3,33 @@
 load("//providers:providers.bzl", "WasmComponentInfo", "WasmPrecompiledInfo")
 
 def _wasm_precompile_impl(ctx):
-    """Implementation of wasm_precompile rule"""
+    """Implementation of wasm_precompile rule for AOT compilation.
+
+    Compiles WebAssembly modules ahead-of-time using Wasmtime to produce optimized
+    native machine code (.cwasm files) for faster startup times. The compilation
+    process includes optimization, debug info control, and optional cross-compilation.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.file.wasm_file: Direct WASM file input (optional)
+            - ctx.attr.component: WasmComponent target providing WASM (optional)
+            - ctx.attr.optimization_level: Optimization level (0/1/2/s)
+            - ctx.attr.debug_info: Whether to include DWARF debug information
+            - ctx.attr.target_triple: Target architecture for cross-compilation
+
+    Returns:
+        List of providers:
+        - DefaultInfo: Contains the compiled .cwasm file
+        - WasmPrecompiledInfo: Metadata about the compilation (version, target, flags)
+        - OutputGroupInfo: Organized output groups for selective building
+
+    The implementation:
+    1. Validates input (either wasm_file or component must be provided)
+    2. Configures Wasmtime compilation with optimization and debug settings
+    3. Runs AOT compilation to produce .cwasm file
+    4. Creates compatibility hash for cache validation
+    5. Returns providers with compilation metadata
+    """
 
     # Get input WASM file
     if ctx.file.wasm_file:
@@ -134,6 +160,10 @@ wasm_precompile = rule(
             default = False,
             doc = "Include DWARF debug information (increases .cwasm size ~8x)",
         ),
+        "strip_symbols": attr.bool(
+            default = False,
+            doc = "Strip symbol tables to reduce size (note: currently ignored, kept for compatibility)",
+        ),
         "target_triple": attr.string(
             doc = "Target triple for cross-compilation (e.g., x86_64-unknown-linux-gnu)",
         ),
@@ -173,7 +203,39 @@ wasm_precompile = rule(
 )
 
 def _wasm_precompile_multi_impl(ctx):
-    """Implementation of wasm_precompile_multi rule for multiple target architectures"""
+    """Implementation of wasm_precompile_multi rule for multi-architecture AOT compilation.
+
+    Compiles a single WebAssembly component for multiple target architectures in parallel,
+    enabling efficient multi-platform deployment with a single build rule.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.attr.component: WasmComponent target to compile (required)
+            - ctx.attr.targets: Dict mapping target names to architecture triples
+                               e.g., {"linux_x64": "x86_64-unknown-linux-gnu"}
+            - ctx.attr.optimization_level: Optimization level applied to all targets
+            - ctx.attr.debug_info: Whether to include debug information
+
+    Returns:
+        List of providers:
+        - DefaultInfo: Contains all compiled .cwasm files for all targets
+        - OutputGroupInfo: Separate output groups for each target architecture
+                          plus an "all" group containing all outputs
+
+    The implementation:
+    1. Validates that a component target is provided
+    2. Iterates through each target architecture
+    3. For each target:
+       - Creates target-specific output file (name.target.cwasm)
+       - Runs Wasmtime compilation with --target flag
+       - Creates WasmPrecompiledInfo with target metadata
+    4. Organizes outputs into named groups for selective building
+
+    Example output files:
+        my_component_multi.linux_x64.cwasm
+        my_component_multi.linux_arm64.cwasm
+        my_component_multi.pulley64.cwasm
+    """
 
     # Get input component
     if ctx.attr.component:

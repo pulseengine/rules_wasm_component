@@ -39,7 +39,7 @@ wkg_registry_config(
 wkg_registry_config(
     name = "production_registries",
     default_registry = "github",
-    cache_dir = "/tmp/wkg_cache",
+    # cache_dir = "/path/to/cache",  # Optional: use platform-specific path if needed
     enable_mirror_fallback = True,
     timeout_seconds = 120,
     registries = [

@@ -3,7 +3,48 @@
 load("//providers:providers.bzl", "WacCompositionInfo", "WasmComponentInfo", "WasmComponentMetadataInfo", "WasmKeyInfo", "WasmMultiArchInfo", "WasmOciInfo", "WasmOciMetadataMappingInfo", "WasmRegistryInfo", "WasmSecurityPolicyInfo", "WasmSignatureInfo")
 
 def _wkg_fetch_impl(ctx):
-    """Implementation of wkg_fetch rule"""
+    """Implementation of wkg_fetch rule for WebAssembly package fetching.
+
+    Fetches WebAssembly component packages from registries using wkg (WebAssembly
+    Package Tool). Downloads components and their WIT interface definitions for
+    use in Bazel builds.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.attr.package: Package name to fetch (e.g., "wasi:http")
+            - ctx.attr.version: Package version (optional, defaults to latest)
+            - ctx.attr.registry: Registry URL (optional, uses default if not set)
+
+    Returns:
+        List of providers:
+        - DefaultInfo: Component .wasm file and WIT directory
+        - OutputGroupInfo: Organized outputs (component, wit groups)
+
+    The implementation:
+    1. Creates wkg configuration with registry URL (if specified)
+    2. Runs wkg get to fetch package@version
+    3. Uses sandbox-friendly cache directory
+    4. Extracts component and WIT files from fetched package
+    5. Uses file_ops tool for cross-platform file operations
+    6. Returns component file and WIT directory
+
+    Package Structure Assumptions:
+        Follows standard WebAssembly package layout:
+        - <package-name>.wasm: Component file
+        - wit/: WIT interface definitions directory
+
+    Example:
+        wkg_fetch(
+            name = "wasi_http",
+            package = "wasi:http",
+            version = "0.2.0",
+            registry = "https://registry.wasm.io",
+        )
+
+    Outputs:
+        wasi_http.wasm          # Component file
+        wasi_http_wit/          # WIT directory
+    """
 
     wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
     wkg = wkg_toolchain.wkg
@@ -143,7 +184,61 @@ wkg_fetch = rule(
 )
 
 def _wkg_lock_impl(ctx):
-    """Implementation of wkg_lock rule to generate lock files using wkg wit fetch"""
+    """Implementation of wkg_lock rule for dependency resolution and locking.
+
+    Generates lock files for WebAssembly package dependencies using wkg wit fetch.
+    Creates a wkg.lock file that pins exact versions of WIT dependencies for
+    reproducible builds.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.attr.package_name: WIT package name for this project
+            - ctx.attr.world_name: WIT world name
+            - ctx.attr.dependencies: List of WIT dependencies to resolve
+                                    Format: "namespace:package:version"
+            - ctx.attr.registry: Optional registry URL
+
+    Returns:
+        List of providers:
+        - DefaultInfo: Lock file and dependency directories
+        - OutputGroupInfo: Organized outputs (lock, deps, wit groups)
+
+    The implementation:
+    1. Generates temporary WIT file importing all dependencies
+    2. Creates wkg configuration (if registry specified)
+    3. Runs wkg wit fetch to resolve and fetch dependencies
+    4. Generates wkg.lock file with pinned versions
+    5. Copies dependencies and WIT files to output directories
+    6. Returns lock file and dependency artifacts
+
+    Dependency Format:
+        "namespace:package:version" → "import namespace:package@version;"
+        "namespace:package" → "import namespace:package;"
+
+    Generated WIT File:
+        package myproject;
+        world my-world {
+            import wasi:cli@0.2.0;
+            import namespace:package@1.0.0;
+        }
+
+    Example:
+        wkg_lock(
+            name = "deps_lock",
+            package_name = "myproject",
+            world_name = "app",
+            dependencies = [
+                "wasi:cli:0.2.0",
+                "wasi:http:0.2.0",
+            ],
+            registry = "https://registry.wasm.io",
+        )
+
+    Outputs:
+        wkg.lock                # Lock file with pinned versions
+        deps_lock_deps/         # Fetched dependency components
+        deps_lock_wit/          # WIT interface definitions
+    """
 
     wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
     wkg = wkg_toolchain.wkg

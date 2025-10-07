@@ -66,14 +66,12 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "service_a_component",
     srcs = ["src/service_a.rs"],
-    visibility = ["//examples/wac_oci_composition:__pkg__"],
     wit = ":service_a_interface",
 )
 
 rust_wasm_component_bindgen(
     name = "service_b_component",
     srcs = ["src/service_b.rs"],
-    visibility = ["//examples/wac_oci_composition:__pkg__"],
     wit = ":service_b_interface",
 )
 

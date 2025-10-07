@@ -1,0 +1,14 @@
+package test:service-b@1.0.0;
+
+use test:service-a/storage@1.0.0;
+
+/// Service B interface that depends on Service A
+interface api {
+    create-user: func(name: string, email: string) -> u32;
+    get-user: func(id: u32) -> option<string>;
+}
+
+world service-b {
+    import storage;
+    export api;
+}

@@ -4,7 +4,42 @@ load("//providers:providers.bzl", "WasmComponentInfo")
 load("//tools/bazel_helpers:wasm_tools_actions.bzl", "create_component_action")
 
 def _wasm_component_new_impl(ctx):
-    """Implementation of wasm_component_new rule"""
+    """Implementation of wasm_component_new rule for module-to-component conversion.
+
+    Converts a core WebAssembly module into a WebAssembly component using
+    wasm-tools component new. Optionally applies a WASI adapter for Preview1
+    compatibility.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.file.wasm_module: Core WASM module to convert (.wasm)
+            - ctx.file.adapter: Optional WASI adapter module for Preview1
+            - ctx.attr.options: Additional wasm-tools options
+
+    Returns:
+        List of providers:
+        - WasmComponentInfo: Component metadata
+        - DefaultInfo: Converted component .wasm file
+
+    The implementation:
+    1. Takes a core WASM module as input
+    2. Uses wasm-tools component new (via WASM Tools Integration Component)
+    3. Optionally applies WASI adapter for Preview1 → Preview2 compatibility
+    4. Creates WasmComponentInfo provider with conversion metadata
+
+    Use cases:
+        - Converting legacy WASM modules to components
+        - Adding component model wrapper to existing modules
+        - Applying WASI adapters for compatibility
+
+    Example:
+        # Convert a core module with WASI Preview1 adapter
+        wasm_component_new(
+            name = "legacy_component",
+            wasm_module = "legacy.wasm",
+            adapter = "@wasi_preview1_adapter//file",
+        )
+    """
 
     # Input and output files
     wasm_module = ctx.file.wasm_module
