@@ -13,6 +13,7 @@ type Dependency struct {
 	PackageName string   `json:"package_name"`
 	SimpleName  string   `json:"simple_name"`
 	WitFiles    []string `json:"wit_files"`
+	OutputDir   string   `json:"output_dir"` // Path to the dependency's output directory (e.g., bazel-bin/external/.../cli_wit)
 }
 
 type Config struct {
@@ -88,6 +89,17 @@ func createWitStructure(config *Config) error {
 					return fmt.Errorf("copying dependency file %s: %w", witFile, err)
 				}
 			}
+
+			// Copy transitive deps/ directory if it exists in the dependency's output
+			if dep.OutputDir != "" {
+				depDepsDir := filepath.Join(dep.OutputDir, "deps")
+				if _, err := os.Stat(depDepsDir); err == nil {
+					// Copy all subdirectories from the dependency's deps/ to our deps/
+					if err := copyDirRecursive(depDepsDir, depsDir); err != nil {
+						return fmt.Errorf("copying transitive deps from %s: %w", depDepsDir, err)
+					}
+				}
+			}
 		}
 	}
 
@@ -117,4 +129,36 @@ func copyFile(src, dst string) error {
 
 	_, err = io.Copy(dstFile, srcFile)
 	return err
+}
+
+// copyDirRecursive copies all subdirectories and files from src to dst
+// It merges content, so if a directory already exists in dst, it adds files to it
+func copyDirRecursive(src, dst string) error {
+	entries, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			// Create directory if it doesn't exist
+			if err := os.MkdirAll(dstPath, 0755); err != nil {
+				return err
+			}
+			// Recursively copy directory contents
+			if err := copyDirRecursive(srcPath, dstPath); err != nil {
+				return err
+			}
+		} else {
+			// Copy file
+			if err := copyFile(srcPath, dstPath); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

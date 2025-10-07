@@ -7,6 +7,19 @@ interface calculator {
     divide: func(a: f64, b: f64) -> f64;
 }
 
+/// Reactor world - WASI imports required by TinyGo runtime
+/// TinyGo's Go runtime requires these even for reactor components (empty main())
+/// This is a TinyGo architecture requirement, not a Component Model limitation
 world calculator-world {
+    // TinyGo runtime requires these WASI interfaces
+    import wasi:io/streams@0.2.0;
+    import wasi:cli/stdout@0.2.0;
+    import wasi:cli/stderr@0.2.0;
+    import wasi:cli/stdin@0.2.0;
+    import wasi:clocks/wall-clock@0.2.0;
+    import wasi:filesystem/types@0.2.0;
+    import wasi:filesystem/preopens@0.2.0;
+    import wasi:random/random@0.2.0;
+
     export calculator;
 }

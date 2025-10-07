@@ -66,7 +66,7 @@ register_toolchains("@go_toolchains//:all")
 # WASI WIT interface definitions
 wasi_wit_ext = use_extension("//wasm:extensions.bzl", "wasi_wit")
 wasi_wit_ext.init()
-use_repo(wasi_wit_ext, "wasi_cli", "wasi_cli_v020", "wasi_clocks", "wasi_clocks_v020", "wasi_filesystem", "wasi_http", "wasi_io", "wasi_io_v020", "wasi_nn", "wasi_nn_v0_2_0_rc_2024_06_25", "wasi_nn_v0_2_0_rc_2024_08_19", "wasi_random", "wasi_sockets")  # Complete WASI ecosystem (0.2.3 + 0.2.0 + all NN versions)
+use_repo(wasi_wit_ext, "wasi_cli", "wasi_cli_v020", "wasi_clocks", "wasi_clocks_v020", "wasi_filesystem", "wasi_filesystem_v020", "wasi_http", "wasi_io", "wasi_io_v020", "wasi_nn", "wasi_nn_v0_2_0_rc_2024_06_25", "wasi_nn_v0_2_0_rc_2024_08_19", "wasi_random", "wasi_random_v020", "wasi_sockets", "wasi_sockets_v020")  # Complete WASI ecosystem (0.2.3 + 0.2.0 + all NN versions)
 
 # WebAssembly toolchains
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")

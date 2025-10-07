@@ -394,18 +394,23 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
 
     # CRITICAL: We DO need WIT flags to tell TinyGo to generate custom WIT exports
     # Without these flags, TinyGo only generates WASI CLI interfaces, not our calculator functions
-    # The issue was with WASI component wrapping, not with WIT export generation
+    # FIX: Use single-dash flags as TinyGo expects: -wit-package and -wit-world (not double-dash)
+    # FIX: Pass the full WIT directory (with deps/) instead of just the file basename
     if ctx.attr.wit and ctx.attr.world:
-        wit_info = ctx.attr.wit[WitInfo]
-        wit_files = wit_info.wit_files.to_list()
-        if wit_files:
-            # TinyGo expects WIT package path and world name for WIT export generation
-            # Since TinyGo executes from the workspace directory, use relative path
-            wit_relative_path = "wit/" + wit_files[0].basename
+        # Get the WIT library directory that contains the full structure with deps/
+        wit_library_dir = None
+        for file in ctx.attr.wit[DefaultInfo].files.to_list():
+            if file.is_directory:
+                wit_library_dir = file
+                break
+
+        if wit_library_dir:
+            # TinyGo expects WIT package directory path for dependency resolution
+            # The wit_library rule creates a directory with proper deps/ structure
             tinygo_args.extend([
-                "--wit-package",
-                wit_relative_path,
-                "--wit-world",
+                "-wit-package",
+                wit_library_dir.path,
+                "-wit-world",
                 ctx.attr.world,
             ])
 
@@ -511,6 +516,11 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
     if ctx.attr.wit:
         wit_info = ctx.attr.wit[WitInfo]
         inputs.extend(wit_info.wit_files.to_list())
+        # Also include the WIT library directory (with deps/) for dependency resolution
+        for file in ctx.attr.wit[DefaultInfo].files.to_list():
+            if file.is_directory:
+                inputs.append(file)
+                break
 
     # CRITICAL FIX: TinyGo needs absolute paths for Go binary
     # Create a wrapper script that sets up the environment with absolute paths
@@ -551,15 +561,26 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         "",
     ])
 
-    # Add the TinyGo command with arguments, adjusting output path to be absolute
+    # Add the TinyGo command with arguments, adjusting paths to be absolute
     tinygo_cmd = "\"$EXECROOT/{}\"".format(tinygo.path) if not tinygo.path.startswith("/") else "\"{}\"".format(tinygo.path)
 
-    # Adjust the output path to be absolute since we're changing directories
+    # Get the WIT library directory path for adjustment
+    wit_library_path = None
+    if ctx.attr.wit and ctx.attr.world:
+        for file in ctx.attr.wit[DefaultInfo].files.to_list():
+            if file.is_directory:
+                wit_library_path = file.path
+                break
+
+    # Adjust paths to be absolute since we're changing directories
     adjusted_args = []
     for arg in tinygo_args:
         if arg == wasm_module.path:
             # Make output path absolute
             adjusted_args.append("\"$EXECROOT/{}\"".format(wasm_module.path))
+        elif wit_library_path and arg == wit_library_path:
+            # Make WIT package path absolute
+            adjusted_args.append("\"$EXECROOT/{}\"".format(wit_library_path))
         else:
             adjusted_args.append("\"%s\"" % arg)
 

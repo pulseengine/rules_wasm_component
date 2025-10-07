@@ -46,10 +46,19 @@ def _wit_library_impl(ctx):
 
         # Convert package name to directory name: external:lib@1.0.0 -> external-lib
         simple_name = dep_info.package_name.split("@")[0].replace(":", "-")
+
+        # Get the output directory from the dependency (first file in DefaultInfo)
+        output_dir = ""
+        dep_files = dep[DefaultInfo].files.to_list()
+        if dep_files:
+            # The first file should be the directory output (e.g., cli_wit)
+            output_dir = dep_files[0].path
+
         dep_info_list.append({
             "package_name": dep_info.package_name,
             "simple_name": simple_name,
             "wit_files": [f.path for f in dep_info.wit_files.to_list()],
+            "output_dir": output_dir,
         })
 
     # Create deps.toml content for wit-deps tool compatibility (not required by wit-bindgen)
@@ -104,12 +113,17 @@ def _wit_library_impl(ctx):
             # Note: This analysis runs but doesn't fail the build - it generates suggestions
         )
 
+    # Collect dependency output directories for transitive deps copying
+    dep_outputs = []
+    for dep in ctx.attr.deps:
+        dep_outputs.extend(dep[DefaultInfo].files.to_list())
+
     # Use custom tool instead of shell commands - this is the Bazel-native way
     ctx.actions.run(
         executable = ctx.executable._wit_structure_tool,
         arguments = [config_file.path],
         inputs = depset(
-            direct = [config_file] + ctx.files.srcs,
+            direct = [config_file] + ctx.files.srcs + dep_outputs,
             transitive = [dep[WitInfo].wit_files for dep in ctx.attr.deps],
         ),
         outputs = [out_dir],
