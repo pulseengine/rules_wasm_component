@@ -3,6 +3,7 @@ package main
 import (
 	// The generated bindings will be at this path
 	"example.com/calculator/example/calculator/calculator"
+	"go.bytecodealliance.org/cm"
 )
 
 // Initialize the calculator component exports with generated bindings
@@ -20,12 +21,20 @@ func init() {
 		return a * b
 	}
 
-	calculator.Exports.Divide = func(a, b float64) float64 {
+	calculator.Exports.Divide = func(a, b float64) calculator.CalculationResult {
 		if b == 0 {
-			// Return NaN for division by zero
-			return 0.0 / 0.0
+			return calculator.CalculationResult{
+				Success: false,
+				Error:   cm.Some("division by zero"),
+				Value:   cm.None[float64](),
+			}
 		}
-		return a / b
+		result := a / b
+		return calculator.CalculationResult{
+			Success: true,
+			Error:   cm.None[string](),
+			Value:   cm.Some(result),
+		}
 	}
 
 	calculator.Exports.Calculate = func(operation calculator.Operation) calculator.CalculationResult {

@@ -107,6 +107,90 @@ go_wasm_component(
 - **Composability**: Link multiple components together
 - **Language Interop**: Call between Go, Rust, C++, JavaScript components
 
+## TinyGo WASI Runtime Requirement
+
+### Why TinyGo Components Always Need WASI
+
+Unlike C/C++ or Rust, **TinyGo reactor components (even with empty `main()`) require WASI imports**. This is due to TinyGo's Go runtime architecture, not a Component Model limitation.
+
+**TinyGo Runtime Architecture:**
+- TinyGo's Go runtime is built on WASI primitives for system operations
+- Even reactor components with `func main() {}` trigger runtime initialization
+- Runtime initialization performs memory management, goroutine setup, and I/O configuration
+- This is an architectural decision in TinyGo's design
+
+**Required WASI Imports:**
+
+All TinyGo components (both command and reactor) require these WASI Preview 2 interfaces:
+
+```wit
+world tinygo-component {
+    // I/O streams for runtime initialization
+    import wasi:io/streams@0.2.0;
+
+    // CLI interfaces for stdout/stderr/stdin
+    import wasi:cli/stdout@0.2.0;
+    import wasi:cli/stderr@0.2.0;
+    import wasi:cli/stdin@0.2.0;
+
+    // Clock for time operations (time.Now(), etc.)
+    import wasi:clocks/wall-clock@0.2.0;
+
+    // Filesystem for runtime initialization
+    import wasi:filesystem/types@0.2.0;
+    import wasi:filesystem/preopens@0.2.0;
+
+    // Your component's exports
+    export my-interface;
+}
+```
+
+**Contrast with Other Languages:**
+
+| Language | Pure Reactor (No WASI) | Why? |
+|----------|------------------------|------|
+| C/C++    | ✅ Possible | Can compile with `-nostdlib`, no runtime dependencies |
+| Rust     | ✅ Possible | `#![no_std]` removes runtime, pure library mode |
+| **TinyGo** | ❌ Not Possible | Runtime always initializes with WASI dependencies |
+
+**What TinyGo's Compiler Generates:**
+
+Even for a minimal reactor component:
+```go
+package main
+
+func main() {}  // Empty, reactor mode
+
+//export my_function
+func my_function() int32 {
+    return 42
+}
+```
+
+The TinyGo compiler still generates:
+1. Runtime initialization code that calls WASI filesystem APIs
+2. I/O stream setup for panic/error handling
+3. Clock initialization for time operations
+4. Memory allocator setup using WASI primitives
+
+**Practical Implications:**
+
+- **Component Composition**: Your Go component will have WASI import requirements
+- **Host Requirements**: The runtime (wasmtime, wasmer) must provide WASI Preview 2
+- **Performance**: The imports are lightweight and don't impact performance significantly
+- **Deployment**: This is transparent in most scenarios - modern runtimes provide WASI by default
+
+**No Workarounds Available:**
+
+There are no practical workarounds. TinyGo components always require WASI. However:
+- Most component hosts (wasmtime, wasmer, etc.) provide WASI Preview 2 by default
+- The WASI overhead is minimal and doesn't affect component composability
+- This is a known and accepted characteristic of TinyGo's design
+
+**Upstream Tracking:**
+
+See [TinyGo Issue #2703](https://github.com/tinygo-org/tinygo/issues/2703) for discussions about making the runtime more modular.
+
 ## Testing Components
 
 ```bash

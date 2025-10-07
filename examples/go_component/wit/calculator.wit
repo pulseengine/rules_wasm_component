@@ -36,8 +36,19 @@ interface calculator {
 }
 
 world calculator-world {
-    /// Import WASI interfaces required by TinyGo stdlib
+    /// Import WASI interfaces required by TinyGo runtime
+    /// TinyGo's Go runtime requires these even for reactor components
+    /// This is a TinyGo architecture requirement, not a Component Model limitation
     import wasi:io/streams@0.2.0;
+    import wasi:cli/stdout@0.2.0;
+    import wasi:cli/stderr@0.2.0;
+    import wasi:cli/stdin@0.2.0;
+    import wasi:cli/environment@0.2.0;
+    import wasi:clocks/wall-clock@0.2.0;
+    import wasi:clocks/monotonic-clock@0.2.0;
+    import wasi:filesystem/types@0.2.0;
+    import wasi:filesystem/preopens@0.2.0;
+    import wasi:random/random@0.2.0;
 
     export calculator;
 }

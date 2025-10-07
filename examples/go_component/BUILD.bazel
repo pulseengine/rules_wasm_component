@@ -17,14 +17,28 @@ wit_library(
     name = "calculator_wit",
     srcs = ["wit/calculator.wit"],
     world = "calculator-world",
-    deps = ["@wasi_io_v020//:streams"],  # Add WASI IO 0.2.0 dependency required by TinyGo
+    deps = [
+        "@wasi_io_v020//:streams",
+        "@wasi_cli_v020//:cli",
+        "@wasi_clocks_v020//:clocks",
+        "@wasi_filesystem_v020//:filesystem",
+        "@wasi_random_v020//:random",
+    ],
 )
 
-# Simple calculator WIT - pure interface, TinyGo handles WASI internally
+# Simple calculator WIT - reactor mode with TinyGo-required WASI imports
+# TinyGo runtime needs these even for empty main() reactor components
 wit_library(
     name = "simple_calculator_wit",
     srcs = ["wit/simple-calculator.wit"],
     world = "calculator-world",
+    deps = [
+        "@wasi_io_v020//:streams",
+        "@wasi_cli_v020//:cli",
+        "@wasi_clocks_v020//:clocks",
+        "@wasi_filesystem_v020//:filesystem",
+        "@wasi_random_v020//:random",
+    ],
 )
 
 # WIT library definitions for HTTP service interface
@@ -175,4 +189,16 @@ go_wasm_component(
     go_sum = "go.sum",
     optimization = "debug",
     world = "wasi:cli/command",
+)
+
+# Pure reactor component - NO main() function, NO WASI imports
+# This demonstrates the proper way to build Go library components
+go_wasm_component(
+    name = "calculator_reactor",
+    srcs = ["calculator_reactor.go"],
+    go_mod = "go.mod",
+    go_sum = "go.sum",
+    optimization = "release",
+    wit = ":simple_calculator_wit",
+    world = "calculator-world",
 )

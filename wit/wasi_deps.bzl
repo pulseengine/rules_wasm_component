@@ -55,7 +55,13 @@ wit_library(
     srcs = glob(["wit/*.wit"]),
     package_name = "wasi:cli@0.2.0",
     interfaces = ["environment", "exit", "stdin", "stdout", "stderr", "terminal-input", "terminal-output", "terminal-stdin", "terminal-stdout", "terminal-stderr"],
-    deps = ["@wasi_io_v020//:streams"],
+    deps = [
+        "@wasi_io_v020//:streams",
+        "@wasi_clocks_v020//:clocks",
+        "@wasi_filesystem_v020//:filesystem",
+        "@wasi_sockets_v020//:sockets",
+        "@wasi_random_v020//:random",
+    ],
     visibility = ["//visibility:public"],
 )
 """,
@@ -75,6 +81,65 @@ wit_library(
     srcs = glob(["wit/*.wit"]),
     package_name = "wasi:clocks@0.2.0",
     interfaces = ["wall-clock", "monotonic-clock"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Filesystem interfaces v0.2.0
+    http_archive(
+        name = "wasi_filesystem_v020",
+        urls = ["https://github.com/WebAssembly/wasi-filesystem/archive/refs/tags/v0.2.0.tar.gz"],
+        sha256 = "862cd22175b488c77fc89c2d4d20b7df7f854f834fd6e39d4e216ac7eeaff9df",
+        strip_prefix = "wasi-filesystem-0.2.0",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "filesystem",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:filesystem@0.2.0",
+    interfaces = ["types", "preopens"],
+    deps = ["@wasi_io_v020//:streams", "@wasi_clocks_v020//:clocks"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Sockets interfaces v0.2.0
+    http_archive(
+        name = "wasi_sockets_v020",
+        urls = ["https://github.com/WebAssembly/wasi-sockets/archive/refs/tags/v0.2.0.tar.gz"],
+        sha256 = "472c06de15ca9411cced4e4008a024b824e68229a8f4bf0714751073c306c87b",
+        strip_prefix = "wasi-sockets-0.2.0",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "sockets",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:sockets@0.2.0",
+    interfaces = ["network", "udp", "tcp", "udp-create-socket", "tcp-create-socket", "instance-network", "ip-name-lookup"],
+    deps = ["@wasi_io_v020//:streams"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Random interfaces v0.2.0
+    http_archive(
+        name = "wasi_random_v020",
+        urls = ["https://github.com/WebAssembly/wasi-random/archive/refs/tags/v0.2.0.tar.gz"],
+        sha256 = "821b6851ed049d0586817c043693809bb263d35d6b1c991167212dae21f64b2f",
+        strip_prefix = "wasi-random-0.2.0",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "random",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:random@0.2.0",
+    interfaces = ["random", "insecure", "insecure-seed"],
     visibility = ["//visibility:public"],
 )
 """,
