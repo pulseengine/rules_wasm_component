@@ -165,7 +165,7 @@ wkg_registry_config(
 ```bazel
 wkg_registry_config(
     name = "production_registries",
-    cache_dir = "/tmp/wkg_cache",
+    # cache_dir = "/path/to/cache",  # Optional: use platform-specific path if needed
     default_registry = "github",
     enable_mirror_fallback = True,
     registries = [

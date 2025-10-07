@@ -204,7 +204,7 @@ async fn update_all_tools(
     info!("Starting update for all tools");
 
     let manager = ChecksumManager::new().await?;
-    let mut engine = UpdateEngine::new(manager);
+    let engine = UpdateEngine::new(manager);
 
     let all_tools = engine.list_available_tools().await?;
     info!("Found {} tools to update", all_tools.len());
@@ -245,7 +245,7 @@ async fn update_specific_tools(
     info!("Starting update for tools: {:?}", tools);
 
     let manager = ChecksumManager::new().await?;
-    let mut engine = UpdateEngine::new(manager);
+    let engine = UpdateEngine::new(manager);
 
     let update_config = UpdateConfig {
         force,

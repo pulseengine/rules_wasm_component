@@ -76,7 +76,7 @@ impl ChecksumUpdater {
             .await
             .map_err(|e| format!("Failed to initialize checksum manager: {}", e))?;
 
-        let mut engine = UpdateEngine::new(manager);
+        let engine = UpdateEngine::new(manager);
 
         let update_config = update_engine::UpdateConfig {
             force: config.force,

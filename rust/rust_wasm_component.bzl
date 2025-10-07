@@ -7,7 +7,24 @@ load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action"
 load(":transitions.bzl", "wasm_transition")
 
 def _wasm_rust_shared_library_impl(ctx):
-    """Implementation that forwards a rust_shared_library with WASM transition applied"""
+    """Implementation that forwards a rust_shared_library with WASM transition applied.
+
+    This is an internal helper rule that applies the WASM transition to a rust_shared_library
+    target, ensuring it's compiled for the wasm32-wasip2 target instead of the host platform.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.attr.target: The rust_shared_library target to transition
+
+    Returns:
+        List of providers forwarded from the transitioned target:
+        - DefaultInfo: Files and runfiles from the WASM library
+        - RustInfo: Rust-specific compilation information (if available)
+
+    The transition mechanism allows Bazel to compile the same Rust code for both
+    the host platform (for tests and build tools) and WASM target (for components)
+    within the same build graph.
+    """
     target_info = ctx.attr.target[0]
 
     # Forward DefaultInfo and RustInfo
@@ -33,7 +50,31 @@ _wasm_rust_shared_library = rule(
 )
 
 def _rust_wasm_component_impl(ctx):
-    """Implementation of rust_wasm_component rule"""
+    """Implementation of rust_wasm_component rule for creating Rust WASM components.
+
+    Converts a Rust WASM module (compiled with wasm32-wasip2 target) into a proper
+    WebAssembly component, optionally validating it against a WIT specification.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.file.wasm_module: The compiled Rust WASM module file
+            - ctx.attr.wit: Optional WIT library for interface definitions
+            - ctx.attr.adapter: Optional WASI adapter module
+            - ctx.attr.component_type: Either "module" or "component"
+            - ctx.attr.validate_wit: Whether to validate against WIT specification
+
+    Returns:
+        List of providers:
+        - WasmComponentInfo: Component metadata including WIT info and exports
+        - DefaultInfo: The component .wasm file and optional validation logs
+        - OutputGroupInfo: Organized outputs (validation logs if enabled)
+
+    The implementation:
+    1. Checks if the WASM module is already a component (wasm32-wasip2 outputs components)
+    2. Extracts WIT metadata if a WIT library was provided
+    3. Optionally validates the component against WIT specification
+    4. Creates WasmComponentInfo provider with language-specific metadata
+    """
 
     # Get the compiled WASM module
     wasm_module = ctx.file.wasm_module
@@ -212,34 +253,64 @@ def rust_wasm_component(
         crate_root = None,
         edition = "2021",
         **kwargs):
-    """
-    Builds a Rust WebAssembly component.
+    """Builds a Rust WebAssembly component with multi-profile support.
 
-    This macro combines rust_library with WASM component conversion.
+    This macro is the primary entry point for creating Rust-based WASM components.
+    It handles the complete build pipeline: Rust compilation, WASM transition,
+    component conversion, and optional WIT validation. Supports building multiple
+    profiles (debug/release/custom) in a single invocation.
 
     Args:
-        name: Target name
-        srcs: Rust source files
-        deps: Rust dependencies
-        wit: WIT library for binding generation
-        adapter: Optional WASI adapter
-        crate_features: Rust crate features to enable
-        rustc_flags: Additional rustc flags
-        profiles: List of build profiles to create ["debug", "release", "custom"]
-        visibility: Target visibility
-        edition: Rust edition (default: "2021")
-        **kwargs: Additional arguments passed to rust_library
+        name: Target name for the component (default profile will use this name)
+        srcs: Rust source files (.rs) to compile
+        deps: Rust dependencies (crate dependencies and wit_bindgen outputs)
+              Note: WIT binding deps should end with "_bindings" for proper transition
+        wit: WIT library target for interface definitions (optional)
+        adapter: Optional WASI adapter module (typically not needed for wasip2)
+        crate_features: Rust crate features to enable (e.g., ["serde", "std"])
+        rustc_flags: Additional rustc compiler flags
+        profiles: List of build profiles to create:
+                 - "debug": opt-level=1, debug=true, strip=false
+                 - "release": opt-level=s, debug=false, strip=true (size-optimized)
+                 - "custom": opt-level=2, debug=true, strip=false
+        validate_wit: Whether to validate component against WIT specification
+        visibility: Target visibility (standard Bazel visibility)
+        crate_root: Optional custom crate root file (defaults to src/lib.rs)
+        edition: Rust edition to use (default: "2021")
+        **kwargs: Additional arguments forwarded to rust_shared_library
+
+    Generated Targets:
+        - <name>: Main component (uses default or first profile)
+        - <name>_<profile>: Profile-specific components (e.g., my_component_debug)
+        - <name>_all_profiles: Filegroup containing all profile variants
+        - <name>_wasm_lib_<profile>: Intermediate WASM libraries (private)
 
     Example:
         rust_wasm_component(
-            name = "my_component",
+            name = "calculator",
             srcs = ["src/lib.rs"],
-            wit = "//wit:my_interfaces",
-            profiles = ["debug", "release"],  # Build both variants
+            wit = "//wit:calculator-interface",
+            profiles = ["debug", "release"],
             deps = [
+                "//wit:calculator_bindings",  # Auto-transitioned for WASM
                 "@crates//:serde",
+                "@crates//:serde_json",
             ],
+            crate_features = ["std"],
+            edition = "2021",
         )
+
+    The macro creates:
+        calculator (release build)
+        calculator_debug
+        calculator_release
+        calculator_all_profiles (filegroup with both)
+
+    WIT Bindings Integration:
+        Dependencies ending with "_bindings" are automatically handled:
+        - Host builds use: <dep>_bindings_host
+        - WASM builds use: <dep>_bindings
+        This ensures proper platform-specific compilation.
     """
 
     # Profile configurations

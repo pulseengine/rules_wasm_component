@@ -4,7 +4,54 @@ load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmValid
 load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action", "validate_wasm_action")
 
 def _wasm_validate_impl(ctx):
-    """Implementation of wasm_validate rule"""
+    """Implementation of wasm_validate rule for WASM file validation and verification.
+
+    Validates WebAssembly files using wasm-tools and optionally verifies
+    cryptographic signatures using wasmsign2. Generates comprehensive validation
+    reports with component inspection and module information.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.file.wasm_file: Direct WASM file to validate (optional)
+            - ctx.attr.component: WasmComponent target to validate (optional)
+            - ctx.attr.verify_signature: Enable signature verification
+            - ctx.file.public_key: Public key file for signature verification
+            - ctx.file.signature_file: Detached signature file
+            - ctx.attr.signing_keys: Key pair provider for verification
+            - ctx.attr.github_account: GitHub account for public key retrieval
+
+    Returns:
+        List of providers:
+        - WasmValidationInfo: Validation results including errors and warnings
+        - DefaultInfo: Validation log file
+
+    The implementation follows a multi-step validation process:
+    1. Basic WASM validation (validate_wasm_action)
+    2. Component model detection (check_is_component_action)
+    3. Module information extraction (wasm-tools print --skeleton)
+    4. Optional signature verification (wasmsign2 verify)
+    5. Comprehensive report generation
+
+    Validation Report Sections:
+        - Basic Validation: WASM file validity check
+        - Component Inspection: Component model analysis
+        - Module Information: Skeleton and structure
+        - Signature Verification: Cryptographic verification (if enabled)
+
+    Signature Verification Methods:
+        - Public key file: Direct key file verification
+        - GitHub account: Retrieve keys from GitHub
+        - Signing keys provider: Use WasmKeyInfo provider
+        - Auto-detect: Check for embedded signatures
+
+    Example:
+        wasm_validate(
+            name = "validate_component",
+            component = ":my_component",
+            verify_signature = True,
+            signing_keys = ":my_keys",
+        )
+    """
 
     # Get toolchain (still needed for wasmsign2 and wasm-tools)
     toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]

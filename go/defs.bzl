@@ -38,7 +38,22 @@ load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_go_module_action")
 
 def _assert_valid_go_component_attrs(ctx):
-    """Validates go_wasm_component attributes for common mistakes and deprecated patterns"""
+    """Validates go_wasm_component attributes for common mistakes and deprecated patterns.
+
+    Performs comprehensive validation of rule inputs to provide early, helpful error
+    messages before compilation begins. Follows rules_rust validation patterns.
+
+    Args:
+        ctx: The rule context to validate
+
+    Validation checks:
+        - At least one Go source file is provided
+        - All source files have .go extension
+        - Optimization level is valid (debug/release/size)
+        - WIT world name format is correct (alphanumeric with -_:/)
+
+    Fails the build with descriptive error message if validation fails.
+    """
 
     # Validate sources
     if not ctx.files.srcs:
@@ -70,7 +85,18 @@ def _assert_valid_go_component_attrs(ctx):
             ))
 
 def _assert_valid_toolchain_setup(ctx, tinygo, wasm_tools):
-    """Validates that required toolchains are properly configured"""
+    """Validates that required toolchains are properly configured.
+
+    Ensures TinyGo and wasm-tools binaries are available and appear valid
+    before attempting compilation.
+
+    Args:
+        ctx: The rule context
+        tinygo: TinyGo executable file from toolchain
+        wasm_tools: wasm-tools executable file from toolchain
+
+    Fails the build if toolchain is misconfigured.
+    """
 
     if not tinygo:
         fail("TinyGo binary not found in toolchain for target '{}'".format(ctx.label))
@@ -85,7 +111,22 @@ def _assert_valid_toolchain_setup(ctx, tinygo, wasm_tools):
         ))
 
 def _build_tool_path_env(ctx, tool_paths):
-    """Build PATH environment variable from tool directories - THE BAZEL WAY"""
+    """Build PATH environment variable from tool directories - THE BAZEL WAY.
+
+    Creates a platform-specific PATH environment variable for hermetic builds
+    using Bazel's platform detection instead of shell commands.
+
+    Args:
+        ctx: The rule context (provides platform information)
+        tool_paths: List of directory paths to include in PATH
+
+    Returns:
+        String: Platform-specific PATH environment variable value
+                Windows: semicolon-separated with system paths
+                Unix: colon-separated with system paths
+
+    Uses ctx.configuration.host_path_separator to detect platform.
+    """
 
     # Detect platform - Bazel provides this via ctx
     is_windows = ctx.configuration.host_path_separator == ";"
@@ -102,7 +143,42 @@ def _build_tool_path_env(ctx, tool_paths):
         return ":".join(tool_paths) + ":/usr/bin:/bin"
 
 def _go_wasm_component_impl(ctx):
-    """Implementation of go_wasm_component rule - THE BAZEL WAY"""
+    """Implementation of go_wasm_component rule for TinyGo WebAssembly components.
+
+    Compiles Go source code to WebAssembly components using TinyGo v0.38.0+ with
+    native WASI Preview 2 support. Uses Bazel-native implementation without shell
+    scripts for cross-platform compatibility.
+
+    Args:
+        ctx: The rule context containing:
+            - ctx.files.srcs: Go source files (.go)
+            - ctx.file.go_mod: go.mod file for module definition
+            - ctx.file.go_sum: go.sum file for dependency checksums
+            - ctx.attr.wit: WIT library for interface bindings
+            - ctx.attr.world: WIT world name to implement
+            - ctx.attr.optimization: Optimization level (debug/release/size)
+            - ctx.attr.validate_wit: Enable WIT validation
+
+    Returns:
+        List of providers:
+        - WasmComponentInfo: Component metadata including TinyGo version
+        - DefaultInfo: Component .wasm file and validation logs
+        - OutputGroupInfo: Validation outputs if enabled
+
+    The implementation pipeline:
+    1. Validates attributes and toolchain setup
+    2. Prepares Go module structure with optional WIT bindings
+    3. Compiles with TinyGo to WASM module (wasip2 target)
+    4. Converts module to component (TinyGo outputs components directly)
+    5. Creates WasmComponentInfo provider
+    6. Optionally validates WIT interface compliance
+
+    TinyGo-specific features:
+        - Hermetic Go toolchain for dependency resolution
+        - Hermetic wasm-opt for optimization
+        - WIT integration via -wit-package and -wit-world flags
+        - Direct component output (no adapter needed)
+    """
 
     # Comprehensive validation following rules_rust patterns
     _assert_valid_go_component_attrs(ctx)
@@ -183,7 +259,32 @@ def _go_wasm_component_impl(ctx):
     ]
 
 def _generate_wit_bindings(ctx, tinygo_toolchain, wit_info):
-    """Generate Go bindings from WIT using wit-bindgen-go"""
+    """Generate Go bindings from WIT using wit-bindgen-go.
+
+    Creates Go source files from WIT interface definitions for use in Go components.
+    Requires wit-bindgen-go tool from the TinyGo toolchain.
+
+    Args:
+        ctx: The rule context
+        tinygo_toolchain: TinyGo toolchain containing wit-bindgen-go
+        wit_info: WitInfo provider from WIT library dependency
+
+    Returns:
+        DefaultInfo: Contains generated bindings directory with Go source files
+
+    Generated structure:
+        <name>_wit_bindings/
+            example/<package>/<interface>/
+                bindings.go
+                types.go
+                ...
+
+    The implementation:
+    1. Extracts WIT library directory from wit_info
+    2. Parses go.mod to determine Go module name
+    3. Runs wit-bindgen-go with proper package root
+    4. Returns bindings directory for inclusion in compilation
+    """
 
     # Get wit-bindgen-go tool from TinyGo toolchain
     wit_bindgen_go = tinygo_toolchain.wit_bindgen_go
@@ -308,7 +409,29 @@ require go.bytecodealliance.org/cm v0.3.0
     return DefaultInfo(files = depset([bindings_dir]))
 
 def _prepare_go_module(ctx, tinygo_toolchain):
-    """Prepare Go module structure with optional WIT binding generation"""
+    """Prepare Go module structure with optional WIT binding generation.
+
+    Sets up the Go module workspace including source files, go.mod, go.sum,
+    and optionally generated WIT bindings. Uses the File Operations Component
+    for cross-platform file management.
+
+    Args:
+        ctx: The rule context
+        tinygo_toolchain: TinyGo toolchain (provides wit-bindgen-go if available)
+
+    Returns:
+        File: Module directory ready for TinyGo compilation
+
+    Preparation steps:
+    1. Check if WIT binding generation is needed (wit + world + wit-bindgen-go)
+    2. Generate WIT bindings if conditions are met
+    3. Call setup_go_module_action to create workspace with:
+       - Go source files
+       - go.mod and go.sum
+       - WIT file (if using manual WIT approach)
+       - Generated bindings directory (if using wit-bindgen-go)
+       - Hermetic Go binary for dependency resolution
+    """
 
     # Get WIT files from providers
     wit_file = None
@@ -355,7 +478,36 @@ def _prepare_go_module(ctx, tinygo_toolchain):
     return module_dir
 
 def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, wasm_tools_toolchain, wasm_module, go_module_files):
-    """Compile Go sources to WASM module using TinyGo - THE BAZEL WAY"""
+    """Compile Go sources to WASM module using TinyGo - THE BAZEL WAY.
+
+    Runs TinyGo compiler with hermetic toolchain environment to produce
+    WebAssembly modules with WASI Preview 2 support.
+
+    Args:
+        ctx: The rule context
+        tinygo: TinyGo executable file
+        go_binary: Hermetic Go binary for dependency resolution
+        wasm_opt_binary: Hermetic wasm-opt for optimization
+        wasm_tools: wasm-tools executable
+        wasm_tools_toolchain: WASM tools toolchain
+        wasm_module: Output WASM module file to create
+        go_module_files: Prepared Go module directory
+
+    The implementation:
+    1. Creates temporary cache directory for TinyGo
+    2. Builds TinyGo command with:
+       - Target: wasip2
+       - Optimization: Based on profile (debug/release/size)
+       - WIT flags: -wit-package and -wit-world (if WIT provided)
+       - Output: WASM module file
+    3. Sets up hermetic environment:
+       - TINYGOROOT: Calculated from tinygo binary path
+       - GOROOT, GOBIN, GO: Hermetic Go toolchain
+       - PATH: Includes Go, wasm-opt, wasm-tools
+       - GOCACHE, HOME, TMPDIR: Bazel-managed temp directory
+    4. Creates wrapper script for absolute path resolution
+    5. Executes TinyGo compilation with local execution requirement
+    """
 
     # Validate inputs
     if not ctx.files.srcs:
@@ -608,7 +760,20 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
     )
 
 def _convert_to_component(ctx, wasm_tools, wasm_module, component_wasm):
-    """Convert WASM module to component using wasm-tools - THE BAZEL WAY"""
+    """Convert WASM module to component using wasm-tools - THE BAZEL WAY.
+
+    TinyGo with -target=wasip2 and WIT flags generates components directly,
+    so this function simply symlinks the output.
+
+    Args:
+        ctx: The rule context
+        wasm_tools: wasm-tools executable (unused but kept for consistency)
+        wasm_module: Source WASM module (already a component from TinyGo)
+        component_wasm: Target component file to create
+
+    Creates a symlink from component_wasm to wasm_module since conversion
+    is not needed for TinyGo wasip2 output.
+    """
 
     # TinyGo with wasip2 target and WIT flags generates components directly
     # So we just need to symlink the output

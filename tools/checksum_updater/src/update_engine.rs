@@ -12,6 +12,7 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
+use futures::stream::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -102,7 +103,7 @@ impl UpdateEngine {
 
     /// Update multiple tools
     pub async fn update_tools(
-        &mut self,
+        &self,
         tool_names: &[String],
         config: &UpdateConfig,
     ) -> Result<UpdateResults> {
@@ -113,18 +114,34 @@ impl UpdateEngine {
         let mut errors = Vec::new();
 
         if config.parallel {
-            // Process tools in parallel - note: sequential processing for now due to borrow checker
-            // TODO: Implement proper parallel processing with Arc<Mutex<Self>>
-            for tool_name in tool_names {
-                match self.update_single_tool_timeout(tool_name, config).await {
-                    Ok(Some(update)) => updates.push(update),
-                    Ok(None) => {} // No update needed
+            // Process tools in parallel using buffer_unordered
+            // This allows concurrent execution while maintaining back-pressure
+            let mut stream = futures::stream::iter(tool_names.iter())
+                .map(|tool_name| {
+                    let tool_name = tool_name.clone();
+                    let config = config.clone();
+                    async move {
+                        let result = self.update_single_tool_timeout(&tool_name, &config).await;
+                        (tool_name, result)
+                    }
+                })
+                .buffer_unordered(10); // Process up to 10 tools concurrently
+
+            // Collect results as they complete
+            while let Some((tool_name, result)) = stream.next().await {
+                match result {
+                    Ok(Some(update)) => {
+                        updates.push(update);
+                    }
+                    Ok(None) => {
+                        // No update needed
+                    }
                     Err(e) => {
                         if !config.skip_errors {
                             return Err(e);
                         }
                         errors.push(UpdateError {
-                            tool_name: tool_name.clone(),
+                            tool_name,
                             message: e.to_string(),
                             error_type: "processing".to_string(),
                         });
@@ -177,7 +194,7 @@ impl UpdateEngine {
 
     /// Update a single tool with timeout
     async fn update_single_tool_timeout(
-        &mut self,
+        &self,
         tool_name: &str,
         config: &UpdateConfig,
     ) -> Result<Option<ToolUpdateResult>> {
@@ -194,7 +211,7 @@ impl UpdateEngine {
 
     /// Update a single tool
     async fn update_single_tool(
-        &mut self,
+        &self,
         tool_name: &str,
         config: &UpdateConfig,
     ) -> Result<Option<ToolUpdateResult>> {
@@ -291,7 +308,7 @@ impl UpdateEngine {
 
     /// Download and validate checksums for all platforms
     async fn download_platform_checksums(
-        &mut self,
+        &self,
         tool_name: &str,
         version: &str,
         tool_config: &crate::tool_config::ToolConfigEntry,
@@ -323,7 +340,7 @@ impl UpdateEngine {
 
     /// Download and validate checksum for a single platform
     async fn download_platform_checksum(
-        &mut self,
+        &self,
         tool_name: &str,
         version: &str,
         platform: &str,

@@ -60,7 +60,10 @@ wkg_registry_config(
 # Advanced registry configuration with authentication
 wkg_registry_config(
     name = "production_registries",
-    cache_dir = "/tmp/wkg_cache",
+    # Note: cache_dir is optional. If needed, use a platform-agnostic path:
+    # - Linux/macOS: Use environment variable or absolute path
+    # - Windows: Use %TEMP% or absolute path (e.g., "C:/temp/wkg_cache")
+    # cache_dir = "/tmp/wkg_cache",  # Example - remove hardcoded path for cross-platform compatibility
     default_registry = "github",
     enable_mirror_fallback = True,
     registries = [
@@ -285,8 +288,8 @@ wac_compose_with_oci(
     """,
     local_components = {
         "frontend": ":frontend_component",
-        "mock_auth": "//test/integration:service_a_component",
-        "mock_data": "//test/integration:service_b_component",
+        "mock_auth": "//examples/wac_oci_composition/mock_services:service_a_component",
+        "mock_data": "//examples/wac_oci_composition/mock_services:service_b_component",
     },
     oci_components = {},  # No external dependencies for development
 )

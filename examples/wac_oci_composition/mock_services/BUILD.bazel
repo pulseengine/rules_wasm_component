@@ -1,0 +1,37 @@
+"""Mock services for WAC composition examples
+
+These mock services provide simple implementations for development and testing
+of WAC composition features without requiring external OCI registries.
+"""
+
+load("//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("//wit:defs.bzl", "wit_library")
+
+package(default_visibility = ["//examples/wac_oci_composition:__pkg__"])
+
+# Service A: Simple storage service
+wit_library(
+    name = "service_a_interface",
+    package_name = "test:service-a@1.0.0",
+    srcs = ["service_a.wit"],
+)
+
+rust_wasm_component_bindgen(
+    name = "service_a_component",
+    srcs = ["src/service_a.rs"],
+    wit = ":service_a_interface",
+)
+
+# Service B: User management service that depends on Service A
+wit_library(
+    name = "service_b_interface",
+    package_name = "test:service-b@1.0.0",
+    srcs = ["service_b.wit"],
+    deps = [":service_a_interface"],
+)
+
+rust_wasm_component_bindgen(
+    name = "service_b_component",
+    srcs = ["src/service_b.rs"],
+    wit = ":service_b_interface",
+)
