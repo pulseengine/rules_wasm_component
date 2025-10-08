@@ -224,7 +224,7 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
 /// Test configuration parsing and tool configuration
 #[tokio::test]
 async fn test_tool_configuration() -> Result<()> {
-    use checksum_updater_lib::tool_config::ToolConfig;
+    use checksum_updater::tool_config::ToolConfig;
 
     let tool_config = ToolConfig::default();
 
