@@ -102,13 +102,15 @@ jobs:
       - name: Build All Targets
         run: |
           # Build core working targets including JavaScript components
-          # Excluding Go calculator components (TinyGo export issues, see #80)
+          # Excluding Go components with manual exports (need wit-bindgen-go migration)
           bazel build --keep_going -- \
+            //examples/go_component:calculator_with_bindings \
             //examples/go_component:http_service_component \
             //examples/go_component:http_service_docs \
             //examples/go_component:multi_file_test \
             //examples/go_component:simple_test \
             //examples/go_component:simple_wasi \
+            //examples/go_component:calculator_wit \
             //examples/go_component:http_service_wit \
             //examples/basic/... \
             //examples/simple_module/... \
@@ -132,6 +134,13 @@ jobs:
             //test/integration/... \
             //docs-site/... \
             -//examples/cpp_component/multi_component_system:analytics_service \
+            -//examples/go_component:calculator_component \
+            -//examples/go_component:calculator_component_debug \
+            -//examples/go_component:calculator_simple \
+            -//examples/go_component:calculator_simple_binding \
+            -//examples/go_component:calculator_manual \
+            -//examples/go_component:calculator_docs \
+            -//examples/go_component:simple_calculator_wit \
             -//tools/checksum_updater_wasm/... \
             -//tools/ssh_keygen:ssh_keygen_test \
 
@@ -197,13 +206,15 @@ jobs:
       - name: Build All Targets
         run: |
           # Build core working targets using explicit inclusions
-          # Excluding Go calculator components (TinyGo export issues, see #80)
+          # Excluding Go components with manual exports (need wit-bindgen-go migration)
           bazel build --keep_going -- \
+            //examples/go_component:calculator_with_bindings \
             //examples/go_component:http_service_component \
             //examples/go_component:http_service_docs \
             //examples/go_component:multi_file_test \
             //examples/go_component:simple_test \
             //examples/go_component:simple_wasi \
+            //examples/go_component:calculator_wit \
             //examples/go_component:http_service_wit \
             //examples/basic/... \
             //examples/simple_module/... \
@@ -227,6 +238,13 @@ jobs:
             //test/integration/... \
             //docs-site/... \
             -//examples/cpp_component/multi_component_system:analytics_service \
+            -//examples/go_component:calculator_component \
+            -//examples/go_component:calculator_component_debug \
+            -//examples/go_component:calculator_simple \
+            -//examples/go_component:calculator_simple_binding \
+            -//examples/go_component:calculator_manual \
+            -//examples/go_component:calculator_docs \
+            -//examples/go_component:simple_calculator_wit \
             -//examples/simple_oci_test/... \
             -//examples/microservices_architecture/... \
             -//test/integration:validate_consumer_deps \
