@@ -1,8 +1,8 @@
 {
   "tool_name": "wkg",
   "github_repo": "bytecodealliance/wasm-pkg-tools",
-  "latest_version": "0.11.0",
-  "last_checked": "2025-08-15T16:00:00Z",
+  "latest_version": "0.12.0",
+  "last_checked": "2025-10-09T00:00:00.000000Z",
   "note": "Updated with real checksums from GitHub releases",
   "versions": {
     "0.11.0": {
@@ -26,6 +26,31 @@
         },
         "windows_amd64": {
           "sha256": "ac7b06b91ea80973432d97c4facd78e84187e4d65b42613374a78c4c584f773c",
+          "binary_name": "wkg-x86_64-pc-windows-gnu"
+        }
+      }
+    },
+    "0.12.0": {
+      "release_date": "2025-10-01",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "15ea13c8fc1d2fe93fcae01f3bdb6da6049e3edfce6a6c6e7ce9d3c620a6defd",
+          "binary_name": "wkg-x86_64-apple-darwin"
+        },
+        "darwin_arm64": {
+          "sha256": "0048768e7046a5df7d8512c4c87c56cbf66fc12fa8805e8fe967ef2118230f6f",
+          "binary_name": "wkg-aarch64-apple-darwin"
+        },
+        "linux_amd64": {
+          "sha256": "444e568ce8c60364b9887301ab6862ef382ac661a4b46c2f0d2f0f254bd4e9d4",
+          "binary_name": "wkg-x86_64-unknown-linux-gnu"
+        },
+        "linux_arm64": {
+          "sha256": "ebd6ffba1467c16dba83058a38e894496247fc58112efd87d2673b40fc406652",
+          "binary_name": "wkg-aarch64-unknown-linux-gnu"
+        },
+        "windows_amd64": {
+          "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
           "binary_name": "wkg-x86_64-pc-windows-gnu"
         }
       }
