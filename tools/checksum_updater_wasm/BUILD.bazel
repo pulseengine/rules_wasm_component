@@ -20,11 +20,20 @@ rust_wasm_component(
     srcs = ["src/main.rs"],
     crate_features = ["default"],
     deps = [
-        "@crates//:anyhow",  # ✅ Error handling
-        "@crates//:chrono",  # ✅ Date/time handling
-        "@crates//:clap",  # ✅ CLI parsing
-        "@crates//:hex",  # ✅ Hex encoding/decoding
-        "@crates//:serde_json",  # ✅ JSON serialization
+        "@crates//:anyhow",
+        "@crates//:chrono",
+        "@crates//:clap",
+        "@crates//:futures",
+        "@crates//:hex",
+        "@crates//:regex",
+        "@crates//:reqwest",
+        "@crates//:semver",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:sha2",
+        "@crates//:tokio",
+        "@crates//:tracing",
+        "@crates//:tracing-subscriber",
     ],
 )
 
@@ -57,11 +66,18 @@ rust_wasm_component_wizer(
     init_function_name = "wizer_initialize",
     profiles = ["release"],
     deps = [
-        "@crates//:anyhow",  # ✅ Error handling
-        "@crates//:chrono",  # ✅ Date/time handling
+        "@crates//:anyhow",
+        "@crates//:chrono",
         "@crates//:clap",
-        "@crates//:hex",  # ✅ Hex encoding/decoding
+        "@crates//:futures",
+        "@crates//:hex",
+        "@crates//:regex",
+        "@crates//:reqwest",
+        "@crates//:semver",
+        "@crates//:serde",
         "@crates//:serde_json",
+        "@crates//:sha2",
+        "@crates//:tokio",
         "@crates//:tracing",
         "@crates//:tracing-subscriber",
     ],
