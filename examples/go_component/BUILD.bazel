@@ -46,6 +46,13 @@ wit_library(
     name = "http_service_wit",
     srcs = ["wit/http-service.wit"],
     world = "http-service-world",
+    deps = [
+        "@wasi_io_v020//:streams",
+        "@wasi_cli_v020//:cli",
+        "@wasi_clocks_v020//:clocks",
+        "@wasi_filesystem_v020//:filesystem",
+        "@wasi_random_v020//:random",
+    ],
 )
 
 # Generate markdown documentation for calculator interface
@@ -65,7 +72,7 @@ go_wasm_component(
     name = "calculator_component",
     srcs = [
         "calculator.go",
-        "calculator_main.go",
+        "calculator_bindings.go",
         "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
@@ -122,19 +129,15 @@ go_wasm_component(
 )
 
 # Build HTTP service component using TinyGo + WASI Preview 2
-# Note: This is a simple WASI CLI component, not implementing WIT interfaces
 go_wasm_component(
     name = "http_service_component",
-    srcs = [
-        "bindings.go",
-        "handlers.go",
-        "service.go",
-    ],
+    srcs = ["http_service_bindings.go"],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     go_sum = "go.sum",
     optimization = "release",
-    world = "wasi:cli/command",
+    wit = ":http_service_wit",
+    world = "http-service-world",
 )
 
 # Debug version for development
@@ -142,14 +145,15 @@ go_wasm_component(
     name = "calculator_component_debug",
     srcs = [
         "calculator.go",
-        "calculator_manual.go",
+        "calculator_bindings.go",
         "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     go_sum = "go.sum",
     optimization = "debug",
-    world = "wasi:cli/command",
+    wit = ":calculator_wit",
+    world = "calculator-world",
 )
 
 # Multi-file test demonstrating TinyGo compilation with multiple Go source files
