@@ -124,10 +124,7 @@ jobs:
             //test/unit/... \
             //test/integration/... \
             //docs-site/... \
-            -//examples/cpp_component/multi_component_system:analytics_service \
             -//examples/go_component:calculator_simple \
-            -//tools/checksum_updater_wasm/... \
-            -//tools/ssh_keygen:ssh_keygen_test \
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/wkg/unit:smoke //test/js:test_hello_js_component_provides_info //test/js:test_calc_js_component_provides_info //test/js:test_npm_dependencies_installation
