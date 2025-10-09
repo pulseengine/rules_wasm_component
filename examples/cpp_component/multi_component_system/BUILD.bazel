@@ -37,7 +37,7 @@ wit_library(
 # Go analytics service component
 go_wasm_component(
     name = "analytics_service",
-    srcs = ["components/analytics_service.go"],
+    srcs = ["components/analytics_service_bindings.go"],
     go_mod = "go.mod",
     go_sum = "go.sum",
     visibility = ["//visibility:public"],
