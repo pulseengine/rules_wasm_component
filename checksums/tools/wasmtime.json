@@ -1,8 +1,8 @@
 {
   "tool_name": "wasmtime",
   "github_repo": "bytecodealliance/wasmtime",
-  "latest_version": "35.0.0",
-  "last_checked": "2025-08-02T04:35:39.086536Z",
+  "latest_version": "37.0.2",
+  "last_checked": "2025-10-09T00:00:00.000000Z",
   "versions": {
     "35.0.0": {
       "release_date": "2025-07-22",
@@ -51,6 +51,31 @@
         "linux_arm64": {
           "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
           "url_suffix": "aarch64-linux.tar.xz"
+        }
+      }
+    },
+    "37.0.2": {
+      "release_date": "2025-09-04",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "6bbc40d77e4779f711af60314b32c24371ffc9dbcb5d8b9961bd93ecd9e0f111",
+          "url_suffix": "x86_64-macos.tar.xz"
+        },
+        "darwin_arm64": {
+          "sha256": "369012921015d627c51fa9e1d1c5b7dff9b3d799a7ec5ce7d0b27bc40434e91c",
+          "url_suffix": "aarch64-macos.tar.xz"
+        },
+        "linux_amd64": {
+          "sha256": "a84fef229c2d11e3635ea369688971dc48abc0732f7b50b696699183043f962e",
+          "url_suffix": "x86_64-linux.tar.xz"
+        },
+        "linux_arm64": {
+          "sha256": "eb306a71e3ec232815326ca6354597b43c565b9ceda7d771529bfc4bd468dde9",
+          "url_suffix": "aarch64-linux.tar.xz"
+        },
+        "windows_amd64": {
+          "sha256": "9aaa2406c990e773cef8d90f409982fac28d3d330ad40a5fab1233b8c5d88795",
+          "url_suffix": "x86_64-windows.zip"
         }
       }
     }

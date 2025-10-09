@@ -49,7 +49,7 @@ rust.toolchain(
         "aarch64-apple-darwin",
         "x86_64-pc-windows-msvc",
     ],
-    versions = ["1.88.0"],
+    versions = ["1.90.0"],
 )
 use_repo(rust, "rust_toolchains")
 
@@ -58,7 +58,7 @@ register_toolchains("@rust_toolchains//:all")
 
 # Go toolchain setup
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.download(version = "1.25.0")
+go_sdk.download(version = "1.25.2")
 use_repo(go_sdk, "go_toolchains")
 
 register_toolchains("@go_toolchains//:all")
@@ -73,7 +73,7 @@ wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
     strategy = "download",  # Download strategy with improved error messages for signing
-    version = "1.235.0",
+    version = "1.240.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
@@ -84,7 +84,7 @@ wkg = use_extension("//wasm:extensions.bzl", "wkg")
 wkg.register(
     name = "wkg",
     strategy = "download",
-    version = "0.11.0",
+    version = "0.12.0",
 )
 use_repo(wkg, "wkg_toolchain")
 
@@ -141,7 +141,7 @@ wasmtime = use_extension("//wasm:extensions.bzl", "wasmtime")
 wasmtime.register(
     name = "wasmtime",
     strategy = "download",
-    version = "35.0.0",
+    version = "37.0.2",
 )
 use_repo(wasmtime, "wasmtime_toolchain")
 

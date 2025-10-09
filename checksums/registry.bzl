@@ -38,7 +38,7 @@ def _get_fallback_checksums(tool_name):
         "wasm-tools": {
             "tool_name": "wasm-tools",
             "github_repo": "bytecodealliance/wasm-tools",
-            "latest_version": "1.239.0",
+            "latest_version": "1.240.0",
             "versions": {
                 "1.235.0": {
                     "release_date": "2024-12-15",
@@ -103,6 +103,31 @@ def _get_fallback_checksums(tool_name):
                         },
                         "linux_arm64": {
                             "sha256": "54bb0fdad016a115bde8dd7d2cd63e88d0b136a44ab23ae9c3ff4d4d48d5fa4d",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                            "url_suffix": "x86_64-windows.tar.gz",
+                        },
+                    },
+                },
+                "1.240.0": {
+                    "release_date": "2025-10-08",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "8959eb9f494af13868af9e13e74e4fa0fa6c9306b492a9ce80f0e576eb10c0c6",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "ecdce0140b4b6394b4fa6deab53f19037ce08e8d618e6a7d108b455504ab03e7",
+                            "url_suffix": "aarch64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "b6ad301b8ac65e283703d1a5cf79280058a5f5699f8ff1fcaf66dbcf80a9efae",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "e3d497196bf99a31a62c885d2f5c3aa1e4d4a6bc02c1bff735ffa6a4c7aa9c2f",
                             "url_suffix": "aarch64-linux.tar.gz",
                         },
                         "windows_amd64": {
@@ -230,7 +255,7 @@ def _get_fallback_checksums(tool_name):
         "wkg": {
             "tool_name": "wkg",
             "github_repo": "bytecodealliance/wasm-pkg-tools",
-            "latest_version": "0.11.0",
+            "latest_version": "0.12.0",
             "versions": {
                 "0.11.0": {
                     "release_date": "2025-06-19",
@@ -257,12 +282,37 @@ def _get_fallback_checksums(tool_name):
                         },
                     },
                 },
+                "0.12.0": {
+                    "release_date": "2025-10-01",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "15ea13c8fc1d2fe93fcae01f3bdb6da6049e3edfce6a6c6e7ce9d3c620a6defd",
+                            "binary_name": "wkg-x86_64-apple-darwin",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "0048768e7046a5df7d8512c4c87c56cbf66fc12fa8805e8fe967ef2118230f6f",
+                            "binary_name": "wkg-aarch64-apple-darwin",
+                        },
+                        "linux_amd64": {
+                            "sha256": "444e568ce8c60364b9887301ab6862ef382ac661a4b46c2f0d2f0f254bd4e9d4",
+                            "binary_name": "wkg-x86_64-unknown-linux-gnu",
+                        },
+                        "linux_arm64": {
+                            "sha256": "ebd6ffba1467c16dba83058a38e894496247fc58112efd87d2673b40fc406652",
+                            "binary_name": "wkg-aarch64-unknown-linux-gnu",
+                        },
+                        "windows_amd64": {
+                            "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                            "binary_name": "wkg-x86_64-pc-windows-gnu",
+                        },
+                    },
+                },
             },
         },
         "wasmtime": {
             "tool_name": "wasmtime",
             "github_repo": "bytecodealliance/wasmtime",
-            "latest_version": "35.0.0",
+            "latest_version": "37.0.2",
             "versions": {
                 "35.0.0": {
                     "release_date": "2025-07-22",
@@ -285,6 +335,31 @@ def _get_fallback_checksums(tool_name):
                         },
                         "windows_amd64": {
                             "sha256": "cb4d9b788e81268edfb43d26c37dc4115060635ff4eceed16f4f9e6f331179b1",
+                            "url_suffix": "x86_64-windows.zip",
+                        },
+                    },
+                },
+                "37.0.2": {
+                    "release_date": "2025-09-04",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "6bbc40d77e4779f711af60314b32c24371ffc9dbcb5d8b9961bd93ecd9e0f111",
+                            "url_suffix": "x86_64-macos.tar.xz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "369012921015d627c51fa9e1d1c5b7dff9b3d799a7ec5ce7d0b27bc40434e91c",
+                            "url_suffix": "aarch64-macos.tar.xz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "a84fef229c2d11e3635ea369688971dc48abc0732f7b50b696699183043f962e",
+                            "url_suffix": "x86_64-linux.tar.xz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "eb306a71e3ec232815326ca6354597b43c565b9ceda7d771529bfc4bd468dde9",
+                            "url_suffix": "aarch64-linux.tar.xz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "9aaa2406c990e773cef8d90f409982fac28d3d330ad40a5fab1233b8c5d88795",
                             "url_suffix": "x86_64-windows.zip",
                         },
                     },
