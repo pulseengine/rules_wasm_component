@@ -129,12 +129,9 @@ jobs:
             //providers/... \
             //test/go/... \
             -//test/go:go_integration_tests \
-            -//test/go:test_calculator_component_provides_info \
             -//test/go:test_calculator_component_valid_wasm \
-            -//test/go:test_calculator_exports_verification \
-            -//test/go:test_debug_component_provides_info \
             -//test/go:test_debug_component_valid_wasm \
-            -//test/go:test_release_vs_debug_profiles \
+            -//test/go:test_http_service_exports_verification \
             //test/cpp/... \
             //test/unit/... \
             //test/integration/... \
@@ -239,12 +236,9 @@ jobs:
             //providers/... \
             //test/go/... \
             -//test/go:go_integration_tests \
-            -//test/go:test_calculator_component_provides_info \
             -//test/go:test_calculator_component_valid_wasm \
-            -//test/go:test_calculator_exports_verification \
-            -//test/go:test_debug_component_provides_info \
             -//test/go:test_debug_component_valid_wasm \
-            -//test/go:test_release_vs_debug_profiles \
+            -//test/go:test_http_service_exports_verification \
             //test/cpp/... \
             //test/unit/... \
             //test/integration/... \
