@@ -18,6 +18,13 @@ wit_library(
     package_name = "analytics:service",
     srcs = ["wit/analytics_service.wit"],
     world = "analytics-service",
+    deps = [
+        "@wasi_io_v020//:streams",
+        "@wasi_cli_v020//:cli",
+        "@wasi_clocks_v020//:clocks",
+        "@wasi_filesystem_v020//:filesystem",
+        "@wasi_random_v020//:random",
+    ],
 )
 
 wit_library(
@@ -32,6 +39,7 @@ go_wasm_component(
     name = "analytics_service",
     srcs = ["components/analytics_service.go"],
     go_mod = "go.mod",
+    go_sum = "go.sum",
     visibility = ["//visibility:public"],
     wit = ":analytics_service_wit",
     world = "analytics-service",
