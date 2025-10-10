@@ -107,6 +107,18 @@ pub extern "C" fn _start() {
     }
 }
 
+// Native binary entry point (for rust_binary target)
+#[cfg(not(target_arch = "wasm32"))]
+fn main() {
+    match run_component() {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("❌ Failed: {}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
 fn run_component() -> Result<()> {
     // Parse command line arguments
     let args = std::env::args().collect::<Vec<_>>();
