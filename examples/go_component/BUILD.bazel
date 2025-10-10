@@ -199,10 +199,14 @@ go_wasm_component(
 # This demonstrates the proper way to build Go library components
 go_wasm_component(
     name = "calculator_reactor",
-    srcs = ["calculator_reactor.go"],
+    srcs = [
+        "calculator.go",
+        "calculator_bindings.go",
+        "utils.go",
+    ],
     go_mod = "go.mod",
     go_sum = "go.sum",
     optimization = "release",
-    wit = ":simple_calculator_wit",
+    wit = ":calculator_wit",
     world = "calculator-world",
 )
