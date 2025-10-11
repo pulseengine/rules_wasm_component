@@ -297,9 +297,8 @@ func (r *FileOpsRunner) validateConfig() error {
 		return fmt.Errorf("workspace_dir cannot be empty")
 	}
 
-	if !filepath.IsAbs(r.config.WorkspaceDir) {
-		return fmt.Errorf("workspace_dir must be an absolute path: %s", r.config.WorkspaceDir)
-	}
+	// Note: In Bazel sandbox, paths may be relative to execution root
+	// Bazel handles path resolution, so we don't strictly require absolute paths
 
 	for i, op := range r.config.Operations {
 		switch op.Type {
@@ -307,9 +306,8 @@ func (r *FileOpsRunner) validateConfig() error {
 			if op.SrcPath == "" || op.DestPath == "" {
 				return fmt.Errorf("operation %d: copy_file requires src_path and dest_path", i)
 			}
-			if !filepath.IsAbs(op.SrcPath) {
-				return fmt.Errorf("operation %d: src_path must be absolute: %s", i, op.SrcPath)
-			}
+			// Note: src_path can be Bazel-relative (e.g., bazel-out/...)
+			// dest_path should be relative to workspace
 			if filepath.IsAbs(op.DestPath) {
 				return fmt.Errorf("operation %d: dest_path must be relative: %s", i, op.DestPath)
 			}
@@ -324,9 +322,8 @@ func (r *FileOpsRunner) validateConfig() error {
 			if op.SrcPath == "" || op.DestPath == "" {
 				return fmt.Errorf("operation %d: copy_directory_contents requires src_path and dest_path", i)
 			}
-			if !filepath.IsAbs(op.SrcPath) {
-				return fmt.Errorf("operation %d: src_path must be absolute: %s", i, op.SrcPath)
-			}
+			// Note: src_path can be Bazel-relative (e.g., bazel-out/...)
+			// dest_path should be relative to workspace
 			if filepath.IsAbs(op.DestPath) {
 				return fmt.Errorf("operation %d: dest_path must be relative: %s", i, op.DestPath)
 			}

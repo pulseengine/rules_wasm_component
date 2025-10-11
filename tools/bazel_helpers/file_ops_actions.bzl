@@ -147,27 +147,35 @@ def prepare_workspace_action(ctx, config):
     # Create workspace output directory
     workspace_dir = ctx.actions.declare_directory(config["work_dir"])
 
-    # HERMETIC APPROACH: Use a simple script that only uses POSIX commands available everywhere
-    # Create a minimal shell script that doesn't depend on system Python
-    workspace_script = ctx.actions.declare_file(ctx.label.name + "_workspace_setup.sh")
+    # Get the hermetic file operations tool from toolchain
+    file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
+    file_ops_tool = file_ops_toolchain.file_ops_component
 
-    # Collect all input files and their destinations
+    # Collect all input files and build operations list
     all_inputs = []
-    file_mappings = []
+    operations = []
 
     # Process source files
     for source_info in config.get("sources", []):
         src_file = source_info["source"]
         dest_name = source_info.get("destination") or src_file.basename
         all_inputs.append(src_file)
-        file_mappings.append((src_file, dest_name))
+        operations.append({
+            "type": "copy_file",
+            "src_path": src_file.path,
+            "dest_path": dest_name,
+        })
 
     # Process header files
     for header_info in config.get("headers", []):
         hdr_file = header_info["source"]
         dest_name = header_info.get("destination") or hdr_file.basename
         all_inputs.append(hdr_file)
-        file_mappings.append((hdr_file, dest_name))
+        operations.append({
+            "type": "copy_file",
+            "src_path": hdr_file.path,
+            "dest_path": dest_name,
+        })
 
     # Process dependency files
     for dep_info in config.get("dependencies", []):
@@ -175,99 +183,55 @@ def prepare_workspace_action(ctx, config):
         dest_name = dep_info.get("destination") or dep_file.basename
         all_inputs.append(dep_file)
 
-        # Include the full dep_info for directory handling
-        file_mappings.append((dep_file, dest_name, dep_info))
-
-    script_lines = [
-        "#!/bin/sh",
-        "set -e",
-        "",
-        "WORKSPACE_DIR=\"$1\"",
-        "mkdir -p \"$WORKSPACE_DIR\"",
-        "",
-    ]
-
-    # Add file operations using basic POSIX commands
-    for mapping in file_mappings:
-        if len(mapping) == 3:
-            src_file, dest_name, dep_info = mapping
-            is_directory = dep_info.get("is_directory", False)
-        else:
-            src_file, dest_name = mapping
-            is_directory = False
-
-        # Ensure parent directory exists for nested paths
-        if "/" in dest_name:
-            parent_dir = "/".join(dest_name.split("/")[:-1])
-            script_lines.append("mkdir -p \"$WORKSPACE_DIR/{}\"".format(parent_dir))
-
-        # Use cp -r for directories, cp for files
+        is_directory = dep_info.get("is_directory", False)
         if is_directory:
-            # For directories, copy contents not the directory itself
-            script_lines.append("mkdir -p \"$WORKSPACE_DIR/{}\"".format(dest_name))
-            script_lines.append("cp -r \"{}\"/* \"$WORKSPACE_DIR/{}\"".format(src_file.path, dest_name))
+            operations.append({
+                "type": "copy_directory_contents",
+                "src_path": dep_file.path,
+                "dest_path": dest_name,
+            })
         else:
-            script_lines.append("cp \"{}\" \"$WORKSPACE_DIR/{}\"".format(src_file.path, dest_name))
+            operations.append({
+                "type": "copy_file",
+                "src_path": dep_file.path,
+                "dest_path": dest_name,
+            })
 
     # Add Go module dependency resolution if go_binary provided
     go_binary = config.get("go_binary")
     if go_binary and config.get("workspace_type") == "go":
-        # Note: go_binary.path might be relative, ensure it's resolved correctly
-        go_binary_path = go_binary.path
-        script_lines.extend([
-            "",
-            "# Go module dependency resolution",
-            "echo \"Resolving Go module dependencies...\"",
-            "cd \"$WORKSPACE_DIR\"",
-            "export GOCACHE=\"$WORKSPACE_DIR/.gocache\"",
-            "export GOPATH=\"$WORKSPACE_DIR/.gopath\"",
-            "mkdir -p \"$GOCACHE\" \"$GOPATH\"",
-            "",
-            "# Find the Go binary in execution root",
-            "if [ -f \"$EXECROOT/{}\" ]; then".format(go_binary_path),
-            "    GO_BIN=\"$EXECROOT/{}\"".format(go_binary_path),
-            "elif [ -f \"{}\" ]; then".format(go_binary_path),
-            "    GO_BIN=\"{}\"".format(go_binary_path),
-            "else",
-            "    echo \"Warning: Go binary not found, skipping dependency resolution\"",
-            "    GO_BIN=\"\"",
-            "fi",
-            "",
-            "if [ -n \"$GO_BIN\" ]; then",
-            "    \"$GO_BIN\" mod download || echo \"Note: Go mod download failed or not needed\"",
-            "    echo \"Go dependencies resolved\"",
-            "fi",
-            "",
+        # Note: go mod download is not needed here as TinyGo handles dependencies
+        # Just create the cache directories for potential future use
+        operations.extend([
+            {"type": "mkdir", "path": ".gocache"},
+            {"type": "mkdir", "path": ".gopath"},
         ])
 
-    script_lines.extend([
-        "",
-        "# Create completion marker",
-        "echo \"Workspace prepared with {} files\" > \"$WORKSPACE_DIR/.workspace_ready\"".format(len(file_mappings)),
-    ])
+    # Build JSON config for file operations tool
+    file_ops_config = {
+        "workspace_dir": workspace_dir.path,
+        "operations": operations,
+    }
 
+    # Write config to a JSON file
+    config_file = ctx.actions.declare_file(ctx.label.name + "_file_ops_config.json")
     ctx.actions.write(
-        output = workspace_script,
-        content = "\n".join(script_lines),
-        is_executable = True,
+        output = config_file,
+        content = json.encode(file_ops_config),
     )
 
-    # Add go_binary to inputs if provided
-    action_inputs = all_inputs + [workspace_script]
-    if go_binary:
-        action_inputs.append(go_binary)
-
-    # Execute the workspace setup using only basic POSIX shell
+    # Execute the hermetic file operations tool
     ctx.actions.run(
-        executable = workspace_script,
-        arguments = [workspace_dir.path],
-        inputs = action_inputs,
+        executable = file_ops_tool,
+        arguments = [config_file.path],
+        inputs = all_inputs + [config_file],
         outputs = [workspace_dir],
         mnemonic = "PrepareWorkspaceHermetic",
         progress_message = "Preparing {} workspace for {} (hermetic)".format(
             config.get("workspace_type", "generic"),
             ctx.label,
         ),
+        tools = [file_ops_tool],
     )
 
     return workspace_dir
@@ -440,69 +404,61 @@ def setup_js_workspace_action(ctx, sources, package_json = None, npm_deps = None
     # Create workspace directory
     workspace_dir = ctx.actions.declare_directory(ctx.label.name + "_jswork")
 
-    # Prepare inputs
-    all_inputs = list(sources)
-    if package_json:
-        all_inputs.append(package_json)
-    if npm_deps:
-        all_inputs.append(npm_deps)
+    # Get the hermetic file operations tool from toolchain
+    file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
+    file_ops_tool = file_ops_toolchain.file_ops_component
 
-    # Create a shell script that properly copies files (not symlinks)
-    setup_script = ctx.actions.declare_file(ctx.label.name + "_setup_workspace.sh")
-
-    script_lines = [
-        "#!/bin/bash",
-        "set -euo pipefail",
-        "",
-        "WORKSPACE_DIR=\"$1\"",
-        "shift",
-        "",
-        "# Create workspace directory",
-        "mkdir -p \"$WORKSPACE_DIR\"",
-        "echo \"Setting up JavaScript workspace: $WORKSPACE_DIR\"",
-        "",
-    ]
+    # Build operations list
+    all_inputs = []
+    operations = []
 
     # Copy source files to workspace root (flatten structure)
     for src in sources:
-        script_lines.extend([
-            "echo \"Copying {} to $WORKSPACE_DIR/{}\"".format(src.path, src.basename),
-            "cp \"{}\" \"$WORKSPACE_DIR/{}\"".format(src.path, src.basename),
-        ])
+        all_inputs.append(src)
+        operations.append({
+            "type": "copy_file",
+            "src_path": src.path,
+            "dest_path": src.basename,
+        })
 
     if package_json:
-        script_lines.extend([
-            "echo \"Copying package.json\"",
-            "cp \"{}\" \"$WORKSPACE_DIR/package.json\"".format(package_json.path),
-        ])
+        all_inputs.append(package_json)
+        operations.append({
+            "type": "copy_file",
+            "src_path": package_json.path,
+            "dest_path": "package.json",
+        })
 
     if npm_deps:
-        script_lines.extend([
-            "echo \"Copying npm dependencies\"",
-            "cp -r \"{}\" \"$WORKSPACE_DIR/node_modules\"".format(npm_deps.path),
-        ])
+        all_inputs.append(npm_deps)
+        operations.append({
+            "type": "copy_directory_contents",
+            "src_path": npm_deps.path,
+            "dest_path": "node_modules",
+        })
 
-    script_lines.extend([
-        "",
-        "echo \"JavaScript workspace setup complete\"",
-        "echo \"Files in workspace:\"",
-        "ls -la \"$WORKSPACE_DIR\"",
-    ])
+    # Build JSON config for file operations tool
+    file_ops_config = {
+        "workspace_dir": workspace_dir.path,
+        "operations": operations,
+    }
 
+    # Write config to a JSON file
+    config_file = ctx.actions.declare_file(ctx.label.name + "_file_ops_config.json")
     ctx.actions.write(
-        output = setup_script,
-        content = "\n".join(script_lines),
-        is_executable = True,
+        output = config_file,
+        content = json.encode(file_ops_config),
     )
 
-    # Run the setup script
+    # Execute the hermetic file operations tool
     ctx.actions.run(
-        executable = setup_script,
-        arguments = [workspace_dir.path],
-        inputs = all_inputs,
+        executable = file_ops_tool,
+        arguments = [config_file.path],
+        inputs = all_inputs + [config_file],
         outputs = [workspace_dir],
         mnemonic = "SetupJSWorkspace",
         progress_message = "Setting up JavaScript workspace for %s" % ctx.label,
+        tools = [file_ops_tool],
     )
 
     return workspace_dir
