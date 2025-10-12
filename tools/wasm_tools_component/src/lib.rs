@@ -1,13 +1,19 @@
 //! WASM Tools Integration Component
 //!
 //! This component provides unified access to wasm-tools operations across
-//! different build systems and platforms, replacing direct tool invocations
-//! with a consistent, cross-platform interface.
+//! different build systems and platforms, using hermetic tool binaries.
 
 use anyhow::{Context, Result as AnyhowResult};
+use std::env;
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
+
+/// Get the path to the hermetic wasm-tools binary
+fn get_wasm_tools_binary() -> String {
+    // Use hermetic binary if available, otherwise fall back to system PATH
+    env::var("WASM_TOOLS_BINARY").unwrap_or_else(|_| "wasm-tools".to_string())
+}
 
 /// Information about a WASM file
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -76,7 +82,7 @@ pub fn validate_wasm(wasm_path: &str, features: &[String]) -> AnyhowResult<WasmI
     let size = metadata.len();
 
     // Run wasm-tools validate
-    let mut cmd = Command::new("wasm-tools");
+    let mut cmd = Command::new(get_wasm_tools_binary());
     cmd.arg("validate").arg(wasm_path);
 
     // Add features if specified
@@ -115,7 +121,7 @@ pub fn validate_wasm(wasm_path: &str, features: &[String]) -> AnyhowResult<WasmI
 
 /// Check if a WASM file is a component
 pub fn check_is_component(wasm_path: &str) -> AnyhowResult<bool> {
-    let output = Command::new("wasm-tools")
+    let output = Command::new(get_wasm_tools_binary())
         .arg("validate")
         .arg(wasm_path)
         .arg("--features")
@@ -135,7 +141,7 @@ pub fn inspect_wasm(wasm_path: &str) -> AnyhowResult<WasmInfo> {
 
 /// Create a new component from a WASM module
 pub fn component_new(config: &ComponentConfig) -> AnyhowResult<String> {
-    let mut cmd = Command::new("wasm-tools");
+    let mut cmd = Command::new(get_wasm_tools_binary());
     cmd.arg("component")
         .arg("new")
         .arg(&config.input_module)
@@ -169,7 +175,7 @@ pub fn component_new(config: &ComponentConfig) -> AnyhowResult<String> {
 
 /// Embed WIT metadata into a WASM module to create a component
 pub fn component_embed(config: &EmbedConfig) -> AnyhowResult<String> {
-    let mut cmd = Command::new("wasm-tools");
+    let mut cmd = Command::new(get_wasm_tools_binary());
     cmd.arg("component")
         .arg("embed")
         .arg(&config.wit_file)
@@ -204,7 +210,7 @@ pub fn component_embed(config: &EmbedConfig) -> AnyhowResult<String> {
 
 /// Extract WIT interface from a component
 pub fn component_wit(component_path: &str, output_path: &str) -> AnyhowResult<String> {
-    let output = Command::new("wasm-tools")
+    let output = Command::new(get_wasm_tools_binary())
         .arg("component")
         .arg("wit")
         .arg(component_path)
@@ -226,7 +232,7 @@ pub fn component_wit(component_path: &str, output_path: &str) -> AnyhowResult<St
 
 /// Compose multiple components
 pub fn compose_components(config: &ComposeConfig) -> AnyhowResult<String> {
-    let mut cmd = Command::new("wasm-tools");
+    let mut cmd = Command::new(get_wasm_tools_binary());
     cmd.arg("compose")
         .arg("-f")
         .arg(&config.composition_file)
@@ -257,7 +263,7 @@ pub fn compose_components(config: &ComposeConfig) -> AnyhowResult<String> {
 
 /// Convert component to JavaScript bindings
 pub fn to_js(component_path: &str, output_dir: &str, options: &[String]) -> AnyhowResult<String> {
-    let mut cmd = Command::new("wasm-tools");
+    let mut cmd = Command::new(get_wasm_tools_binary());
     cmd.arg("component")
         .arg("targets")
         .arg("js")
@@ -284,7 +290,7 @@ pub fn to_js(component_path: &str, output_dir: &str, options: &[String]) -> Anyh
 
 /// Strip debug information from component
 pub fn strip_component(input_path: &str, output_path: &str) -> AnyhowResult<String> {
-    let output = Command::new("wasm-tools")
+    let output = Command::new(get_wasm_tools_binary())
         .arg("strip")
         .arg(input_path)
         .arg("-o")

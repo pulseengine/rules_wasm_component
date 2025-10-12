@@ -21,8 +21,12 @@ rust_binary(
         "@crates//:serde",
         "@crates//:serde_json",
     ],
-    # Note: This component calls the system wasm-tools binary
-    # Future enhancement: integrate wasm-tools as a library dependency
+    # Include hermetic wasm-tools binary from toolchain
+    data = ["@wasm_tools_toolchains//:wasm_tools_binary"],
+    # Pass the path via environment variable
+    env = {
+        "WASM_TOOLS_BINARY": "$(rootpath @wasm_tools_toolchains//:wasm_tools_binary)",
+    },
 )
 
 # Export WIT interface for external use
