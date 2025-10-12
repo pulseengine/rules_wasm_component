@@ -99,13 +99,6 @@ wasi_sdk.register(
 )
 use_repo(wasi_sdk, "wasi_sdk")
 
-# Enable C++ toolchain auto-configuration for cross-platform support
-cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure")
-use_repo(cc_configure, "local_config_cc")
-
-# Add compatibility proxy repository for rules_cc 0.2.0 (required for bzlmod)
-cc_compatibility = use_extension("@rules_cc//cc:extensions.bzl", "compatibility_proxy")
-
 # Register both WASI SDK and C++ toolchains
 register_toolchains(
     "@wasi_sdk//:wasi_sdk_toolchain",
