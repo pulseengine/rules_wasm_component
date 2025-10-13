@@ -36,10 +36,46 @@ jobs:
           # Show warnings but don't fail the CI
           bazel run //:buildifier -- --lint=warn --mode=check -r . || true
 
+  hermiticity-check:
+    name: Hermiticity Check
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Bazelisk
+        run: |
+          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          chmod +x bazelisk-linux-amd64
+          sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Build with Execution Log
+        run: |
+          echo "🔍 Building with execution logging to analyze hermiticity..."
+          bazel build --execution_log_json_file=/tmp/exec.json //examples/go_component:calculator_component
+
+      - name: Analyze Hermiticity
+        run: |
+          echo "📊 Analyzing build hermiticity..."
+          python3 tools/hermetic_test/analyze_exec_log.py /tmp/exec.json
+
+      - name: Upload Execution Log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermiticity-execution-log
+          path: /tmp/exec.json
+
   test-linux:
     name: Test on ubuntu-latest
     runs-on: ubuntu-latest
-    needs: lint # Run tests only after lint passes
+    needs: [lint, hermiticity-check]
 
     services:
       registry:
@@ -148,7 +184,7 @@ jobs:
   test-macos:
     name: Test on macos-latest
     runs-on: macos-latest
-    needs: lint # Run tests only after lint passes
+    needs: [lint, hermiticity-check]
 
     steps:
       - uses: actions/checkout@v5
@@ -261,7 +297,7 @@ jobs:
   bcr-docker-test:
     name: BCR Docker Environment Test
     runs-on: ubuntu-latest
-    needs: lint # Run in parallel with regular tests
+    needs: [lint, hermiticity-check]
 
     steps:
       - uses: actions/checkout@v5
@@ -433,7 +469,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [test-linux, test-macos, integration, bcr-docker-test]
+    needs: [test-linux, test-macos, integration, bcr-docker-test, hermiticity-check]
     if: github.ref == 'refs/heads/main'
 
     steps:

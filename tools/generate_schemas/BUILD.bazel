@@ -6,5 +6,6 @@ go_binary(
         "comprehensive_schemas.go",
         "main.go",
     ],
+    pure = "on",  # Disable CGO for hermetic builds
     visibility = ["//visibility:public"],
 )

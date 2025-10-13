@@ -1,7 +1,5 @@
 # RFC: Add Optional Auto-Detection Control to rules_cc cc_configure Extension
 
-## Status: DRAFT
-
 ## Target: [bazelbuild/rules_cc](https://github.com/bazelbuild/rules_cc)
 
 ## Summary
@@ -222,21 +220,20 @@ Consider making `auto_detect = False` the default in a major version (2.0.0), wi
 
 ## Proof of Concept
 
-A working implementation will be available at:
+Working implementation:
 - Fork: https://github.com/avrabe/rules_cc
-- Branch: `feature/optional-auto-detect` (to be created)
-- PR: [To be submitted to bazelbuild/rules_cc]
+- Branch: `feature/optional-cc-toolchain-auto-detect`
+- Commit: `7215331f9e53f80070dc01c4a95a0f9c53ea477b`
+- RFC Issue: https://github.com/avrabe/rules_cc/issues/1
 
 ## Next Steps
 
-1. Get feedback from rules_cc maintainers
+1. Gather feedback from rules_cc maintainers
 2. Refine API based on feedback
-3. Implement proof-of-concept
-4. Submit PR with tests and documentation
-5. Iterate based on code review
+3. Submit PR to bazelbuild/rules_cc
+4. Iterate based on code review
 
 ---
 
-**Author**: [Your name/handle]
-**Date**: 2025-10-12
-**Discussion**: [Link to GitHub issue when created]
+**Date**: 2025-10-13
+**Discussion**: https://github.com/avrabe/rules_cc/issues/1
