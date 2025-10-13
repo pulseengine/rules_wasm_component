@@ -13,6 +13,13 @@ bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.4")
 bazel_dep(name = "rules_go", version = "0.57.0")
 
+# Test optional auto-detection control (Issue #163)
+git_override(
+    module_name = "rules_cc",
+    remote = "https://github.com/avrabe/rules_cc.git",
+    commit = "7215331f9e53f80070dc01c4a95a0f9c53ea477b",
+)
+
 # OCI image signing capabilities
 bazel_dep(name = "rules_oci", version = "1.8.0")
 
@@ -98,6 +105,12 @@ wasi_sdk.register(
     version = "27",
 )
 use_repo(wasi_sdk, "wasi_sdk")
+
+# Configure cc_configure to disable auto-detection (Issue #163)
+# This prevents system WASI SDK at /usr/local/wasi-sdk from being detected
+cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_extension")
+cc_configure.configure(auto_detect = False)
+use_repo(cc_configure, "local_config_cc", "local_config_cc_toolchains")
 
 # Register both WASI SDK and C++ toolchains
 register_toolchains(
