@@ -79,3 +79,4 @@ coverage/
 # Profiling output
 perf.data
 flamegraph.svg
+__pycache__/
