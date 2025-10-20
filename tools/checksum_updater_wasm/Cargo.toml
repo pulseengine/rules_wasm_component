@@ -35,7 +35,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Async runtime and futures (needed for update_engine)
-tokio = { version = "1.0", features = ["sync", "time", "fs"] }
+tokio = { version = "1.48", features = ["sync", "time", "fs"] }
 futures = "0.3"
 reqwest = { version = "0.12", features = ["json"] }
 
