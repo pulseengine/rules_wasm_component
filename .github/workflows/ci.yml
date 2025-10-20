@@ -65,6 +65,12 @@ jobs:
           echo "📊 Analyzing build hermiticity..."
           python3 tools/hermetic_test/analyze_exec_log.py /tmp/exec.json
 
+      - name: Run Comprehensive Hermetic Test Suite
+        run: |
+          echo "🧪 Running comprehensive hermetic test suite..."
+          chmod +x .hermetic_test.sh
+          ./.hermetic_test.sh
+
       - name: Upload Execution Log (on failure)
         if: failure()
         uses: actions/upload-artifact@v4
