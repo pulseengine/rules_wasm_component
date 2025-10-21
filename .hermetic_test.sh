@@ -149,13 +149,21 @@ test_reproducibility() {
     echo "-----------------------------"
 
     TARGET="//examples/basic:hello_component_release"
-    WASM_OUTPUT="bazel-bin/examples/basic/hello_component_wasm_lib_release_wasm_base.wasm"
 
     # First build
     echo "  Building first time..."
-    if ! bazel build "$TARGET" 2>&1 | tail -3; then
+    BUILD_OUTPUT=$(bazel build "$TARGET" 2>&1)
+    if [ $? -ne 0 ]; then
         echo -e "${RED}✗ First build failed${NC}"
+        echo "$BUILD_OUTPUT" | tail -3
         return 1
+    fi
+
+    # Extract the actual output path from bazel's output
+    WASM_OUTPUT=$(echo "$BUILD_OUTPUT" | grep -o "bazel-out/.*/hello_component_wasm_lib_release_wasm_base.wasm" | head -1)
+    if [ -z "$WASM_OUTPUT" ]; then
+        # Fallback to symlink path
+        WASM_OUTPUT="bazel-bin/examples/basic/hello_component_wasm_lib_release_wasm_base.wasm"
     fi
 
     if [ ! -f "$WASM_OUTPUT" ]; then
