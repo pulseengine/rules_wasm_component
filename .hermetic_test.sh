@@ -74,15 +74,15 @@ test_no_system_paths() {
     echo "-------------------------------------"
 
     echo "  Building WASM target for analysis..."
-    if ! bazel build //examples/basic:hello_component_wasm_lib_release_wasm_base 2>&1 | tail -2; then
+    if ! bazel build //examples/basic:hello_component_release 2>&1 | tail -2; then
         echo -e "${RED}✗ Build failed, cannot analyze${NC}"
         return 1
     fi
 
     # Get action details for the WASM build
     echo "  Analyzing build actions for system path references..."
-    ACTIONS=$(bazel aquery //examples/basic:hello_component_wasm_lib_release_wasm_base \
-        'mnemonic("RustcCompile|CppLink", //examples/basic:hello_component_wasm_lib_release_wasm_base)' 2>&1 || true)
+    ACTIONS=$(bazel aquery //examples/basic:hello_component_release \
+        'mnemonic("RustcCompile|CppLink", //examples/basic:hello_component_release)' 2>&1 || true)
 
     # Check for suspicious system paths
     SYSTEM_PATHS=("/usr/local" "/opt/homebrew" "/opt/local")
