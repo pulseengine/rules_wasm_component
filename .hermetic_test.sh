@@ -36,7 +36,7 @@ test_wasm_toolchain_selection() {
     echo "---------------------------------------"
 
     echo "  Analyzing toolchain resolution for WASM target..."
-    OUTPUT=$(bazel build //examples/basic:hello_component_wasm_lib_release_wasm_base \
+    OUTPUT=$(bazel build //examples/basic:hello_component_release \
         --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type' 2>&1 || true)
 
     # Save output to temp file for analysis
@@ -148,7 +148,7 @@ test_reproducibility() {
     echo "Test 5: Build reproducibility"
     echo "-----------------------------"
 
-    TARGET="//examples/basic:hello_component_wasm_lib_release_wasm_base"
+    TARGET="//examples/basic:hello_component_release"
     WASM_OUTPUT="bazel-bin/examples/basic/hello_component_wasm_lib_release_wasm_base.wasm"
 
     # First build
