@@ -12,10 +12,16 @@
       "description": "AOT compilation support for 100x faster startup and 2-5x runtime improvement",
       "platforms": {
         "wasm_component": {
-          "sha256": "PENDING",
+          "sha256": "8a9b1aa8a2c9d3dc36f1724ccbf24a48c473808d9017b059c84afddc55743f1e",
           "url_suffix": "file_ops_component.wasm",
-          "size_kb": 849,
-          "notes": "Regular WASM variant. AOT variant (22MB) also available."
+          "size_kb": 853,
+          "notes": "Regular WASM variant (identical to rc.2). For AOT variant, see wasm_component_aot."
+        },
+        "wasm_component_aot": {
+          "sha256": "4fc117fae701ffd74b03dd72bbbeaf4ccdd1677ad15effa5c306a809de256938",
+          "url_suffix": "file_ops_component_aot.wasm",
+          "size_kb": 22851,
+          "notes": "AOT-embedded variant with native code for Linux/macOS/Windows x64+ARM64. 100x faster startup."
         }
       }
     },
