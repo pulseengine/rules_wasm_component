@@ -250,14 +250,20 @@ string_flag(
     ],
 )
 
-# File Operations Source Selection (Phase 2: External with AOT)
-# Build flag for choosing between embedded and external component
+# File Operations Source Selection
+# Phase 3: DEPRECATION - Embedded component will be removed in v2.0.0
+#
+# The embedded component (tools/file_ops/) is DEPRECATED and will be removed in v2.0.0.
+# See docs/MIGRATION.md for migration guide.
+#
+# Default is "external" with AOT support (100x faster startup)
+# Only use "embedded" if you encounter critical issues - this option will be removed soon.
 string_flag(
     name = "file_ops_source",
-    build_setting_default = "external",  # Phase 2: External with AOT is now default
+    build_setting_default = "external",  # Phase 2+: External with AOT is default
     values = [
-        "embedded",  # Use embedded Go binary (legacy fallback)
-        "external",  # Use external pre-built WASM component with AOT (default, Phase 2)
+        "embedded",  # DEPRECATED - Will be removed in v2.0.0 (Phase 4)
+        "external",  # RECOMMENDED - External component with AOT (default)
     ],
 )
 

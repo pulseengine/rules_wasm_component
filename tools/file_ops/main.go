@@ -340,6 +340,31 @@ func (r *FileOpsRunner) validateConfig() error {
 }
 
 func main() {
+	// Phase 3 Deprecation Warning (Month 3)
+	// This embedded file operations tool is deprecated and will be removed in v2.0.0
+	if os.Getenv("FILE_OPS_NO_DEPRECATION_WARNING") == "" {
+		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprintf(os.Stderr, "╔════════════════════════════════════════════════════════════════════════╗\n")
+		fmt.Fprintf(os.Stderr, "║                         DEPRECATION WARNING                            ║\n")
+		fmt.Fprintf(os.Stderr, "╠════════════════════════════════════════════════════════════════════════╣\n")
+		fmt.Fprintf(os.Stderr, "║ The embedded file operations component is DEPRECATED.                 ║\n")
+		fmt.Fprintf(os.Stderr, "║                                                                        ║\n")
+		fmt.Fprintf(os.Stderr, "║ Please switch to the external component with AOT support:             ║\n")
+		fmt.Fprintf(os.Stderr, "║   • 100x faster startup with native code execution                    ║\n")
+		fmt.Fprintf(os.Stderr, "║   • Cryptographically signed with Cosign                              ║\n")
+		fmt.Fprintf(os.Stderr, "║   • SLSA provenance for supply chain security                         ║\n")
+		fmt.Fprintf(os.Stderr, "║                                                                        ║\n")
+		fmt.Fprintf(os.Stderr, "║ The external component is now the DEFAULT. To use it:                 ║\n")
+		fmt.Fprintf(os.Stderr, "║   (No action needed - already default in Phase 2)                     ║\n")
+		fmt.Fprintf(os.Stderr, "║                                                                        ║\n")
+		fmt.Fprintf(os.Stderr, "║ This embedded version will be REMOVED in v2.0.0 (Phase 4)            ║\n")
+		fmt.Fprintf(os.Stderr, "║                                                                        ║\n")
+		fmt.Fprintf(os.Stderr, "║ To silence this warning: FILE_OPS_NO_DEPRECATION_WARNING=1           ║\n")
+		fmt.Fprintf(os.Stderr, "║ Migration guide: docs/MIGRATION.md                                     ║\n")
+		fmt.Fprintf(os.Stderr, "╚════════════════════════════════════════════════════════════════════════╝\n")
+		fmt.Fprintf(os.Stderr, "\n")
+	}
+
 	if len(os.Args) != 2 {
 		fmt.Fprintf(os.Stderr, "Usage: %s <config.json>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nHermetic file operations tool for Bazel rules_wasm_component\n")

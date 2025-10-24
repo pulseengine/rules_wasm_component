@@ -137,23 +137,33 @@ bazel test //test/file_ops_integration:external_implementation_test \\
 2. Performance regression tracking
 3. Prepare for Phase 2 (make external default)
 
-## Phase 1 Validation Status
+## Phase Status
 
-**Week 1-2: Implementation** ✅ COMPLETE
+**Phase 1: Optional Integration** ✅ COMPLETE (Week 1-2)
 - External component integrated
 - Build flags configured
 - Wrapper binary functional
+- Embedded as default, external opt-in
 
-**Week 3-4: Testing** ✅ COMPLETE
-- Test suite created ✅
-- Signature verification passing ✅
-- Integration validation complete ✅
-
-**Week 5-6: Phase 2** ✅ COMPLETE
+**Phase 2: External as Default** ✅ COMPLETE (Week 5-6)
 - Upgraded to v0.1.0-rc.3 AOT variant
-- AOT extraction integrated for all platforms
-- External with AOT is now the default
+- AOT extraction integrated for all 6 platforms
+- **External with AOT is now the default**
 - 100x faster startup with native code execution
+- Embedded still available as fallback
+
+**Phase 3: Deprecation** ✅ COMPLETE (Month 3)
+- **⚠️ Embedded component is now DEPRECATED**
+- Deprecation warnings added to embedded binary
+- Migration guide created: `docs/MIGRATION.md`
+- Build flag documentation updated
+- Embedded will be removed in v2.0.0 (Phase 4)
+
+**Phase 4: Removal** 🔜 PLANNED (v2.0.0)
+- Complete removal of `tools/file_ops/` (embedded component)
+- External component only
+- Smaller repository size
+- Simplified toolchain configuration
 
 ## Security Verification
 
