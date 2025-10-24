@@ -4,15 +4,13 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 
 	"github.com/bazelbuild/rules_go/go/runfiles"
 )
 
-// Wrapper for external file operations WASM component with AOT support
-// This wrapper executes the pre-built WASM component via wasmtime,
-// using extracted AOT artifacts for 100x faster startup
+// Wrapper for external file operations WASM component with LOCAL AOT
+// This wrapper executes the WASM component via wasmtime, using locally-compiled
+// AOT for 100x faster startup with guaranteed Wasmtime version compatibility
 func main() {
 	// Initialize Bazel runfiles
 	r, err := runfiles.New()
@@ -20,46 +18,46 @@ func main() {
 		log.Fatalf("Failed to initialize runfiles: %v", err)
 	}
 
-	// Locate wasmtime binary using Bazel runfiles
+	// Locate wasmtime binary
 	wasmtimeBinary, err := r.Rlocation("+wasmtime+wasmtime_toolchain/wasmtime")
 	if err != nil {
 		log.Fatalf("Failed to locate wasmtime: %v", err)
 	}
 
-	// Verify wasmtime exists
 	if _, err := os.Stat(wasmtimeBinary); err != nil {
 		log.Fatalf("Wasmtime binary not found at %s: %v", wasmtimeBinary, err)
 	}
 
-	// Determine platform for AOT artifact selection
-	osName := runtime.GOOS
-	arch := runtime.GOARCH
+	// Try to locate locally-compiled AOT artifact
+	// This is compiled at build time with the user's Wasmtime version - guaranteed compatible!
+	aotPath, err := r.Rlocation("_main/tools/file_ops_external/file_ops_aot.cwasm")
+	useAOT := err == nil
 
-	// Map Go platform names to AOT artifact names
-	platformName := getPlatformName(osName, arch)
-
-	// Try to locate the AOT artifact for this platform
-	aotPath, err := r.Rlocation(filepath.Join("_main/tools/file_ops_external", "file_ops_aot_" + platformName + ".cwasm"))
-	useAOT := false
-
-	if err == nil {
-		if _, err := os.Stat(aotPath); err == nil {
-			useAOT = true
-			if os.Getenv("FILE_OPS_DEBUG") != "" {
-				log.Printf("DEBUG: Using AOT artifact for platform %s at %s", platformName, aotPath)
-			}
-		} else if os.Getenv("FILE_OPS_DEBUG") != "" {
-			log.Printf("DEBUG: AOT artifact not found at %s: %v", aotPath, err)
+	if useAOT {
+		if _, err := os.Stat(aotPath); err != nil {
+			useAOT = false
 		}
-	} else if os.Getenv("FILE_OPS_DEBUG") != "" {
-		log.Printf("DEBUG: Failed to locate AOT artifact: %v", err)
+	}
+
+	// Locate regular WASM component for fallback
+	wasmComponent, err := r.Rlocation("+_repo_rules+file_ops_component_external/file/file_ops_component.wasm")
+	if err != nil {
+		log.Fatalf("Failed to locate WASM component: %v", err)
+	}
+
+	if _, err := os.Stat(wasmComponent); err != nil {
+		log.Fatalf("WASM component not found at %s: %v", wasmComponent, err)
 	}
 
 	// Build wasmtime command
 	var args []string
 
 	if useAOT {
-		// Use AOT precompiled artifact for faster startup
+		// Use locally-compiled AOT - guaranteed compatible with current Wasmtime version
+		if os.Getenv("FILE_OPS_DEBUG") != "" {
+			log.Printf("DEBUG: Using locally-compiled AOT at %s", aotPath)
+		}
+
 		args = []string{
 			"run",
 			"--dir=/::/", // Preopen root directory for full filesystem access
@@ -67,14 +65,9 @@ func main() {
 			aotPath,
 		}
 	} else {
-		// Fall back to regular WASM component
-		wasmComponent, err := r.Rlocation("+_repo_rules+file_ops_component_external/file/file_ops_component_aot.wasm")
-		if err != nil {
-			log.Fatalf("Failed to locate WASM component: %v", err)
-		}
-
-		if _, err := os.Stat(wasmComponent); err != nil {
-			log.Fatalf("WASM component not found at %s: %v", wasmComponent, err)
+		// Fallback to regular WASM (still much faster than embedded Go binary)
+		if os.Getenv("FILE_OPS_DEBUG") != "" {
+			log.Printf("DEBUG: AOT not available, using regular WASM")
 		}
 
 		args = []string{
@@ -84,7 +77,7 @@ func main() {
 		}
 	}
 
-	// Append all original arguments
+	// Append original arguments
 	args = append(args, os.Args[1:]...)
 
 	// Execute wasmtime
@@ -99,27 +92,4 @@ func main() {
 		}
 		log.Fatalf("Failed to execute wasmtime: %v", err)
 	}
-}
-
-// getPlatformName maps Go OS/arch to AOT platform names
-func getPlatformName(osName, arch string) string {
-	switch osName {
-	case "linux":
-		if arch == "amd64" {
-			return "linux_x64"
-		} else if arch == "arm64" {
-			return "linux_arm64"
-		}
-	case "darwin":
-		if arch == "amd64" {
-			return "darwin_x64"
-		} else if arch == "arm64" {
-			return "darwin_arm64"
-		}
-	case "windows":
-		if arch == "amd64" {
-			return "windows_x64"
-		}
-	}
-	return "portable"
 }

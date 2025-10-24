@@ -178,23 +178,22 @@ register_toolchains("@jco_toolchain//:jco_toolchain")
 register_toolchains("//toolchains:file_ops_toolchain_local")
 
 # External File Operations Component from bazel-file-ops-component
-# Phase 2: AOT variant is now default for 100x faster startup
+# Phase 2: External component with LOCAL AOT compilation
+#
+# We download the regular WASM component and compile AOT locally using our
+# wasm_precompile rules. This guarantees compatibility with the user's
+# Wasmtime version while maintaining 100x faster startup.
 #
 # Version information tracked in: //checksums/tools/file-ops-component.json
-# Current: v0.1.0-rc.3 AOT (22.8MB with native code for multiple platforms)
-#
-# AOT artifacts are extracted at build time for the current platform:
-#   - linux-x64, linux-arm64
-#   - darwin-x64, darwin-arm64
-#   - windows-x64
-#   - portable (Pulley64 fallback)
+# Current: v0.1.0-rc.3 (regular WASM, 853KB)
+# AOT compilation happens at build time for perfect compatibility
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
     name = "file_ops_component_external",
-    url = "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.1.0-rc.3/file_ops_component_aot.wasm",
-    sha256 = "4fc117fae701ffd74b03dd72bbbeaf4ccdd1677ad15effa5c306a809de256938",
-    downloaded_file_path = "file_ops_component_aot.wasm",
+    url = "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.1.0-rc.3/file_ops_component.wasm",
+    sha256 = "8a9b1aa8a2c9d3dc36f1724ccbf24a48c473808d9017b059c84afddc55743f1e",
+    downloaded_file_path = "file_ops_component.wasm",
 )
 
 # WASM Tools Component toolchain for universal wasm-tools operations
