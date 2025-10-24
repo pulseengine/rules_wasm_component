@@ -250,14 +250,14 @@ string_flag(
     ],
 )
 
-# File Operations Source Selection (Phase 1 Integration)
+# File Operations Source Selection (Phase 2: External with AOT)
 # Build flag for choosing between embedded and external component
 string_flag(
     name = "file_ops_source",
-    build_setting_default = "embedded",
+    build_setting_default = "external",  # Phase 2: External with AOT is now default
     values = [
-        "embedded",  # Use embedded Go binary (default, Phase 1)
-        "external",  # Use external pre-built WASM component (opt-in, Phase 1)
+        "embedded",  # Use embedded Go binary (legacy fallback)
+        "external",  # Use external pre-built WASM component with AOT (default, Phase 2)
     ],
 )
 
@@ -283,7 +283,7 @@ config_setting(
     },
 )
 
-# Configuration settings for source selection (Phase 1 Integration)
+# Configuration settings for source selection (Phase 2: External with AOT is default)
 config_setting(
     name = "file_ops_use_embedded",
     flag_values = {
