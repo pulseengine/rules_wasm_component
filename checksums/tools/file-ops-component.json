@@ -1,0 +1,55 @@
+{
+  "tool_name": "file-ops-component",
+  "github_repo": "pulseengine/bazel-file-ops-component",
+  "latest_version": "0.1.0-rc.3",
+  "last_checked": "2024-10-24T13:00:00.000000Z",
+  "supported_platforms": [
+    "wasm_component"
+  ],
+  "versions": {
+    "0.1.0-rc.3": {
+      "release_date": "2024-10-24",
+      "description": "AOT compilation support for 100x faster startup and 2-5x runtime improvement",
+      "platforms": {
+        "wasm_component": {
+          "sha256": "PENDING",
+          "url_suffix": "file_ops_component.wasm",
+          "size_kb": 849,
+          "notes": "Regular WASM variant. AOT variant (22MB) also available."
+        }
+      }
+    },
+    "0.1.0-rc.2": {
+      "release_date": "2024-10-24",
+      "description": "Stable pre-release with dependency updates",
+      "platforms": {
+        "wasm_component": {
+          "sha256": "8a9b1aa8a2c9d3dc36f1724ccbf24a48c473808d9017b059c84afddc55743f1e",
+          "url_suffix": "file_ops_component.wasm",
+          "size_kb": 853
+        }
+      }
+    },
+    "0.1.0-rc.1": {
+      "release_date": "2024-10-24",
+      "description": "Initial test release",
+      "platforms": {
+        "wasm_component": {
+          "sha256": "UNKNOWN",
+          "url_suffix": "file_ops_component.wasm"
+        }
+      }
+    }
+  },
+  "security": {
+    "signing": "Cosign keyless (GitHub OIDC)",
+    "provenance": "SLSA attestation available",
+    "oci_registry": "ghcr.io/pulseengine/bazel-file-ops-component"
+  },
+  "notes": [
+    "Platform-independent WebAssembly component",
+    "Requires wasmtime for execution",
+    "WASI Preview 2 compatible",
+    "Component Model v1 compliant"
+  ]
+}
