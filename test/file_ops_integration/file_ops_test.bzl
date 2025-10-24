@@ -18,14 +18,23 @@ def _file_ops_integration_test_impl(ctx):
 
     workspace_dir = prepare_workspace_action(ctx, config)
 
-    # Create a test script that verifies the workspace was created correctly
+    # Create a wrapper script that passes the workspace path to the test
     test_script = ctx.actions.declare_file(ctx.label.name + "_test.sh")
+
+    # Get the workspace directory short path for the test
+    workspace_path = workspace_dir.short_path
+
     ctx.actions.write(
         output = test_script,
         content = """#!/bin/bash
 set -e
 
-WORKSPACE_DIR="$1"
+# Find the workspace directory in runfiles
+if [ -n "$TEST_SRCDIR" ]; then
+    WORKSPACE_DIR="$TEST_SRCDIR/_main/{workspace_path}"
+else
+    WORKSPACE_DIR="{workspace_path}"
+fi
 
 echo "Testing file operations workspace: $WORKSPACE_DIR"
 
@@ -54,6 +63,7 @@ fi
 echo "PASS: All file operations tests passed"
 echo "Implementation used: {implementation}"
 """.format(
+            workspace_path = workspace_path,
             expected_content = ctx.attr.expected_content,
             implementation = ctx.attr.implementation,
         ),
