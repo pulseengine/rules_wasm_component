@@ -72,7 +72,7 @@ use_repo(wasi_wit_ext, "wasi_cli", "wasi_cli_v020", "wasi_clocks", "wasi_clocks_
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
-    strategy = "download",  # Download strategy with improved error messages for signing
+    strategy = "hybrid",  # Hybrid strategy: download binaries + build wasmsign2 from source
     version = "1.240.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
@@ -180,6 +180,12 @@ register_toolchains("//toolchains:file_ops_toolchain_local")
 # Optional: External File Operations Component from bazel-file-ops-component
 # Phase 1 integration - available but not default (embedded Go binary is default)
 # To use: bazel build --//toolchains:file_ops_source=external ...
+#
+# Version information tracked in: //checksums/tools/file-ops-component.json
+# Current: v0.1.0-rc.2 (stable, 853KB)
+# Latest: v0.1.0-rc.3 (AOT support: 100x faster startup, 2-5x runtime improvement, 849KB)
+#
+# Note: rc.3 CI assets pending. Will update when available.
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
