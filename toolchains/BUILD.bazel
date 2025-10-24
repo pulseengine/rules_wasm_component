@@ -209,6 +209,22 @@ toolchain(
     toolchain_type = ":file_ops_toolchain_type",
 )
 
+# Phase 1 Integration: External File Operations Component from bazel-file-ops-component
+# This uses the pre-built WASM component from https://github.com/pulseengine/bazel-file-ops-component
+
+file_ops_toolchain(
+    name = "file_ops_toolchain_external_impl",
+    file_ops_component = "//tools/file_ops_external:file_ops_external",
+    wit_files = ["//tools/file_operations_component:wit_files"],
+)
+
+toolchain(
+    name = "file_ops_toolchain_external",
+    # External component toolchain (opt-in for Phase 1)
+    toolchain = ":file_ops_toolchain_external_impl",
+    toolchain_type = ":file_ops_toolchain_type",
+)
+
 wasm_tools_component_toolchain(
     name = "wasm_tools_component_toolchain_impl",
     wasm_tools_component = "//tools/wasm_tools_component:wasm_tools_component",
@@ -234,6 +250,17 @@ string_flag(
     ],
 )
 
+# File Operations Source Selection (Phase 1 Integration)
+# Build flag for choosing between embedded and external component
+string_flag(
+    name = "file_ops_source",
+    build_setting_default = "embedded",
+    values = [
+        "embedded",  # Use embedded Go binary (default, Phase 1)
+        "external",  # Use external pre-built WASM component (opt-in, Phase 1)
+    ],
+)
+
 # Configuration settings for implementation selection
 config_setting(
     name = "file_ops_use_tinygo",
@@ -253,6 +280,21 @@ config_setting(
     name = "file_ops_auto_select",
     flag_values = {
         ":file_ops_implementation": "auto",
+    },
+)
+
+# Configuration settings for source selection (Phase 1 Integration)
+config_setting(
+    name = "file_ops_use_embedded",
+    flag_values = {
+        ":file_ops_source": "embedded",
+    },
+)
+
+config_setting(
+    name = "file_ops_use_external",
+    flag_values = {
+        ":file_ops_source": "external",
     },
 )
 
