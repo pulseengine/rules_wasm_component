@@ -40,10 +40,11 @@ func main() {
 	}
 
 	// Build wasmtime command with proper directory preopens
-	// The WASM component needs access to the working directory
+	// Preopen root directory to allow access to config files and workspaces
+	// This matches the embedded Go binary's filesystem access capabilities
 	args := []string{
 		"run",
-		"--dir=.::/tmp", // Preopen current directory as /tmp inside WASM
+		"--dir=/::/", // Preopen root directory for full filesystem access
 		wasmComponent,
 	}
 
