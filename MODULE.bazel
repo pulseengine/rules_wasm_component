@@ -182,15 +182,15 @@ register_toolchains("//toolchains:file_ops_toolchain_local")
 # To use: bazel build --//toolchains:file_ops_source=external ...
 #
 # Version information tracked in: //checksums/tools/file-ops-component.json
-# Current: v0.1.0-rc.2 (stable, 853KB)
-# Latest: v0.1.0-rc.3 (AOT support: 100x faster startup, 2-5x runtime improvement, 849KB)
+# Current: v0.1.0-rc.3 (regular WASM variant, 853KB)
+# AOT variant: v0.1.0-rc.3 AOT (100x faster startup, 22.8MB with native code)
 #
-# Note: rc.3 CI assets pending. Will update when available.
+# Phase 2 (Week 5-6): Will switch to AOT variant as default for better performance
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
     name = "file_ops_component_external",
-    url = "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.1.0-rc.2/file_ops_component.wasm",
+    url = "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.1.0-rc.3/file_ops_component.wasm",
     sha256 = "8a9b1aa8a2c9d3dc36f1724ccbf24a48c473808d9017b059c84afddc55743f1e",
     downloaded_file_path = "file_ops_component.wasm",
 )
