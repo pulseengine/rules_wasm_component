@@ -45,7 +45,14 @@ func main() {
 	if err == nil {
 		if _, err := os.Stat(aotPath); err == nil {
 			useAOT = true
+			if os.Getenv("FILE_OPS_DEBUG") != "" {
+				log.Printf("DEBUG: Using AOT artifact for platform %s at %s", platformName, aotPath)
+			}
+		} else if os.Getenv("FILE_OPS_DEBUG") != "" {
+			log.Printf("DEBUG: AOT artifact not found at %s: %v", aotPath, err)
 		}
+	} else if os.Getenv("FILE_OPS_DEBUG") != "" {
+		log.Printf("DEBUG: Failed to locate AOT artifact: %v", err)
 	}
 
 	// Build wasmtime command
