@@ -1,0 +1,110 @@
+"""Integration tests for file operations components (embedded vs external)
+
+These tests validate:
+1. Both embedded and external implementations work correctly
+2. Backward compatibility between implementations
+3. Performance characteristics
+4. Fallback mechanisms
+"""
+
+load(":file_ops_test.bzl", "file_ops_integration_test")
+load("//tools/bazel_helpers:file_ops_actions.bzl", "prepare_workspace_action")
+
+package(default_visibility = ["//visibility:private"])
+
+# Test input file
+genrule(
+    name = "test_input_file",
+    outs = ["test_input.txt"],
+    cmd = "echo 'File operations integration test' > $@",
+)
+
+# Test 1: Integration test with embedded implementation (default)
+file_ops_integration_test(
+    name = "embedded_implementation_test",
+    test_input = ":test_input_file",
+    expected_content = "File operations integration test",
+    implementation = "embedded",
+    tags = ["file_ops", "integration"],
+)
+
+# Test 2: Integration test with external implementation
+# This test should be run with --//toolchains:file_ops_source=external
+file_ops_integration_test(
+    name = "external_implementation_test",
+    test_input = ":test_input_file",
+    expected_content = "File operations integration test",
+    implementation = "external",
+    tags = ["file_ops", "integration", "external"],
+)
+
+# Test 3: Backward compatibility test
+# Verifies that switching implementations doesn't break existing functionality
+sh_test(
+    name = "backward_compatibility_test",
+    srcs = ["backward_compatibility_test.sh"],
+    data = [
+        ":test_input_file",
+        "//tools/file_ops:file_ops",
+        "//tools/file_ops_external:file_ops_external",
+    ],
+    tags = ["file_ops", "compatibility"],
+)
+
+# Test 4: Performance comparison test
+sh_test(
+    name = "performance_comparison_test",
+    srcs = ["performance_comparison_test.sh"],
+    data = [
+        ":test_input_file",
+        "//tools/file_ops:file_ops",
+        "//tools/file_ops_external:file_ops_external",
+    ],
+    tags = ["file_ops", "performance", "manual"],  # manual because it's slow
+)
+
+# Test 5: Signature verification test
+sh_test(
+    name = "signature_verification_test",
+    srcs = ["signature_verification_test.sh"],
+    data = [
+        "@file_ops_component_external//file",
+    ],
+    tags = ["file_ops", "security", "manual"],  # manual - requires cosign
+)
+
+# Test 6: Fallback mechanism test
+sh_test(
+    name = "fallback_mechanism_test",
+    srcs = ["fallback_mechanism_test.sh"],
+    data = [
+        "//tools/file_ops:file_ops",
+        "//tools/file_ops_external:file_ops_external",
+    ],
+    tags = ["file_ops", "fallback"],
+)
+
+# Test suite for all file operations tests
+test_suite(
+    name = "file_ops_integration_tests",
+    tests = [
+        ":embedded_implementation_test",
+        ":backward_compatibility_test",
+        ":fallback_mechanism_test",
+    ],
+    tags = ["file_ops"],
+)
+
+# Extended test suite including manual tests
+test_suite(
+    name = "file_ops_all_tests",
+    tests = [
+        ":embedded_implementation_test",
+        ":external_implementation_test",
+        ":backward_compatibility_test",
+        ":performance_comparison_test",
+        ":signature_verification_test",
+        ":fallback_mechanism_test",
+    ],
+    tags = ["file_ops"],
+)

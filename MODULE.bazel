@@ -177,6 +177,18 @@ register_toolchains("@jco_toolchain//:jco_toolchain")
 # File Operations Component toolchain for universal file handling
 register_toolchains("//toolchains:file_ops_toolchain_local")
 
+# Optional: External File Operations Component from bazel-file-ops-component
+# Phase 1 integration - available but not default (embedded Go binary is default)
+# To use: bazel build --//toolchains:file_ops_source=external ...
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "file_ops_component_external",
+    url = "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.1.0-rc.2/file_ops_component.wasm",
+    sha256 = "8a9b1aa8a2c9d3dc36f1724ccbf24a48c473808d9017b059c84afddc55743f1e",
+    downloaded_file_path = "file_ops_component.wasm",
+)
+
 # WASM Tools Component toolchain for universal wasm-tools operations
 register_toolchains("//toolchains:wasm_tools_component_toolchain_local")
 

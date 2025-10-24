@@ -1,0 +1,29 @@
+"""Wrapper for external file operations WASM component
+
+This wrapper executes the pre-built WASM component from bazel-file-ops-component
+via wasmtime, maintaining compatibility with the existing toolchain interface.
+"""
+
+load("@rules_go//go:def.bzl", "go_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Wrapper binary that executes external WASM component
+go_binary(
+    name = "file_ops_external",
+    srcs = ["main.go"],
+    pure = "on",
+    data = [
+        "@file_ops_component_external//file",
+        "@wasmtime_toolchain//:wasmtime",
+    ],
+    deps = ["@rules_go//go/runfiles"],
+    visibility = ["//visibility:public"],
+)
+
+# Export for easy access in toolchains
+alias(
+    name = "file_ops_external_binary",
+    actual = ":file_ops_external",
+    visibility = ["//visibility:public"],
+)
