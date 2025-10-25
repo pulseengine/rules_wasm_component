@@ -19,9 +19,12 @@ This addresses the CRITICAL PRIORITY gap identified in coverage analysis:
 package(default_visibility = ["//visibility:public"])
 
 # Import all language-specific test suites
-alias(
+test_suite(
     name = "rust_tests",
-    actual = "//test/unit:unit_tests",  # Rust tests already exist
+    tests = [
+        "//test/rust_binary:rust_binary_tests",
+        "//test/unit:unit_tests",
+    ],
     visibility = ["//visibility:public"],
 )
 
