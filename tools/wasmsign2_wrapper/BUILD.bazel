@@ -1,0 +1,30 @@
+"""Cross-platform wrapper for wasmsign2 WASM component
+
+This wrapper executes the pre-built wasmsign2.wasm component via wasmtime,
+resolving symlinks to real paths to work with both Bazel's sandbox and
+WASI's security model.
+"""
+
+load("@rules_go//go:def.bzl", "go_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Wrapper binary that executes wasmsign2.wasm with path resolution
+go_binary(
+    name = "wasmsign2_wrapper",
+    srcs = ["main.go"],
+    pure = "on",  # Pure Go for cross-platform compatibility
+    data = [
+        "@wasmsign2_cli_wasm//file",
+        "@wasmtime_toolchain//:wasmtime",
+    ],
+    deps = ["@rules_go//go/runfiles"],
+    visibility = ["//visibility:public"],
+)
+
+# Export for easy access in toolchains
+alias(
+    name = "wasmsign2",
+    actual = ":wasmsign2_wrapper",
+    visibility = ["//visibility:public"],
+)

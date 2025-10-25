@@ -153,6 +153,10 @@ jobs:
             //examples/js_component:simple_js_component \
             //examples/js_component:hello_js_component \
             //examples/js_component:calc_js_component \
+            //examples/wasm_signing:compact_keys \
+            //examples/wasm_signing:signed_component_embedded \
+            //examples/wasm_signing:signed_raw_wasm \
+            //examples/wasm_signing:verify_embedded \
             //rust/... \
             //go/... \
             //cpp/... \
@@ -247,6 +251,10 @@ jobs:
             //examples/js_component:simple_js_component \
             //examples/js_component:hello_js_component \
             //examples/js_component:calc_js_component \
+            //examples/wasm_signing:compact_keys \
+            //examples/wasm_signing:signed_component_embedded \
+            //examples/wasm_signing:signed_raw_wasm \
+            //examples/wasm_signing:verify_embedded \
             //rust/... \
             //go/... \
             //cpp/... \
