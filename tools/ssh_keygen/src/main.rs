@@ -111,8 +111,9 @@ fn main() -> Result<()> {
         .to_algorithm(cli.bits)
         .context("Failed to determine key algorithm")?;
 
-    // Generate the private key
-    let mut private_key = PrivateKey::random(&mut rand::thread_rng(), algorithm)
+    // Generate the private key using OS CSPRNG
+    // OsRng is the recommended cryptographic RNG for key generation
+    let mut private_key = PrivateKey::random(&mut rand::rngs::OsRng, algorithm)
         .context("Failed to generate private key")?;
 
     // Set comment if provided
@@ -212,7 +213,7 @@ mod tests {
 
         // Generate key using our algorithm
         let algorithm = cli.key_type.to_algorithm(cli.bits)?;
-        let private_key = PrivateKey::random(&mut rand::thread_rng(), algorithm)?;
+        let private_key = PrivateKey::random(&mut rand::rngs::OsRng, algorithm)?;
 
         // Verify we can encode both private and public keys
         let _private_data = private_key.to_openssh(LineEnding::LF)?;
@@ -224,7 +225,7 @@ mod tests {
     #[test]
     fn test_rsa_key_generation() -> Result<()> {
         let algorithm = KeyType::Rsa.to_algorithm(Some(2048))?;
-        let private_key = PrivateKey::random(&mut rand::thread_rng(), algorithm)?;
+        let private_key = PrivateKey::random(&mut rand::rngs::OsRng, algorithm)?;
 
         // Verify we can encode both keys
         let _private_data = private_key.to_openssh(LineEnding::LF)?;

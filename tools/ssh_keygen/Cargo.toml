@@ -10,7 +10,8 @@ anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
 ssh-key = { version = "0.6", features = ["ed25519", "rsa", "ecdsa", "rand_core"] }
 rand = "0.8"
-# rand_core will be resolved transitively to 0.6 (compatible with ssh-key)
+# Uses OsRng for cryptographic key generation (OS-backed CSPRNG)
+# Note: Cannot upgrade to rand 0.9 until ssh-key supports rand_core 0.9
 
 [dev-dependencies]
 tempfile = "3.23"
