@@ -9,9 +9,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "rust/checksum"
       include: "scope"
@@ -29,9 +29,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "rust/wasm-checksum"
       include: "scope"
@@ -49,9 +49,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "rust/keygen"
       include: "scope"
@@ -69,9 +69,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "rust/wizer"
       include: "scope"
@@ -89,9 +89,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "rust/file-ops"
       include: "scope"
@@ -109,9 +109,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "rust/toolchains"
       include: "scope"
@@ -130,9 +130,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "go/file-ops"
       include: "scope"
@@ -149,9 +149,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "go/http-downloader"
       include: "scope"
@@ -168,9 +168,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "go/olareg"
       include: "scope"
@@ -188,9 +188,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
     assignees:
-      - "pulseengine/maintainers"
+      - "avrabe"
     commit-message:
       prefix: "go/examples"
       include: "scope"
@@ -208,7 +208,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
+    assignees:
+      - "avrabe"
     commit-message:
       prefix: "docs"
       include: "scope"
@@ -225,7 +227,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
+    assignees:
+      - "avrabe"
     commit-message:
       prefix: "js/examples"
       include: "scope"
@@ -243,7 +247,9 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "pulseengine/maintainers"
+      - "avrabe"
+    assignees:
+      - "avrabe"
     commit-message:
       prefix: "ci"
       include: "scope"
