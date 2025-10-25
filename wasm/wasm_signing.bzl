@@ -5,9 +5,8 @@ load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmSigna
 def _wasm_keygen_impl(ctx):
     """Implementation of wasm_keygen rule"""
 
-    # Get toolchain
-    toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    wasmsign2 = toolchain.wasmsign2
+    # Get wasmsign2 wrapper
+    wasmsign2_wrapper = ctx.executable._wasmsign2_wrapper
 
     # Declare output files
     public_key = ctx.actions.declare_file(ctx.attr.public_key_name)
@@ -19,28 +18,29 @@ def _wasm_keygen_impl(ctx):
     args.add("--public-key", public_key)
     args.add("--secret-key", secret_key)
 
-    # Note: wasmsign2 keygen doesn't support --ssh flag
-    # The openssh_format is just for metadata tracking
-
-    # Run key generation
+    # Run key generation via Go wrapper
+    # The wrapper handles symlink resolution and WASI directory mapping
     ctx.actions.run(
-        executable = wasmsign2,
+        executable = wasmsign2_wrapper,
         arguments = [args],
-        inputs = [],
         outputs = [public_key, secret_key],
         mnemonic = "WasmKeyGen",
         progress_message = "Generating WASM signing keys %s" % ctx.label,
+        execution_requirements = {
+            "no-cache": "1",  # Key generation uses crypto randomness
+        },
     )
 
     # Create key info provider
+    # wasmsign2 keygen always generates compact format keys
     key_info = WasmKeyInfo(
         public_key = public_key,
         secret_key = secret_key,
-        key_format = "openssh" if ctx.attr.openssh_format else "compact",
+        key_format = "compact",
         key_metadata = {
             "name": ctx.label.name,
             "algorithm": "EdDSA",
-            "format": "openssh" if ctx.attr.openssh_format else "compact",
+            "format": "compact",
         },
     )
 
@@ -60,24 +60,27 @@ wasm_keygen = rule(
             default = "key.secret",
             doc = "Name of the secret key file to generate",
         ),
-        "openssh_format": attr.bool(
-            default = False,
-            doc = "Metadata flag for OpenSSH format preference. Note: wasmsign2 keygen always generates keys in its own compact format, not OpenSSH format. This flag is kept for metadata tracking only.",
+        "_wasmsign2_wrapper": attr.label(
+            default = "//tools/wasmsign2_wrapper",
+            executable = True,
+            cfg = "exec",
         ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
     doc = """
-    Generates a key pair for signing WebAssembly components.
+    Generates a key pair for signing WebAssembly components in compact format.
 
-    This rule uses wasmsign2 to generate a public/secret key pair
-    that can be used for signing and verifying WASM components.
+    This rule uses wasmsign2 keygen to generate a public/secret key pair
+    in the compact WebAssembly signature format. The keys can be used for
+    signing and verifying WASM components.
+
+    Note: wasmsign2 keygen always generates compact format keys. If you need
+    OpenSSH format keys (for use with the -Z/--ssh flag), use ssh_keygen instead.
 
     Example:
         wasm_keygen(
             name = "signing_keys",
             public_key_name = "my_key.public",
             secret_key_name = "my_key.secret",
-            openssh_format = False,
         )
     """,
 )
@@ -85,9 +88,8 @@ wasm_keygen = rule(
 def _wasm_sign_impl(ctx):
     """Implementation of wasm_sign rule"""
 
-    # Get toolchain
-    toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    wasmsign2 = toolchain.wasmsign2
+    # Get wasmsign2 wrapper
+    wasmsign2_wrapper = ctx.executable._wasmsign2_wrapper
 
     # Get input component
     if ctx.attr.component:
@@ -105,12 +107,13 @@ def _wasm_sign_impl(ctx):
         secret_key = key_info.secret_key
         public_key = key_info.public_key
 
-        # Use the actual key format from the key info
+        # Determine if we should use OpenSSH format based on key format
         # ssh_keygen produces "openssh" format, wasm_keygen produces "compact" format
         openssh_format = key_info.key_format == "openssh"
     else:
         secret_key = ctx.file.secret_key
         public_key = ctx.file.public_key
+        # When using raw key files, user must specify the format explicitly
         openssh_format = ctx.attr.openssh_format
 
     # Declare output files
@@ -148,9 +151,9 @@ def _wasm_sign_impl(ctx):
     if signature_file:
         outputs.append(signature_file)
 
-    # Run signing
+    # Run signing via Go wrapper (maintains sandbox and cross-platform!)
     ctx.actions.run(
-        executable = wasmsign2,
+        executable = wasmsign2_wrapper,
         arguments = [args],
         inputs = inputs,
         outputs = outputs,
@@ -225,8 +228,12 @@ wasm_sign = rule(
             default = False,
             doc = "Use OpenSSH key format",
         ),
+        "_wasmsign2_wrapper": attr.label(
+            default = "//tools/wasmsign2_wrapper",
+            executable = True,
+            cfg = "exec",
+        ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
     doc = """
     Signs a WebAssembly component with a cryptographic signature.
 
@@ -246,55 +253,61 @@ wasm_sign = rule(
 def _wasm_verify_impl(ctx):
     """Implementation of wasm_verify rule"""
 
-    # Get toolchain
-    toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-    wasmsign2 = toolchain.wasmsign2
+    # Get wasmsign2 wrapper
+    wasmsign2_wrapper = ctx.executable._wasmsign2_wrapper
 
     # Get input component
     if ctx.attr.signed_component:
         signature_info = ctx.attr.signed_component[WasmSignatureInfo]
         input_wasm = signature_info.signed_wasm
         signature_file = signature_info.signature_file
+        # Infer OpenSSH format from signature metadata
         openssh_format = signature_info.signature_metadata.get("format") == "openssh"
     elif ctx.file.wasm_file:
         input_wasm = ctx.file.wasm_file
         signature_file = ctx.file.signature_file
-        openssh_format = ctx.attr.openssh_format
+        openssh_format = False  # Will be overridden if keys provider is used
     else:
         fail("Either signed_component or wasm_file must be specified")
 
-    # Get public key
+    # Get public key and determine format
     if ctx.attr.keys:
         key_info = ctx.attr.keys[WasmKeyInfo]
         public_key = key_info.public_key
+        # Override openssh_format if we have key info
+        openssh_format = key_info.key_format == "openssh"
     else:
         public_key = ctx.file.public_key
+        # When using raw public key file, user must specify format explicitly
+        openssh_format = ctx.attr.openssh_format
 
-    # Declare output verification report
-    verification_log = ctx.actions.declare_file(ctx.label.name + "_verification.log")
+    # Declare output verification marker
+    verification_marker = ctx.actions.declare_file(ctx.label.name + "_verified.txt")
 
-    # Build command arguments as list
-    verify_cmd_args = ["verify", "-i", input_wasm.path]
+    # Build command arguments
+    args = ctx.actions.args()
+    args.add("verify")
+    args.add("-i", input_wasm)
 
     # Add public key or GitHub account
     if public_key:
-        verify_cmd_args.extend(["-K", public_key.path])
+        args.add("-K", public_key)
     elif ctx.attr.github_account:
-        verify_cmd_args.extend(["-G", ctx.attr.github_account])
+        args.add("-G", ctx.attr.github_account)
     else:
         fail("Either public_key, keys, or github_account must be specified")
 
     # Add detached signature if provided
     if signature_file:
-        verify_cmd_args.extend(["-S", signature_file.path])
+        args.add("-S", signature_file)
 
     # Add OpenSSH format if needed
     if openssh_format:
-        verify_cmd_args.append("-Z")
+        args.add("-Z")
 
     # Add partial verification if specified
     if ctx.attr.split_regex:
-        verify_cmd_args.extend(["-s", ctx.attr.split_regex])
+        args.add("-s", ctx.attr.split_regex)
 
     # Prepare inputs
     inputs = [input_wasm]
@@ -303,105 +316,20 @@ def _wasm_verify_impl(ctx):
     if signature_file:
         inputs.append(signature_file)
 
-    # Create verification script for better error handling and cross-platform compatibility
-    verify_script = ctx.actions.declare_file(ctx.label.name + "_verify.py")
-    script_content = '''#!/usr/bin/env python3
-import subprocess
-import sys
-import datetime
+    # Run verification via Go wrapper (no shell scripts!)
+    # The wrapper will create the marker file on success
+    args.add("--bazel-marker-file=" + verification_marker.path)
 
-def main():
-    wasmsign2_path = sys.argv[1]
-    log_path = sys.argv[2]
-    component_path = sys.argv[3]
-    verify_args = sys.argv[4:]
-
-    # Create verification report header
-    report_lines = [
-        "=== WASM Signature Verification Report ===",
-        f"Component: {component_path}",
-        f"Date: {datetime.datetime.now().isoformat()}",
-        f"Verification Command: {wasmsign2_path} {' '.join(verify_args)}",
-        ""
-    ]
-
-    try:
-        # Run verification command
-        result = subprocess.run(
-            [wasmsign2_path] + verify_args,
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
-
-        # Add verification output to report
-        if result.stdout:
-            report_lines.extend([
-                "=== Verification Output ===",
-                result.stdout,
-                ""
-            ])
-
-        if result.stderr:
-            report_lines.extend([
-                "=== Error Output ===",
-                result.stderr,
-                ""
-            ])
-
-        # Add result
-        if result.returncode == 0:
-            report_lines.append("✅ Signature verification PASSED")
-            status = "VERIFICATION_SUCCESS"
-        else:
-            report_lines.append("❌ Signature verification FAILED")
-            status = "VERIFICATION_FAILED"
-
-    except subprocess.TimeoutExpired:
-        report_lines.extend([
-            "❌ Signature verification TIMED OUT",
-            "Verification process exceeded 60 second timeout"
-        ])
-        status = "VERIFICATION_TIMEOUT"
-    except Exception as e:
-        report_lines.extend([
-            "❌ Signature verification ERROR",
-            f"Error: {str(e)}"
-        ])
-        status = "VERIFICATION_ERROR"
-
-    # Write verification log
-    with open(log_path, 'w') as f:
-        f.write('\\n'.join(report_lines))
-
-    # Write status file for programmatic access
-    with open(log_path + '.status', 'w') as f:
-        f.write(status)
-
-    print(f"Verification complete: {status}")
-
-if __name__ == "__main__":
-    main()
-'''
-
-    ctx.actions.write(
-        output = verify_script,
-        content = script_content,
-        is_executable = True,
-    )
-
-    # Run verification using the structured script
     ctx.actions.run(
-        executable = verify_script,
-        arguments = [wasmsign2.path, verification_log.path, input_wasm.short_path] + verify_cmd_args,
-        inputs = inputs + [verify_script],
-        outputs = [verification_log],
-        tools = [wasmsign2],
+        executable = wasmsign2_wrapper,
+        arguments = [args],
+        inputs = inputs,
+        outputs = [verification_marker],
         mnemonic = "WasmVerify",
         progress_message = "Verifying WASM signature %s" % ctx.label,
     )
 
-    # Create verification info (we can't know the result at analysis time)
+    # Create verification info
     verification_info = WasmSignatureInfo(
         signed_wasm = input_wasm,
         signature_file = signature_file,
@@ -411,14 +339,13 @@ if __name__ == "__main__":
         signature_type = "detached" if signature_file else "embedded",
         signature_metadata = {
             "name": ctx.label.name,
-            "verification_log": verification_log.path,
         },
-        verification_status = "checked",  # Result will be in log
+        verification_status = "checked",
     )
 
     return [
         verification_info,
-        DefaultInfo(files = depset([verification_log])),
+        DefaultInfo(files = depset([verification_marker])),
     ]
 
 wasm_verify = rule(
@@ -454,8 +381,12 @@ wasm_verify = rule(
         "split_regex": attr.string(
             doc = "Regular expression for partial verification",
         ),
+        "_wasmsign2_wrapper": attr.label(
+            default = "//tools/wasmsign2_wrapper",
+            executable = True,
+            cfg = "exec",
+        ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"],
     doc = """
     Verifies the cryptographic signature of a WebAssembly component.
 
