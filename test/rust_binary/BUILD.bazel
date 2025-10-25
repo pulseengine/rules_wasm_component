@@ -1,0 +1,47 @@
+"""Tests for rust_wasm_binary rule
+
+This tests the rust_wasm_binary macro that creates WASI CLI executables.
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//rust:defs.bzl", "rust_wasm_binary")
+
+package(default_testonly = True)
+
+# Test 1: Basic CLI binary
+rust_wasm_binary(
+    name = "hello_cli",
+    srcs = ["hello.rs"],
+    edition = "2021",
+)
+
+# Test 2: CLI binary with dependencies
+rust_wasm_binary(
+    name = "cli_with_deps",
+    srcs = ["cli_with_deps.rs"],
+    edition = "2021",
+    deps = [
+        "@crates//:anyhow",
+    ],
+)
+
+# Build tests to ensure compilation succeeds
+build_test(
+    name = "hello_cli_build_test",
+    targets = [":hello_cli"],
+)
+
+build_test(
+    name = "cli_with_deps_build_test",
+    targets = [":cli_with_deps"],
+)
+
+# Test suite
+test_suite(
+    name = "rust_binary_tests",
+    tests = [
+        ":cli_with_deps_build_test",
+        ":hello_cli_build_test",
+    ],
+    visibility = ["//visibility:public"],
+)

@@ -10,9 +10,26 @@ load(":transitions.bzl", "wasm_transition")
 def _wasm_rust_binary_impl(ctx):
     """Implementation that forwards a rust_binary with WASM transition applied"""
     target_info = ctx.attr.target[0]
+    default_info = target_info[DefaultInfo]
 
-    # Forward the default info and any rust-specific providers
-    providers = [target_info[DefaultInfo]]
+    # Get the executable from the target
+    source_executable = default_info.files_to_run.executable
+
+    # Create our own executable output by symlinking to the source
+    # This is required because executable rules must create their own outputs
+    output = ctx.actions.declare_file(ctx.label.name)
+    ctx.actions.symlink(
+        output = output,
+        target_file = source_executable,
+        is_executable = True,
+    )
+
+    # Forward the default info with our own executable
+    providers = [DefaultInfo(
+        files = depset([output]),
+        runfiles = default_info.default_runfiles,
+        executable = output,
+    )]
 
     # Forward RustInfo if available
     if hasattr(target_info, "rust_info"):
@@ -31,7 +48,7 @@ _wasm_rust_binary_rule = rule(
             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
     },
-    executable = False,  # This rule forwards files, doesn't create executables itself
+    executable = True,  # WASM binaries are executable via wasmtime
 )
 
 def rust_wasm_binary(
