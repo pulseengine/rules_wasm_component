@@ -805,6 +805,10 @@ def _wkg_push_impl(ctx):
         mnemonic = "WkgOciPush",
         progress_message = "Pushing WebAssembly component to OCI registry: {}".format(image_ref),
         use_default_shell_env = True,  # Needed for registry authentication
+        execution_requirements = {
+            "local": "1",  # Requires network access to push to OCI registry
+            "no-sandbox": "1",  # Disable sandboxing for network access
+        },
     )
 
     # Create status script that reports the push result
@@ -968,6 +972,10 @@ def _wkg_pull_impl(ctx):
         mnemonic = "WkgPull",
         progress_message = "Pulling WASM component {}".format(image_ref),
         use_default_shell_env = True,  # Needed for registry authentication
+        execution_requirements = {
+            "local": "1",  # Requires network access to pull from OCI registry
+            "no-sandbox": "1",  # Disable sandboxing for network access
+        },
     )
 
     # Create OCI info provider
@@ -1498,6 +1506,10 @@ def _wasm_component_publish_impl(ctx):
         mnemonic = "WkgOciPush",
         progress_message = "Publishing WebAssembly component to OCI registry: {}".format(image_ref),
         use_default_shell_env = True,  # Needed for registry authentication
+        execution_requirements = {
+            "local": "1",  # Requires network access to push to OCI registry
+            "no-sandbox": "1",  # Disable sandboxing for network access
+        },
     )
 
     # Create executable marker file separately (depends on successful push)
@@ -3138,6 +3150,10 @@ def _wasm_component_from_oci_impl(ctx):
         outputs = [component_file],
         mnemonic = "WkgPullOCI",
         progress_message = "Pulling WebAssembly component from OCI registry: {}".format(image_ref),
+        execution_requirements = {
+            "local": "1",  # Requires network access to pull from OCI registry
+            "no-sandbox": "1",  # Disable sandboxing for network access
+        },
     )
 
     # Post-pull signature verification if requested
@@ -3301,6 +3317,10 @@ def _wac_compose_with_oci_impl(ctx):
             outputs = [oci_component_file],
             mnemonic = "WkgPullOCIForComposition",
             progress_message = "Pulling OCI component {} for composition".format(comp_name),
+            execution_requirements = {
+                "local": "1",  # Requires network access to pull from OCI registry
+                "no-sandbox": "1",  # Disable sandboxing for network access
+            },
         )
 
         # Infer WIT package name from OCI spec (simple heuristic)
