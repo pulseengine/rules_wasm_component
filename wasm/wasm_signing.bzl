@@ -60,6 +60,10 @@ wasm_keygen = rule(
             default = "key.secret",
             doc = "Name of the secret key file to generate",
         ),
+        "openssh_format": attr.bool(
+            default = False,
+            doc = "Deprecated: Ignored. wasmsign2 keygen always generates compact format keys.",
+        ),
         "_wasmsign2_wrapper": attr.label(
             default = "//tools/wasmsign2_wrapper",
             executable = True,
