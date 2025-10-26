@@ -487,11 +487,18 @@ def _download_wasm_tools(repository_ctx):
         platform_info.url_suffix,
     )
 
-    # Download and extract tarball, letting Bazel handle the structure
+    # Determine stripPrefix based on archive format
+    # Windows uses .zip, others use .tar.gz
+    if platform_info.url_suffix.endswith(".zip"):
+        strip_prefix = "wasm-tools-{}-{}".format(version, platform_info.url_suffix.replace(".zip", ""))
+    else:
+        strip_prefix = "wasm-tools-{}-{}".format(version, platform_info.url_suffix.replace(".tar.gz", ""))
+
+    # Download and extract archive, letting Bazel handle the structure
     repository_ctx.download_and_extract(
         url = wasm_tools_url,
         sha256 = platform_info.sha256,
-        stripPrefix = "wasm-tools-{}-{}".format(version, platform_info.url_suffix.replace(".tar.gz", "")),
+        stripPrefix = strip_prefix,
     )
 
 def _download_wac(repository_ctx):
