@@ -41,7 +41,7 @@ def _wasm_toolchain_extension_impl(module_ctx):
     if not registrations:
         wasm_toolchain_repository(
             name = "wasm_tools_toolchains",
-            strategy = "hybrid",
+            strategy = "download",
             version = "1.235.0",
             git_commit = "main",
             wasm_tools_commit = "",
@@ -65,9 +65,9 @@ wasm_toolchain = module_extension(
                     default = "wasm_tools",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'download', 'build', 'bazel', or 'hybrid'",
-                    default = "hybrid",
-                    values = ["download", "build", "bazel", "hybrid"],
+                    doc = "Tool acquisition strategy: 'download' (prebuilt binaries from GitHub releases)",
+                    default = "download",
+                    values = ["download"],
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download/build strategies)",
@@ -188,7 +188,7 @@ def _wkg_extension_impl(module_ctx):
     if not registrations:
         wkg_toolchain_repository(
             name = "wkg_toolchain",
-            strategy = "source",
+            strategy = "download",
             version = "0.11.0",
         )
 
@@ -203,9 +203,9 @@ wkg = module_extension(
                     default = "wkg",
                 ),
                 "strategy": attr.string(
-                    doc = "Tool acquisition strategy: 'download', 'build', or 'source'",
-                    default = "source",
-                    values = ["download", "build", "source"],
+                    doc = "Tool acquisition strategy: 'download' (prebuilt binaries from GitHub releases)",
+                    default = "download",
+                    values = ["download"],
                 ),
                 "version": attr.string(
                     doc = "Version to use (for download/build strategies)",
@@ -390,7 +390,7 @@ def _wizer_extension_impl(module_ctx):
         wizer_toolchain_repository(
             name = "wizer_toolchain",
             version = "9.0.0",
-            strategy = "source",
+            strategy = "download",
         )
 
 # Module extension for Wizer WebAssembly pre-initialization
@@ -408,9 +408,9 @@ wizer = module_extension(
                     default = "9.0.0",
                 ),
                 "strategy": attr.string(
-                    doc = "Installation strategy: 'build' (build from source), 'cargo' (install via cargo), 'source' (git repository), or 'download' (download prebuilt binary)",
-                    default = "source",
-                    values = ["build", "cargo", "source", "download"],
+                    doc = "Installation strategy: 'download' (download prebuilt binary from GitHub releases)",
+                    default = "download",
+                    values = ["download"],
                 ),
             },
         ),

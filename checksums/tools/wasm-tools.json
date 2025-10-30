@@ -11,52 +11,6 @@
     "windows_amd64"
   ],
   "versions": {
-    "1.235.0": {
-      "release_date": "2024-12-15",
-      "platforms": {
-        "windows_amd64": {
-          "sha256": "ecf9f2064c2096df134c39c2c97af2c025e974cc32e3c76eb2609156c1690a74",
-          "url_suffix": "x86_64-windows.zip"
-        },
-        "linux_arm64": {
-          "sha256": "384ca3691502116fb6f48951ad42bd0f01f9bf799111014913ce15f4f4dde5a2",
-          "url_suffix": "aarch64-linux.tar.gz"
-        },
-        "darwin_amd64": {
-          "sha256": "154e9ea5f5477aa57466cfb10e44bc62ef537e32bf13d1c35ceb4fedd9921510",
-          "url_suffix": "x86_64-macos.tar.gz"
-        },
-        "darwin_arm64": {
-          "sha256": "17035deade9d351df6183d87ad9283ce4ae7d3e8e93724ae70126c87188e96b2",
-          "url_suffix": "aarch64-macos.tar.gz"
-        },
-        "linux_amd64": {
-          "sha256": "4c44bc776aadbbce4eedc90c6a07c966a54b375f8f36a26fd178cea9b419f584",
-          "url_suffix": "x86_64-linux.tar.gz"
-        }
-      }
-    },
-    "1.236.0": {
-      "release_date": "2025-07-28",
-      "platforms": {
-        "darwin_amd64": {
-          "sha256": "d9356a9de047598d6c2b8ff4a5318c9305485152430e85ceec78052a9bd08828",
-          "url_suffix": "x86_64-macos.tar.gz"
-        },
-        "darwin_arm64": {
-          "sha256": "d3094124e18f17864bd0e0de93f1938a466aca374c180962b2ba670a5ec9c8cf",
-          "url_suffix": "aarch64-macos.tar.gz"
-        },
-        "linux_arm64": {
-          "sha256": "c11b4d02bd730a8c3e60f4066602ce4264a752013d6c9ec58d70b7f276c3b794",
-          "url_suffix": "aarch64-linux.tar.gz"
-        },
-        "linux_amd64": {
-          "sha256": "a4fe8101d98f4efeb4854fde05d7c6a36a9a61e8249d4c72afcda4a4944723fb",
-          "url_suffix": "x86_64-linux.tar.gz"
-        }
-      }
-    },
     "1.239.0": {
       "release_date": "2024-09-09",
       "platforms": {

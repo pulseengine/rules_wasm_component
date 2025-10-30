@@ -811,6 +811,8 @@ def list_available_tools():
         "wizer",
         "nodejs",
         "jco",
+        "file-ops-component",
+        "wasmsign2-cli",
     ]
 
 def validate_tool_compatibility(tools_config):

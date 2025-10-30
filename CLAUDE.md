@@ -295,6 +295,246 @@ http_archive(
 - **Path Handling**: Use Bazel's path utilities
 - **Platform Detection**: Use `@platforms//` constraints, not `uname`
 
+## Dependency Management Patterns
+
+### 🎯 RULE #2: STRATIFIED HYBRID APPROACH
+
+**Use the RIGHT download pattern for each dependency category**
+
+This project uses a **stratified hybrid approach** to dependency management, selecting the most appropriate mechanism based on the characteristics of each dependency type.
+
+### Decision Matrix
+
+| Dependency Type | Pattern | Location | Why |
+|----------------|---------|----------|-----|
+| **Multi-platform GitHub binaries** | JSON Registry + secure_download | `checksums/tools/*.json` | Solves platform × version matrix, central security auditing |
+| **Bazel Central Registry deps** | `bazel_dep` | `MODULE.bazel` | Ecosystem standard, automatic dependency resolution |
+| **Source builds** | `git_repository` | `wasm_tools_repositories.bzl` | Bazel standard, maximum flexibility |
+| **Universal WASM binaries** | JSON Registry (preferred) or `http_file` | `checksums/tools/*.json` or `MODULE.bazel` | Platform-independent, security auditable |
+| **NPM packages** | Hermetic npm + package.json | `toolchains/jco_toolchain.bzl` | Ecosystem standard, package lock files |
+
+### Pattern 1: JSON Registry (Multi-Platform GitHub Binaries)
+
+**Use for**: Tools with different binaries per platform (wasm-tools, wit-bindgen, wac, wkg, wasmtime, wizer, wasi-sdk, nodejs, tinygo)
+
+**Why**: Elegantly handles the combinatorial explosion of (platforms × versions × URL patterns)
+
+**Structure**:
+```json
+{
+  "tool_name": "wasm-tools",
+  "github_repo": "bytecodealliance/wasm-tools",
+  "latest_version": "1.240.0",
+  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64"],
+  "versions": {
+    "1.240.0": {
+      "release_date": "2025-10-08",
+      "platforms": {
+        "darwin_arm64": {
+          "sha256": "8959eb9f494af13868af9e13e74e4fa0fa6c9306b492a9ce80f0e576eb10c0c6",
+          "url_suffix": "aarch64-macos.tar.gz"
+        }
+        // ... other platforms
+      }
+    }
+  }
+}
+```
+
+**Usage**:
+```python
+# In toolchain .bzl file
+from toolchains.secure_download import secure_download_tool
+
+secure_download_tool(ctx, "wasm-tools", "1.240.0", platform)
+```
+
+**Benefits**:
+- ✅ Single source of truth for all versions and checksums
+- ✅ Central security auditing (`checksums/` directory)
+- ✅ Supports multiple versions side-by-side
+- ✅ Platform detection and URL construction automatic
+- ✅ Clean API via `registry.bzl`
+
+### Pattern 2: Bazel Central Registry (`bazel_dep`)
+
+**Use for**: Standard Bazel ecosystem dependencies (rules_rust, bazel_skylib, platforms, rules_cc, etc.)
+
+**Why**: Bazel's standard mechanism with automatic dependency resolution
+
+**Structure**:
+```starlark
+# MODULE.bazel
+bazel_dep(name = "rules_rust", version = "0.65.0")
+bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "platforms", version = "1.0.0")
+```
+
+**Benefits**:
+- ✅ Ecosystem standard - no learning curve
+- ✅ Automatic transitive dependency resolution
+- ✅ Maintained by Bazel team
+- ✅ Built-in security and version compatibility
+
+**Do NOT**:
+- ❌ Duplicate BCR deps in JSON registry
+- ❌ Use http_archive for tools available in BCR
+
+### Pattern 3: Git Repository (Source Builds)
+
+**Use for**: Custom forks, bleeding edge versions, or when source builds are required
+
+**Why**: Bazel-native source repository management
+
+**Structure**:
+```starlark
+# wasm_tools_repositories.bzl
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "wasm_tools_src",
+    remote = "https://github.com/bytecodealliance/wasm-tools.git",
+    tag = "v1.235.0",
+    build_file = "//toolchains:BUILD.wasm_tools",
+)
+```
+
+**When to use**:
+- Custom fork with patches
+- Need bleeding edge from main branch
+- Binary not available for your platform
+- Building from source is required for licensing
+
+**Prefer download over build**: When prebuilt binaries are available and work correctly, use Pattern 1 (JSON Registry) instead for faster, more hermetic builds.
+
+### Pattern 4: Universal WASM Binaries
+
+**Use for**: WebAssembly components (platform-independent .wasm files)
+
+**Preferred**: JSON Registry for consistency and security auditing
+```json
+// checksums/tools/file-ops-component.json
+{
+  "tool_name": "file-ops-component",
+  "github_repo": "pulseengine/bazel-file-ops-component",
+  "latest_version": "0.1.0-rc.3",
+  "supported_platforms": ["wasm"],  // Universal
+  "versions": {
+    "0.1.0-rc.3": {
+      "release_date": "2025-10-15",
+      "platforms": {
+        "wasm": {
+          "sha256": "8a9b1aa8a2c9d3dc36f1724ccbf24a48c473808d9017b059c84afddc55743f1e",
+          "url": "https://github.com/.../file_ops_component.wasm"
+        }
+      }
+    }
+  }
+}
+```
+
+**Alternative**: `http_file` for very simple cases (legacy)
+```starlark
+# MODULE.bazel (only for simple cases)
+http_file(
+    name = "component_external",
+    url = "https://github.com/.../component.wasm",
+    sha256 = "abc123...",
+    downloaded_file_path = "component.wasm",
+)
+```
+
+**Recommendation**: Migrate all WASM components to JSON Registry for:
+- Consistent security auditing
+- Version management
+- Same tooling as other downloads
+
+### Pattern 5: NPM Packages
+
+**Use for**: Node.js ecosystem tools (jco, componentize-js)
+
+**Why**: npm is the standard package manager with lock file support
+
+**Structure**:
+```python
+# Download hermetic Node.js first (Pattern 1)
+secure_download_tool(ctx, "nodejs", "20.18.0", platform)
+
+# Use hermetic npm for package installation
+ctx.execute([npm_path, "install", "@bytecodealliance/jco@1.4.0"])
+```
+
+**Benefits**:
+- ✅ Hermetic builds (no system Node.js dependency)
+- ✅ Package lock files for reproducibility
+- ✅ Ecosystem standard
+
+### Adding New Dependencies
+
+**Decision Tree**:
+
+1. **Is it in Bazel Central Registry?**
+   - YES → Use `bazel_dep` (Pattern 2)
+   - NO → Continue to step 2
+
+2. **Is it a GitHub release with platform-specific binaries?**
+   - YES → Create JSON in `checksums/tools/` (Pattern 1)
+   - NO → Continue to step 3
+
+3. **Is it a universal WASM component?**
+   - YES → Create JSON in `checksums/tools/` with platform "wasm" (Pattern 4)
+   - NO → Continue to step 4
+
+4. **Is it an NPM package?**
+   - YES → Use hermetic npm installation (Pattern 5)
+   - NO → Continue to step 5
+
+5. **Must it be built from source?**
+   - YES → Use `git_repository` (Pattern 3)
+   - NO → Reconsider if this dependency is needed
+
+### Security Best Practices
+
+1. **Always verify checksums**: All downloads MUST have SHA256 verification
+2. **Central audit trail**: Prefer JSON registry for auditability
+3. **Version pinning**: Always specify exact versions, never use "latest"
+4. **Minimal versions**: Keep only latest stable + previous stable in JSON files
+5. **Review changes**: All checksum changes require careful PR review
+
+### Maintenance Guidelines
+
+**Adding a new version to JSON registry**:
+```bash
+# 1. Download binaries for all platforms
+# 2. Calculate SHA256 checksums
+shasum -a 256 wasm-tools-1.241.0-*.tar.gz
+
+# 3. Add version block to JSON file
+# 4. Update "latest_version" if appropriate
+# 5. Remove old versions if keeping only latest + previous
+```
+
+**Updating a BCR dependency**:
+```starlark
+# Simply change version in MODULE.bazel
+bazel_dep(name = "rules_rust", version = "0.66.0")  # Updated
+```
+
+**Removing old versions**:
+- Keep latest stable version
+- Keep previous stable version (for rollback capability)
+- Remove all older versions
+- Update tests if they pin to old versions
+
+### Anti-Patterns to Avoid
+
+❌ **DO NOT** create custom download mechanisms
+❌ **DO NOT** hardcode URLs in .bzl files
+❌ **DO NOT** duplicate BCR dependencies in JSON registry
+❌ **DO NOT** use http_archive for multi-platform binaries (use JSON registry)
+❌ **DO NOT** keep more than 2 versions per tool without strong justification
+❌ **DO NOT** use "strategy options" - pick ONE best approach per tool
+
 ## Current State
 
 ### Toolchains Implemented
