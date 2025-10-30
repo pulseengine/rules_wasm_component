@@ -35,16 +35,6 @@
           "size_kb": 853
         }
       }
-    },
-    "0.1.0-rc.1": {
-      "release_date": "2024-10-24",
-      "description": "Initial test release",
-      "platforms": {
-        "wasm_component": {
-          "sha256": "UNKNOWN",
-          "url_suffix": "file_ops_component.wasm"
-        }
-      }
     }
   },
   "security": {

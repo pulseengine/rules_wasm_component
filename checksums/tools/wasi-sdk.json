@@ -53,31 +53,6 @@
           "url_suffix": "windows.tar.gz"
         }
       }
-    },
-    "25": {
-      "release_date": "2024-11-01",
-      "platforms": {
-        "darwin_amd64": {
-          "sha256": "55e3ff3fee1a15678a16eeccba0129276c9f6be481bc9c283e7f9f65bf055c11",
-          "url_suffix": "macos.tar.gz"
-        },
-        "darwin_arm64": {
-          "sha256": "e1e529ea226b1db0b430327809deae9246b580fa3cae32d31c82dfe770233587",
-          "url_suffix": "macos.tar.gz"
-        },
-        "linux_amd64": {
-          "sha256": "52640dde13599bf127a95499e61d6d640256119456d1af8897ab6725bcf3d89c",
-          "url_suffix": "linux.tar.gz"
-        },
-        "linux_arm64": {
-          "sha256": "52640dde13599bf127a95499e61d6d640256119456d1af8897ab6725bcf3d89c",
-          "url_suffix": "linux.tar.gz"
-        },
-        "windows_amd64": {
-          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
-          "url_suffix": "windows.tar.gz"
-        }
-      }
     }
   }
 }
