@@ -535,7 +535,7 @@ def _download_wit_bindgen(repository_ctx):
     repository_ctx.download_and_extract(
         url = wit_bindgen_url,
         sha256 = tool_info["sha256"],
-        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, tool_info["url_suffix"].replace(".tar.gz", "")),
+        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, tool_info["url_suffix"].replace(".tar.gz", "").replace(".zip", "")),
     )
 
 def _download_wrpc(repository_ctx):
