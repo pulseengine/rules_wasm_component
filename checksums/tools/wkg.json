@@ -50,7 +50,7 @@
           "binary_name": "wkg-aarch64-unknown-linux-gnu"
         },
         "windows_amd64": {
-          "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+          "sha256": "930adea31da8d2a572860304c00903f7683966e722591819e99e26787e58416b",
           "binary_name": "wkg-x86_64-pc-windows-gnu"
         }
       }
