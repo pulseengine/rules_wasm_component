@@ -230,7 +230,7 @@ def _get_fallback_checksums(tool_name):
                             "platform_name": "aarch64-unknown-linux-musl",
                         },
                         "windows_amd64": {
-                            "sha256": "d8c65e5471fc242d8c4993e2125912e10e9373f1e38249157491b3c851bd1336",
+                            "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
                             "platform_name": "x86_64-pc-windows-gnu",
                         },
                     },
@@ -255,7 +255,7 @@ def _get_fallback_checksums(tool_name):
                             "platform_name": "aarch64-unknown-linux-musl",
                         },
                         "windows_amd64": {
-                            "sha256": "d8c65e5471fc242d8c4993e2125912e10e9373f1e38249157491b3c851bd1336",
+                            "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
                             "platform_name": "x86_64-pc-windows-gnu",
                         },
                     },
