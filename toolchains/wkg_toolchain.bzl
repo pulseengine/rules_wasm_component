@@ -90,7 +90,7 @@ def _wkg_toolchain_repository_impl(ctx):
                 "darwin_arm64": "0048768e7046a5df7d8512c4c87c56cbf66fc12fa8805e8fe967ef2118230f6f",
                 "linux_amd64": "444e568ce8c60364b9887301ab6862ef382ac661a4b46c2f0d2f0f254bd4e9d4",
                 "linux_arm64": "ebd6ffba1467c16dba83058a38e894496247fc58112efd87d2673b40fc406652",
-                "windows_amd64": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                "windows_amd64": "930adea31da8d2a572860304c00903f7683966e722591819e99e26787e58416b",
             },
         }
 
