@@ -198,7 +198,7 @@ def _get_fallback_checksums(tool_name):
                             "url_suffix": "aarch64-linux.tar.gz",
                         },
                         "windows_amd64": {
-                            "sha256": "e133d9f18bc0d8a3d848df78960f9974a4333bee7ed3f99b4c9e900e9e279029",
+                            "sha256": "95c6380ec7c1e385be8427a2da1206d90163fd66b6cbb573a516390988ccbad2",
                             "url_suffix": "x86_64-windows.zip",
                         },
                     },
