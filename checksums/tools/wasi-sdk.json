@@ -24,8 +24,8 @@
           "url_suffix": "linux.tar.gz"
         },
         "windows_amd64": {
-          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
-          "url_suffix": "windows.tar.gz"
+          "sha256": "4a576c13125c91996d8cc3b70b7ea0612c2044598d2795c9be100d15f874adf6",
+          "url_suffix": "x86_64-windows.tar.gz"
         }
       }
     },

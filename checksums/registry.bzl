@@ -400,6 +400,10 @@ def _get_fallback_checksums(tool_name):
                             "sha256": "4cf4c553c4640e63e780442146f87d83fdff5737f988c06a6e3b2f0228e37665",
                             "url_suffix": "linux.tar.gz",
                         },
+                        "windows_amd64": {
+                            "sha256": "4a576c13125c91996d8cc3b70b7ea0612c2044598d2795c9be100d15f874adf6",
+                            "url_suffix": "x86_64-windows.tar.gz",
+                        },
                     },
                 },
                 "26": {
