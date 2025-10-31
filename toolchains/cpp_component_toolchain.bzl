@@ -150,7 +150,7 @@ def _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version):
         ))
 
     # Create tool wrappers pointing to downloaded WASI SDK
-    _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir)
+    _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir, platform)
 
     # Set up sysroot symlink for the downloaded WASI SDK
     _setup_downloaded_sysroot(repository_ctx)
@@ -200,7 +200,7 @@ def _get_wasi_sdk_url(platform, version):
 
     return base_url.format(version) + "/" + filename
 
-def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir):
+def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir, platform):
     """Create Bazel-native tool configurations for WASI SDK tools"""
 
     # Get absolute path to the repository root
@@ -218,9 +218,11 @@ def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir):
     repository_ctx.file("wasi_config.txt", "\n".join(wasi_config))
 
     # Create direct symlinks to WASI SDK binaries (Bazel-native approach)
-    clang_path = "{}/bin/clang".format(repo_root)
-    clang_cpp_path = "{}/bin/clang++".format(repo_root)
-    llvm_ar_path = "{}/bin/llvm-ar".format(repo_root)
+    # Windows uses .exe extension for executables
+    exe_suffix = ".exe" if platform == "windows_amd64" else ""
+    clang_path = "{}/bin/clang{}".format(repo_root, exe_suffix)
+    clang_cpp_path = "{}/bin/clang++{}".format(repo_root, exe_suffix)
+    llvm_ar_path = "{}/bin/llvm-ar{}".format(repo_root, exe_suffix)
 
     if repository_ctx.path(clang_path).exists:
         repository_ctx.symlink(clang_path, "clang")
