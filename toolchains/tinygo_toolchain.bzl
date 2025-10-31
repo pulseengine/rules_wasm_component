@@ -114,10 +114,12 @@ def _download_binaryen(repository_ctx, platform):
 def _download_tinygo(repository_ctx, version, platform):
     """Download TinyGo release for the specified platform and version"""
 
-    # TinyGo release URL pattern
-    tinygo_url = "https://github.com/tinygo-org/tinygo/releases/download/v{version}/tinygo{version}.{platform}.tar.gz".format(
+    # TinyGo release URL pattern (use .zip for Windows, .tar.gz for others)
+    extension = ".zip" if platform == "windows_amd64" else ".tar.gz"
+    tinygo_url = "https://github.com/tinygo-org/tinygo/releases/download/v{version}/tinygo{version}.{platform}{extension}".format(
         version = version,
         platform = _get_tinygo_platform_suffix(platform),
+        extension = extension,
     )
 
     print("Downloading TinyGo {} for {}".format(version, platform))
@@ -129,8 +131,9 @@ def _download_tinygo(repository_ctx, version, platform):
         stripPrefix = "tinygo",
     )
 
-    # Verify installation
-    tinygo_binary = repository_ctx.path("tinygo/bin/tinygo")
+    # Verify installation (use .exe on Windows)
+    tinygo_binary_name = "tinygo.exe" if platform == "windows_amd64" else "tinygo"
+    tinygo_binary = repository_ctx.path("tinygo/bin/{}".format(tinygo_binary_name))
     if not tinygo_binary.exists:
         fail("TinyGo binary not found after download: {}".format(tinygo_binary))
 
@@ -357,7 +360,7 @@ toolchain(
     toolchain_type = "@rules_wasm_component//toolchains:tinygo_toolchain_type",
 )
 """.format(
-        tinygo_binary_name = "tinygo/bin/tinygo",
+        tinygo_binary_name = "tinygo/bin/tinygo.exe" if platform == "windows_amd64" else "tinygo/bin/tinygo",
         go_binary_name = "go_sdk/bin/go.exe" if platform == "windows_amd64" else "go_sdk/bin/go",
         wasm_opt_binary_name = "binaryen/bin/wasm-opt.exe" if platform == "windows_amd64" else "binaryen/bin/wasm-opt",
         os = "osx" if "darwin" in platform else ("windows" if "windows" in platform else "linux"),
