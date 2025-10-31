@@ -46,7 +46,9 @@ def _download_go(repository_ctx, version, platform):
     if not go_platform:
         fail("Unsupported platform for Go SDK: {}".format(platform))
 
-    go_url = "https://go.dev/dl/go{}.{}.tar.gz".format(go_version, go_platform)
+    # Windows uses .zip, others use .tar.gz
+    go_extension = ".zip" if platform == "windows_amd64" else ".tar.gz"
+    go_url = "https://go.dev/dl/go{}.{}{}".format(go_version, go_platform, go_extension)
 
     print("Downloading Go {} for TinyGo from: {}".format(go_version, go_url))
 
