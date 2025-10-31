@@ -59,8 +59,9 @@ def _download_go(repository_ctx, version, platform):
         stripPrefix = "go",
     )
 
-    # Verify Go installation
-    go_binary = repository_ctx.path("go_sdk/bin/go")
+    # Verify Go installation (use .exe on Windows)
+    go_binary_name = "go.exe" if platform == "windows_amd64" else "go"
+    go_binary = repository_ctx.path("go_sdk/bin/{}".format(go_binary_name))
     if not go_binary.exists:
         fail("Go binary not found after download: {}".format(go_binary))
 
@@ -303,14 +304,14 @@ filegroup(
 # Go binary for TinyGo
 alias(
     name = "go_binary",
-    actual = "go_sdk/bin/go",
+    actual = "{go_binary_name}",
     visibility = ["//visibility:public"],
 )
 
 # wasm-opt binary from Binaryen
 alias(
     name = "wasm_opt_binary",
-    actual = "binaryen/bin/wasm-opt",
+    actual = "{wasm_opt_binary_name}",
     visibility = ["//visibility:public"],
 )
 
@@ -356,6 +357,8 @@ toolchain(
 )
 """.format(
         tinygo_binary_name = "tinygo/bin/tinygo",
+        go_binary_name = "go_sdk/bin/go.exe" if platform == "windows_amd64" else "go_sdk/bin/go",
+        wasm_opt_binary_name = "binaryen/bin/wasm-opt.exe" if platform == "windows_amd64" else "binaryen/bin/wasm-opt",
         os = "osx" if "darwin" in platform else ("windows" if "windows" in platform else "linux"),
         cpu = "arm64" if "arm64" in platform else "x86_64",
     ))
