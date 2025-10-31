@@ -647,6 +647,8 @@ toolchain(
 """
     else:
         # For download strategy, use local downloaded files
+        # Windows binaries need .exe extension
+        exe_suffix = ".exe" if platform == "windows_amd64" else ""
         build_content = """
 load("@rules_wasm_component//toolchains:wasm_toolchain.bzl", "wasm_tools_toolchain")
 
@@ -655,31 +657,31 @@ package(default_visibility = ["//visibility:public"])
 # File targets for executables
 filegroup(
     name = "wasm_tools_binary",
-    srcs = ["wasm-tools"],
+    srcs = ["{wasm_tools_bin}"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wac_binary",
-    srcs = ["wac"],
+    srcs = ["{wac_bin}"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wit_bindgen_binary",
-    srcs = ["wit-bindgen"],
+    srcs = ["{wit_bindgen_bin}"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wrpc_binary",
-    srcs = ["wrpc"],
+    srcs = ["{wrpc_bin}"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wasmsign2_binary",
-    srcs = ["wasmsign2"],
+    srcs = ["{wasmsign2_bin}"],
     visibility = ["//visibility:public"],
 )
 
@@ -706,7 +708,13 @@ toolchain(
 # Use the direct target name for explicit, clear toolchain registration
 # Note: Other aliases removed to prevent dependency cycles
 # Use the _binary targets directly: wasm_tools_binary, wac_binary, wit_bindgen_binary
-"""
+""".format(
+            wasm_tools_bin = "wasm-tools{}".format(exe_suffix),
+            wac_bin = "wac{}".format(exe_suffix),
+            wit_bindgen_bin = "wit-bindgen{}".format(exe_suffix),
+            wrpc_bin = "wrpc{}".format(exe_suffix),
+            wasmsign2_bin = "wasmsign2{}".format(exe_suffix),
+        )
 
     # Create main BUILD file with strategy-specific content
     repository_ctx.file("BUILD.bazel", build_content)
