@@ -32,7 +32,7 @@ def _detect_host_platform(repository_ctx):
 def _download_go(repository_ctx, version, platform):
     """Download hermetic Go SDK for TinyGo to use"""
 
-    go_version = "1.25.0"  # Updated for TinyGo 0.39.0 support
+    go_version = "1.25.3"  # Latest stable Go version (1.25.0 doesn't exist)
 
     # Map platform to Go's naming convention
     go_platform_map = {
