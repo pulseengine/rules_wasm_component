@@ -101,8 +101,9 @@ def _download_binaryen(repository_ctx, platform):
         stripPrefix = "binaryen-version_{}".format(binaryen_version),
     )
 
-    # Verify wasm-opt installation
-    wasm_opt_binary = repository_ctx.path("binaryen/bin/wasm-opt")
+    # Verify wasm-opt installation (use .exe on Windows)
+    wasm_opt_binary_name = "wasm-opt.exe" if platform == "windows_amd64" else "wasm-opt"
+    wasm_opt_binary = repository_ctx.path("binaryen/bin/{}".format(wasm_opt_binary_name))
     if not wasm_opt_binary.exists:
         fail("wasm-opt binary not found after download: {}".format(wasm_opt_binary))
 
