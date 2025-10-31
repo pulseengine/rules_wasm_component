@@ -103,9 +103,15 @@ def _detect_host_platform(repository_ctx):
     os_name = repository_ctx.os.name.lower()
     arch = repository_ctx.os.arch.lower()
 
-    if os_name == "mac os x":
+    # Normalize platform names for cross-platform compatibility
+    if "mac" in os_name or "darwin" in os_name:
         os_name = "darwin"
+    elif "windows" in os_name:
+        os_name = "windows"
+    elif "linux" in os_name:
+        os_name = "linux"
 
+    # Normalize architecture names
     if arch == "x86_64":
         arch = "amd64"
     elif arch == "aarch64":
@@ -134,21 +140,14 @@ def _wasm_toolchain_repository_impl(repository_ctx):
     for warning in compatibility_warnings:
         print("Warning: {}".format(warning))
 
-    # All strategies now use modernized approach with git_repository rules
-    # This eliminates ctx.execute() calls for git clone and cargo build operations
+    # Use download strategy for fast, hermetic builds with prebuilt binaries
     if strategy == "download":
-        _setup_downloaded_tools(repository_ctx)  # Use simple method for stability
-    elif strategy == "build":
-        _setup_built_tools_enhanced(repository_ctx)  # Modernized: uses git_repository
-    elif strategy == "bazel":
-        _setup_bazel_native_tools(repository_ctx)
-    elif strategy == "hybrid":
-        _setup_hybrid_tools_enhanced(repository_ctx)  # Modernized: most robust approach
+        _setup_downloaded_tools(repository_ctx)
     else:
         fail(format_diagnostic_error(
             "E001",
             "Unknown strategy: {}".format(strategy),
-            "Must be 'download', 'build', 'bazel', or 'hybrid'",
+            "Must be 'download' (other strategies removed in dependency management cleanup)",
         ))
 
     # Create BUILD files for all strategies
@@ -481,11 +480,18 @@ def _download_wasm_tools(repository_ctx):
         platform_info.url_suffix,
     )
 
-    # Download and extract tarball, letting Bazel handle the structure
+    # Determine stripPrefix based on archive format
+    # Windows uses .zip, others use .tar.gz
+    if platform_info.url_suffix.endswith(".zip"):
+        strip_prefix = "wasm-tools-{}-{}".format(version, platform_info.url_suffix.replace(".zip", ""))
+    else:
+        strip_prefix = "wasm-tools-{}-{}".format(version, platform_info.url_suffix.replace(".tar.gz", ""))
+
+    # Download and extract archive, letting Bazel handle the structure
     repository_ctx.download_and_extract(
         url = wasm_tools_url,
         sha256 = platform_info.sha256,
-        stripPrefix = "wasm-tools-{}-{}".format(version, platform_info.url_suffix.replace(".tar.gz", "")),
+        stripPrefix = strip_prefix,
     )
 
 def _download_wac(repository_ctx):
@@ -529,7 +535,7 @@ def _download_wit_bindgen(repository_ctx):
     repository_ctx.download_and_extract(
         url = wit_bindgen_url,
         sha256 = tool_info["sha256"],
-        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, tool_info["url_suffix"].replace(".tar.gz", "")),
+        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, tool_info["url_suffix"].replace(".tar.gz", "").replace(".zip", "")),
     )
 
 def _download_wrpc(repository_ctx):
@@ -550,79 +556,20 @@ exit 1
 """, executable = True)
 
 def _download_wasmsign2(repository_ctx):
-    """Setup wasmsign2 placeholder - use bazel strategy for full functionality"""
+    """Setup wasmsign2 placeholder - not available in prebuilt downloads"""
 
     print("Setting up wasmsign2 placeholder for download strategy")
 
-    # Create a stub that explains the limitation and recommends the bazel strategy
+    # Create a stub explaining wasmsign2 is not included in prebuilt downloads
     repository_ctx.file("wasmsign2", """#!/bin/bash
-# wasmsign2 stub for download strategy
-# The download strategy cannot build Rust binaries from source
+# wasmsign2 is not included in prebuilt binary downloads
 echo "wasmsign2: Not available in download strategy" >&2
-echo "For signing functionality, use strategy = 'bazel' in your MODULE.bazel:" >&2
-echo "  wasm_toolchain.register(strategy = 'bazel')" >&2
-echo "This enables Bazel-native rust_binary builds with full signing support." >&2
+echo "WebAssembly component signing requires building wasmsign2 from source" >&2
+echo "For signing functionality, use @wasmsign2_src from git_repository" >&2
 exit 1
 """, executable = True)
 
-    print("Created wasmsign2 stub - use bazel strategy for full signing functionality")
-
-def _setup_bazel_native_tools(repository_ctx):
-    """Setup tools using Bazel-native rust_binary builds instead of cargo"""
-
-    print("Setting up Bazel-native toolchain using rust_binary rules")
-
-    # For Bazel-native strategy, we don't create any local binaries at all.
-    # Instead, we copy the BUILD files that use rust_binary rules and git_repository sources.
-    # This completely bypasses cargo and uses only Bazel + rules_rust.
-
-    # Copy the wasm-tools BUILD file that uses rust_binary
-    repository_ctx.template(
-        "BUILD.wasm_tools",
-        Label("//toolchains:BUILD.wasm_tools_bazel"),
-    )
-
-    # Copy the wizer BUILD file that uses rust_binary
-    repository_ctx.template(
-        "BUILD.wizer",
-        Label("//toolchains:BUILD.wizer_bazel"),
-    )
-
-    # Create placeholder binaries for tools not yet implemented with rust_binary
-    # These will be updated as we add more Bazel-native builds
-
-    # Create placeholder wac (will be updated to rust_binary later)
-    repository_ctx.file("wac", """#!/bin/bash
-echo "wac: Bazel-native rust_binary not yet implemented"
-echo "Using placeholder - switch to 'download' strategy in MODULE.bazel for full functionality"
-echo "To use wac, switch to 'download' strategy in MODULE.bazel"
-exit 1
-""", executable = True)
-
-    # Create placeholder wit-bindgen (will be updated to rust_binary later)
-    repository_ctx.file("wit-bindgen", """#!/bin/bash
-echo "wit-bindgen: Bazel-native rust_binary not yet implemented"
-echo "Using download strategy fallback"
-# For now, fail gracefully and suggest alternative
-echo "To use wit-bindgen, switch to 'download' strategy in MODULE.bazel"
-exit 1
-""", executable = True)
-
-    # Create placeholder wrpc (complex build, keep as placeholder)
-    repository_ctx.file("wrpc", """#!/bin/bash
-echo "wrpc: placeholder - complex dependencies"
-echo "Use system wrpc or download strategy"
-exit 1
-""", executable = True)
-
-    # Create placeholder wasmsign2 (not critical for core functionality)
-    repository_ctx.file("wasmsign2", """#!/bin/bash
-echo "wasmsign2: not critical for WebAssembly component compilation"
-echo "Basic functionality available without signing"
-exit 0
-""", executable = True)
-
-    print("✅ Bazel-native strategy configured - using rust_binary rules for core tools")
+    print("Created wasmsign2 stub - not included in prebuilt downloads")
 
 def _get_platform_suffix(platform):
     """Get platform suffix for download URLs"""
@@ -639,6 +586,7 @@ def _create_build_files(repository_ctx):
     """Create BUILD files for the toolchain"""
 
     strategy = repository_ctx.attr.strategy
+    platform = _detect_host_platform(repository_ctx)
 
     if strategy == "build":
         # For build strategy, reference external git repositories directly
@@ -698,72 +646,10 @@ toolchain(
     target_compatible_with = [],
 )
 """
-    elif strategy == "bazel":
-        # For Bazel-native strategy, reference rust_binary builds from git repositories
-        build_content = """
-load("@rules_wasm_component//toolchains:wasm_toolchain.bzl", "wasm_tools_toolchain")
-
-package(default_visibility = ["//visibility:public"])
-
-# File targets for executables - use Bazel-native rust_binary builds
-alias(
-    name = "wasm_tools_binary",
-    actual = "@wasm_tools_src//:wasm_tools_bazel",
-    visibility = ["//visibility:public"],
-)
-
-alias(
-    name = "wizer_binary",
-    actual = "@wizer_src//:wizer_bazel",
-    visibility = ["//visibility:public"],
-)
-
-# Remaining tools use local fallback files until rust_binary implementations added
-filegroup(
-    name = "wac_binary",
-    srcs = ["wac"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "wit_bindgen_binary",
-    srcs = ["wit-bindgen"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "wrpc_binary",
-    srcs = ["wrpc"],
-    visibility = ["//visibility:public"],
-)
-
-alias(
-    name = "wasmsign2_binary",
-    actual = "@wasmsign2_src//:wasmsign2_bazel",
-    visibility = ["//visibility:public"],
-)
-
-# Toolchain implementation
-wasm_tools_toolchain(
-    name = "wasm_tools_impl",
-    wasm_tools = ":wasm_tools_binary",
-    wac = ":wac_binary",
-    wit_bindgen = ":wit_bindgen_binary",
-    wrpc = ":wrpc_binary",
-    wasmsign2 = ":wasmsign2_binary",
-)
-
-# Toolchain registration
-toolchain(
-    name = "wasm_tools_toolchain",
-    toolchain = ":wasm_tools_impl",
-    toolchain_type = "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
-    exec_compatible_with = [],
-    target_compatible_with = [],
-)
-"""
     else:
-        # For other strategies (download, system, hybrid), use local files
+        # For download strategy, use local downloaded files
+        # Windows binaries need .exe extension
+        exe_suffix = ".exe" if platform == "windows_amd64" else ""
         build_content = """
 load("@rules_wasm_component//toolchains:wasm_toolchain.bzl", "wasm_tools_toolchain")
 
@@ -772,31 +658,31 @@ package(default_visibility = ["//visibility:public"])
 # File targets for executables
 filegroup(
     name = "wasm_tools_binary",
-    srcs = ["wasm-tools"],
+    srcs = ["{wasm_tools_bin}"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wac_binary",
-    srcs = ["wac"],
+    srcs = ["{wac_bin}"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wit_bindgen_binary",
-    srcs = ["wit-bindgen"],
+    srcs = ["{wit_bindgen_bin}"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wrpc_binary",
-    srcs = ["wrpc"],
+    srcs = ["{wrpc_bin}"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "wasmsign2_binary",
-    srcs = ["wasmsign2"],
+    srcs = ["{wasmsign2_bin}"],
     visibility = ["//visibility:public"],
 )
 
@@ -823,7 +709,13 @@ toolchain(
 # Use the direct target name for explicit, clear toolchain registration
 # Note: Other aliases removed to prevent dependency cycles
 # Use the _binary targets directly: wasm_tools_binary, wac_binary, wit_bindgen_binary
-"""
+""".format(
+            wasm_tools_bin = "wasm-tools{}".format(exe_suffix),
+            wac_bin = "wac{}".format(exe_suffix),
+            wit_bindgen_bin = "wit-bindgen{}".format(exe_suffix),
+            wrpc_bin = "wrpc{}".format(exe_suffix),
+            wasmsign2_bin = "wasmsign2{}".format(exe_suffix),
+        )
 
     # Create main BUILD file with strategy-specific content
     repository_ctx.file("BUILD.bazel", build_content)
@@ -832,9 +724,9 @@ wasm_toolchain_repository = repository_rule(
     implementation = _wasm_toolchain_repository_impl,
     attrs = {
         "strategy": attr.string(
-            doc = "Tool acquisition strategy: 'download', 'build', 'bazel', or 'hybrid'. All strategies now modernized to eliminate ctx.execute() calls.",
-            default = "hybrid",  # Hybrid is most robust with git_repository approach
-            values = ["download", "build", "bazel", "hybrid"],
+            doc = "Tool acquisition strategy: 'download' only (other strategies removed in dependency management cleanup)",
+            default = "download",
+            values = ["download"],
         ),
         "version": attr.string(
             doc = "Version to use (for download/build strategies)",

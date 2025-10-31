@@ -89,9 +89,15 @@ def _detect_host_platform(repository_ctx):
     os_name = repository_ctx.os.name.lower()
     arch = repository_ctx.os.arch.lower()
 
-    if os_name == "mac os x":
+    # Normalize platform names for cross-platform compatibility
+    if "mac" in os_name or "darwin" in os_name:
         os_name = "darwin"
+    elif "windows" in os_name:
+        os_name = "windows"
+    elif "linux" in os_name:
+        os_name = "linux"
 
+    # Normalize architecture names
     if arch == "x86_64":
         arch = "amd64"
     elif arch == "aarch64":
@@ -128,7 +134,7 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
             "darwin_arm64": "arm64-macos",
             "linux_amd64": "x86_64-linux",
             "linux_arm64": "arm64-linux",
-            "windows_amd64": "x86_64-mingw",
+            "windows_amd64": "x86_64-windows",
         }
 
         if platform not in platform_mapping:

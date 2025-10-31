@@ -1,15 +1,27 @@
 """Centralized checksum registry API for WebAssembly toolchain
 
-This module provides a unified API for accessing tool checksums. Checksum data is
-embedded in this file and kept synchronized with checksums/tools/*.json files, which
-serve as the canonical source for checksum updater tools and external documentation.
-
-The embedded approach is used because Bazel rules don't have built-in JSON parsing
-capabilities, making direct JSON loading impractical in the build system.
+This module provides a unified API for accessing tool checksums from JSON files.
 """
 
+def _load_tool_checksums_from_json(repository_ctx, tool_name):
+    """Load checksums for a tool from JSON file
+
+    Args:
+        repository_ctx: Repository context for file operations
+        tool_name: Name of the tool (e.g., 'wasm-tools', 'wit-bindgen')
+
+    Returns:
+        Dict: Tool data from JSON file, or None if file not found
+    """
+    json_file = repository_ctx.path(Label("@rules_wasm_component//checksums/tools:{}.json".format(tool_name)))
+    if not json_file.exists:
+        return None
+
+    content = repository_ctx.read(json_file)
+    return json.decode(content)
+
 def _load_tool_checksums(tool_name):
-    """Load checksums for a tool from embedded registry data
+    """Load checksums for a tool from embedded fallback data
 
     Args:
         tool_name: Name of the tool (e.g., 'wasm-tools', 'wit-bindgen')
@@ -18,10 +30,8 @@ def _load_tool_checksums(tool_name):
         Dict: Tool data from embedded registry, or empty dict if not found
 
     Note:
-        This function uses embedded data rather than JSON file loading because
-        Bazel rules don't have built-in JSON parsing capabilities. The embedded
-        data is kept synchronized with checksums/tools/*.json files, which serve
-        as the canonical source for checksum updater tools and documentation.
+        This is fallback data for non-repository contexts.
+        Use _load_tool_checksums_from_json() in repository rules for up-to-date data.
     """
 
     tool_data = _get_fallback_checksums(tool_name)
@@ -61,7 +71,7 @@ def _get_fallback_checksums(tool_name):
                         },
                         "windows_amd64": {
                             "sha256": "ecf9f2064c2096df134c39c2c97af2c025e974cc32e3c76eb2609156c1690a74",
-                            "url_suffix": "x86_64-windows.tar.gz",
+                            "url_suffix": "x86_64-windows.zip",
                         },
                     },
                 },
@@ -106,8 +116,8 @@ def _get_fallback_checksums(tool_name):
                             "url_suffix": "aarch64-linux.tar.gz",
                         },
                         "windows_amd64": {
-                            "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
-                            "url_suffix": "x86_64-windows.tar.gz",
+                            "sha256": "039b1eaa170563f762355a23c5ee709790199433e35e5364008521523e9e3398",
+                            "url_suffix": "x86_64-windows.zip",
                         },
                     },
                 },
@@ -131,8 +141,8 @@ def _get_fallback_checksums(tool_name):
                             "url_suffix": "aarch64-linux.tar.gz",
                         },
                         "windows_amd64": {
-                            "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
-                            "url_suffix": "x86_64-windows.tar.gz",
+                            "sha256": "81f012832e80fe09d384d86bb961d4779f6372a35fa965cc64efe318001ab27e",
+                            "url_suffix": "x86_64-windows.zip",
                         },
                     },
                 },
@@ -188,7 +198,7 @@ def _get_fallback_checksums(tool_name):
                             "url_suffix": "aarch64-linux.tar.gz",
                         },
                         "windows_amd64": {
-                            "sha256": "e133d9f18bc0d8a3d848df78960f9974a4333bee7ed3f99b4c9e900e9e279029",
+                            "sha256": "95c6380ec7c1e385be8427a2da1206d90163fd66b6cbb573a516390988ccbad2",
                             "url_suffix": "x86_64-windows.zip",
                         },
                     },
@@ -220,7 +230,7 @@ def _get_fallback_checksums(tool_name):
                             "platform_name": "aarch64-unknown-linux-musl",
                         },
                         "windows_amd64": {
-                            "sha256": "d8c65e5471fc242d8c4993e2125912e10e9373f1e38249157491b3c851bd1336",
+                            "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
                             "platform_name": "x86_64-pc-windows-gnu",
                         },
                     },
@@ -245,7 +255,7 @@ def _get_fallback_checksums(tool_name):
                             "platform_name": "aarch64-unknown-linux-musl",
                         },
                         "windows_amd64": {
-                            "sha256": "d8c65e5471fc242d8c4993e2125912e10e9373f1e38249157491b3c851bd1336",
+                            "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
                             "platform_name": "x86_64-pc-windows-gnu",
                         },
                     },
@@ -302,7 +312,7 @@ def _get_fallback_checksums(tool_name):
                             "binary_name": "wkg-aarch64-unknown-linux-gnu",
                         },
                         "windows_amd64": {
-                            "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+                            "sha256": "930adea31da8d2a572860304c00903f7683966e722591819e99e26787e58416b",
                             "binary_name": "wkg-x86_64-pc-windows-gnu",
                         },
                     },
@@ -389,6 +399,10 @@ def _get_fallback_checksums(tool_name):
                         "linux_arm64": {
                             "sha256": "4cf4c553c4640e63e780442146f87d83fdff5737f988c06a6e3b2f0228e37665",
                             "url_suffix": "linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "4a576c13125c91996d8cc3b70b7ea0612c2044598d2795c9be100d15f874adf6",
+                            "url_suffix": "x86_64-windows.tar.gz",
                         },
                     },
                 },
@@ -801,6 +815,8 @@ def list_available_tools():
         "wizer",
         "nodejs",
         "jco",
+        "file-ops-component",
+        "wasmsign2-cli",
     ]
 
 def validate_tool_compatibility(tools_config):

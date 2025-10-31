@@ -1,0 +1,26 @@
+{
+  "tool_name": "wasmsign2-cli",
+  "github_repo": "pulseengine/wasmsign2",
+  "latest_version": "0.2.7-rc.2",
+  "last_checked": "2025-10-30T00:00:00.000000Z",
+  "supported_platforms": ["wasm_component"],
+  "versions": {
+    "0.2.7-rc.2": {
+      "release_date": "2025-10-30",
+      "description": "WebAssembly component signing tool",
+      "platforms": {
+        "wasm_component": {
+          "sha256": "0a2ba6a55621d83980daa7f38e3770ba6b9342736971a0cebf613df08377cd34",
+          "url_suffix": "wasmsign2-cli.wasm",
+          "downloaded_file_path": "wasmsign2.wasm"
+        }
+      }
+    }
+  },
+  "notes": [
+    "Platform-independent WebAssembly component",
+    "Used for signing WASM components",
+    "WASI Preview 2 compatible",
+    "Component Model v1 compliant"
+  ]
+}

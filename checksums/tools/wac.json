@@ -24,7 +24,32 @@
           "platform_name": "aarch64-apple-darwin"
         },
         "windows_amd64": {
-          "sha256": "d8c65e5471fc242d8c4993e2125912e10e9373f1e38249157491b3c851bd1336",
+          "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
+          "platform_name": "x86_64-pc-windows-gnu"
+        }
+      }
+    },
+    "0.8.0": {
+      "release_date": "2024-08-20",
+      "platforms": {
+        "linux_amd64": {
+          "sha256": "9fee2d8603dc50403ebed580b47b8661b582ffde8a9174bf193b89ca00decf0f",
+          "platform_name": "x86_64-unknown-linux-musl"
+        },
+        "linux_arm64": {
+          "sha256": "af966d4efbd411900073270bd4261ac42d9550af8ba26ed49288bb942476c5a9",
+          "platform_name": "aarch64-unknown-linux-musl"
+        },
+        "darwin_amd64": {
+          "sha256": "cc58f94c611b3b7f27b16dd0a9a9fc63c91c662582ac7eaa9a14f2dac87b07f8",
+          "platform_name": "x86_64-apple-darwin"
+        },
+        "darwin_arm64": {
+          "sha256": "6ca7f69f3e2bbab41f375a35e486d53e5b4968ea94271ea9d9bd59b0d2b65c13",
+          "platform_name": "aarch64-apple-darwin"
+        },
+        "windows_amd64": {
+          "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
           "platform_name": "x86_64-pc-windows-gnu"
         }
       }

@@ -186,8 +186,8 @@ jobs:
     name: BCR Multi-Platform Test
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
-    # Only run on main branch to avoid overloading PR checks
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    # Run on all PRs and main branch to catch Windows issues early
+    # Windows builds have been failing silently - now we'll catch them!
 
     strategy:
       fail-fast: false
@@ -197,6 +197,13 @@ jobs:
         exclude:
           # Skip some combinations to reduce CI load
           - os: windows-latest
+            bazel_version: "6.x"
+          # On PRs, only test latest Bazel versions to reduce load
+          - os: windows-latest
+            bazel_version: "7.x"
+          - os: ubuntu-latest
+            bazel_version: "6.x"
+          - os: macos-latest
             bazel_version: "6.x"
 
     steps:

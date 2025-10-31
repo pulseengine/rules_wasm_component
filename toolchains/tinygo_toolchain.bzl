@@ -32,7 +32,7 @@ def _detect_host_platform(repository_ctx):
 def _download_go(repository_ctx, version, platform):
     """Download hermetic Go SDK for TinyGo to use"""
 
-    go_version = "1.25.0"  # Updated for TinyGo 0.39.0 support
+    go_version = "1.25.3"  # Latest stable Go version (1.25.0 doesn't exist)
 
     # Map platform to Go's naming convention
     go_platform_map = {
@@ -46,7 +46,9 @@ def _download_go(repository_ctx, version, platform):
     if not go_platform:
         fail("Unsupported platform for Go SDK: {}".format(platform))
 
-    go_url = "https://go.dev/dl/go{}.{}.tar.gz".format(go_version, go_platform)
+    # Windows uses .zip, others use .tar.gz
+    go_extension = ".zip" if platform == "windows_amd64" else ".tar.gz"
+    go_url = "https://go.dev/dl/go{}.{}{}".format(go_version, go_platform, go_extension)
 
     print("Downloading Go {} for TinyGo from: {}".format(go_version, go_url))
 
@@ -57,8 +59,9 @@ def _download_go(repository_ctx, version, platform):
         stripPrefix = "go",
     )
 
-    # Verify Go installation
-    go_binary = repository_ctx.path("go_sdk/bin/go")
+    # Verify Go installation (use .exe on Windows)
+    go_binary_name = "go.exe" if platform == "windows_amd64" else "go"
+    go_binary = repository_ctx.path("go_sdk/bin/{}".format(go_binary_name))
     if not go_binary.exists:
         fail("Go binary not found after download: {}".format(go_binary))
 
@@ -98,8 +101,9 @@ def _download_binaryen(repository_ctx, platform):
         stripPrefix = "binaryen-version_{}".format(binaryen_version),
     )
 
-    # Verify wasm-opt installation
-    wasm_opt_binary = repository_ctx.path("binaryen/bin/wasm-opt")
+    # Verify wasm-opt installation (use .exe on Windows)
+    wasm_opt_binary_name = "wasm-opt.exe" if platform == "windows_amd64" else "wasm-opt"
+    wasm_opt_binary = repository_ctx.path("binaryen/bin/{}".format(wasm_opt_binary_name))
     if not wasm_opt_binary.exists:
         fail("wasm-opt binary not found after download: {}".format(wasm_opt_binary))
 
@@ -110,10 +114,12 @@ def _download_binaryen(repository_ctx, platform):
 def _download_tinygo(repository_ctx, version, platform):
     """Download TinyGo release for the specified platform and version"""
 
-    # TinyGo release URL pattern
-    tinygo_url = "https://github.com/tinygo-org/tinygo/releases/download/v{version}/tinygo{version}.{platform}.tar.gz".format(
+    # TinyGo release URL pattern (use .zip for Windows, .tar.gz for others)
+    extension = ".zip" if platform == "windows_amd64" else ".tar.gz"
+    tinygo_url = "https://github.com/tinygo-org/tinygo/releases/download/v{version}/tinygo{version}.{platform}{extension}".format(
         version = version,
         platform = _get_tinygo_platform_suffix(platform),
+        extension = extension,
     )
 
     print("Downloading TinyGo {} for {}".format(version, platform))
@@ -125,8 +131,9 @@ def _download_tinygo(repository_ctx, version, platform):
         stripPrefix = "tinygo",
     )
 
-    # Verify installation
-    tinygo_binary = repository_ctx.path("tinygo/bin/tinygo")
+    # Verify installation (use .exe on Windows)
+    tinygo_binary_name = "tinygo.exe" if platform == "windows_amd64" else "tinygo"
+    tinygo_binary = repository_ctx.path("tinygo/bin/{}".format(tinygo_binary_name))
     if not tinygo_binary.exists:
         fail("TinyGo binary not found after download: {}".format(tinygo_binary))
 
@@ -301,14 +308,14 @@ filegroup(
 # Go binary for TinyGo
 alias(
     name = "go_binary",
-    actual = "go_sdk/bin/go",
+    actual = "{go_binary_name}",
     visibility = ["//visibility:public"],
 )
 
 # wasm-opt binary from Binaryen
 alias(
     name = "wasm_opt_binary",
-    actual = "binaryen/bin/wasm-opt",
+    actual = "{wasm_opt_binary_name}",
     visibility = ["//visibility:public"],
 )
 
@@ -353,7 +360,9 @@ toolchain(
     toolchain_type = "@rules_wasm_component//toolchains:tinygo_toolchain_type",
 )
 """.format(
-        tinygo_binary_name = "tinygo/bin/tinygo",
+        tinygo_binary_name = "tinygo/bin/tinygo.exe" if platform == "windows_amd64" else "tinygo/bin/tinygo",
+        go_binary_name = "go_sdk/bin/go.exe" if platform == "windows_amd64" else "go_sdk/bin/go",
+        wasm_opt_binary_name = "binaryen/bin/wasm-opt.exe" if platform == "windows_amd64" else "binaryen/bin/wasm-opt",
         os = "osx" if "darwin" in platform else ("windows" if "windows" in platform else "linux"),
         cpu = "arm64" if "arm64" in platform else "x86_64",
     ))

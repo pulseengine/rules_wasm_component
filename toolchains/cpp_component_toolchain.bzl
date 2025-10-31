@@ -77,9 +77,15 @@ def _detect_host_platform(repository_ctx):
     os_name = repository_ctx.os.name.lower()
     arch = repository_ctx.os.arch.lower()
 
-    if os_name == "mac os x":
+    # Normalize platform names for cross-platform compatibility
+    if "mac" in os_name or "darwin" in os_name:
         os_name = "darwin"
+    elif "windows" in os_name:
+        os_name = "windows"
+    elif "linux" in os_name:
+        os_name = "linux"
 
+    # Normalize architecture names
     if arch == "x86_64":
         arch = "amd64"
     elif arch == "aarch64":
@@ -121,7 +127,7 @@ def _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version):
             "linux_arm64": "arm64-linux",
             "darwin_amd64": "x86_64-macos",
             "darwin_arm64": "arm64-macos",
-            "windows_amd64": "x86_64-mingw",
+            "windows_amd64": "x86_64-windows",
         }
         arch_os = platform_map.get(platform, "x86_64-linux")
         wasi_sdk_dir = "wasi-sdk-{}.0-{}".format(wasi_sdk_version, arch_os)
@@ -144,7 +150,7 @@ def _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version):
         ))
 
     # Create tool wrappers pointing to downloaded WASI SDK
-    _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir)
+    _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir, platform)
 
     # Set up sysroot symlink for the downloaded WASI SDK
     _setup_downloaded_sysroot(repository_ctx)
@@ -176,7 +182,7 @@ def _get_wasi_sdk_url(platform, version):
             "linux_arm64": "arm64-linux",
             "darwin_amd64": "x86_64-macos",
             "darwin_arm64": "arm64-macos",
-            "windows_amd64": "x86_64-mingw",
+            "windows_amd64": "x86_64-windows",
         }
         arch_os = platform_map.get(platform, "x86_64-linux")
         filename = "wasi-sdk-{}.0-{}.tar.gz".format(version, arch_os)
@@ -187,14 +193,14 @@ def _get_wasi_sdk_url(platform, version):
             "linux_arm64": "linux",
             "darwin_amd64": "macos",
             "darwin_arm64": "macos",
-            "windows_amd64": "mingw",
+            "windows_amd64": "windows",
         }
         os_name = platform_map.get(platform, "linux")
         filename = "wasi-sdk-{}-{}.tar.gz".format(version, os_name)
 
     return base_url.format(version) + "/" + filename
 
-def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir):
+def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir, platform):
     """Create Bazel-native tool configurations for WASI SDK tools"""
 
     # Get absolute path to the repository root
@@ -212,9 +218,11 @@ def _create_wasi_sdk_wrappers(repository_ctx, wasi_sdk_dir):
     repository_ctx.file("wasi_config.txt", "\n".join(wasi_config))
 
     # Create direct symlinks to WASI SDK binaries (Bazel-native approach)
-    clang_path = "{}/bin/clang".format(repo_root)
-    clang_cpp_path = "{}/bin/clang++".format(repo_root)
-    llvm_ar_path = "{}/bin/llvm-ar".format(repo_root)
+    # Windows uses .exe extension for executables
+    exe_suffix = ".exe" if platform == "windows_amd64" else ""
+    clang_path = "{}/bin/clang{}".format(repo_root, exe_suffix)
+    clang_cpp_path = "{}/bin/clang++{}".format(repo_root, exe_suffix)
+    llvm_ar_path = "{}/bin/llvm-ar{}".format(repo_root, exe_suffix)
 
     if repository_ctx.path(clang_path).exists:
         repository_ctx.symlink(clang_path, "clang")
