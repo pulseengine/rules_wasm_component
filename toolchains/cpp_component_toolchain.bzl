@@ -127,7 +127,7 @@ def _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version):
             "linux_arm64": "arm64-linux",
             "darwin_amd64": "x86_64-macos",
             "darwin_arm64": "arm64-macos",
-            "windows_amd64": "x86_64-mingw",
+            "windows_amd64": "x86_64-windows",
         }
         arch_os = platform_map.get(platform, "x86_64-linux")
         wasi_sdk_dir = "wasi-sdk-{}.0-{}".format(wasi_sdk_version, arch_os)
@@ -182,7 +182,7 @@ def _get_wasi_sdk_url(platform, version):
             "linux_arm64": "arm64-linux",
             "darwin_amd64": "x86_64-macos",
             "darwin_arm64": "arm64-macos",
-            "windows_amd64": "x86_64-mingw",
+            "windows_amd64": "x86_64-windows",
         }
         arch_os = platform_map.get(platform, "x86_64-linux")
         filename = "wasi-sdk-{}.0-{}.tar.gz".format(version, arch_os)
@@ -193,7 +193,7 @@ def _get_wasi_sdk_url(platform, version):
             "linux_arm64": "linux",
             "darwin_amd64": "macos",
             "darwin_arm64": "macos",
-            "windows_amd64": "mingw",
+            "windows_amd64": "windows",
         }
         os_name = platform_map.get(platform, "linux")
         filename = "wasi-sdk-{}-{}.tar.gz".format(version, os_name)
