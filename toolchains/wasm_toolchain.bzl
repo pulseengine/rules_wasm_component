@@ -586,6 +586,7 @@ def _create_build_files(repository_ctx):
     """Create BUILD files for the toolchain"""
 
     strategy = repository_ctx.attr.strategy
+    platform = _detect_host_platform(repository_ctx)
 
     if strategy == "build":
         # For build strategy, reference external git repositories directly
