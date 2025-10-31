@@ -134,7 +134,7 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
             "darwin_arm64": "arm64-macos",
             "linux_amd64": "x86_64-linux",
             "linux_arm64": "arm64-linux",
-            "windows_amd64": "x86_64-mingw",
+            "windows_amd64": "x86_64-windows",
         }
 
         if platform not in platform_mapping:
