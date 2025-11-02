@@ -77,7 +77,7 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> AnyhowResult<()> {
     Ok(())
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, serde::Serialize)]
 pub struct WorkspaceConfig {
     pub work_dir: String,
     pub workspace_type: String,
@@ -87,7 +87,7 @@ pub struct WorkspaceConfig {
     pub bindings_dir: Option<String>,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, serde::Serialize)]
 pub struct FileSpec {
     pub source: String,
     pub destination: Option<String>,
@@ -184,4 +184,158 @@ pub fn prepare_workspace(config: &WorkspaceConfig) -> AnyhowResult<WorkspaceInfo
             config.workspace_type, file_count
         ),
     })
+}
+
+// JSON Batch Operations Support
+
+/// JSON operation request
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+pub struct JsonOperation {
+    pub operation: String,
+    pub source: Option<String>,
+    pub destination: Option<String>,
+    pub content: Option<String>,
+}
+
+/// JSON batch request
+#[derive(serde::Deserialize, Debug)]
+pub struct JsonBatchRequest {
+    pub operations: Vec<JsonOperation>,
+}
+
+/// JSON operation result
+#[derive(serde::Serialize, Debug, Clone)]
+pub struct JsonOperationResult {
+    pub success: bool,
+    pub message: String,
+    pub output: Option<String>,
+}
+
+/// JSON batch response
+#[derive(serde::Serialize, Debug)]
+pub struct JsonBatchResponse {
+    pub success: bool,
+    pub results: Vec<JsonOperationResult>,
+}
+
+/// Process JSON batch operations
+pub fn process_json_batch(request_json: &str) -> AnyhowResult<String> {
+    let request: JsonBatchRequest = serde_json::from_str(request_json)?;
+    let mut results = Vec::new();
+    let mut overall_success = true;
+
+    for op in request.operations {
+        let result = execute_json_operation(&op);
+        if !result.success {
+            overall_success = false;
+        }
+        results.push(result);
+    }
+
+    let response = JsonBatchResponse {
+        success: overall_success,
+        results,
+    };
+
+    Ok(serde_json::to_string(&response)?)
+}
+
+/// List files in a directory
+fn list_directory(path: &str) -> AnyhowResult<Vec<String>> {
+    let mut entries = Vec::new();
+
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        if let Some(name) = entry.file_name().to_str() {
+            entries.push(name.to_string());
+        }
+    }
+
+    entries.sort();
+    Ok(entries)
+}
+
+/// Execute a single JSON operation
+fn execute_json_operation(op: &JsonOperation) -> JsonOperationResult {
+    let result = match op.operation.as_str() {
+        "copy_file" => {
+            if let (Some(source), Some(dest)) = (&op.source, &op.destination) {
+                copy_file(source, dest).map(|_| None)
+            } else {
+                Err(anyhow::anyhow!("copy_file requires source and destination"))
+            }
+        }
+        "copy_directory" => {
+            if let (Some(source), Some(dest)) = (&op.source, &op.destination) {
+                copy_directory(source, dest).map(|_| None)
+            } else {
+                Err(anyhow::anyhow!("copy_directory requires source and destination"))
+            }
+        }
+        "create_directory" => {
+            if let Some(dest) = &op.destination {
+                create_directory(dest).map(|_| None)
+            } else {
+                Err(anyhow::anyhow!("create_directory requires destination"))
+            }
+        }
+        "copy_first_matching" => {
+            // Copy the first file matching a pattern (e.g., "*.rs") from source dir to destination
+            // source = directory to search
+            // content = glob pattern (e.g., "*.rs")
+            // destination = output file path
+            if let (Some(dir), Some(pattern), Some(dest)) = (&op.source, &op.content, &op.destination) {
+                match list_directory(dir) {
+                    Ok(entries) => {
+                        // Simple glob matching: *.ext means ends with .ext
+                        let matching: Vec<_> = entries.iter()
+                            .filter(|name| {
+                                if pattern.starts_with("*.") {
+                                    let ext = &pattern[1..]; // Remove *
+                                    name.ends_with(ext)
+                                } else {
+                                    name == &pattern
+                                }
+                            })
+                            .collect();
+
+                        if matching.is_empty() {
+                            Err(anyhow::anyhow!("No files matching '{}' found in {}", pattern, dir))
+                        } else {
+                            // Copy the first match
+                            let source_path = Path::new(dir).join(matching[0]);
+                            match copy_file(source_path.to_str().unwrap(), dest) {
+                                Ok(_) => {
+                                    let message = if matching.len() > 1 {
+                                        format!("Copied first match '{}' (found {} total)", matching[0], matching.len())
+                                    } else {
+                                        format!("Copied '{}'", matching[0])
+                                    };
+                                    Ok(Some(message))
+                                }
+                                Err(e) => Err(e)
+                            }
+                        }
+                    }
+                    Err(e) => Err(e)
+                }
+            } else {
+                Err(anyhow::anyhow!("copy_first_matching requires source (dir), content (pattern), and destination"))
+            }
+        }
+        _ => Err(anyhow::anyhow!("Unknown operation: {}", op.operation)),
+    };
+
+    match result {
+        Ok(output) => JsonOperationResult {
+            success: true,
+            message: format!("Operation '{}' completed successfully", op.operation),
+            output,
+        },
+        Err(e) => JsonOperationResult {
+            success: false,
+            message: format!("Operation '{}' failed: {}", op.operation, e),
+            output: None,
+        },
+    }
 }
