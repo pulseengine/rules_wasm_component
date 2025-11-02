@@ -9,6 +9,7 @@ wit_library(
     name = "simple_interfaces",
     package_name = "test:simple@1.0.0",
     srcs = ["simple.wit"],
+    world = "simple",
 )
 
 # Simple component
@@ -34,6 +35,7 @@ wit_library(
         "@wasi_random//:random",
         # "@wasi_http//:http",
     ],
+    world = "simple-no-wasi",
 )
 
 # Test with WASI 0.2.0 (potentially better compatibility)
@@ -46,6 +48,7 @@ wit_library(
         "@wasi_clocks_v020//:clocks",
         "@wasi_io_v020//:streams",
     ],
+    world = "simple-no-wasi-v020",
 )
 
 # Test component without WASI (using no_std)

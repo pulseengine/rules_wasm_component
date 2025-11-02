@@ -618,6 +618,45 @@ fn execute_json_operation(op: &JsonOperation) -> JsonOperationResult {
                 Err(anyhow::anyhow!("list_directory requires source"))
             }
         }
+        "copy_first_matching" => {
+            // Copy the first file matching a pattern (e.g., "*.rs") from source dir to destination
+            // source = directory to search
+            // content = glob pattern (e.g., "*.rs")
+            // destination = output file path
+            if let (Some(dir), Some(pattern), Some(dest)) = (&op.source, &op.content, &op.destination) {
+                let entries = list_directory(dir)?;
+
+                // Simple glob matching: *.ext means ends with .ext
+                let matching: Vec<_> = entries.iter()
+                    .filter(|name| {
+                        if pattern.starts_with("*.") {
+                            let ext = &pattern[1..]; // Remove *
+                            name.ends_with(ext)
+                        } else {
+                            name == pattern
+                        }
+                    })
+                    .collect();
+
+                if matching.is_empty() {
+                    return Err(anyhow::anyhow!("No files matching '{}' found in {}", pattern, dir));
+                }
+
+                // Copy the first match
+                let source_path = format!("{}/{}", dir, matching[0]);
+                copy_file(&source_path, dest)?;
+
+                let message = if matching.len() > 1 {
+                    format!("Copied first match '{}' (found {} total)", matching[0], matching.len())
+                } else {
+                    format!("Copied '{}'", matching[0])
+                };
+
+                Ok(Some(message))
+            } else {
+                Err(anyhow::anyhow!("copy_first_matching requires source (dir), content (pattern), and destination"))
+            }
+        }
         "path_exists" => {
             if let Some(source) = &op.source {
                 let info = path_exists(source);

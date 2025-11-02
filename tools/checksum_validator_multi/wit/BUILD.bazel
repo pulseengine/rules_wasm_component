@@ -10,4 +10,5 @@ wit_library(
     name = "checksum_validator_wit",
     srcs = ["checksum-validator.wit"],
     visibility = ["//visibility:public"],
+    world = "checksum-validator",
 )

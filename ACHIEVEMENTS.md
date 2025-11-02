@@ -45,7 +45,7 @@ and composition.
 | ------------------------------- | --------------- | ------------------------------------------------ |
 | `rust_wasm_component`           | ✅ **Complete** | Rust → WebAssembly Component compilation         |
 | `go_wasm_component`             | ✅ **Complete** | Go (TinyGo) → WebAssembly Component (rule ready) |
-| `multi_language_wasm_component` | ✅ **Complete** | Multi-language component composition             |
+| `wac_compose`                   | ✅ **Complete** | Official WAC standard component composition      |
 | `wasm_component_wizer`          | ✅ **Complete** | Pre-initialization optimization                  |
 | `wasm_validate`                 | ✅ **Complete** | Component validation and testing                 |
 
@@ -88,14 +88,15 @@ wasmtime run checksum_updater_wasm.wasm test --verbose
 ### Multi-Language Composition
 
 ```bash
-# Build composed component
+# Build component examples
 bazel build //examples/multi_language_composition:checksum_updater_simple
 
-# Test composition pipeline
-bazel test //examples/multi_language_composition:multi_language_composition_test
+# Test WAC composition (official WebAssembly standard)
+bazel test //examples/multi_profile:all
+bazel test //test/integration:all
 ```
 
-**Result:** ✅ **All tests passing**
+**Result:** ✅ **All tests passing** (using official WAC composition standard)
 
 ## 🔧 Component Features Demonstrated
 

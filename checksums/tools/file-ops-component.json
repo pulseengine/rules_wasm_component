@@ -1,12 +1,24 @@
 {
   "tool_name": "file-ops-component",
   "github_repo": "pulseengine/bazel-file-ops-component",
-  "latest_version": "0.1.0-rc.3",
-  "last_checked": "2024-10-24T13:00:00.000000Z",
+  "latest_version": "0.2.0",
+  "last_checked": "2025-11-01T16:00:00.000000Z",
   "supported_platforms": [
     "wasm_component"
   ],
   "versions": {
+    "0.2.0": {
+      "release_date": "2025-11-01",
+      "description": "Tier 1 File Operations - Added concatenate-files, read-file, write-file, append-to-file, move-path and enhanced security",
+      "platforms": {
+        "wasm_component": {
+          "sha256": "b31271501e44e92f95c1399ed655af00e54ab23bddc83fb7300890f75ea7e373",
+          "url_suffix": "file_ops_component.wasm",
+          "size_kb": 874,
+          "notes": "Includes concatenate-files operation for file merging"
+        }
+      }
+    },
     "0.1.0-rc.3": {
       "release_date": "2024-10-24",
       "description": "AOT compilation support for 100x faster startup and 2-5x runtime improvement",

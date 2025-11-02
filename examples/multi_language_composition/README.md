@@ -2,266 +2,281 @@
 
 > **State-of-the-art WebAssembly Component Model implementation with Bazel**
 
-This example demonstrates the composition of WebAssembly components written in different languages into cohesive, orchestrated systems using the WebAssembly Component Model.
-
-## 🌟 Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                Multi-Language Composition                   │
-├─────────────────────────────────────────────────────────────┤
-│  🦀 Rust Component          🐹 Go Component (Ready)        │
-│  ├── Checksum validation    ├── HTTP downloading           │
-│  ├── File system ops        ├── GitHub API integration     │
-│  ├── JSON processing        ├── Release management         │
-│  └── CLI interface          └── Network operations         │
-├─────────────────────────────────────────────────────────────┤
-│               🔧 Component Orchestration                    │
-│  ├── Interface definitions (WIT)                           │
-│  ├── Workflow coordination                                 │
-│  ├── Data flow management                                  │
-│  └── Cross-language communication                          │
-├─────────────────────────────────────────────────────────────┤
-│                 🏗️ Bazel Integration                       │
-│  ├── Pure Bazel rules (zero shell scripts)                │
-│  ├── Cross-platform compatibility                         │
-│  ├── Hermetic builds                                       │
-│  └── Proper toolchain integration                          │
-└─────────────────────────────────────────────────────────────┘
-```
+This example demonstrates WebAssembly component composition using **wac_compose**, the official WebAssembly Composition (WAC) standard from the Bytecode Alliance.
 
 ## 🚀 Quick Start
 
-### Build the Composed Component
+### Simple Component Usage
 
 ```bash
-# Build simple composition (single Rust component)
+# Build the checksum updater component
 bazel build //examples/multi_language_composition:checksum_updater_simple
 
-# Run the composed component
+# Run the component
 wasmtime run bazel-bin/examples/multi_language_composition/checksum_updater_simple.wasm test --verbose
 ```
 
-### Test All Compositions
+### Real Multi-Language Composition Examples
+
+For actual multi-language component composition, see these production examples:
+
+#### 1. **Multi-Profile Composition**
+See `//examples/multi_profile:*` for components with different build profiles:
+
+```starlark
+wac_compose(
+    name = "development_system",
+    components = {
+        ":camera_sensor_debug": "sensor:interfaces",
+        ":object_detection_release": "ai:interfaces",  # Mix profiles!
+    },
+    component_profiles = {
+        "ai:interfaces": "release",  # Override per-component
+    },
+    composition = """
+        let camera = new sensor:interfaces { ... };
+        let ai = new ai:interfaces { ... };
+        export ai as main;
+    """,
+)
+```
+
+#### 2. **Multi-Service Integration**
+See `//test/integration:multi_service_system` for component interconnection:
+
+```starlark
+wac_compose(
+    name = "multi_service_system",
+    components = {
+        ":service_a_component": "test:service-a",
+        ":service_b_component": "test:service-b",
+    },
+    composition = """
+        let service-a = new test:service-a { ... };
+        let service-b = new test:service-b {
+            storage: service-a.storage,  // Connect components!
+            ...
+        };
+        export service-b as main;
+    """,
+)
+```
+
+#### 3. **OCI Registry Composition**
+See `//examples/wac_oci_composition:*` for production deployment:
+
+```starlark
+wac_remote_compose(
+    name = "production_system",
+    components = {
+        "frontend": "ghcr.io/org/frontend:v1.0",
+        "backend": "ghcr.io/org/backend:v1.0",
+    },
+    composition_file = "production.wac",
+)
+```
+
+## 📋 Why wac_compose?
+
+### ✅ Official WebAssembly Standard
+
+`wac_compose` uses the **official WAC tool** from the Bytecode Alliance, ensuring:
+- **Standards compliance** with WebAssembly Component Model
+- **Proper component interconnection** through WIT interfaces
+- **Full composition language** support
+- **Active development** and ecosystem support
+
+### ✅ Production Features
+
+- **Multi-profile builds** - Mix debug/release components
+- **Per-component configuration** - Granular control
+- **No Python scripts** - Windows compatible
+- **Hermetic builds** - Reproducible across platforms
+- **Component interconnection** - Real inter-component communication
+
+### ✅ Working Examples
+
+| Example | Description | Location |
+|---------|-------------|----------|
+| Multi-Profile | Different build profiles per component | `//examples/multi_profile:*` |
+| Service Integration | Component interconnection patterns | `//test/integration:multi_service_system` |
+| WAC OCI | Production deployment with registries | `//examples/wac_oci_composition:*` |
+| WAC Remote | Remote component composition | `//examples/wac_remote_compose:*` |
+
+## 🔧 Component Composition with wac_compose
+
+### Basic Composition
+
+```starlark
+load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
+
+wac_compose(
+    name = "my_system",
+    components = {
+        ":frontend_component": "app:frontend",
+        ":backend_component": "app:backend",
+    },
+    composition = """
+        let frontend = new app:frontend { ... };
+        let backend = new app:backend { ... };
+
+        connect frontend.request -> backend.handler;
+
+        export frontend as main;
+    """,
+)
+```
+
+### Auto-Generated Composition
+
+If you don't specify a composition, wac_compose auto-generates one:
+
+```starlark
+wac_compose(
+    name = "simple_system",
+    components = {
+        ":component_a": "pkg:component-a",
+        ":component_b": "pkg:component-b",
+    },
+    # No composition specified - auto-generated
+)
+```
+
+Generates:
+```wac
+let component-a = new pkg:component-a { ... };
+let component-b = new pkg:component-b { ... };
+export component-a as main;
+```
+
+## 📚 WebAssembly Component Model
+
+### WIT Interface Definitions
+
+Components communicate through WebAssembly Interface Types (WIT):
+
+```wit
+// wit/frontend.wit
+package app:frontend@1.0.0;
+
+interface display {
+    show-message: func(message: string);
+}
+
+interface client {
+    make-request: func(data: string) -> string;
+}
+
+world frontend {
+    export display;
+    import client;
+}
+```
+
+### Component Implementation
+
+```rust
+use app_frontend_bindings::{
+    exports::app::frontend::display::Guest,
+    app::frontend::client,
+};
+
+struct Frontend;
+
+impl Guest for Frontend {
+    fn show_message(message: String) {
+        println!("Frontend: {}", message);
+    }
+}
+
+app_frontend_bindings::export!(Frontend with_types_in app_frontend_bindings);
+```
+
+## 🏗️ Bazel Integration
+
+### Complete Build
+
+```starlark
+# Define WIT interfaces
+wit_library(
+    name = "interfaces",
+    srcs = ["wit/interfaces.wit"],
+    package_name = "app:interfaces@1.0.0",
+    world = "app",
+)
+
+# Build Rust component
+rust_wasm_component_bindgen(
+    name = "app_component",
+    srcs = ["src/lib.rs"],
+    wit = ":interfaces",
+    profiles = ["debug", "release"],
+)
+
+# Compose with other components
+wac_compose(
+    name = "full_system",
+    components = {
+        ":app_component": "app:interfaces",
+        ":other_component": "other:interfaces",
+    },
+)
+```
+
+## 🧪 Testing Compositions
 
 ```bash
 # Run build tests
-bazel test //examples/multi_language_composition:multi_language_composition_test
+bazel test //examples/multi_language_composition:multi_language_tests
 
 # Build all targets
 bazel build //examples/multi_language_composition:all
+
+# Run specific composition
+wasmtime run bazel-bin/examples/multi_profile/development_system.wasm
 ```
 
-## 📋 Component Features
+## 📊 Performance Benefits
 
-### 🦀 Rust Checksum Component
+WAC compositions provide:
 
-**Capabilities:**
+- **Near-native speed** - Direct function calls between components
+- **Zero-copy sharing** - Efficient memory management
+- **Lazy loading** - Components loaded on demand
+- **Memory isolation** - Security through sandboxing
 
-- ✅ Complete CLI interface (`test`, `validate`, `update-all`, `list`)
-- ✅ Full Rust crate ecosystem (anyhow, hex, chrono, clap, serde_json)
-- ✅ WASI Preview 2 support through std library
-- ✅ Checksum validation and management
-- ✅ JSON configuration processing
+## 🎯 Migration from Old Patterns
 
-**Testing:**
-
-```bash
-wasmtime run checksum_updater_simple.wasm test --verbose
-wasmtime run checksum_updater_simple.wasm list
-wasmtime run checksum_updater_simple.wasm validate --all
-```
-
-### 🐹 Go HTTP Component (Architecture Complete)
-
-**Planned Capabilities:**
-
-- 🏗️ GitHub API integration
-- 🏗️ Release asset downloading
-- 🏗️ Checksum file retrieval
-- 🏗️ TinyGo + WASI Preview 2
-- 🏗️ HTTP/HTTPS networking
-
-**Bazel Rule:**
+If you're using older composition patterns:
 
 ```starlark
-go_wasm_component(
-    name = "http_downloader",
-    srcs = ["main.go"],
-    go_mod = "go.mod",
-    world = "wasi:cli/command",
-    optimization = "release",
-)
-```
-
-## 🔧 Composition Types
-
-### Simple Composition
-
-Components are bundled together with a shared manifest:
-
-```starlark
+# ❌ OLD: multi_language_wasm_component (removed)
 multi_language_wasm_component(
-    name = "simple_composition",
-    components = ["//path/to:component"],
+    name = "old_composition",
+    components = [":component"],
     composition_type = "simple",
-    description = "Single component demonstration",
+)
+
+# ✅ NEW: wac_compose (official standard)
+wac_compose(
+    name = "new_composition",
+    components = {":component": "pkg:component"},
+)
+
+# Or for single component, just use directly:
+alias(
+    name = "new_composition",
+    actual = ":component",
 )
 ```
 
-### Orchestrated Composition
+## 📖 Further Reading
 
-Components communicate through shared interfaces:
-
-```starlark
-multi_language_wasm_component(
-    name = "orchestrated_composition",
-    components = [
-        "//tools/http_downloader_go:http_downloader",
-        "//tools/checksum_updater_wasm:checksum_updater",
-    ],
-    composition_type = "orchestrated",
-    workflows = [
-        "download_checksums_from_github",
-        "validate_existing_checksums",
-        "update_tool_definitions",
-    ],
-)
-```
-
-### Linked Composition
-
-Components are merged into a single optimized module:
-
-```starlark
-multi_language_wasm_component(
-    name = "linked_composition",
-    components = ["//path/to:comp1", "//path/to:comp2"],
-    composition_type = "linked",
-    description = "Optimized single-module composition",
-)
-```
-
-## 📊 Build Results
-
-### Composition Manifest
-
-Each composition generates a manifest describing its architecture:
-
-```
-Component Composition Manifest
-============================
-Name: checksum_updater_simple
-Description: Checksum validation component (single-language demonstration)
-Type: simple
-Components:
-  1. checksum_updater_wasm_component_release (unknown)
-Workflows:
-```
-
-### Component Testing Output
-
-```
-🔧 WebAssembly Checksum Updater
-===============================
-🔍 Running in verbose mode
-
-🧪 Testing Crate Compatibility:
-✅ anyhow: Working
-✅ hex: Working - encoded 'hello world' to '68656c6c6f20776f726c64'
-✅ chrono: Working - current time: 2025-08-07 19:06:04 UTC
-✅ clap: Working - parsed value: 'test'
-
-📋 Basic Checksum Validation:
-⚠️ No tools found - creating demo data
-```
-
-## 🏗️ Bazel Implementation Details
-
-### Rule Features
-
-#### ✅ Pure Bazel Implementation
-
-- **Zero shell scripts** - complete adherence to "THE BAZEL WAY"
-- **Cross-platform compatibility** (Windows/macOS/Linux)
-- **Hermetic builds** with proper toolchain integration
-- **Provider-based architecture** following Bazel best practices
-
-#### ✅ Multi-Language Support
-
-- **Rust components** via `rust_wasm_component`
-- **Go components** via `go_wasm_component` (architecture complete)
-- **JavaScript components** via `jco_wasm_component` (planned)
-- **Component composition** via `multi_language_wasm_component`
-
-#### ✅ WebAssembly Component Model
-
-- **WASI Preview 2** support through standard libraries
-- **WIT interface definitions** for component communication
-- **Component orchestration** with workflow management
-- **Proper component metadata** and manifest generation
-
-### Rule Definition
-
-```starlark
-multi_language_wasm_component = rule(
-    implementation = _multi_language_wasm_component_impl,
-    cfg = wasm_transition,  # Platform transition for WebAssembly
-    attrs = {
-        "components": attr.label_list(
-            providers = [WasmComponentInfo],
-            doc = "List of WebAssembly components to compose",
-            mandatory = True,
-        ),
-        "wit": attr.label(
-            providers = [WitInfo],
-            doc = "WIT library defining component interfaces",
-        ),
-        "composition_type": attr.string(
-            values = ["simple", "orchestrated", "linked"],
-            default = "simple",
-        ),
-        "workflows": attr.string_list(
-            doc = "Workflow descriptions for orchestration",
-        ),
-    },
-    toolchains = [
-        "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
-    ],
-)
-```
-
-## 🎯 Future Enhancements
-
-### Planned Features
-
-1. **Advanced Orchestration**
-   - WAC (WebAssembly Compositions) integration
-   - Inter-component communication protocols
-   - Shared memory management
-
-2. **Extended Language Support**
-   - JavaScript/TypeScript via ComponentizeJS
-   - C/C++ via WASI SDK
-   - Python via Pyodide
-
-3. **Production Tooling**
-   - Component debugging support
-   - Performance profiling
-   - Deployment automation
-
-4. **Component Registry**
-   - Component package management
-   - Version compatibility checking
-   - Dependency resolution
-
-## 📚 Related Documentation
-
-- [Rust WebAssembly Components](../../tools/checksum_updater_wasm/README.md)
-- [Go WebAssembly Components](../../tools/http_downloader_go/README.md)
-- [WebAssembly Component Model](../../README.md#webassembly-component-model)
-- [Bazel Rules Documentation](../../README.md#rules)
+- [WAC Composition Guide](../../docs-site/src/content/docs/composition/wac.md)
+- [Multi-Profile Builds](../../docs-site/src/content/docs/guides/multi-profile-builds.mdx)
+- [WebAssembly Component Model](https://component-model.bytecodealliance.org/)
+- [WIT Language Specification](https://component-model.bytecodealliance.org/design/wit.html)
 
 ---
 
-> **This example demonstrates state-of-the-art WebAssembly Component Model implementation with Bazel, showcasing the complete architecture for multi-language component development and composition.**
+> **This example demonstrates state-of-the-art WebAssembly Component Model implementation with Bazel using the official WAC composition standard from the Bytecode Alliance.**
