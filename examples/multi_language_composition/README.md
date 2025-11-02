@@ -80,7 +80,7 @@ wac_remote_compose(
 
 ### ✅ Official WebAssembly Standard
 
-`wac_compose` uses the **official WAC tool** from the Bytecode Alliance, ensuring:
+`wac_compose` uses the [**official WAC tool**](https://github.com/bytecodealliance/wac) from the Bytecode Alliance, ensuring:
 - **Standards compliance** with WebAssembly Component Model
 - **Proper component interconnection** through WIT interfaces
 - **Full composition language** support
@@ -238,10 +238,13 @@ wasmtime run bazel-bin/examples/multi_profile/development_system.wasm
 
 ## 📊 Performance Benefits
 
+> **Note**: These characteristics are based on the WebAssembly Component Model architecture.
+> Actual performance depends on runtime implementation (Wasmtime, etc.) and component design.
+
 WAC compositions provide:
 
 - **Near-native speed** - Direct function calls between components
-- **Zero-copy sharing** - Efficient memory management
+- **Zero-copy sharing** - Efficient memory management where possible
 - **Lazy loading** - Components loaded on demand
 - **Memory isolation** - Security through sandboxing
 
@@ -260,7 +263,9 @@ multi_language_wasm_component(
 # ✅ NEW: wac_compose (official standard)
 wac_compose(
     name = "new_composition",
-    components = {":component": "pkg:component"},
+    components = {
+        ":component": "pkg:component",  # label -> WIT package name
+    },
 )
 
 # Or for single component, just use directly:
