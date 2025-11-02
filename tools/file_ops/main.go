@@ -27,6 +27,7 @@ type Operation struct {
 	Args       []string `json:"args,omitempty"`
 	WorkDir    string   `json:"work_dir,omitempty"`
 	OutputFile string   `json:"output_file,omitempty"`
+	InputFiles []string `json:"input_files,omitempty"` // For concatenate_files
 }
 
 // FileOpsRunner executes file operations hermetically
@@ -80,6 +81,8 @@ func (r *FileOpsRunner) executeOperation(op Operation) error {
 		return r.copyDirectoryContents(op.SrcPath, op.DestPath)
 	case "run_command":
 		return r.runCommand(op.Command, op.Args, op.WorkDir, op.OutputFile)
+	case "concatenate_files":
+		return r.concatenateFiles(op.InputFiles, op.OutputFile)
 	default:
 		return fmt.Errorf("unknown operation type: %s", op.Type)
 	}
@@ -291,6 +294,66 @@ func (r *FileOpsRunner) runCommand(command string, args []string, workDir, outpu
 	return nil
 }
 
+// concatenateFiles concatenates multiple input files into a single output file
+func (r *FileOpsRunner) concatenateFiles(inputFiles []string, outputFile string) error {
+	if len(inputFiles) == 0 {
+		return fmt.Errorf("concatenate_files requires at least one input file")
+	}
+	if outputFile == "" {
+		return fmt.Errorf("concatenate_files requires output_file")
+	}
+
+	// Determine full output path (relative to workspace)
+	var fullOutputPath string
+	if filepath.IsAbs(outputFile) {
+		fullOutputPath = outputFile
+	} else {
+		fullOutputPath = filepath.Join(r.config.WorkspaceDir, outputFile)
+	}
+
+	// Ensure output directory exists
+	outDir := filepath.Dir(fullOutputPath)
+	if err := os.MkdirAll(outDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory %s: %w", outDir, err)
+	}
+
+	// Create output file
+	outFile, err := os.Create(fullOutputPath)
+	if err != nil {
+		return fmt.Errorf("failed to create output file %s: %w", fullOutputPath, err)
+	}
+	defer outFile.Close()
+
+	// Concatenate all input files
+	for _, inputPath := range inputFiles {
+		// Input files can be absolute (from Bazel) or relative to workspace
+		var fullInputPath string
+		if filepath.IsAbs(inputPath) {
+			fullInputPath = inputPath
+		} else {
+			fullInputPath = filepath.Join(r.config.WorkspaceDir, inputPath)
+		}
+
+		// Open input file
+		inFile, err := os.Open(fullInputPath)
+		if err != nil {
+			return fmt.Errorf("failed to open input file %s: %w", fullInputPath, err)
+		}
+
+		// Copy contents to output file
+		if _, err := io.Copy(outFile, inFile); err != nil {
+			inFile.Close()
+			return fmt.Errorf("failed to copy contents from %s: %w", fullInputPath, err)
+		}
+
+		inFile.Close()
+		log.Printf("Concatenated: %s", inputPath)
+	}
+
+	log.Printf("Successfully concatenated %d files into %s", len(inputFiles), outputFile)
+	return nil
+}
+
 // validateConfig performs basic validation on the configuration
 func (r *FileOpsRunner) validateConfig() error {
 	if r.config.WorkspaceDir == "" {
@@ -330,6 +393,13 @@ func (r *FileOpsRunner) validateConfig() error {
 		case "run_command":
 			if op.Command == "" {
 				return fmt.Errorf("operation %d: run_command requires command", i)
+			}
+		case "concatenate_files":
+			if len(op.InputFiles) == 0 {
+				return fmt.Errorf("operation %d: concatenate_files requires input_files", i)
+			}
+			if op.OutputFile == "" {
+				return fmt.Errorf("operation %d: concatenate_files requires output_file", i)
 			}
 		default:
 			return fmt.Errorf("operation %d: unknown operation type: %s", i, op.Type)

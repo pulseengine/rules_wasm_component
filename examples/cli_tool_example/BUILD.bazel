@@ -33,6 +33,7 @@ wit_library(
     name = "processor_interfaces",
     package_name = "example:processor@1.0.0",
     srcs = ["wit/processor.wit"],
+    world = "processor",
 )
 
 rust_wasm_component_bindgen(

@@ -19,6 +19,7 @@ wit_library(
     package_name = "test:simple@1.0.0",
     testonly = True,
     srcs = ["fixtures/simple.wit"],
+    world = "simple-world",
 )
 
 wit_library(
@@ -27,6 +28,7 @@ wit_library(
     testonly = True,
     srcs = ["fixtures/consumer.wit"],
     deps = [":test_wit_simple"],
+    world = "consumer-world",
 )
 
 rust_wasm_component_bindgen(

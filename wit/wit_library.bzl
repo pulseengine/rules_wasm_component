@@ -204,7 +204,8 @@ wit_library = rule(
             doc = "WIT package name (defaults to target name)",
         ),
         "world": attr.string(
-            doc = "Optional world name to export",
+            mandatory = True,
+            doc = "World name defined in the WIT file (required for predictable binding generation)",
         ),
         "interfaces": attr.string_list(
             doc = "List of interface names defined in this library",

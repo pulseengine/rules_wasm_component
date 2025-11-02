@@ -25,6 +25,7 @@ wit_library(
     name = "greeting_interfaces",
     package_name = "example:greeting@1.0.0",
     srcs = ["greeting.wit"],
+    world = "greeter",
 )
 
 rust_wasm_component_bindgen(
