@@ -221,32 +221,30 @@ with open(sys.argv[3], 'w') as f:
             progress_message = "Filtering wrapper for {}".format(ctx.label),
         )
     else:
-        # For guest mode, simple concatenation
-        concat_script = ctx.actions.declare_file(ctx.label.name + "_concat.py")
-        concat_content = """#!/usr/bin/env python3
-import sys
-
-# Read and concatenate files
-with open(sys.argv[1], 'r') as f:
-    wrapper_content = f.read()
-
-with open(sys.argv[2], 'r') as f:
-    bindgen_content = f.read()
-
-with open(sys.argv[3], 'w') as f:
-    f.write(wrapper_content)
-    f.write(bindgen_content)
-"""
+        # For guest mode, use file_ops component for cross-platform concatenation
+        # Build JSON config for file_ops concatenate-files operation
+        config_file = ctx.actions.declare_file(ctx.label.name + "_concat_config.json")
         ctx.actions.write(
-            output = concat_script,
-            content = concat_content,
-            is_executable = True,
+            output = config_file,
+            content = json.encode({
+                "workspace_dir": ".",
+                "operations": [{
+                    "type": "concatenate_files",
+                    "input_files": [temp_wrapper.path, ctx.file.bindgen.path],
+                    "output_file": out_file.path,
+                }]
+            }),
         )
 
+        # Get file_ops tool from toolchain
+        file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
+        file_ops_tool = file_ops_toolchain.file_ops_component
+
+        # Execute cross-platform file concatenation
         ctx.actions.run(
-            executable = concat_script,
-            arguments = [temp_wrapper.path, ctx.file.bindgen.path, out_file.path],
-            inputs = [temp_wrapper, ctx.file.bindgen, concat_script],
+            executable = file_ops_tool,
+            arguments = [config_file.path],
+            inputs = [temp_wrapper, ctx.file.bindgen, config_file],
             outputs = [out_file],
             mnemonic = "ConcatWitWrapper",
             progress_message = "Concatenating wrapper for {}".format(ctx.label),
@@ -267,6 +265,7 @@ _generate_wrapper = rule(
             doc = "Generation mode: 'guest' for WASM component, 'native-guest' for native application",
         ),
     },
+    toolchains = ["@rules_wasm_component//toolchains:file_ops_toolchain_type"],
 )
 
 def _wasm_rust_library_impl(ctx):

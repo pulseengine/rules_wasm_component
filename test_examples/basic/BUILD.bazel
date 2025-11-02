@@ -6,6 +6,7 @@ wit_library(
     package_name = "example:hello@1.0.0",
     srcs = ["hello.wit"],
     interfaces = ["greeting"],
+    world = "hello-world",
 )
 
 rust_wasm_component_bindgen(

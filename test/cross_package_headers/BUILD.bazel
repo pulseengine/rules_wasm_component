@@ -40,6 +40,7 @@ wit_library(
     name = "consumer_interface",
     package_name = "test:consumer@1.0.0",
     srcs = ["consumer.wit"],
+    world = "consumer-component",
 )
 
 # Consumer component that depends on foundation headers

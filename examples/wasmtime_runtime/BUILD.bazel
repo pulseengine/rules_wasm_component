@@ -25,7 +25,7 @@ The source files in src/ demonstrate:
 #
 # rust_library(
 #     name = "wasmtime_utils",
-#     srcs = glob(["src/*.rs"]),
+#     srcs = glob(["src/*.rs"])
 #     deps = ["@crates//:wasmtime", "@crates//:anyhow", ...],
 # )
 #

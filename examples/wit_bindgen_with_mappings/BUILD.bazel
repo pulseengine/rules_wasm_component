@@ -6,6 +6,7 @@ wit_library(
     name = "api_interfaces",
     package_name = "example:api@1.0.0",
     srcs = ["api.wit"],
+    world = "my-app",
 )
 
 # Basic wit-bindgen usage without interface mappings
@@ -38,6 +39,7 @@ wit_library(
     deps = [
         "@wasi_io//:streams",
     ],
+    world = "wasi-demo",
 )
 
 # Example showing how to map WASI interfaces to existing crates

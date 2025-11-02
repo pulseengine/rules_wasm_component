@@ -11,6 +11,7 @@ load("//wit:wit_library.bzl", "wit_library")
 wit_library(
     name = "macro_interfaces",
     srcs = ["wit/macro-example.wit"],
+    world = "macro-world",
 )
 
 # Component using wit-bindgen macro approach

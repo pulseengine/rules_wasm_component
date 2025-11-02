@@ -17,6 +17,7 @@ wit_library(
     name = "basic_interface",
     package_name = "test:basic@1.0.0",
     srcs = ["basic.wit"],
+    world = "basic-component",
 )
 
 rust_wasm_component_bindgen(
@@ -34,6 +35,7 @@ wit_library(
     name = "external_lib",
     package_name = "external:lib@1.0.0",
     srcs = ["external.wit"],
+    world = "external-utilities",
 )
 
 wit_library(
@@ -41,6 +43,7 @@ wit_library(
     package_name = "test:consumer@1.0.0",
     srcs = ["consumer.wit"],
     deps = [":external_lib"],
+    world = "consumer-component",
 )
 
 rust_wasm_component_bindgen(
@@ -54,6 +57,7 @@ wit_library(
     name = "service_a_interface",
     package_name = "test:service-a@1.0.0",
     srcs = ["service_a.wit"],
+    world = "service-a",
 )
 
 wit_library(
@@ -61,6 +65,7 @@ wit_library(
     package_name = "test:service-b@1.0.0",
     srcs = ["service_b.wit"],
     deps = [":service_a_interface"],
+    world = "service-b",
 )
 
 rust_wasm_component_bindgen(
@@ -100,6 +105,7 @@ wit_library(
     name = "wasi_interface",
     package_name = "test:wasi-app@1.0.0",
     srcs = ["wasi_app.wit"],
+    world = "wasi-app",
 )
 
 rust_wasm_component_bindgen(

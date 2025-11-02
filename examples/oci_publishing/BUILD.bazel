@@ -429,7 +429,7 @@ wasm_component_oci_image(
         language = "rust",
         security_level = "enhanced",
         wasi_version = "preview2",
-    ),
+    )
     authors = ["metadata-team@example.com"],
     component = ":enhanced_annotations_example",
     description = "WebAssembly component with enhanced OCI annotations",
@@ -462,7 +462,7 @@ wasm_component_multi_arch_package(
         language = "rust",
         security_level = "basic",
         wasi_version = "multi",
-    ),
+    )
     components = {
         "wasm32-wasi": ":wasm32_wasi_component",
         "wasm32-unknown": ":wasm32_unknown_component",
@@ -503,7 +503,7 @@ wasm_component_multi_arch_package(
         language = "rust",
         security_level = "enterprise",
         wasi_version = "multi",
-    ),
+    )
     components = {
         "wasm32-wasi": ":wasm32_wasi_component",
         "wasm32-wasi-preview1": ":hello_oci_component",

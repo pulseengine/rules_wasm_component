@@ -14,6 +14,7 @@ wit_library(
     name = "test_interface",
     package_name = "test:export",
     srcs = ["test.wit"],
+    world = "test-world",
 )
 
 # Build a component using rust_wasm_component_bindgen
