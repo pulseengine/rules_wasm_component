@@ -256,61 +256,27 @@ def rust_wasm_component(
     """Builds a Rust WebAssembly component with multi-profile support.
 
     This macro is the primary entry point for creating Rust-based WASM components.
-    It handles the complete build pipeline: Rust compilation, WASM transition,
+    It handles the complete build pipeline including Rust compilation, WASM transition,
     component conversion, and optional WIT validation. Supports building multiple
-    profiles (debug/release/custom) in a single invocation.
+    profiles (debug, release, custom) in a single invocation.
+
+    Generated targets: <name> (main), <name>_<profile> (profile-specific),
+    <name>_all_profiles (filegroup), and intermediate libraries.
 
     Args:
-        name: Target name for the component (default profile will use this name)
-        srcs: Rust source files (.rs) to compile
-        deps: Rust dependencies (crate dependencies and wit_bindgen outputs)
-              Note: WIT binding deps should end with "_bindings" for proper transition
-        wit: WIT library target for interface definitions (optional)
-        adapter: Optional WASI adapter module (typically not needed for wasip2)
-        crate_features: Rust crate features to enable (e.g., ["serde", "std"])
-        rustc_flags: Additional rustc compiler flags
-        profiles: List of build profiles to create:
-                 - "debug": opt-level=1, debug=true, strip=false
-                 - "release": opt-level=s, debug=false, strip=true (size-optimized)
-                 - "custom": opt-level=2, debug=true, strip=false
-        validate_wit: Whether to validate component against WIT specification
-        visibility: Target visibility (standard Bazel visibility)
-        crate_root: Optional custom crate root file (defaults to src/lib.rs)
-        edition: Rust edition to use (default: "2021")
-        **kwargs: Additional arguments forwarded to rust_shared_library
-
-    Generated Targets:
-        - <name>: Main component (uses default or first profile)
-        - <name>_<profile>: Profile-specific components (e.g., my_component_debug)
-        - <name>_all_profiles: Filegroup containing all profile variants
-        - <name>_wasm_lib_<profile>: Intermediate WASM libraries (private)
-
-    Example:
-        rust_wasm_component(
-            name = "calculator",
-            srcs = ["src/lib.rs"],
-            wit = "//wit:calculator-interface",
-            profiles = ["debug", "release"],
-            deps = [
-                "//wit:calculator_bindings",  # Auto-transitioned for WASM
-                "@crates//:serde",
-                "@crates//:serde_json",
-            ],
-            crate_features = ["std"],
-            edition = "2021",
-        )
-
-    The macro creates:
-        calculator (release build)
-        calculator_debug
-        calculator_release
-        calculator_all_profiles (filegroup with both)
-
-    WIT Bindings Integration:
-        Dependencies ending with "_bindings" are automatically handled:
-        - Host builds use: <dep>_bindings_host
-        - WASM builds use: <dep>_bindings
-        This ensures proper platform-specific compilation.
+        name: Target name for the component (default profile will use this name).
+        srcs: Rust source files (.rs) to compile.
+        deps: Rust dependencies including crate dependencies and wit_bindgen outputs.
+        wit: WIT library target for interface definitions (optional).
+        adapter: Optional WASI adapter module (typically not needed for wasip2).
+        crate_features: Rust crate features to enable (e.g., ["serde", "std"]).
+        rustc_flags: Additional rustc compiler flags.
+        profiles: List of build profiles: "debug", "release", or "custom".
+        validate_wit: Whether to validate component against WIT specification.
+        visibility: Target visibility (standard Bazel visibility).
+        crate_root: Optional custom crate root file (defaults to src/lib.rs).
+        edition: Rust edition to use (default: "2021").
+        **kwargs: Additional arguments forwarded to rust_shared_library.
     """
 
     # Profile configurations

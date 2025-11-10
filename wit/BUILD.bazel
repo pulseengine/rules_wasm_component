@@ -8,6 +8,7 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     deps = [
+        ":symmetric_wit_bindgen",
         ":wit_bindgen",
         ":wit_library",
     ],
@@ -27,5 +28,21 @@ bzl_library(
     deps = [
         "//providers",
         "@bazel_skylib//lib:paths",
+    ],
+)
+
+bzl_library(
+    name = "symmetric_wit_bindgen",
+    srcs = ["symmetric_wit_bindgen.bzl"],
+    deps = [
+        "//providers",
+    ],
+)
+
+bzl_library(
+    name = "wit_markdown",
+    srcs = ["wit_markdown.bzl"],
+    deps = [
+        "//providers",
     ],
 )

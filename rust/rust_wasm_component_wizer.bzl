@@ -17,11 +17,7 @@ def rust_wasm_component_wizer(
         edition = "2021",
         init_function_name = "wizer.initialize",
         **kwargs):
-    """
-    Builds a Rust WebAssembly component with Wizer pre-initialization.
-
-    This macro combines rust_library with Wizer pre-initialization and WASM component conversion.
-    The workflow is: Rust → WASM module → Wizer → WASM component
+    """Builds a Rust WebAssembly component with Wizer pre-initialization.
 
     Args:
         name: Target name
@@ -37,17 +33,6 @@ def rust_wasm_component_wizer(
         edition: Rust edition (default: "2021")
         init_function_name: Wizer initialization function name (default: "wizer.initialize")
         **kwargs: Additional arguments passed to rust_library
-
-    Example:
-        rust_wasm_component_wizer(
-            name = "my_optimized_component",
-            srcs = ["src/lib.rs"],
-            wit = "//wit:my_interfaces",
-            init_function_name = "wizer.initialize",
-            deps = [
-                "@crates//:serde",
-            ],
-        )
     """
 
     # Profile configurations

@@ -329,17 +329,10 @@ def rust_wasm_component_bindgen(
         symmetric = False,
         invert_direction = False,
         **kwargs):
-    """
-    Builds a Rust WebAssembly component with automatic WIT binding generation.
+    """Builds a Rust WebAssembly component with automatic WIT binding generation.
 
-    This macro generates WIT bindings as a separate library and builds a WASM component
-    that depends on them. This provides clean separation between generated bindings
-    and user implementation code.
-
-    Generated targets:
-    - {name}_bindings_host: Host-platform rust_library for host applications
-    - {name}_bindings: WASM-platform rust_library for WASM components
-    - {name}: The final WASM component that depends on the bindings
+    Generates WIT bindings as a separate library and builds a WASM component that depends on
+    them, providing clean separation between generated bindings and user implementation code.
 
     Args:
         name: Target name
@@ -353,34 +346,7 @@ def rust_wasm_component_bindgen(
         symmetric: Enable symmetric mode for same source code to run natively and as WASM (requires cpetig's fork)
         invert_direction: Invert direction for symmetric interfaces (only used with symmetric=True)
         **kwargs: Additional arguments passed to rust_wasm_component
-
-    Example:
-        rust_wasm_component_bindgen(
-            name = "my_component",
-            srcs = ["src/lib.rs"],
-            wit = "//wit:my_interfaces",
-            profiles = ["debug", "release"],
-        )
-
-        # In WASM component src/lib.rs:
-        use my_component_bindings::exports::my_interface::{Guest};
-
-        # In host application BUILD.bazel:
-        rust_binary(
-            name = "host_app",
-            deps = [":my_component_bindings_host"],  # Use host bindings
-        )
-
-        # Symmetric example (same source code for native and WASM):
-        rust_wasm_component_bindgen(
-            name = "my_symmetric_component",
-            srcs = ["src/lib.rs"],
-            wit = "//wit:my_interfaces",
-            symmetric = True,
-            # Component code can now be compiled for both native and WASM execution
-        )
     """
-
     # Generate WIT bindings based on symmetric flag
     if symmetric:
         # Symmetric mode: Generate symmetric bindings for both native and WASM from same source

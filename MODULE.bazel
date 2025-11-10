@@ -20,7 +20,14 @@ bazel_dep(name = "rules_oci", version = "1.8.0")
 
 # Development dependencies
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
-bazel_dep(name = "stardoc", version = "0.7.1", dev_dependency = True)
+bazel_dep(name = "stardoc", version = "0.7.2", dev_dependency = True)
+
+# Fix abseil-cpp/protobuf compatibility: protobuf 29.0 expects removed absl/utility:if_constexpr
+# Upgrade to protobuf 33.0 which is compatible with abseil-cpp 20250814.0
+single_version_override(
+    module_name = "protobuf",
+    version = "33.0",
+)
 
 # Test dependencies for cross-package C++ header examples
 bazel_dep(name = "fmt", version = "11.0.2")

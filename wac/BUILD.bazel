@@ -8,14 +8,32 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     deps = [
+        ":wac_bundle",
         ":wac_compose",
+        ":wac_plug",
         ":wac_remote_compose",
+    ],
+)
+
+bzl_library(
+    name = "wac_bundle",
+    srcs = ["wac_bundle.bzl"],
+    deps = [
+        "//providers",
     ],
 )
 
 bzl_library(
     name = "wac_compose",
     srcs = ["wac_compose.bzl"],
+    deps = [
+        "//providers",
+    ],
+)
+
+bzl_library(
+    name = "wac_plug",
+    srcs = ["wac_plug.bzl"],
     deps = [
         "//providers",
     ],

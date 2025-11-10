@@ -1636,11 +1636,7 @@ def wasm_component_oci_publish(
         annotations = [],
         dry_run = False,
         **kwargs):
-    """
-    Convenience macro that combines wasm_component_oci_image and wasm_component_publish.
-
-    This macro provides a single-step workflow for preparing and publishing
-    a WebAssembly component to an OCI registry with optional signing.
+    """Combines wasm_component_oci_image and wasm_component_publish for convenient publishing.
 
     Args:
         name: Name of the publish target
@@ -1659,35 +1655,7 @@ def wasm_component_oci_publish(
         annotations: List of OCI annotations in 'key=value' format
         dry_run: Perform dry run without actual publish (default: False)
         **kwargs: Additional arguments passed to rules
-
-    Creates two targets:
-        {name}_image: The prepared OCI image
-        {name}: The publish script (executable)
-
-    Example:
-        wasm_component_oci_publish(
-            name = "publish_my_component",
-            component = ":my_component",
-            package_name = "my-org/my-component",
-            registry = "ghcr.io",
-            namespace = "my-org",
-            tag = "v1.0.0",
-            sign_component = True,
-            signing_keys = ":component_keys",
-            description = "My WebAssembly component",
-            authors = ["developer@my-org.com"],
-            license = "MIT",
-            annotations = [
-                "org.opencontainers.image.source=https://github.com/my-org/my-component",
-                "org.opencontainers.image.description=My WebAssembly component",
-            ],
-        )
-
-        # Then run:
-        # bazel run :publish_my_component  # for actual publish
-        # bazel run :publish_my_component -- --dry-run  # for dry run
     """
-
     # Create the OCI image
     oci_image_name = name + "_image"
     wasm_component_oci_image(
