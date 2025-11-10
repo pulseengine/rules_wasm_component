@@ -18,8 +18,8 @@ wit_library(
     name = "ai_interfaces",
     package_name = "ai:interfaces",
     srcs = ["wit/ai.wit"],
-    deps = [":sensor_interfaces"],
     world = "ai-model",
+    deps = [":sensor_interfaces"],
 )
 
 # Build components with multiple profiles

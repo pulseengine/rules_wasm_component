@@ -15,7 +15,7 @@ bzl_library(
 # Export all tool checksum files for consumption by toolchains
 filegroup(
     name = "all_checksums",
-    srcs = glob(["tools/*.json"])
+    srcs = glob(["tools/*.json"]),
     visibility = ["//visibility:public"],
 )
 

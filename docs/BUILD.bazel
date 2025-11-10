@@ -29,8 +29,8 @@ wit_docs_collection(
 
 stardoc(
     name = "example_rule_stardoc_raw",
-    input = "example_rule.bzl",
     out = "example_rule_stardoc_raw.md",
+    input = "example_rule.bzl",
 )
 
 genrule(
@@ -53,8 +53,8 @@ genrule(
 
 stardoc(
     name = "cpp_component_stardoc_raw",
-    input = "//cpp:defs.bzl",
     out = "cpp_component_raw.md",
+    input = "//cpp:defs.bzl",
     deps = [
         "//cpp:defs",
         "//providers",
@@ -85,11 +85,11 @@ genrule(
 
 stardoc(
     name = "rust_defs_stardoc_raw",
-    input = "//rust:defs.bzl",
     out = "rust_defs_raw.md",
+    input = "//rust:defs.bzl",
     deps = [
-        "//rust:defs",
         "//providers",
+        "//rust:defs",
         "//rust:transitions",
         "//wasm:wasm_component_wizer",
         "//wit:symmetric_wit_bindgen",
@@ -114,8 +114,8 @@ genrule(
 
 stardoc(
     name = "rust_wasm_component_stardoc_raw",
-    input = "//rust:rust_wasm_component.bzl",
     out = "rust_wasm_component_stardoc_raw.md",
+    input = "//rust:rust_wasm_component.bzl",
     deps = [
         "//rust:rust_wasm_component",
         "@rules_rust//rust:bzl_lib",
@@ -142,8 +142,8 @@ genrule(
 
 stardoc(
     name = "go_defs_stardoc_raw",
-    input = "//go:defs.bzl",
     out = "go_defs_raw.md",
+    input = "//go:defs.bzl",
     deps = [
         "//go:defs",
         "//providers",
@@ -174,8 +174,8 @@ genrule(
 
 stardoc(
     name = "js_defs_stardoc_raw",
-    input = "//js:defs.bzl",
     out = "js_defs_raw.md",
+    input = "//js:defs.bzl",
     deps = [
         "//js:defs",
         "//providers",
@@ -204,13 +204,13 @@ genrule(
 
 stardoc(
     name = "wit_defs_stardoc_raw",
-    input = "//wit:defs.bzl",
     out = "wit_defs_raw.md",
+    input = "//wit:defs.bzl",
     deps = [
         "//wit:defs",
-        "//wit:wit_library",
-        "//wit:wit_bindgen",
         "//wit:symmetric_wit_bindgen",
+        "//wit:wit_bindgen",
+        "//wit:wit_library",
         "//wit:wit_markdown",
         "@bazel_skylib//lib:paths",
     ],
@@ -236,12 +236,12 @@ genrule(
 
 stardoc(
     name = "wasm_defs_stardoc_raw",
-    input = "//wasm:defs.bzl",
     out = "wasm_defs_raw.md",
+    input = "//wasm:defs.bzl",
     deps = [
-        "//wasm:defs",
         "//providers",
         "//tools/bazel_helpers:wasm_tools_actions",
+        "//wasm:defs",
     ],
 )
 
@@ -265,11 +265,11 @@ genrule(
 
 stardoc(
     name = "wkg_defs_stardoc_raw",
-    input = "//wkg:defs.bzl",
     out = "wkg_defs_raw.md",
+    input = "//wkg:defs.bzl",
     deps = [
-        "//wkg:defs",
         "//providers",
+        "//wkg:defs",
     ],
 )
 
@@ -293,11 +293,11 @@ genrule(
 
 stardoc(
     name = "wac_defs_stardoc_raw",
-    input = "//wac:defs.bzl",
     out = "wac_defs_raw.md",
+    input = "//wac:defs.bzl",
     deps = [
-        "//wac:defs",
         "//providers",
+        "//wac:defs",
     ],
 )
 
@@ -321,11 +321,11 @@ genrule(
 
 stardoc(
     name = "wrpc_defs_stardoc_raw",
-    input = "//wrpc:defs.bzl",
     out = "wrpc_defs_raw.md",
+    input = "//wrpc:defs.bzl",
     deps = [
-        "//wrpc:defs",
         "//providers",
+        "//wrpc:defs",
     ],
 )
 

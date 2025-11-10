@@ -36,10 +36,10 @@ wit_library(
     name = "wasi_demo_interfaces",
     package_name = "example:wasi-demo@1.0.0",
     srcs = ["wasi_example.wit"],
+    world = "wasi-demo",
     deps = [
         "@wasi_io//:streams",
     ],
-    world = "wasi-demo",
 )
 
 # Example showing how to map WASI interfaces to existing crates

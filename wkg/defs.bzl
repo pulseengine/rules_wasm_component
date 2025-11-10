@@ -1656,6 +1656,7 @@ def wasm_component_oci_publish(
         dry_run: Perform dry run without actual publish (default: False)
         **kwargs: Additional arguments passed to rules
     """
+
     # Create the OCI image
     oci_image_name = name + "_image"
     wasm_component_oci_image(

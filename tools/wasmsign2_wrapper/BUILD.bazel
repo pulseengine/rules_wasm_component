@@ -13,13 +13,13 @@ package(default_visibility = ["//visibility:public"])
 go_binary(
     name = "wasmsign2_wrapper",
     srcs = ["main.go"],
-    pure = "on",  # Pure Go for cross-platform compatibility
     data = [
         "@wasmsign2_cli_wasm//file",
         "@wasmtime_toolchain//:wasmtime",
     ],
-    deps = ["@rules_go//go/runfiles"],
+    pure = "on",  # Pure Go for cross-platform compatibility
     visibility = ["//visibility:public"],
+    deps = ["@rules_go//go/runfiles"],
 )
 
 # Export for easy access in toolchains

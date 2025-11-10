@@ -25,6 +25,7 @@ wit_library(
     name = "nowasi_interfaces",
     package_name = "test:nowasi@1.0.0",
     srcs = ["simple_no_wasi.wit"],
+    world = "simple-no-wasi",
     deps = [
         "@wasi_cli//:cli",
         "@wasi_io//:streams",
@@ -35,7 +36,6 @@ wit_library(
         "@wasi_random//:random",
         # "@wasi_http//:http",
     ],
-    world = "simple-no-wasi",
 )
 
 # Test with WASI 0.2.0 (potentially better compatibility)
@@ -43,12 +43,12 @@ wit_library(
     name = "nowasi_interfaces_v020",
     package_name = "test:nowasi020@1.0.0",
     srcs = ["simple_no_wasi_v020.wit"],
+    world = "simple-no-wasi-v020",
     deps = [
         "@wasi_cli_v020//:cli",
         "@wasi_clocks_v020//:clocks",
         "@wasi_io_v020//:streams",
     ],
-    world = "simple-no-wasi-v020",
 )
 
 # Test component without WASI (using no_std)

@@ -14,23 +14,23 @@ package(default_visibility = ["//visibility:public"])
 # This guarantees compatibility with the user's Wasmtime version
 wasm_precompile(
     name = "file_ops_aot",
-    wasm_file = "@file_ops_component_external//file",
-    optimization_level = "2",  # Maximum optimization
     debug_info = False,  # Production build - no debug info
+    optimization_level = "2",  # Maximum optimization
+    wasm_file = "@file_ops_component_external//file",
 )
 
 # Wrapper binary that executes external WASM component with local AOT
 go_binary(
     name = "file_ops_external",
     srcs = ["main.go"],
-    pure = "on",
     data = [
         ":file_ops_aot",  # Locally compiled AOT - guaranteed compatible!
         "@file_ops_component_external//file",  # Fallback to regular WASM if AOT fails
         "@wasmtime_toolchain//:wasmtime",
     ],
-    deps = ["@rules_go//go/runfiles"],
+    pure = "on",
     visibility = ["//visibility:public"],
+    deps = ["@rules_go//go/runfiles"],
 )
 
 # Export for easy access in toolchains

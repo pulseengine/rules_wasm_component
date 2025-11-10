@@ -28,8 +28,8 @@ wit_library(
     name = "service_b_interface",
     package_name = "test:service-b@1.0.0",
     srcs = ["service_b.wit"],
-    deps = [":service_a_interface"],
     world = "service-b",
+    deps = [":service_a_interface"],
 )
 
 rust_wasm_component_bindgen(

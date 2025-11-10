@@ -27,7 +27,7 @@ filegroup(
             "*.md",
         ],
         allow_empty = True,
-    )
+    ),
     visibility = ["//visibility:public"],
 )
 
