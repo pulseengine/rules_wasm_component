@@ -539,7 +539,7 @@ bazel_dep(name = "rules_rust", version = "0.66.0")  # Updated
 
 ### Toolchains Implemented
 
-- ✅ TinyGo v0.38.0 with WASI Preview 2 support
+- ✅ TinyGo v0.39.0 with WASI Preview 2 support
 - ✅ Rust WebAssembly components
 - ✅ C++ components with WASI SDK
 - ✅ JavaScript/TypeScript components with ComponentizeJS

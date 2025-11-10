@@ -60,11 +60,7 @@ def rust_wasm_binary(
         visibility = None,
         edition = "2021",
         **kwargs):
-    """
-    Builds a Rust WebAssembly CLI binary component.
-
-    This macro creates a Rust binary compiled to wasm32-wasip2 that automatically
-    exports the wasi:cli/command interface, making it executable via wasmtime.
+    """Builds a Rust WebAssembly CLI binary component.
 
     Args:
         name: Target name
@@ -75,16 +71,6 @@ def rust_wasm_binary(
         visibility: Target visibility
         edition: Rust edition (default: "2021")
         **kwargs: Additional arguments passed to rust_binary
-
-    Example:
-        rust_wasm_binary(
-            name = "my_cli_tool",
-            srcs = ["src/main.rs"],
-            deps = [
-                "@crates//:clap",
-                "@crates//:anyhow",
-            ],
-        )
     """
 
     # Build the host-platform rust_binary first

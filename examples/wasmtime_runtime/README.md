@@ -1,5 +1,7 @@
 # Wasmtime Runtime Examples
 
+> **NOTE**: This example is currently disabled pending wasmtime crate integration. The documentation below describes the intended architecture and functionality.
+
 This directory contains enhanced real-world examples demonstrating how to use the [Wasmtime](https://wasmtime.dev/) WebAssembly runtime with the component model for production applications.
 
 ## 🎯 Overview

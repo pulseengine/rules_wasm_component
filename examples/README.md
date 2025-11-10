@@ -11,8 +11,8 @@ This directory contains examples demonstrating different approaches to building 
 A basic WebAssembly component using Rust with WIT interfaces and generated bindings.
 
 ```bash
-bazel build //examples/basic:basic_component
-bazel test //examples/basic:basic_test
+bazel build //examples/basic:hello_component
+bazel test //examples/basic:hello_component_test
 ```
 
 **Use this when:**
@@ -123,13 +123,13 @@ Optimized toolchains with proper caching, parallel builds, and platform constrai
 
 ```bash
 # Build all working examples
-bazel build //examples/basic:basic_component
+bazel build //examples/basic:hello_component
 bazel build //examples/go_component:calculator_component
-bazel build //examples/cpp_component/calculator:calculator_component
-bazel build //examples/js_component:calculator_component
+bazel build //examples/cpp_component/calculator:calculator_cpp_component
+bazel build //examples/js_component:hello_js_component
 
 # Run tests
-bazel test //examples/basic:basic_test
+bazel test //examples/basic:hello_component_test
 bazel test //examples/go_component:...
 ```
 

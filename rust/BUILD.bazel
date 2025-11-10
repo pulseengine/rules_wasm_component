@@ -8,8 +8,12 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     deps = [
+        ":clippy",
+        ":rust_wasm_binary",
         ":rust_wasm_component",
+        ":rust_wasm_component_bindgen",
         ":rust_wasm_component_test",
+        ":rust_wasm_component_wizer",
     ],
 )
 
@@ -17,8 +21,53 @@ bzl_library(
     name = "rust_wasm_component",
     srcs = ["rust_wasm_component.bzl"],
     deps = [
+        ":transitions",
         "//common",
         "//providers",
+        "//tools/bazel_helpers:wasm_tools_actions",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_component_bindgen",
+    srcs = ["rust_wasm_component_bindgen.bzl"],
+    deps = [
+        ":rust_wasm_component",
+        ":transitions",
+        "//providers",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_component_wizer",
+    srcs = ["rust_wasm_component_wizer.bzl"],
+    deps = [
+        "//providers",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_binary",
+    srcs = ["rust_wasm_binary.bzl"],
+    deps = [
+        ":transitions",
+        "//common",
+    ],
+)
+
+bzl_library(
+    name = "clippy",
+    srcs = ["clippy.bzl"],
+    deps = [
+        "//providers",
+    ],
+)
+
+bzl_library(
+    name = "transitions",
+    srcs = ["transitions.bzl"],
+    deps = [
+        "//common",
     ],
 )
 

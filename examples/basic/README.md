@@ -12,10 +12,10 @@ This example demonstrates the simplest possible WebAssembly component using Rust
 
 ```bash
 # Build the component
-bazel build //examples/basic:basic_component
+bazel build //examples/basic:hello_component
 
 # Test the component
-bazel test //examples/basic:basic_test
+bazel test //examples/basic:hello_component_test
 ```
 
 ## WIT Interface
@@ -34,10 +34,10 @@ world hello {
 
 ```bash
 # Test with wasmtime
-wasmtime run --wasi preview2 bazel-bin/examples/basic/basic_component.wasm
+wasmtime run --wasi preview2 bazel-bin/examples/basic/hello_component.wasm
 
 # Or use the built-in test
-bazel test //examples/basic:basic_test
+bazel test //examples/basic:hello_component_test
 ```
 
 This demonstrates the minimal setup required for a WebAssembly component with rules_wasm_component.

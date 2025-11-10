@@ -4,6 +4,7 @@ Collects and generates documentation for all WIT interfaces used in examples.
 """
 
 load("@rules_wasm_component//wit:defs.bzl", "wit_docs_collection")
+load("@stardoc//stardoc:stardoc.bzl", "stardoc")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -14,4 +15,330 @@ wit_docs_collection(
         "//examples/go_component:calculator_docs",
         "//examples/go_component:http_service_docs",
     ],
+)
+
+# ============================================================================
+# Stardoc API Documentation
+# ============================================================================
+# Auto-generated API reference for all rules_wasm_component rule files
+# All outputs include Astro frontmatter for docs-site integration
+
+# ----------------------------------------------------------------------------
+# Example Rules (Tutorial/Demo)
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "example_rule_stardoc_raw",
+    input = "example_rule.bzl",
+    out = "example_rule_stardoc_raw.md",
+)
+
+genrule(
+    name = "example_rule_stardoc",
+    srcs = [":example_rule_stardoc_raw"],
+    outs = ["example_rule.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: Example Rule' >> $@
+        echo 'description: Simple Stardoc example demonstrating documentation generation' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# C++ Component Rules
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "cpp_component_stardoc_raw",
+    input = "//cpp:defs.bzl",
+    out = "cpp_component_raw.md",
+    deps = [
+        "//cpp:defs",
+        "//providers",
+        "//rust:transitions",
+        "//tools/bazel_helpers:file_ops_actions",
+        "@bazel_skylib//rules:copy_file",
+        "@bazel_skylib//rules:write_file",
+    ],
+)
+
+genrule(
+    name = "cpp_component_stardoc",
+    srcs = [":cpp_component_stardoc_raw"],
+    outs = ["cpp_component.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: C++ Components API' >> $@
+        echo 'description: Build WebAssembly components from C++ code using cpp_component and cc_component_library' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# Rust Component Rules
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "rust_defs_stardoc_raw",
+    input = "//rust:defs.bzl",
+    out = "rust_defs_raw.md",
+    deps = [
+        "//rust:defs",
+        "//providers",
+        "//rust:transitions",
+        "//wasm:wasm_component_wizer",
+        "//wit:symmetric_wit_bindgen",
+        "//wit:wit_bindgen",
+        "@rules_rust//rust:bzl_lib",
+    ],
+)
+
+genrule(
+    name = "rust_defs_stardoc",
+    srcs = [":rust_defs_stardoc_raw"],
+    outs = ["rust_defs.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: Rust Components API' >> $@
+        echo 'description: Build WebAssembly components from Rust code using rust_wasm_component' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+stardoc(
+    name = "rust_wasm_component_stardoc_raw",
+    input = "//rust:rust_wasm_component.bzl",
+    out = "rust_wasm_component_stardoc_raw.md",
+    deps = [
+        "//rust:rust_wasm_component",
+        "@rules_rust//rust:bzl_lib",
+    ],
+)
+
+genrule(
+    name = "rust_wasm_component_stardoc",
+    srcs = [":rust_wasm_component_stardoc_raw"],
+    outs = ["rust_wasm_component.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: rust_wasm_component Rule' >> $@
+        echo 'description: Core implementation of rust_wasm_component rule for building WebAssembly components' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# Go Component Rules
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "go_defs_stardoc_raw",
+    input = "//go:defs.bzl",
+    out = "go_defs_raw.md",
+    deps = [
+        "//go:defs",
+        "//providers",
+        "//rust:transitions",
+        "//tools/bazel_helpers:file_ops_actions",
+        "@bazel_skylib//rules:copy_file",
+        "@bazel_skylib//rules:write_file",
+    ],
+)
+
+genrule(
+    name = "go_defs_stardoc",
+    srcs = [":go_defs_stardoc_raw"],
+    outs = ["go_defs.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: Go Components API' >> $@
+        echo 'description: Build WebAssembly components from Go code using TinyGo and wit-bindgen-go' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# JavaScript/TypeScript Component Rules
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "js_defs_stardoc_raw",
+    input = "//js:defs.bzl",
+    out = "js_defs_raw.md",
+    deps = [
+        "//js:defs",
+        "//providers",
+        "//rust:transitions",
+        "@bazel_skylib//lib:paths",
+    ],
+)
+
+genrule(
+    name = "js_defs_stardoc",
+    srcs = [":js_defs_stardoc_raw"],
+    outs = ["js_defs.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: JavaScript Components API' >> $@
+        echo 'description: Build WebAssembly components from JavaScript/TypeScript using componentize-js' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# WIT (WebAssembly Interface Type) Rules
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "wit_defs_stardoc_raw",
+    input = "//wit:defs.bzl",
+    out = "wit_defs_raw.md",
+    deps = [
+        "//wit:defs",
+        "//wit:wit_library",
+        "//wit:wit_bindgen",
+        "//wit:symmetric_wit_bindgen",
+        "//wit:wit_markdown",
+        "@bazel_skylib//lib:paths",
+    ],
+)
+
+genrule(
+    name = "wit_defs_stardoc",
+    srcs = [":wit_defs_stardoc_raw"],
+    outs = ["wit_defs.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: WIT Interface API' >> $@
+        echo 'description: Define and document WebAssembly Component Model interfaces using WIT' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# WASM Component Utilities
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "wasm_defs_stardoc_raw",
+    input = "//wasm:defs.bzl",
+    out = "wasm_defs_raw.md",
+    deps = [
+        "//wasm:defs",
+        "//providers",
+        "//tools/bazel_helpers:wasm_tools_actions",
+    ],
+)
+
+genrule(
+    name = "wasm_defs_stardoc",
+    srcs = [":wasm_defs_stardoc_raw"],
+    outs = ["wasm_defs.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: WASM Utilities API' >> $@
+        echo 'description: Validate, inspect, and manipulate WebAssembly components and modules' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# WKG (Wasm Package) Rules
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "wkg_defs_stardoc_raw",
+    input = "//wkg:defs.bzl",
+    out = "wkg_defs_raw.md",
+    deps = [
+        "//wkg:defs",
+        "//providers",
+    ],
+)
+
+genrule(
+    name = "wkg_defs_stardoc",
+    srcs = [":wkg_defs_stardoc_raw"],
+    outs = ["wkg_defs.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: WKG Package API' >> $@
+        echo 'description: Fetch and use WebAssembly packages from wkg registries' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# WAC (WebAssembly Composition) Rules
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "wac_defs_stardoc_raw",
+    input = "//wac:defs.bzl",
+    out = "wac_defs_raw.md",
+    deps = [
+        "//wac:defs",
+        "//providers",
+    ],
+)
+
+genrule(
+    name = "wac_defs_stardoc",
+    srcs = [":wac_defs_stardoc_raw"],
+    outs = ["wac_defs.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: WAC Composition API' >> $@
+        echo 'description: Compose multiple WebAssembly components using wac' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
+# WRPC (WebAssembly RPC) Rules
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "wrpc_defs_stardoc_raw",
+    input = "//wrpc:defs.bzl",
+    out = "wrpc_defs_raw.md",
+    deps = [
+        "//wrpc:defs",
+        "//providers",
+    ],
+)
+
+genrule(
+    name = "wrpc_defs_stardoc",
+    srcs = [":wrpc_defs_stardoc_raw"],
+    outs = ["wrpc_defs.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: WRPC Protocol API' >> $@
+        echo 'description: Generate RPC bindings for WebAssembly components using wrpc' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
 )
