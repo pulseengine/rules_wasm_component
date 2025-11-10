@@ -5,8 +5,8 @@ wit_library(
     name = "consumer_interfaces",
     package_name = "consumer:app@1.0.0",
     srcs = ["consumer.wit"],
-    deps = ["//test_examples/dependencies/external:lib_interfaces"],
     world = "consumer-world",
+    deps = ["//test_examples/dependencies/external:lib_interfaces"],
 )
 
 rust_wasm_component_bindgen(

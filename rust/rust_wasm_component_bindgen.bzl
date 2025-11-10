@@ -232,7 +232,7 @@ with open(sys.argv[3], 'w') as f:
                     "type": "concatenate_files",
                     "input_files": [temp_wrapper.path, ctx.file.bindgen.path],
                     "output_file": out_file.path,
-                }]
+                }],
             }),
         )
 
@@ -347,6 +347,7 @@ def rust_wasm_component_bindgen(
         invert_direction: Invert direction for symmetric interfaces (only used with symmetric=True)
         **kwargs: Additional arguments passed to rust_wasm_component
     """
+
     # Generate WIT bindings based on symmetric flag
     if symmetric:
         # Symmetric mode: Generate symmetric bindings for both native and WASM from same source

@@ -27,8 +27,8 @@ wit_library(
     package_name = "test:consumer@1.0.0",
     testonly = True,
     srcs = ["fixtures/consumer.wit"],
-    deps = [":test_wit_simple"],
     world = "consumer-world",
+    deps = [":test_wit_simple"],
 )
 
 rust_wasm_component_bindgen(

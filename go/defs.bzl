@@ -668,6 +668,7 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
     if ctx.attr.wit:
         wit_info = ctx.attr.wit[WitInfo]
         inputs.extend(wit_info.wit_files.to_list())
+
         # Also include the WIT library directory (with deps/) for dependency resolution
         for file in ctx.attr.wit[DefaultInfo].files.to_list():
             if file.is_directory:

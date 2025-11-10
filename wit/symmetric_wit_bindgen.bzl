@@ -4,6 +4,7 @@ load("//providers:providers.bzl", "WitInfo")
 
 def _to_snake_case(name):
     """Convert a name to snake_case (matching wit-bindgen's Rust backend logic)"""
+
     # Replace hyphens with underscores and convert to lowercase
     return name.replace("-", "_").lower()
 
@@ -114,7 +115,7 @@ def _symmetric_wit_bindgen_impl(ctx):
                         "type": "copy_file",
                         "src_path": source_path,
                         "dest_path": out_file.path,
-                    }]
+                    }],
                 }),
             )
 

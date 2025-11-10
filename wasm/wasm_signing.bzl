@@ -117,6 +117,7 @@ def _wasm_sign_impl(ctx):
     else:
         secret_key = ctx.file.secret_key
         public_key = ctx.file.public_key
+
         # When using raw key files, user must specify the format explicitly
         openssh_format = ctx.attr.openssh_format
 
@@ -265,6 +266,7 @@ def _wasm_verify_impl(ctx):
         signature_info = ctx.attr.signed_component[WasmSignatureInfo]
         input_wasm = signature_info.signed_wasm
         signature_file = signature_info.signature_file
+
         # Infer OpenSSH format from signature metadata
         openssh_format = signature_info.signature_metadata.get("format") == "openssh"
     elif ctx.file.wasm_file:
@@ -278,10 +280,12 @@ def _wasm_verify_impl(ctx):
     if ctx.attr.keys:
         key_info = ctx.attr.keys[WasmKeyInfo]
         public_key = key_info.public_key
+
         # Override openssh_format if we have key info
         openssh_format = key_info.key_format == "openssh"
     else:
         public_key = ctx.file.public_key
+
         # When using raw public key file, user must specify format explicitly
         openssh_format = ctx.attr.openssh_format
 

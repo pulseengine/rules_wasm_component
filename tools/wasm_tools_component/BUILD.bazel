@@ -16,17 +16,17 @@ rust_binary(
         "src/lib.rs",
         "src/main.rs",
     ],
-    deps = [
-        "@crates//:anyhow",
-        "@crates//:serde",
-        "@crates//:serde_json",
-    ],
     # Include hermetic wasm-tools binary from toolchain
     data = ["@wasm_tools_toolchains//:wasm_tools_binary"],
     # Pass the path via environment variable
     env = {
         "WASM_TOOLS_BINARY": "$(rootpath @wasm_tools_toolchains//:wasm_tools_binary)",
     },
+    deps = [
+        "@crates//:anyhow",
+        "@crates//:serde",
+        "@crates//:serde_json",
+    ],
 )
 
 # Export WIT interface for external use
