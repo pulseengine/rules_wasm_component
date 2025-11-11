@@ -311,6 +311,15 @@ def rust_wasm_component(
 
         profile_rustc_flags = rustc_flags + config["rustc_flags"]
 
+        # Add Windows-specific linker flag for wasm-component-ld.exe
+        # On Windows, executables need .exe extension but Rust target spec doesn't add it
+        # This is a workaround for https://github.com/rust-lang/rust/issues/...
+        windows_linker_flag = select({
+            "@platforms//os:windows": ["-C", "linker=wasm-component-ld.exe"],
+            "//conditions:default": [],
+        })
+        profile_rustc_flags = profile_rustc_flags + windows_linker_flag
+
         # Add wit-bindgen generated code if specified
         all_srcs = list(srcs)
 
