@@ -203,15 +203,13 @@ http_file(
     url = "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.1.0-rc.3/file_ops_component.wasm",
 )
 
-# wasmsign2 CLI WASM binary for component signing
-# Commented out temporarily: release v0.2.7-rc.2 not available
-# TODO: Update to use official wasm-signatures/wasmsign2 when WASM binary is published
-# http_file(
-#     name = "wasmsign2_cli_wasm",
-#     downloaded_file_path = "wasmsign2.wasm",
-#     sha256 = "0a2ba6a55621d83980daa7f38e3770ba6b9342736971a0cebf613df08377cd34",
-#     url = "https://github.com/pulseengine/wasmsign2/releases/download/v0.2.7-rc.2/wasmsign2-cli.wasm",
-# )
+# wasmsign2 CLI WASM binary for component signing (from pulseengine/wsc)
+http_file(
+    name = "wasmsign2_cli_wasm",
+    downloaded_file_path = "wasmsign2.wasm",
+    sha256 = "cb3125ce35704fed117bee95d56ab34576c6c1c8b940234aba5dc9893c224fa7",
+    url = "https://github.com/pulseengine/wsc/releases/download/v0.2.7-rc.1/wsc-cli.wasm",
+)
 
 # WASM Tools Component toolchain for universal wasm-tools operations
 register_toolchains("//toolchains:wasm_tools_component_toolchain_local")

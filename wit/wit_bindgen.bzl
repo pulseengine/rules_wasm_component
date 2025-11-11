@@ -51,7 +51,10 @@ def _wit_bindgen_impl(ctx):
             # Fallback to target name if world_name not provided
             base_filename = ctx.label.name.replace("_wit_bindgen_guest", "").replace("_wit_bindgen_native_guest", "")
 
-        # Include generation_mode in filename to avoid conflicts between guest and native-guest
+        # wit-bindgen generates files without any suffix
+        wit_bindgen_output_filename = base_filename + ".rs"
+
+        # Include generation_mode in Bazel output filename to avoid conflicts between guest and native-guest
         mode_suffix = "_" + ctx.attr.generation_mode.replace("-", "_") if ctx.attr.generation_mode != "guest" else ""
         rust_filename = base_filename + mode_suffix + ".rs"
         out_file = ctx.actions.declare_file(rust_filename)
@@ -179,9 +182,9 @@ def _wit_bindgen_impl(ctx):
 
             # Extract the generated .rs file from output directory
             # wit-bindgen creates a predictable filename: world_name.to_snake_case() + ".rs"
-            # Since world is now mandatory, we always know the exact filename
+            # Use the filename that wit-bindgen actually generates (without our Bazel suffix)
             # Use file_ops component for cross-platform file copying
-            source_path = out_dir.path + "/" + rust_filename
+            source_path = out_dir.path + "/" + wit_bindgen_output_filename
 
             # Build JSON config for file_ops
             config_file = ctx.actions.declare_file(ctx.label.name + "_extract_config.json")
@@ -208,7 +211,7 @@ def _wit_bindgen_impl(ctx):
                 inputs = [out_dir, config_file],
                 outputs = [out_file],
                 mnemonic = "ExtractRustBinding",
-                progress_message = "Extracting {} from wit-bindgen output".format(rust_filename),
+                progress_message = "Extracting {} from wit-bindgen output".format(wit_bindgen_output_filename),
             )
         else:
             # No dependencies - run wit-bindgen directly on WIT files
