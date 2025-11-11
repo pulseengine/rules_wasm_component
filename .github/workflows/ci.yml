@@ -153,10 +153,6 @@ jobs:
             //examples/js_component:simple_js_component \
             //examples/js_component:hello_js_component \
             //examples/js_component:calc_js_component \
-            //examples/wasm_signing:compact_keys \
-            //examples/wasm_signing:signed_component_embedded \
-            //examples/wasm_signing:signed_raw_wasm \
-            //examples/wasm_signing:verify_embedded \
             //rust/... \
             //go/... \
             //cpp/... \
@@ -171,6 +167,7 @@ jobs:
             //test/integration/... \
             //docs-site/... \
             -//examples/go_component:calculator_simple \
+            -//examples/wasm_signing/... \
 
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/wkg/unit:smoke //test/js:test_hello_js_component_provides_info //test/js:test_calc_js_component_provides_info //test/js:test_npm_dependencies_installation
@@ -251,10 +248,6 @@ jobs:
             //examples/js_component:simple_js_component \
             //examples/js_component:hello_js_component \
             //examples/js_component:calc_js_component \
-            //examples/wasm_signing:compact_keys \
-            //examples/wasm_signing:signed_component_embedded \
-            //examples/wasm_signing:signed_raw_wasm \
-            //examples/wasm_signing:verify_embedded \
             //rust/... \
             //go/... \
             //cpp/... \
@@ -274,6 +267,7 @@ jobs:
             //docs-site/... \
             -//examples/cpp_component/multi_component_system:analytics_service \
             -//examples/go_component:calculator_component \
+            -//examples/wasm_signing/... \
             -//examples/go_component:calculator_component_debug \
             -//examples/go_component:calculator_simple \
             -//examples/go_component:calculator_simple_binding \
