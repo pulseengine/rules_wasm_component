@@ -3,28 +3,50 @@
 This wrapper executes the pre-built wasmsign2.wasm component via wasmtime,
 resolving symlinks to real paths to work with both Bazel's sandbox and
 WASI's security model.
+
+TEMPORARILY DISABLED: wasmsign2 binary not available
+TODO: Re-enable when wasmsign2 WASM binary is published
 """
 
 load("@rules_go//go:def.bzl", "go_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-# Wrapper binary that executes wasmsign2.wasm with path resolution
-go_binary(
-    name = "wasmsign2_wrapper",
-    srcs = ["main.go"],
-    data = [
-        "@wasmsign2_cli_wasm//file",
-        "@wasmtime_toolchain//:wasmtime",
-    ],
-    pure = "on",  # Pure Go for cross-platform compatibility
-    visibility = ["//visibility:public"],
-    deps = ["@rules_go//go/runfiles"],
-)
+# Temporarily commented out - wasmsign2 binary not available
+# # Wrapper binary that executes wasmsign2.wasm with path resolution
+# go_binary(
+#     name = "wasmsign2_wrapper",
+#     srcs = ["main.go"],
+#     data = [
+#         "@wasmsign2_cli_wasm//file",
+#         "@wasmtime_toolchain//:wasmtime",
+#     ],
+#     pure = "on",  # Pure Go for cross-platform compatibility
+#     visibility = ["//visibility:public"],
+#     deps = ["@rules_go//go/runfiles"],
+# )
+#
+# # Export for easy access in toolchains
+# alias(
+#     name = "wasmsign2",
+#     actual = ":wasmsign2_wrapper",
+#     visibility = ["//visibility:public"],
+# )
 
-# Export for easy access in toolchains
-alias(
-    name = "wasmsign2",
-    actual = ":wasmsign2_wrapper",
+# Stub target to prevent build failures while wasmsign2 is unavailable
+# This will fail at runtime if actually used, but allows builds to complete
+genrule(
+    name = "wasmsign2_wrapper",
+    outs = ["wasmsign2_stub.sh"],
+    cmd = """
+cat > $@ << 'EOF'
+#!/bin/sh
+echo "ERROR: wasmsign2 is temporarily unavailable" >&2
+echo "The wasmsign2 binary could not be downloaded from upstream" >&2
+exit 1
+EOF
+chmod +x $@
+    """,
+    executable = True,
     visibility = ["//visibility:public"],
 )
