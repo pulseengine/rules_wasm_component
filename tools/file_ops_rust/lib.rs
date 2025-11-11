@@ -623,39 +623,41 @@ fn execute_json_operation(op: &JsonOperation) -> JsonOperationResult {
             // source = directory to search
             // content = glob pattern (e.g., "*.rs")
             // destination = output file path
-            if let (Some(dir), Some(pattern), Some(dest)) = (&op.source, &op.content, &op.destination) {
-                let entries = list_directory(dir)?;
+            (|| {
+                if let (Some(dir), Some(pattern), Some(dest)) = (&op.source, &op.content, &op.destination) {
+                    let entries = list_directory(dir)?;
 
-                // Simple glob matching: *.ext means ends with .ext
-                let matching: Vec<_> = entries.iter()
-                    .filter(|name| {
-                        if pattern.starts_with("*.") {
-                            let ext = &pattern[1..]; // Remove *
-                            name.ends_with(ext)
-                        } else {
-                            name == pattern
-                        }
-                    })
-                    .collect();
+                    // Simple glob matching: *.ext means ends with .ext
+                    let matching: Vec<_> = entries.iter()
+                        .filter(|name| {
+                            if pattern.starts_with("*.") {
+                                let ext = &pattern[1..]; // Remove *
+                                name.ends_with(ext)
+                            } else {
+                                name.as_str() == pattern
+                            }
+                        })
+                        .collect();
 
-                if matching.is_empty() {
-                    return Err(anyhow::anyhow!("No files matching '{}' found in {}", pattern, dir));
-                }
+                    if matching.is_empty() {
+                        return Err(anyhow::anyhow!("No files matching '{}' found in {}", pattern, dir));
+                    }
 
-                // Copy the first match
-                let source_path = format!("{}/{}", dir, matching[0]);
-                copy_file(&source_path, dest)?;
+                    // Copy the first match
+                    let source_path = format!("{}/{}", dir, matching[0]);
+                    copy_file(&source_path, dest)?;
 
-                let message = if matching.len() > 1 {
-                    format!("Copied first match '{}' (found {} total)", matching[0], matching.len())
+                    let message = if matching.len() > 1 {
+                        format!("Copied first match '{}' (found {} total)", matching[0], matching.len())
+                    } else {
+                        format!("Copied '{}'", matching[0])
+                    };
+
+                    Ok(Some(message))
                 } else {
-                    format!("Copied '{}'", matching[0])
-                };
-
-                Ok(Some(message))
-            } else {
-                Err(anyhow::anyhow!("copy_first_matching requires source (dir), content (pattern), and destination"))
-            }
+                    Err(anyhow::anyhow!("copy_first_matching requires source (dir), content (pattern), and destination"))
+                }
+            })()
         }
         "path_exists" => {
             if let Some(source) = &op.source {
