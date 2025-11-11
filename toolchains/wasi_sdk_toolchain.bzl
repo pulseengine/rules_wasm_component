@@ -166,18 +166,23 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
 def _create_wasi_sdk_build_file(repository_ctx):
     """Create BUILD file for WASI SDK"""
 
+    # Detect platform to determine binary extension
+    platform = _detect_host_platform(repository_ctx)
+    is_windows = platform.startswith("windows_")
+    exe_ext = ".exe" if is_windows else ""
+
     # Create a tools directory with proper symlinks for Rust builds
     # Note: Directory will be created automatically when symlinks are created
 
     # Create symlinks in the tools directory that Rust can find
     tools = [
-        ("bin/ar", "tools/ar"),
-        ("bin/clang", "tools/clang"),
-        ("bin/clang++", "tools/clang++"),
-        ("bin/wasm-ld", "tools/wasm-ld"),
-        ("bin/llvm-nm", "tools/llvm-nm"),
-        ("bin/llvm-objdump", "tools/llvm-objdump"),
-        ("bin/llvm-strip", "tools/llvm-strip"),
+        ("bin/ar" + exe_ext, "tools/ar" + exe_ext),
+        ("bin/clang" + exe_ext, "tools/clang" + exe_ext),
+        ("bin/clang++" + exe_ext, "tools/clang++" + exe_ext),
+        ("bin/wasm-ld" + exe_ext, "tools/wasm-ld" + exe_ext),
+        ("bin/llvm-nm" + exe_ext, "tools/llvm-nm" + exe_ext),
+        ("bin/llvm-objdump" + exe_ext, "tools/llvm-objdump" + exe_ext),
+        ("bin/llvm-strip" + exe_ext, "tools/llvm-strip" + exe_ext),
     ]
 
     for src, dst in tools:
@@ -194,32 +199,32 @@ package(default_visibility = ["//visibility:public"])
 # File targets for WASI SDK tools
 filegroup(
     name = "clang",
-    srcs = ["bin/clang"],
+    srcs = ["bin/clang{exe_ext}"],
 )
 
 filegroup(
     name = "ar",
-    srcs = ["bin/ar"],
+    srcs = ["bin/ar{exe_ext}"],
 )
 
 filegroup(
     name = "wasm_ld",
-    srcs = ["bin/wasm-ld"],
+    srcs = ["bin/wasm-ld{exe_ext}"],
 )
 
 filegroup(
     name = "llvm_nm",
-    srcs = ["bin/llvm-nm"],
+    srcs = ["bin/llvm-nm{exe_ext}"],
 )
 
 filegroup(
     name = "llvm_objdump",
-    srcs = ["bin/llvm-objdump"],
+    srcs = ["bin/llvm-objdump{exe_ext}"],
 )
 
 filegroup(
     name = "llvm_strip",
-    srcs = ["bin/llvm-strip"],
+    srcs = ["bin/llvm-strip{exe_ext}"],
 )
 
 filegroup(
@@ -318,6 +323,8 @@ alias(
 )
 '''
 
+    # Format BUILD content with executable extension
+    build_content = build_content.format(exe_ext = exe_ext)
     repository_ctx.file("BUILD.bazel", build_content)
 
     # Create cc_toolchain_config.bzl with proper path resolution
