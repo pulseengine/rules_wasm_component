@@ -44,8 +44,16 @@ def _wit_bindgen_impl(ctx):
     if ctx.attr.language == "rust":
         # wit-bindgen for Rust generates filename as: world_name.to_snake_case() + ".rs"
         # Source: bytecodealliance/wit-bindgen/crates/rust/src/lib.rs - fn finish()
-        # world_name is now mandatory in wit_library, so this is always predictable
-        rust_filename = _to_snake_case(wit_info.world_name) + ".rs"
+        # world_name should be provided for bindgen generation
+        if wit_info.world_name:
+            base_filename = _to_snake_case(wit_info.world_name)
+        else:
+            # Fallback to target name if world_name not provided
+            base_filename = ctx.label.name.replace("_wit_bindgen_guest", "").replace("_wit_bindgen_native_guest", "")
+
+        # Include generation_mode in filename to avoid conflicts between guest and native-guest
+        mode_suffix = "_" + ctx.attr.generation_mode.replace("-", "_") if ctx.attr.generation_mode != "guest" else ""
+        rust_filename = base_filename + mode_suffix + ".rs"
         out_file = ctx.actions.declare_file(rust_filename)
     elif ctx.attr.language == "c":
         # C generates multiple files
