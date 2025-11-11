@@ -341,14 +341,14 @@ def _wasm_cc_toolchain_config_impl(ctx):
     """C++ toolchain config for WASM using WASI SDK"""
 
     tool_paths = [
-        tool_path(name = "gcc", path = "bin/clang"),
-        tool_path(name = "ld", path = "bin/wasm-ld"),
-        tool_path(name = "ar", path = "bin/ar"),
-        tool_path(name = "cpp", path = "bin/clang"),
+        tool_path(name = "gcc", path = "bin/clang{exe_ext}"),
+        tool_path(name = "ld", path = "bin/wasm-ld{exe_ext}"),
+        tool_path(name = "ar", path = "bin/ar{exe_ext}"),
+        tool_path(name = "cpp", path = "bin/clang{exe_ext}"),
         tool_path(name = "gcov", path = "/usr/bin/false"),
-        tool_path(name = "nm", path = "bin/llvm-nm"),
-        tool_path(name = "objdump", path = "bin/llvm-objdump"),
-        tool_path(name = "strip", path = "bin/llvm-strip"),
+        tool_path(name = "nm", path = "bin/llvm-nm{exe_ext}"),
+        tool_path(name = "objdump", path = "bin/llvm-objdump{exe_ext}"),
+        tool_path(name = "strip", path = "bin/llvm-strip{exe_ext}"),
     ]
 
     default_compile_flags_feature = feature(
@@ -416,6 +416,8 @@ wasm_cc_toolchain_config = rule(
 )
 '''
 
+    # Format cc_config content with executable extension
+    cc_config_content = cc_config_content.format(exe_ext = exe_ext)
     repository_ctx.file("cc_toolchain_config.bzl", cc_config_content)
 
 wasi_sdk_repository = repository_rule(
