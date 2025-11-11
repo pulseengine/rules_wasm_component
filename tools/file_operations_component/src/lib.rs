@@ -204,7 +204,7 @@ pub struct JsonBatchRequest {
 }
 
 /// JSON operation result
-#[derive(serde::Serialize, Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct JsonOperationResult {
     pub success: bool,
     pub message: String,
@@ -212,7 +212,7 @@ pub struct JsonOperationResult {
 }
 
 /// JSON batch response
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct JsonBatchResponse {
     pub success: bool,
     pub results: Vec<JsonOperationResult>,
