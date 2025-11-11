@@ -323,8 +323,8 @@ alias(
 )
 '''
 
-    # Format BUILD content with executable extension
-    build_content = build_content.format(exe_ext = exe_ext)
+    # Replace exe_ext placeholder with actual extension using string replacement
+    build_content = build_content.replace("{exe_ext}", exe_ext)
     repository_ctx.file("BUILD.bazel", build_content)
 
     # Create cc_toolchain_config.bzl with proper path resolution
@@ -416,8 +416,8 @@ wasm_cc_toolchain_config = rule(
 )
 '''
 
-    # Format cc_config content with executable extension
-    cc_config_content = cc_config_content.format(exe_ext = exe_ext)
+    # Replace exe_ext placeholder with actual extension using string replacement
+    cc_config_content = cc_config_content.replace("{exe_ext}", exe_ext)
     repository_ctx.file("cc_toolchain_config.bzl", cc_config_content)
 
 wasi_sdk_repository = repository_rule(
