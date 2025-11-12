@@ -34,9 +34,21 @@ Size: 5.1MB
 Status: Present in official Rust distribution
 ```
 
-**The real problem**: rustc can't access its own `lib/rustlib/{target}/bin/` directory in the Bazel sandbox on Windows.
+**The real problem**: rules_rust's `rustc_lib` filegroup has incomplete glob patterns.
 
-This is a **rules_rust/Bazel integration issue**, not a Rust toolchain issue.
+In `rust/private/repository_utils.bzl`, the filegroup only declares:
+```starlark
+"lib/rustlib/{target_triple}/bin/gcc-ld/*"           # Includes subdirectory
+"lib/rustlib/{target_triple}/bin/rust-lld{binary_ext}"  # Includes rust-lld.exe
+```
+
+But the Windows rustc distribution also contains:
+- ❌ `wasm-component-ld.exe` (5.1MB) - **NOT DECLARED** → Excluded from sandbox!
+- ❌ `rust-objcopy.exe` (4.2MB) - **NOT DECLARED** → Excluded from sandbox!
+
+When Bazel creates the sandbox, it only copies files declared in filegroups. Since `wasm-component-ld.exe` is missing from the pattern, it's excluded from the sandbox, causing rustc's linker lookup to fail.
+
+This is a **rules_rust filegroup pattern issue**, not a Rust toolchain issue.
 
 ### What We Fixed
 
@@ -101,16 +113,32 @@ Track these Rust issues:
 
 This will be resolved when:
 1. ~~Rust officially distributes `wasm-component-ld.exe` with Windows rustc~~ ✅ Already done!
-2. **rules_rust exposes the rustlib directory properly on Windows** (file issue with bazelbuild/rules_rust)
-3. Or a workaround is implemented to explicitly pass the full path to the linker
+2. **rules_rust adds wasm-component-ld to rustc_lib filegroup patterns** ← **The Fix**
 
-### Recommended Action
+### The Required Fix
 
-File an issue with `bazelbuild/rules_rust` including:
-- Title: "Windows: rustc can't access lib/rustlib/{target}/bin/ in Bazel sandbox for wasm32-wasip2"
-- Details: Tool exists at `rustc/lib/rustlib/x86_64-pc-windows-msvc/bin/wasm-component-ld.exe` but rustc reports "not found"
-- Test case: rules_wasm_component Windows BCR test failure
-- Request: Investigation of Windows-specific sandbox configuration
+In `rust/private/repository_utils.bzl`, add to the `rustc_lib` filegroup:
+
+**Option 1: Explicit declarations (conservative)**
+```starlark
+"lib/rustlib/{target_triple}/bin/wasm-component-ld{binary_ext}",
+"lib/rustlib/{target_triple}/bin/rust-objcopy{binary_ext}",
+```
+
+**Option 2: Wildcard (future-proof)**
+```starlark
+"lib/rustlib/{target_triple}/bin/*{binary_ext}",
+```
+
+This ensures all tools in the `bin/` directory are copied into the Bazel sandbox.
+
+### Issue Filed
+
+✅ Issue filed: https://github.com/avrabe/rules_rust/issues/8
+- Detailed root cause analysis
+- Evidence from Windows rustc distribution
+- Proposed fixes
+- Test case from rules_wasm_component BCR tests
 
 ## Testing on Windows
 
@@ -151,8 +179,8 @@ bazel build //examples/basic:hello_component_release
 
 ## Recommendation
 
-**For production use**: Document that Windows Rust wasm32-wasip2 support is experimental/unsupported until the Rust ecosystem provides the required tooling.
+**For production use**: Document that Windows Rust wasm32-wasip2 support is blocked by upstream rules_rust filegroup patterns. All other Windows toolchains work correctly.
 
-**For contributors**: All Windows compatibility work is complete on the rules_wasm_component side. The blocker is upstream in Rust's Windows distribution.
+**For contributors**: All Windows compatibility work is complete on the rules_wasm_component side. The blocker is a missing filegroup pattern in rules_rust (issue filed: https://github.com/avrabe/rules_rust/issues/8).
 
-**For users**: Use Linux or macOS for Rust WASM component development, or use wasm32-wasip1 (Preview 1) on Windows as a temporary workaround.
+**For users**: Use Linux or macOS for Rust WASM component development, or use wasm32-wasip1 (Preview 1) on Windows as a temporary workaround. Once rules_rust #8 is fixed, Windows wasm32-wasip2 will work without any changes to rules_wasm_component.
