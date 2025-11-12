@@ -19,31 +19,44 @@ def _wasm_transition_impl(settings, attr):
 
     # Detect Windows execution platform for wasm-component-ld.exe workaround
     # On Windows, the linker needs .exe extension but Rust's wasm32-wasip2 target spec doesn't add it
-    host_platform = str(settings["//command_line_option:host_platform"])
-    is_windows = "windows" in host_platform
+    #
+    # Check multiple possible indicators of Windows:
+    # 1. host_platform label might contain "windows"
+    # 2. cpu setting might be x86_64 or x64_windows
+    # 3. Default to adding .exe suffix on any platform with "windows" in cpu string
+    host_platform = str(settings.get("//command_line_option:host_platform", ""))
+    cpu = str(settings.get("//command_line_option:cpu", ""))
 
-    # Get current rustc flags
-    rustc_flags = list(settings.get("@rules_rust//:extra_rustc_flags", []))
+    # Windows detection: check both platform and CPU strings
+    is_windows = "windows" in host_platform.lower() or "windows" in cpu.lower() or "x64_windows" in cpu
+
+    # Get current rustc flags from the rules_rust extra_rustc_flags setting
+    # Note: This is a list of strings
+    current_flags = list(settings.get("@rules_rust//rust/settings:extra_rustc_flags", []))
 
     # Add Windows-specific linker configuration
+    # IMPORTANT: This must happen for wasm32-wasip2 builds on Windows hosts
     if is_windows:
         # Override the linker for wasm32-wasip2 on Windows hosts
-        rustc_flags.extend(["-C", "linker=wasm-component-ld.exe"])
+        # The Rust target spec hardcodes "wasm-component-ld" but Windows needs .exe
+        # The -C linker= flag should override the target spec's linker setting
+        current_flags.extend(["-Clinker=wasm-component-ld.exe"])
 
     return {
         "//command_line_option:platforms": "//platforms:wasm32-wasip2",
-        "@rules_rust//:extra_rustc_flags": rustc_flags,
+        "@rules_rust//rust/settings:extra_rustc_flags": current_flags,
     }
 
 wasm_transition = transition(
     implementation = _wasm_transition_impl,
     inputs = [
         "//command_line_option:host_platform",
-        "@rules_rust//:extra_rustc_flags",
+        "//command_line_option:cpu",
+        "@rules_rust//rust/settings:extra_rustc_flags",
     ],
     outputs = [
         "//command_line_option:platforms",
-        "@rules_rust//:extra_rustc_flags",
+        "@rules_rust//rust/settings:extra_rustc_flags",
     ],
 )
 
