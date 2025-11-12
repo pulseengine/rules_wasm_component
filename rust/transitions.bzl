@@ -17,16 +17,33 @@
 def _wasm_transition_impl(settings, attr):
     """Transition to WASM platform for component builds"""
 
-    # Use WASI Preview 2 - now Tier 2 support in Rust 1.82+
+    # Detect Windows execution platform for wasm-component-ld.exe workaround
+    # On Windows, the linker needs .exe extension but Rust's wasm32-wasip2 target spec doesn't add it
+    host_platform = str(settings["//command_line_option:host_platform"])
+    is_windows = "windows" in host_platform
+
+    # Get current rustc flags
+    rustc_flags = list(settings.get("@rules_rust//:extra_rustc_flags", []))
+
+    # Add Windows-specific linker configuration
+    if is_windows:
+        # Override the linker for wasm32-wasip2 on Windows hosts
+        rustc_flags.extend(["-C", "linker=wasm-component-ld.exe"])
+
     return {
         "//command_line_option:platforms": "//platforms:wasm32-wasip2",
+        "@rules_rust//:extra_rustc_flags": rustc_flags,
     }
 
 wasm_transition = transition(
     implementation = _wasm_transition_impl,
-    inputs = [],
+    inputs = [
+        "//command_line_option:host_platform",
+        "@rules_rust//:extra_rustc_flags",
+    ],
     outputs = [
         "//command_line_option:platforms",
+        "@rules_rust//:extra_rustc_flags",
     ],
 )
 
