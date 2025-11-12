@@ -1,0 +1,13 @@
+"""Debug targets for investigating Windows issues"""
+
+load("//rust:debug_windows.bzl", "debug_rust_toolchain")
+
+# Debug target that will show us what's visible in the Bazel sandbox on Windows
+debug_rust_toolchain(
+    name = "windows_toolchain_debug",
+    is_windows = select({
+        "@platforms//os:windows": True,
+        "//conditions:default": False,
+    }),
+    visibility = ["//visibility:public"],
+)
