@@ -34,12 +34,17 @@ def _wasm_transition_impl(settings, attr):
     # Note: This is a list of strings
     current_flags = list(settings.get("@rules_rust//rust/settings:extra_rustc_flags", []))
 
-    # Add Windows-specific linker configuration
-    # IMPORTANT: This must happen for wasm32-wasip2 builds on Windows hosts
+    # Windows-specific linker configuration for wasm32-wasip2
+    # Discovery: wasm-component-ld.exe EXISTS in rustc distribution at:
+    #   rustc/lib/rustlib/x86_64-pc-windows-msvc/bin/wasm-component-ld.exe
+    # But rustc can't find it by name alone. We need to help it.
     if is_windows:
-        # Override the linker for wasm32-wasip2 on Windows hosts
-        # The Rust target spec hardcodes "wasm-component-ld" but Windows needs .exe
-        # The -C linker= flag should override the target spec's linker setting
+        # Try using -Clink-self-contained=yes to force rustc to use its own linker tools
+        # This should make it search in lib/rustlib/{target}/bin/
+        current_flags.extend(["-Clink-self-contained=yes"])
+
+        # Also explicitly point to the linker using the target-specific path
+        # Rustc should resolve this relative to its sysroot
         current_flags.extend(["-Clinker=wasm-component-ld.exe"])
 
     return {
