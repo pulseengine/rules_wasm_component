@@ -39,10 +39,6 @@ def _wasm_transition_impl(settings, attr):
     #   rustc/lib/rustlib/x86_64-pc-windows-msvc/bin/wasm-component-ld.exe
     # But rustc can't find it by name alone. We need to help it.
     if is_windows:
-        # DEBUG: Add verbose output to see what rustc is doing
-        # -vv shows command lines and search paths
-        current_flags.extend(["-vv"])
-
         # Try using -Clink-self-contained=yes to force rustc to use its own linker tools
         # This should make it search in lib/rustlib/{target}/bin/
         current_flags.extend(["-Clink-self-contained=yes"])
