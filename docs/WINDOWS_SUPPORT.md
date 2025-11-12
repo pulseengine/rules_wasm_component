@@ -7,7 +7,7 @@
 | **WASI SDK** | ✅ | ✅ | ✅ | Full support with .exe extensions |
 | **C/C++ Components** | ✅ | ✅ | ✅ | All toolchain binaries work correctly |
 | **TinyGo** | ✅ | ✅ | ✅ | Cross-platform compatibility verified |
-| **Rust wasm32-wasip2** | ✅ | ✅ | ❌ | Blocked by missing wasm-component-ld.exe |
+| **Rust wasm32-wasip2** | ✅ | ✅ | ❌ | Blocked by Bazel/rules_rust sandbox issue |
 | **JavaScript** | ✅ | ✅ | ✅ | Node.js and jco work on Windows |
 | **WASM Tools** | ✅ | ✅ | ✅ | All validation and composition tools work |
 
@@ -23,14 +23,20 @@ error: linker `wasm-component-ld.exe` not found
   = note: program not found
 ```
 
-### Root Cause
+### Root Cause (DISCOVERED)
 
-The `wasm-component-ld` linker is required for the wasm32-wasip2 target. This tool:
-- Wraps `wasm-ld` (LLVM's WASM linker)
-- Converts core WASM modules to WASM components
-- Is distributed as part of the Rust compiler toolchain
+**✅ The tool EXISTS!** We downloaded and analyzed the Windows rustc distribution:
 
-**Problem**: The Windows rustc distribution does not include `wasm-component-ld.exe`, or it's not in the expected PATH.
+```
+File: rustc-1.90.0-x86_64-pc-windows-msvc.tar.xz
+Location: rustc/lib/rustlib/x86_64-pc-windows-msvc/bin/wasm-component-ld.exe
+Size: 5.1MB
+Status: Present in official Rust distribution
+```
+
+**The real problem**: rustc can't access its own `lib/rustlib/{target}/bin/` directory in the Bazel sandbox on Windows.
+
+This is a **rules_rust/Bazel integration issue**, not a Rust toolchain issue.
 
 ### What We Fixed
 
@@ -91,10 +97,20 @@ Track these Rust issues:
 
 ### Future Resolution
 
+**UPDATE**: The tool IS distributed! ~~Issue #1 below is complete~~.
+
 This will be resolved when:
-1. Rust officially distributes `wasm-component-ld.exe` with Windows rustc
-2. Or rustup includes it when installing the wasm32-wasip2 target
-3. Or Bazel rules_rust provides a hermetic wasm-component-ld for Windows
+1. ~~Rust officially distributes `wasm-component-ld.exe` with Windows rustc~~ ✅ Already done!
+2. **rules_rust exposes the rustlib directory properly on Windows** (file issue with bazelbuild/rules_rust)
+3. Or a workaround is implemented to explicitly pass the full path to the linker
+
+### Recommended Action
+
+File an issue with `bazelbuild/rules_rust` including:
+- Title: "Windows: rustc can't access lib/rustlib/{target}/bin/ in Bazel sandbox for wasm32-wasip2"
+- Details: Tool exists at `rustc/lib/rustlib/x86_64-pc-windows-msvc/bin/wasm-component-ld.exe` but rustc reports "not found"
+- Test case: rules_wasm_component Windows BCR test failure
+- Request: Investigation of Windows-specific sandbox configuration
 
 ## Testing on Windows
 
