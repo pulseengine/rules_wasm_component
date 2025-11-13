@@ -1,0 +1,32 @@
+package test:alignment;
+
+/// Test nested record structures for alignment issues
+world alignment-test {
+    /// Simple record
+    record point {
+        x: float64,
+        y: float64,
+    }
+
+    /// Nested record with mixed types
+    record nested-data {
+        id: u32,
+        name: string,
+        location: point,
+        active: bool,
+    }
+
+    /// Deeply nested with alignment challenges
+    record complex-nested {
+        header: nested-data,
+        count: u64,
+        metadata: list<nested-data>,
+        flag: bool,
+    }
+
+    /// Test various alignment scenarios
+    export test-simple: func(p: point) -> point;
+    export test-nested: func(data: nested-data) -> nested-data;
+    export test-complex: func(data: complex-nested) -> complex-nested;
+    export test-list: func(items: list<nested-data>) -> list<nested-data>;
+}
