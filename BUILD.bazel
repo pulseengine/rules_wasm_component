@@ -4,6 +4,16 @@ load("@buildifier_prebuilt//:rules.bzl", "buildifier")
 
 package(default_visibility = ["//visibility:public"])
 
+# Test suite for wit-bindgen-rt fix validation
+# Aggregates alignment tests and integration tests that validate the fix
+test_suite(
+    name = "wit_bindgen_rt_validation",
+    tests = [
+        "//test/alignment:alignment_tests",
+        "//test/integration:wit_bindgen_rt_fix_test",
+    ],
+)
+
 # Export all rule files
 exports_files([
     "LICENSE",
