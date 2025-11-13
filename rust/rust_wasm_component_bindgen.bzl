@@ -55,124 +55,28 @@ def _generate_wrapper_impl(ctx):
     """Generate a wrapper that includes both bindings and runtime shim"""
     out_file = ctx.actions.declare_file(ctx.label.name + ".rs")
 
-    # Create wrapper content based on mode
-    if ctx.attr.mode == "native-guest":
-        # Native-guest wrapper uses native std runtime
-        wrapper_content = """// Generated wrapper for native-guest WIT bindings
+    # Create wrapper content - re-export the real wit-bindgen crate
+    # The wit-bindgen CLI generates code that expects: crate::wit_bindgen::rt
+    # Instead of embedding broken runtime stubs, we use the real wit-bindgen crate
+    wrapper_content = """// Generated wrapper for WIT bindings
+//
+// This wrapper re-exports the wit-bindgen crate to provide the runtime
+// at the path expected by wit-bindgen CLI (--runtime-path crate::wit_bindgen::rt)
 
 // Suppress clippy warnings for generated code
 #![allow(clippy::all)]
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-// Native runtime implementation for wit_bindgen::rt
-pub mod wit_bindgen {
-    pub mod rt {
-        use std::alloc::Layout;
-
-        #[inline]
-        pub fn run_ctors_once() {
-            // No-op for native execution - constructors run automatically
-        }
-
-        #[inline]
-        pub fn maybe_link_cabi_realloc() {
-            // No-op for native execution - standard allocator is used
-        }
-
-        pub struct Cleanup;
-
-        impl Cleanup {
-            #[inline]
-            #[allow(clippy::new_ret_no_self)]
-            pub fn new(_layout: Layout) -> (*mut u8, Option<CleanupGuard>) {
-                // Use standard allocator for native execution
-                let ptr = unsafe { std::alloc::alloc(_layout) };
-                (ptr, Some(CleanupGuard))
-            }
-        }
-
-        pub struct CleanupGuard;
-
-        impl CleanupGuard {
-            #[inline]
-            pub fn forget(self) {
-                // Standard memory management handles cleanup
-            }
-        }
-
-        impl Drop for CleanupGuard {
-            fn drop(&mut self) {
-                // Standard Drop trait handles cleanup automatically
-            }
-        }
-    }
-}
-
-// Provide export! macro for native-guest mode as a no-op
-#[macro_export]
-macro_rules! export {
-    ($component:ident with_types_in $pkg:path) => {
-        // No-op for native-guest mode - the component struct can be used directly
-        // In native applications, you would typically call Guest trait methods directly
-    };
-}
-
-// Generated bindings follow:
-"""
-    else:
-        # Guest wrapper uses WASM component runtime stubs
-        wrapper_content = """// Generated wrapper for guest WIT bindings
-
-// Suppress clippy warnings for generated code
-#![allow(clippy::all)]
-#![allow(unused_imports)]
-#![allow(dead_code)]
-
-// Minimal wit_bindgen::rt implementation
-pub mod wit_bindgen {
-    pub mod rt {
-        use core::alloc::Layout;
-
-        #[inline]
-        pub fn run_ctors_once() {
-            // No-op - WASM components don't need explicit constructor calls
-        }
-
-        #[inline]
-        pub fn maybe_link_cabi_realloc() {
-            // This ensures cabi_realloc is referenced and thus linked
-        }
-
-        pub struct Cleanup;
-
-        impl Cleanup {
-            #[inline]
-            #[allow(clippy::new_ret_no_self)]
-            pub fn new(_layout: Layout) -> (*mut u8, Option<CleanupGuard>) {
-                // Return a dummy pointer - in real implementation this would use the allocator
-                #[allow(clippy::manual_dangling_ptr)]
-                let ptr = 1 as *mut u8; // Non-null dummy pointer
-                (ptr, None)
-            }
-        }
-
-        pub struct CleanupGuard;
-
-        impl CleanupGuard {
-            #[inline]
-            pub fn forget(self) {
-                // No-op
-            }
-        }
-    }
-}
+// Re-export the real wit-bindgen crate to provide proper runtime implementation
+// This provides wit_bindgen::rt with correct allocator integration
+pub use wit_bindgen;
 
 // Generated bindings follow:
 """
 
     # Concatenate wrapper content with generated bindings
-    # Modern approach: write wrapper first, then append bindgen content with single cat command
+    # Simple approach: write wrapper first, then append bindgen content
     temp_wrapper = ctx.actions.declare_file(ctx.label.name + "_wrapper.rs")
     ctx.actions.write(
         output = temp_wrapper,
@@ -416,8 +320,7 @@ def rust_wasm_component_bindgen(
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
         visibility = visibility,  # Make native bindings publicly available
-        # Note: wasmtime dependency would be needed for full native-guest functionality
-        # For now, providing compilation-compatible stubs
+        deps = ["@crates//:wit-bindgen"],  # Provide real wit-bindgen runtime
     )
 
     # Create a separate WASM bindings library using guest wrapper
@@ -428,6 +331,7 @@ def rust_wasm_component_bindgen(
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
         visibility = ["//visibility:private"],
+        deps = ["@crates//:wit-bindgen"],  # Provide real wit-bindgen runtime
     )
 
     # Create a WASM-transitioned version of the WASM bindings library
