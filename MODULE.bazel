@@ -281,6 +281,10 @@ crate.from_cargo(
         "x86_64-pc-windows-msvc",
     ],
 )
+
+# Note: wit-bindgen crate is available from checksum_updater/Cargo.toml (version 0.47.0)
+# It provides the proper wit_bindgen::rt module for generated bindings instead of embedded stubs
+
 use_repo(crate, "crates", "ssh_keygen_crates", "wasm_embed_aot_crates", "wasmsign2_crates", "wizer_crates")
 
 # Modernized WASM tool repositories using git_repository + rules_rust
