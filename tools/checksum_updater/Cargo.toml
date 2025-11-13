@@ -32,6 +32,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tempfile = "3.23"
 async-trait = "0.1"
 wit-bindgen = "0.47.0"  # WIT binding generation for macro usage
+wit-bindgen-rt = "0.39.0"  # Runtime support for CLI-generated bindings (export macro, allocator, etc)
 uuid = { version = "1.18", default-features = false }  # UUID generation for user service (deterministic, no getrandom dependency)
 
 [dev-dependencies]

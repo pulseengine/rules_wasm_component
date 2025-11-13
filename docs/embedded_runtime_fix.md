@@ -25,34 +25,42 @@ The `rust_wasm_component_bindgen` rule had embedded **broken runtime stubs** for
 
 ### Changes Made
 
-#### 1. Used Existing wit-bindgen Crate Dependency
+#### 1. Added wit-bindgen-rt Runtime Crate
 
-The `wit-bindgen` crate (version 0.47.0) is already available from `tools/checksum_updater/Cargo.toml`:
+The `wit-bindgen-rt` crate provides runtime support for CLI-generated bindings. Added to `tools/checksum_updater/Cargo.toml`:
 
 ```toml
 [dependencies]
-wit-bindgen = "0.47.0"
+wit-bindgen = "0.47.0"       # For proc macro usage
+wit-bindgen-rt = "0.39.0"    # Runtime support (export macro, allocator, etc)
 ```
 
-This is automatically available as `@crates//:wit-bindgen` through the crates repository.
+This is automatically available as `@crates//:wit-bindgen-rt` through the crates repository.
 
-#### 2. Simplified Runtime Wrapper (rust/rust_wasm_component_bindgen.bzl:58-76)
+**Key distinction**:
+- `wit-bindgen` = Procedural macro crate for `generate!()` macro
+- `wit-bindgen-rt` = Runtime crate for CLI-generated bindings (what we need)
+
+#### 2. Simplified Runtime Wrapper (rust/rust_wasm_component_bindgen.bzl:58-79)
 
 **Before**: 114 lines of embedded runtime stubs
-**After**: 4 lines of simple re-export
+**After**: 6 lines of simple re-exports
 
 ```rust
-// Re-export the real wit-bindgen crate to provide proper runtime implementation
+// Re-export wit-bindgen-rt as wit_bindgen to provide proper runtime implementation
 // The wit-bindgen CLI generates code that expects: crate::wit_bindgen::rt
-pub use wit_bindgen;
+pub use wit_bindgen_rt as wit_bindgen;
+
+// Re-export the export macro at crate level for convenience
+pub use wit_bindgen_rt::export;
 ```
 
-#### 3. Added Dependencies to Bindings Libraries (lines 315, 326)
+#### 3. Added Dependencies to Bindings Libraries (lines 326, 337)
 
-Both host and WASM bindings libraries now depend on the real crate:
+Both host and WASM bindings libraries now depend on the runtime crate:
 
 ```starlark
-deps = ["@crates//:wit-bindgen"],  # Provide real wit-bindgen runtime
+deps = ["@crates//:wit-bindgen-rt"],  # Provide wit-bindgen runtime (export macro, allocator)
 ```
 
 #### 4. Removed Complex Filtering Logic

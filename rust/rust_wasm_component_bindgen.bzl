@@ -55,12 +55,12 @@ def _generate_wrapper_impl(ctx):
     """Generate a wrapper that includes both bindings and runtime shim"""
     out_file = ctx.actions.declare_file(ctx.label.name + ".rs")
 
-    # Create wrapper content - re-export the real wit-bindgen crate
+    # Create wrapper content - re-export wit-bindgen-rt as wit_bindgen
     # The wit-bindgen CLI generates code that expects: crate::wit_bindgen::rt
-    # Instead of embedding broken runtime stubs, we use the real wit-bindgen crate
+    # wit-bindgen-rt provides the runtime support (export macro, allocator, etc)
     wrapper_content = """// Generated wrapper for WIT bindings
 //
-// This wrapper re-exports the wit-bindgen crate to provide the runtime
+// This wrapper re-exports wit-bindgen-rt as wit_bindgen to provide the runtime
 // at the path expected by wit-bindgen CLI (--runtime-path crate::wit_bindgen::rt)
 
 // Suppress clippy warnings for generated code
@@ -68,9 +68,12 @@ def _generate_wrapper_impl(ctx):
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-// Re-export the real wit-bindgen crate to provide proper runtime implementation
-// This provides wit_bindgen::rt with correct allocator integration
-pub use wit_bindgen;
+// Re-export wit-bindgen-rt as wit_bindgen to provide proper runtime implementation
+// This provides the export! macro, rt module with correct allocator integration
+pub use wit_bindgen_rt as wit_bindgen;
+
+// Re-export the export macro at crate level for convenience
+pub use wit_bindgen_rt::export;
 
 // Generated bindings follow:
 """
@@ -320,7 +323,7 @@ def rust_wasm_component_bindgen(
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
         visibility = visibility,  # Make native bindings publicly available
-        deps = ["@crates//:wit-bindgen"],  # Provide real wit-bindgen runtime
+        deps = ["@crates//:wit-bindgen-rt"],  # Provide wit-bindgen runtime (export macro, allocator)
     )
 
     # Create a separate WASM bindings library using guest wrapper
@@ -331,7 +334,7 @@ def rust_wasm_component_bindgen(
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
         visibility = ["//visibility:private"],
-        deps = ["@crates//:wit-bindgen"],  # Provide real wit-bindgen runtime
+        deps = ["@crates//:wit-bindgen-rt"],  # Provide wit-bindgen runtime (export macro, allocator)
     )
 
     # Create a WASM-transitioned version of the WASM bindings library
