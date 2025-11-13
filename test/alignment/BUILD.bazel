@@ -1,0 +1,26 @@
+"""Alignment test for nested records"""
+
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_component_run")
+
+wit_library(
+    name = "alignment_interfaces",
+    package_name = "test:alignment@1.0.0",
+    srcs = ["alignment.wit"],
+    world = "alignment-test",
+)
+
+rust_wasm_component_bindgen(
+    name = "alignment_component",
+    srcs = ["src/lib.rs"],
+    wit = ":alignment_interfaces",
+    profiles = ["release"],
+)
+
+# Test that the component can be instantiated
+wasm_component_run(
+    name = "test_alignment",
+    component = ":alignment_component",
+    # Component doesn't need to be invoked, just validated
+)
