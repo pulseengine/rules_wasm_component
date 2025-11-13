@@ -200,19 +200,43 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
 
     print("JCO dependencies configured")
 
-    # Actually install the packages using npm
-    npm_install_result = repository_ctx.execute([
-        str(npm_binary),
-        "install",
-        "--global-style",
-        "--no-package-lock",
-    ] + install_packages, environment = npm_env, working_directory = "jco_workspace")
+    # Install packages with retry logic for transient registry failures
+    max_retries = 3
+    retry_delay_seconds = 5
+    npm_install_result = None
+
+    for attempt in range(1, max_retries + 1):
+        if attempt > 1:
+            print("Retrying npm install (attempt {}/{}) after {}s delay...".format(
+                attempt, max_retries, retry_delay_seconds
+            ))
+            # Simple delay using execute with sleep
+            repository_ctx.execute(["sleep", str(retry_delay_seconds)])
+            retry_delay_seconds *= 2  # Exponential backoff
+
+        npm_install_result = repository_ctx.execute([
+            str(npm_binary),
+            "install",
+            "--global-style",
+            "--no-package-lock",
+        ] + install_packages, environment = npm_env, working_directory = "jco_workspace")
+
+        if npm_install_result.return_code == 0:
+            break
+
+        print("npm install attempt {} failed (return code: {})".format(
+            attempt, npm_install_result.return_code
+        ))
+        if attempt < max_retries:
+            print("STDERR:", npm_install_result.stderr)
 
     if npm_install_result.return_code != 0:
-        print("ERROR: npm install failed:")
+        print("ERROR: npm install failed after {} attempts:".format(max_retries))
         print("STDOUT:", npm_install_result.stdout)
         print("STDERR:", npm_install_result.stderr)
-        fail("Failed to install jco dependencies: {}".format(npm_install_result.stderr))
+        fail("Failed to install jco dependencies after {} retries: {}".format(
+            max_retries, npm_install_result.stderr
+        ))
 
     print("JCO installation completed successfully")
 
