@@ -1,9 +1,18 @@
-"""Alignment test for nested records"""
+"""Alignment test for nested records - validates wit-bindgen-rt fix
 
+This test validates that the wit-bindgen-rt crate correctly handles:
+1. Nested record structures with mixed-size types
+2. Proper memory alignment (float64=8-byte, bool=1-byte)
+3. Export macro generation by wit-bindgen CLI
+4. Component instantiation without undefined behavior
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_component_run")
+load(":alignment_test.bzl", "alignment_validation_test")
 
+# WIT interface with challenging alignment scenarios
 wit_library(
     name = "alignment_interfaces",
     package_name = "test:alignment@1.0.0",
@@ -11,16 +20,37 @@ wit_library(
     world = "alignment-test",
 )
 
+# Component using wit-bindgen-rt runtime
 rust_wasm_component_bindgen(
     name = "alignment_component",
     srcs = ["src/lib.rs"],
     wit = ":alignment_interfaces",
-    profiles = ["release"],
+    profiles = [
+        "debug",
+        "release",
+    ],
 )
 
-# Test that the component can be instantiated
-wasm_component_run(
-    name = "test_alignment",
-    component = ":alignment_component",
-    # Component doesn't need to be invoked, just validated
+# Test 1: Build validation - ensures component builds successfully
+build_test(
+    name = "alignment_component_build_test",
+    targets = [
+        ":alignment_component_debug",
+        ":alignment_component_release",
+    ],
+)
+
+# Test 2: Alignment validation - comprehensive testing
+alignment_validation_test(
+    name = "alignment_validation_test",
+    component = ":alignment_component_release",
+)
+
+# Test suite for all alignment tests
+test_suite(
+    name = "alignment_tests",
+    tests = [
+        ":alignment_component_build_test",
+        ":alignment_validation_test",
+    ],
 )

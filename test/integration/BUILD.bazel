@@ -151,7 +151,18 @@ build_test(
     ],
 )
 
-# Test 3: Composition build validation
+# Test 3: wit-bindgen-rt fix validation - service components
+# These components previously failed with "could not find `export`" error
+# This test validates the fix using wit-bindgen-rt crate
+build_test(
+    name = "wit_bindgen_rt_fix_test",
+    targets = [
+        ":service_a_component",
+        ":service_b_component",
+    ],
+)
+
+# Test 4: Composition build validation
 build_test(
     name = "composition_build_test",
     targets = [
@@ -160,7 +171,7 @@ build_test(
     ],
 )
 
-# Test 4: Component validation tests using custom rule
+# Test 5: Component validation tests using custom rule
 component_validation_test(
     name = "basic_component_validation",
     component = ":basic_component_release",
@@ -190,5 +201,6 @@ test_suite(
         ":consumer_component_validation",
         ":dependency_resolution_build_test",
         ":wasi_system_validation",
+        ":wit_bindgen_rt_fix_test",
     ],
 )
