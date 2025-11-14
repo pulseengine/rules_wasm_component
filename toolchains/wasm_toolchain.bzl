@@ -4,6 +4,7 @@ load("//checksums:registry.bzl", "get_tool_info", "validate_tool_compatibility")
 load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error", "log_diagnostic_info", "validate_system_tool")
 load("//toolchains:monitoring.bzl", "add_build_telemetry", "create_health_check")
 load("//toolchains:tool_cache.bzl", "cache_tool", "clean_expired_cache", "retrieve_cached_tool", "validate_tool_functionality")
+load("//toolchains:tool_versions.bzl", "get_tool_version", "validate_tool_versions")
 
 def _get_rust_toolchain_info(repository_ctx):
     """Get Rust toolchain info from the registered hermetic toolchain"""
@@ -497,7 +498,7 @@ def _download_wasm_tools(repository_ctx):
 def _download_wac(repository_ctx):
     """Download wac only"""
     platform = _detect_host_platform(repository_ctx)
-    wac_version = "0.8.0"
+    wac_version = get_tool_version("wac")  # From tool_versions.bzl
 
     # Get checksum and platform info from tool_versions.bzl
     tool_info = get_tool_info("wac", wac_version, platform)
@@ -519,7 +520,7 @@ def _download_wac(repository_ctx):
 def _download_wit_bindgen(repository_ctx):
     """Download wit-bindgen only"""
     platform = _detect_host_platform(repository_ctx)
-    wit_bindgen_version = "0.46.0"
+    wit_bindgen_version = get_tool_version("wit-bindgen")  # From tool_versions.bzl
 
     # Get checksum and platform info from tool_versions.bzl
     tool_info = get_tool_info("wit-bindgen", wit_bindgen_version, platform)
