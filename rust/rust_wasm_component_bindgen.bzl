@@ -160,9 +160,9 @@ pub mod wit_bindgen {
 
         // Bitflags module for WASI interfaces
         pub mod bitflags {
-            // Re-export bitflags macro without #[macro_export]
+            // Re-export bitflags macro for public access from other crates
             // Generated code expects: crate::wit_bindgen::rt::bitflags::bitflags!
-            pub(crate) use bitflags;
+            pub use bitflags::bitflags;
         }
     }
 }
@@ -254,9 +254,9 @@ pub mod wit_bindgen {
 
         // Bitflags module for WASI interfaces
         pub mod bitflags {
-            // Re-export bitflags macro without #[macro_export]
+            // Re-export bitflags macro for public access from other crates
             // Generated code expects: crate::wit_bindgen::rt::bitflags::bitflags!
-            pub(crate) use bitflags;
+            pub use bitflags::bitflags;
         }
     }
 }
