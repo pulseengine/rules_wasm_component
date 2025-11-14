@@ -82,7 +82,98 @@ def _generate_wrapper_impl(ctx):
             )
         )
 
-    wrapper_content = """// Generated wrapper for WIT bindings
+    # Different wrapper content based on mode
+    if ctx.attr.mode == "native-guest":
+        wrapper_content = """// Generated wrapper for WIT bindings (native-guest mode)
+//
+// COMPATIBILITY: wit-bindgen CLI 0.44.0 - 0.46.0
+// This wrapper provides a wit_bindgen::rt module compatible with the CLI-generated code.
+// The runtime provides allocation helpers and cleanup guards expected by generated bindings.
+//
+// For native-guest mode, we also provide a no-op export! macro since native applications
+// don't need to export WASM functions.
+//
+// API provided:
+// - Cleanup::new(layout) -> (*mut u8, Option<CleanupGuard>)
+// - CleanupGuard (with Drop impl for deallocation)
+// - run_ctors_once() - no-op for native applications
+// - maybe_link_cabi_realloc() - no-op for native applications
+// - export! - no-op macro for native applications (does nothing)
+
+// Suppress clippy warnings for generated code
+#![allow(clippy::all)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
+// Minimal wit_bindgen::rt runtime compatible with CLI-generated code
+pub mod wit_bindgen {
+    pub mod rt {
+        use core::alloc::Layout;
+
+        #[inline]
+        pub fn run_ctors_once() {
+            // No-op - native applications don't need constructor calls
+        }
+
+        #[inline]
+        pub fn maybe_link_cabi_realloc() {
+            // No-op - native applications don't need cabi_realloc
+        }
+
+        pub struct Cleanup;
+
+        impl Cleanup {
+            #[inline]
+            #[allow(clippy::new_ret_no_self)]
+            pub fn new(layout: Layout) -> (*mut u8, Option<CleanupGuard>) {
+                // Use the global allocator to allocate memory
+                // SAFETY: We're allocating with a valid layout
+                let ptr = unsafe { std::alloc::alloc(layout) };
+
+                // Return the pointer and a cleanup guard
+                // If allocation fails, alloc() will panic (as per std::alloc behavior)
+                (ptr, Some(CleanupGuard { ptr, layout }))
+            }
+        }
+
+        pub struct CleanupGuard {
+            ptr: *mut u8,
+            layout: Layout,
+        }
+
+        impl CleanupGuard {
+            #[inline]
+            pub fn forget(self) {
+                // Prevent the Drop from running
+                core::mem::forget(self);
+            }
+        }
+
+        impl Drop for CleanupGuard {
+            fn drop(&mut self) {
+                // SAFETY: ptr was allocated with layout in Cleanup::new
+                unsafe {
+                    std::alloc::dealloc(self.ptr, self.layout);
+                }
+            }
+        }
+    }
+}
+
+// No-op export macro for native-guest mode
+// Native applications don't export WASM functions, so this does nothing
+#[allow(unused_macros)]
+#[macro_export]
+macro_rules! export {
+    ($($t:tt)*) => {
+        // No-op: native applications don't export WASM functions
+    };
+}
+
+// Generated bindings follow:
+"""
+    else:
+        wrapper_content = """// Generated wrapper for WIT bindings (guest mode)
 //
 // COMPATIBILITY: wit-bindgen CLI 0.44.0 - 0.46.0
 // This wrapper provides a wit_bindgen::rt module compatible with the CLI-generated code.
@@ -167,9 +258,10 @@ pub mod wit_bindgen {
         content = wrapper_content + "\n",
     )
 
-    # Create filtered content based on mode
+    # For native-guest mode, filter out the conflicting pub(crate) use export line
+    # For guest mode, just concatenate directly
     if ctx.attr.mode == "native-guest":
-        # Read bindgen file and filter out conflicting exports
+        # Use Python to filter out conflicting export line
         filter_script = ctx.actions.declare_file(ctx.label.name + "_filter.py")
         filter_content = """#!/usr/bin/env python3
 import sys
@@ -182,11 +274,12 @@ with open(sys.argv[1], 'r') as f:
 with open(sys.argv[2], 'r') as f:
     bindgen_content = f.read()
 
-# Filter out conflicting export statements for native-guest mode
+# Filter out conflicting pub(crate) use export line
+# The wrapper provides a public export! macro, so we don't need the crate-private one
 filtered_lines = []
 for line in bindgen_content.split('\\n'):
-    # Skip lines that start with pub(crate) use __export_ and end with _impl as export;
-    if not (line.strip().startswith('pub(crate) use __export_') and line.strip().endswith('_impl as export;')):
+    # Skip lines that re-export as 'export' (conflicts with our macro)
+    if not (line.strip().startswith('pub(crate) use') and line.strip().endswith(' as export;')):
         filtered_lines.append(line)
 
 # Write combined content
@@ -206,10 +299,10 @@ with open(sys.argv[3], 'w') as f:
             inputs = [temp_wrapper, ctx.file.bindgen, filter_script],
             outputs = [out_file],
             mnemonic = "FilterWitWrapper",
-            progress_message = "Filtering wrapper for {}".format(ctx.label),
+            progress_message = "Filtering native-guest wrapper for {}".format(ctx.label),
         )
     else:
-        # For guest mode, use file_ops component for cross-platform concatenation
+        # Use file_ops component for cross-platform concatenation
         # Build JSON config for file_ops concatenate-files operation
         config_file = ctx.actions.declare_file(ctx.label.name + "_concat_config.json")
         ctx.actions.write(
@@ -397,22 +490,16 @@ def rust_wasm_component_bindgen(
     bindings_lib = name + "_bindings"
     bindings_lib_host = bindings_lib + "_host"
 
-    # TODO: Re-enable host bindings once we fix the export macro issue
-    # The native-guest bindings correctly remove the export! macro (by design),
-    # but user code unconditionally uses export!(). We need to either:
-    # 1. Add cfg guards in user code: #[cfg(target_arch = "wasm32")]
-    # 2. Keep the export macro in native-guest mode (but make it a no-op)
-    # 3. Use conditional compilation in the wrapper
-    # For now, disabled to unblock CI (WASM builds work fine)
-
-    # DISABLED: Create the bindings library for native platform (host) using native-guest wrapper
-    # rust_library(
-    #     name = bindings_lib_host,
-    #     srcs = [":" + wrapper_native_guest_target],
-    #     crate_name = name.replace("-", "_") + "_bindings",
-    #     edition = "2021",
-    #     visibility = visibility,  # Make native bindings publicly available
-    # )
+    # Create the bindings library for native platform (host) using native-guest wrapper
+    # The native-guest wrapper includes a no-op export! macro that does nothing,
+    # since native applications don't export WASM functions
+    rust_library(
+        name = bindings_lib_host,
+        srcs = [":" + wrapper_native_guest_target],
+        crate_name = name.replace("-", "_") + "_bindings",
+        edition = "2021",
+        visibility = visibility,  # Make native bindings publicly available
+    )
 
     # Create a separate WASM bindings library using guest wrapper
     bindings_lib_wasm_base = bindings_lib + "_wasm_base"
