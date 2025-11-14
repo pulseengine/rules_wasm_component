@@ -157,6 +157,13 @@ pub mod wit_bindgen {
                 }
             }
         }
+
+        // Bitflags module for WASI interfaces
+        pub mod bitflags {
+            // Re-export bitflags macro without #[macro_export]
+            // Generated code expects: crate::wit_bindgen::rt::bitflags::bitflags!
+            pub(crate) use bitflags;
+        }
     }
 }
 
@@ -243,6 +250,13 @@ pub mod wit_bindgen {
                     std::alloc::dealloc(self.ptr, self.layout);
                 }
             }
+        }
+
+        // Bitflags module for WASI interfaces
+        pub mod bitflags {
+            // Re-export bitflags macro without #[macro_export]
+            // Generated code expects: crate::wit_bindgen::rt::bitflags::bitflags!
+            pub(crate) use bitflags;
         }
     }
 }
@@ -498,6 +512,7 @@ def rust_wasm_component_bindgen(
         srcs = [":" + wrapper_native_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
+        deps = ["@crates//:bitflags"],  # Required for WASI filesystem interfaces
         visibility = visibility,  # Make native bindings publicly available
     )
 
@@ -508,6 +523,7 @@ def rust_wasm_component_bindgen(
         srcs = [":" + wrapper_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
+        deps = ["@crates//:bitflags"],  # Required for WASI filesystem interfaces
         visibility = ["//visibility:private"],
     )
 
