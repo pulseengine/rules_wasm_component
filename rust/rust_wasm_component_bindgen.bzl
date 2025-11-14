@@ -3,6 +3,7 @@
 load("@rules_rust//rust:defs.bzl", "rust_common", "rust_library")
 load("//wit:wit_bindgen.bzl", "wit_bindgen")
 load("//wit:symmetric_wit_bindgen.bzl", "symmetric_wit_bindgen")
+load("//toolchains:tool_versions.bzl", "get_tool_version")
 load(":rust_wasm_component.bzl", "rust_wasm_component")
 load(":transitions.bzl", "wasm_transition")
 
@@ -67,6 +68,20 @@ def _generate_wrapper_impl(ctx):
     # IMPORTANT: When updating wit-bindgen CLI version (in wasm_toolchain.bzl),
     # verify this embedded runtime still provides the required API.
     # Check generated bindings for any new runtime requirements.
+
+    # Validate CLI version compatibility
+    COMPATIBLE_CLI_VERSIONS = ["0.44.0", "0.45.0", "0.46.0"]
+    cli_version = get_tool_version("wit-bindgen")
+    if cli_version not in COMPATIBLE_CLI_VERSIONS:
+        fail(
+            "Embedded runtime incompatible with wit-bindgen CLI {}. " +
+            "Compatible versions: {}. " +
+            "Update the embedded runtime in rust_wasm_component_bindgen.bzl or downgrade CLI version.".format(
+                cli_version,
+                ", ".join(COMPATIBLE_CLI_VERSIONS)
+            )
+        )
+
     wrapper_content = """// Generated wrapper for WIT bindings
 //
 // COMPATIBILITY: wit-bindgen CLI 0.44.0 - 0.46.0
