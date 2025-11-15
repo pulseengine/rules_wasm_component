@@ -30,7 +30,11 @@ def _detect_host_platform(repository_ctx):
         fail("Unsupported operating system: {}".format(os_name))
 
 def _download_go(repository_ctx, version, platform):
-    """Download hermetic Go SDK for TinyGo to use"""
+    """Download hermetic Go SDK for TinyGo to use
+
+    Supports configurable mirrors via environment variables for enterprise/air-gap deployments:
+    - BAZEL_GO_MIRROR: Override Go SDK download URL (default: https://go.dev)
+    """
 
     go_version = "1.25.3"  # Latest stable Go version (1.25.0 doesn't exist)
 
@@ -46,9 +50,12 @@ def _download_go(repository_ctx, version, platform):
     if not go_platform:
         fail("Unsupported platform for Go SDK: {}".format(platform))
 
+    # Get mirror configuration from environment (enterprise support)
+    go_mirror = repository_ctx.os.environ.get("BAZEL_GO_MIRROR", "https://go.dev")
+
     # Windows uses .zip, others use .tar.gz
     go_extension = ".zip" if platform == "windows_amd64" else ".tar.gz"
-    go_url = "https://go.dev/dl/go{}.{}{}".format(go_version, go_platform, go_extension)
+    go_url = "{}/dl/go{}.{}{}".format(go_mirror, go_version, go_platform, go_extension)
 
     print("Downloading Go {} for TinyGo from: {}".format(go_version, go_url))
 
@@ -182,6 +189,9 @@ def _setup_go_wit_bindgen(repository_ctx, go_binary):
     """Install wit-bindgen-go Go tool for WIT binding generation
 
     Installs go.bytecodealliance.org/wit/bindgen which provides 'go tool wit-bindgen-go'
+
+    Supports configurable Go proxy via environment variable for enterprise/air-gap deployments:
+    - BAZEL_GOPROXY: Override Go module proxy (default: https://proxy.golang.org,direct)
     """
 
     print("Installing Go WIT binding tools...")
@@ -189,12 +199,16 @@ def _setup_go_wit_bindgen(repository_ctx, go_binary):
     # Create bin directory first
     repository_ctx.file("bin/.gitkeep", "")
 
+    # Get Go proxy configuration from environment (enterprise support)
+    goproxy = repository_ctx.os.environ.get("BAZEL_GOPROXY", "https://proxy.golang.org,direct")
+
     # Set up Go environment for tool installation
     go_env = {
         "GOCACHE": str(repository_ctx.path("go_cache")),
         "GOPATH": str(repository_ctx.path("go_path")),
         "CGO_ENABLED": "0",
         "GO111MODULE": "on",
+        "GOPROXY": goproxy,
     }
 
     # Install wit-bindgen-go using hermetic Go - this provides 'go tool wit-bindgen-go'

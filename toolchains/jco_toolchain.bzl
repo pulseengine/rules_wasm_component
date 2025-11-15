@@ -96,7 +96,12 @@ def _jco_toolchain_repository_impl(repository_ctx):
     _create_jco_build_files(repository_ctx)
 
 def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_version):
-    """Download hermetic Node.js and install jco via npm"""
+    """Download hermetic Node.js and install jco via npm
+
+    Supports configurable mirrors via environment variables for enterprise/air-gap deployments:
+    - BAZEL_NODEJS_MIRROR: Override Node.js download URL (default: https://nodejs.org)
+    - BAZEL_NPM_REGISTRY: Override npm registry URL (default: https://registry.npmjs.org)
+    """
 
     # Get Node.js info from registry
     node_info = get_tool_info("nodejs", node_version, platform)
@@ -113,9 +118,13 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
         platform,
     ))
 
-    # Download Node.js
+    # Get mirror configuration from environment (enterprise support)
+    nodejs_mirror = repository_ctx.os.environ.get("BAZEL_NODEJS_MIRROR", "https://nodejs.org")
+    npm_registry = repository_ctx.os.environ.get("BAZEL_NPM_REGISTRY", "https://registry.npmjs.org")
+
+    # Download Node.js from configurable mirror
     archive_name = "node-v{}-{}".format(node_version, node_info["url_suffix"])
-    node_url = "https://nodejs.org/dist/v{}/{}".format(node_version, archive_name)
+    node_url = "{}/dist/v{}/{}".format(nodejs_mirror, node_version, archive_name)
 
     print("Downloading Node.js from: {}".format(node_url))
 
@@ -169,6 +178,12 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
 
     # Install jco using the hermetic npm
     print("Installing jco {} using hermetic npm...".format(jco_version))
+
+    # Configure npm to use custom registry if specified
+    if npm_registry != "https://registry.npmjs.org":
+        print("Configuring npm to use custom registry: {}".format(npm_registry))
+        npmrc_content = "registry={}\n".format(npm_registry)
+        repository_ctx.file("jco_workspace/.npmrc", npmrc_content)
 
     # Create a local node_modules for jco
     # Set up environment so npm can find node binary
