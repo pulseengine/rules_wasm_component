@@ -12,12 +12,6 @@ To run clippy on all Rust targets in the project:
 bazel build --config=clippy //...
 ```
 
-Or use the provided script:
-
-```bash
-./scripts/clippy.sh
-```
-
 ### On Specific Targets
 
 To run clippy on a specific target, you can use the `rust_wasm_component_clippy` rule:
