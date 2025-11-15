@@ -1,0 +1,10 @@
+"""Toolchain vendoring infrastructure"""
+
+package(default_visibility = ["//visibility:public"])
+
+# Vendoring rules and documentation
+exports_files([
+    "vendor_toolchains.bzl",
+    "defs.bzl",
+    "README.md",
+])
