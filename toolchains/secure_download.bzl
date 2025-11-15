@@ -5,8 +5,14 @@ load("//checksums:registry.bzl", "get_github_repo", "get_tool_checksum", "get_to
 def secure_download_tool(ctx, tool_name, version, platform):
     """Download tool with mandatory checksum verification using central registry
 
-    Supports configurable mirrors via environment variables for enterprise/air-gap deployments.
-    Set BAZEL_WASM_GITHUB_MIRROR to override default GitHub URL.
+    Supports configurable mirrors via environment variables for enterprise/air-gap deployments:
+    - BAZEL_WASM_GITHUB_MIRROR: Override default GitHub URL
+    - BAZEL_WASM_OFFLINE: Use vendored files from third_party/ instead of downloading
+
+    Offline mode workflow:
+    1. Vendor toolchains: bazel run @vendored_toolchains//:export_to_third_party
+    2. Set environment: export BAZEL_WASM_OFFLINE=1
+    3. Build uses vendored files instead of downloading
     """
 
     # Get verified checksum from central registry
@@ -24,6 +30,24 @@ def secure_download_tool(ctx, tool_name, version, platform):
     if not tool_info:
         fail("SECURITY: Tool info not found for '{}' version '{}' platform '{}'".format(tool_name, version, platform))
 
+    # Check for offline mode (use vendored files)
+    offline_mode = ctx.os.environ.get("BAZEL_WASM_OFFLINE", "0") == "1"
+
+    if offline_mode:
+        # Use vendored files from third_party/
+        vendored_path = "third_party/toolchains/{}/{}/{}".format(tool_name, version, platform)
+
+        # Check if vendored file exists
+        if ctx.path(vendored_path).exists:
+            print("Using vendored toolchain: {}/{}/{} from {}".format(tool_name, version, platform, vendored_path))
+
+            # Symlink vendored directory into repository
+            ctx.symlink(vendored_path, tool_name)
+            return None  # No download needed
+        else:
+            fail("OFFLINE MODE: Vendored toolchain not found at {}\nRun 'bazel run @vendored_toolchains//:export_to_third_party' to vendor toolchains first.".format(vendored_path))
+
+    # Online mode: download from mirror
     # Get mirror configuration from environment (enterprise support)
     github_mirror = ctx.os.environ.get("BAZEL_WASM_GITHUB_MIRROR", "https://github.com")
 

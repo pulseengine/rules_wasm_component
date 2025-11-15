@@ -1,0 +1,24 @@
+"""Integration tests for toolchain vendoring"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Test that vendor infrastructure can be loaded
+build_test(
+    name = "vendor_infrastructure_test",
+    targets = [
+        "//tools/vendor:BUILD.bazel",
+    ],
+)
+
+# Smoke test: Verify vendoring documentation exists
+filegroup(
+    name = "vendor_docs",
+    srcs = ["//tools/vendor:README.md"],
+)
+
+build_test(
+    name = "vendor_docs_test",
+    targets = [":vendor_docs"],
+)
