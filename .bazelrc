@@ -46,3 +46,39 @@ build --incompatible_strict_action_env
 build:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
 build:clippy --output_groups=+clippy_checks
 build:clippy --@rules_rust//:clippy_flags=-D,warnings,-D,clippy::all,-D,clippy::correctness,-D,clippy::style,-D,clippy::complexity,-D,clippy::perf
+
+# ============================================================================
+# Enterprise / Air-Gap Configuration
+# ============================================================================
+# The following environment variables allow you to configure corporate mirrors
+# for all external dependencies. This supports enterprise deployments with:
+# - Air-gap/offline builds
+# - Corporate artifact repositories (JFrog, Nexus, Harbor, Minio)
+# - Security scanning and compliance requirements
+#
+# To use corporate mirrors, set these in your environment or .bazelrc.user:
+#
+# GitHub Releases Mirror (for wasm-tools, wit-bindgen, wac, wkg, wasmtime, wizer, wasi-sdk):
+#   build --action_env=BAZEL_WASM_GITHUB_MIRROR=https://artifactory.company.com/github
+#
+# Node.js Mirror (for jco toolchain):
+#   build --action_env=BAZEL_NODEJS_MIRROR=https://artifactory.company.com/nodejs
+#
+# NPM Registry Mirror (for jco and componentize-js packages):
+#   build --action_env=BAZEL_NPM_REGISTRY=https://artifactory.company.com/npm
+#
+# Go SDK Mirror (for TinyGo toolchain):
+#   build --action_env=BAZEL_GO_MIRROR=https://artifactory.company.com/golang
+#
+# Go Module Proxy (for wit-bindgen-go and other Go dependencies):
+#   build --action_env=BAZEL_GOPROXY=https://artifactory.company.com/go-proxy
+#
+# Example corporate configuration (.bazelrc.user):
+#   build --action_env=BAZEL_WASM_GITHUB_MIRROR=https://nexus.corp.com/repository/github-proxy
+#   build --action_env=BAZEL_NODEJS_MIRROR=https://nexus.corp.com/repository/nodejs-dist
+#   build --action_env=BAZEL_NPM_REGISTRY=https://nexus.corp.com/repository/npm-group
+#   build --action_env=BAZEL_GO_MIRROR=https://nexus.corp.com/repository/golang-dist
+#   build --action_env=BAZEL_GOPROXY=https://nexus.corp.com/repository/go-proxy
+#
+# All downloads include mandatory SHA256 checksum verification for security.
+# See checksums/tools/*.json for the complete list of verified checksums.
