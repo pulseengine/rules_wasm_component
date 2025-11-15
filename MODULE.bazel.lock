@@ -366,7 +366,7 @@
     },
     "//wasm:extensions.bzl%wasi_wit": {
       "general": {
-        "bzlTransitiveDigest": "a+454jb/z3nt3Vl6hW7ojso0CHhspyevhsPsQyAQGKU=",
+        "bzlTransitiveDigest": "U6MfxH8Sw5S6Q1hacLJ+pdcJg4g5U7mo689Zc+qdjHA=",
         "usagesDigest": "aprKQAVHUGZU3Qda4GY+rceEATrn/fard2WlVtmwyIU=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
