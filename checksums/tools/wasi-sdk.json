@@ -1,9 +1,30 @@
 {
   "tool_name": "wasi-sdk",
   "github_repo": "WebAssembly/wasi-sdk",
-  "latest_version": "27",
-  "last_checked": "2025-08-18T10:30:00Z",
+  "latest_version": "29",
+  "last_checked": "2025-11-18T00:00:00Z",
   "versions": {
+    "29": {
+      "release_date": "2025-11-15",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "d0de2fd3ea5c57060efa87e4356c164bec3689972f2386f0c9a89c58e10cec8d",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "e11552913e3f99e834d7fe7da1bd081abaf764759ed76b6097a34c63fc83665e",
+          "url_suffix": "arm64-macos.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "87d1d1a2879d139cdc624b968efad3d4a97b8078cdff95e63ac88ecafd1a0171",
+          "url_suffix": "x86_64-linux.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "052ad773397dc9e5aa99fb4cfef694175e6b1e81bb2ad1d3c8e7b3fc81441b7c",
+          "url_suffix": "arm64-linux.tar.gz"
+        }
+      }
+    },
     "27": {
       "release_date": "2025-07-28",
       "platforms": {

@@ -8,13 +8,13 @@ module(
 
 # Dependencies for WebAssembly tooling
 bazel_dep(name = "rules_rust", version = "0.65.0")
-bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_cc", version = "0.2.4")
-bazel_dep(name = "rules_go", version = "0.57.0")
+bazel_dep(name = "rules_cc", version = "0.2.14")
+bazel_dep(name = "rules_go", version = "0.59.0")
 
 # OCI image signing capabilities
-bazel_dep(name = "rules_oci", version = "1.8.0")
+bazel_dep(name = "rules_oci", version = "2.2.6")
 
 # Hermetic toolchain management with pre-built binaries
 
@@ -65,7 +65,7 @@ rust.toolchain(
         "aarch64-apple-darwin",
         "x86_64-pc-windows-msvc",
     ],
-    versions = ["1.90.0"],
+    versions = ["1.91.1"],
 )
 use_repo(rust, "rust_toolchains")
 
@@ -89,7 +89,7 @@ wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
     strategy = "download",  # Download prebuilt binaries from GitHub releases
-    version = "1.240.0",
+    version = "1.241.2",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
@@ -161,7 +161,7 @@ cpp_component = use_extension("//wasm:extensions.bzl", "cpp_component")
 cpp_component.register(
     name = "cpp",
     strategy = "download",
-    wasi_sdk_version = "27",  # Match existing WASI SDK version
+    wasi_sdk_version = "29",
 )
 use_repo(cpp_component, "cpp_toolchain")
 
