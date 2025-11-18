@@ -3,6 +3,7 @@ load("//cpp:defs.bzl", "cc_component_library", "cpp_wit_bindgen")
 # WIT bindings generation
 cpp_wit_bindgen(
     name = "image_processing_bindings",
+    language = "cpp",
     wit = "wit/image_processing.wit",
     world = "image-processor-world",
 )
@@ -16,6 +17,7 @@ cc_component_library(
         "-msimd128",  # Enable WebAssembly SIMD
         "-O3",  # Optimize for performance
     ],
+    language = "cpp",
     target_compatible_with = ["@platforms//cpu:wasm32"],
 )
 

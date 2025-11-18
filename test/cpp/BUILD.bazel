@@ -114,15 +114,15 @@ cpp_component_language_test(
 cpp_component_validation_test(
     name = "test_cpp_component_optimization_features",
     expected_cxx_std = "c++20",
-    expected_language = "cpp",
-    expected_optimization = True,
+    expected_language = "c",  # C++ source with C bindings
+    expected_optimization = 1,  # 1 = True
     target_under_test = "//examples/cpp_component/calculator:calculator_cpp_component",
 )
 
 cpp_component_validation_test(
     name = "test_c_component_features",
     expected_language = "c",
-    expected_optimization = True,
+    expected_optimization = 1,  # 1 = True
     target_under_test = "//examples/cpp_component/calculator:calculator_c_component",
 )
 

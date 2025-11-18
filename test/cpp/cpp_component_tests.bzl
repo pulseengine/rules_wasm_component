@@ -132,12 +132,20 @@ def _cpp_wit_bindgen_test_impl(ctx):
         "cpp_wit_bindgen should provide output files",
     )
 
-    # Check for C/C++ header files
-    header_files = [f for f in files if f.basename.endswith((".h", ".hpp", ".c", ".cpp"))]
+    # Check that cpp_wit_bindgen provides a bindings directory
+    # The rule outputs a directory containing the generated .h, .c/.cpp files
     asserts.true(
         env,
-        len(header_files) > 0,
-        "cpp_wit_bindgen should generate C/C++ header files",
+        len(files) > 0,
+        "cpp_wit_bindgen should provide bindings directory",
+    )
+
+    # Verify it's a directory by checking the path ends with "_bindings"
+    has_bindings_dir = any([f.path.endswith("_bindings") for f in files])
+    asserts.true(
+        env,
+        has_bindings_dir,
+        "cpp_wit_bindgen should generate C/C++ bindings directory",
     )
 
     return analysistest.end(env)
@@ -328,14 +336,15 @@ def _cpp_component_validation_test_impl(ctx):
 
         # Test optimization if specified
         expected_optimization = ctx.attr.expected_optimization
-        if expected_optimization != None:  # Handle boolean False
+        if expected_optimization != -1:  # -1 means don't check
             metadata = component_info.metadata
             optimization = metadata.get("optimization", False)
+            expected_bool = expected_optimization == 1
             asserts.equals(
                 env,
                 optimization,
-                expected_optimization,
-                "Component optimization should be {}".format(expected_optimization),
+                expected_bool,
+                "Component optimization should be {}".format(expected_bool),
             )
 
     elif ctx.attr.components:
@@ -393,8 +402,9 @@ cpp_component_validation_test = analysistest.make(
         "expected_cxx_std": attr.string(
             doc = "Expected C++ standard (e.g., c++20)",
         ),
-        "expected_optimization": attr.bool(
-            doc = "Expected optimization setting",
+        "expected_optimization": attr.int(
+            default = -1,
+            doc = "Expected optimization setting (1=True, 0=False, -1=don't check)",
         ),
     },
 )

@@ -4,9 +4,11 @@ load("//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("//wit:defs.bzl", "wit_library")
 
 # Simple C++ component to test build system
+# Note: C++ source with C bindings (uses extern "C" and C-style API)
 cpp_component(
     name = "auth_service_cpp",
     srcs = ["test/simple_auth.cpp"],
+    language = "c",  # C bindings (C++ source auto-detected)
     target_compatible_with = ["@platforms//cpu:wasm32"],
     wit = "wit/auth_service.wit",
     world = "auth-service-world",

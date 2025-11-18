@@ -3,6 +3,7 @@ load("//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen
 # WIT bindings generation
 cpp_wit_bindgen(
     name = "http_service_bindings",
+    language = "c",
     visibility = ["//visibility:public"],
     wit = "wit/http_service.wit",
     world = "http-service-world",
@@ -21,10 +22,7 @@ cc_component_library(
         "src/request_parser.h",
         "src/response_builder.h",
     ],
-    copts = [
-        "-x",
-        "c",
-    ],  # Force compilation as C, not C++
+    language = "c",
     target_compatible_with = ["@platforms//cpu:wasm32"],
     visibility = ["//visibility:public"],
 )
@@ -45,6 +43,7 @@ cpp_component(
         "src/response_builder.h",
     ],
     language = "c",
+    optimize = True,  # Enable optimization
     target_compatible_with = ["@platforms//cpu:wasm32"],
     validate_wit = True,  # Validate WIT compliance
     visibility = ["//visibility:public"],

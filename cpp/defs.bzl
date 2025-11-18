@@ -113,6 +113,11 @@ def _cpp_component_impl(ctx):
     headers = ctx.files.hdrs
     wit_file = ctx.file.wit
 
+    # Detect if we need C++ compilation support (for source files, not bindings)
+    # This allows C++ source files to work with both C and C++ bindings
+    has_cpp_sources = any([src.extension in ["cpp", "cc", "cxx", "C", "CPP"] for src in sources])
+    needs_cpp_compilation = ctx.attr.language == "cpp" or has_cpp_sources
+
     # Collect dependency headers and libraries using CcInfo provider
     dep_headers = []
     dep_libraries = []
@@ -154,7 +159,7 @@ def _cpp_component_impl(ctx):
 
     # Generate C/C++ bindings from WIT
     wit_args = ctx.actions.args()
-    wit_args.add("c")
+    wit_args.add(ctx.attr.language)
     wit_args.add("--out-dir", bindings_dir.path)
 
     if ctx.attr.world:
@@ -167,8 +172,8 @@ def _cpp_component_impl(ctx):
         arguments = [wit_args],
         inputs = [wit_file],
         outputs = [bindings_dir],
-        mnemonic = "WitBindgenCpp",
-        progress_message = "Generating C/C++ bindings for %s" % ctx.label,
+        mnemonic = "WitBindgen" + ("C" if ctx.attr.language == "c" else "Cpp"),
+        progress_message = "Generating %s bindings for %s" % (ctx.attr.language.upper(), ctx.label),
     )
 
     # Create working directory for compilation using File Operations Component
@@ -226,8 +231,8 @@ def _cpp_component_impl(ctx):
         compile_args.add("-O0")
         compile_args.add("-g")
 
-    # C++ specific flags
-    if ctx.attr.language == "cpp":
+    # C++ specific flags (for source compilation)
+    if needs_cpp_compilation:
         if ctx.attr.enable_exceptions:
             # Enable exceptions if specifically requested
             compile_args.add("-fexceptions")
@@ -248,7 +253,7 @@ def _cpp_component_impl(ctx):
     compile_args.add("-I" + work_dir.path)
 
     # Add C++ standard library paths for wasm32-wasip2 target
-    if ctx.attr.language == "cpp":
+    if needs_cpp_compilation:
         # WASI SDK stores C++ headers in share/wasi-sysroot, not just sysroot
         if "/external/" in sysroot_path:
             toolchain_repo = sysroot_path.split("/sysroot")[0]
@@ -298,11 +303,12 @@ def _cpp_component_impl(ctx):
     for src in sources:
         compile_args.add(work_dir.path + "/" + src.basename)
 
-    # Compile generated WIT binding C file separately (without C++ flags)
+    # Compile generated WIT binding file separately
     # wit-bindgen generates filenames by converting hyphens to underscores: http-service-world -> http_service_world.c
     world_name = ctx.attr.world or "component"  # Default to "component" if no world specified
     file_safe_world_name = world_name.replace("-", "_")  # Convert hyphens to underscores for filesystem
-    binding_c_file = bindings_dir.path + "/" + file_safe_world_name + ".c"
+    binding_ext = ".cpp" if ctx.attr.language == "cpp" else ".c"
+    binding_c_file = bindings_dir.path + "/" + file_safe_world_name + binding_ext
     binding_h_file = bindings_dir.path + "/" + file_safe_world_name + ".h"
     binding_o_file = bindings_dir.path + "/" + file_safe_world_name + "_component_type.o"
 
@@ -336,6 +342,27 @@ def _cpp_component_impl(ctx):
         binding_compile_args.add("-fexceptions")
         binding_compile_args.add("-fcxx-exceptions")
 
+    # C++ compilation flags for binding compilation
+    if ctx.attr.language == "cpp":
+        # C++ standard (bindings require C++20 for std::span)
+        if ctx.attr.cxx_std:
+            binding_compile_args.add("-std=" + ctx.attr.cxx_std)
+        else:
+            binding_compile_args.add("-std=c++20")  # Default to C++20 for bindings
+
+        # WASI SDK stores C++ headers in share/wasi-sysroot, not just sysroot
+        if "/external/" in sysroot_path:
+            toolchain_repo = sysroot_path.split("/sysroot")[0]
+            wasi_sysroot = toolchain_repo + "/share/wasi-sysroot"
+        else:
+            wasi_sysroot = sysroot_path
+        binding_compile_args.add("-I" + wasi_sysroot + "/include/wasm32-wasip2/c++/v1")
+        binding_compile_args.add("-I" + wasi_sysroot + "/include/c++/v1")
+
+        # Also add clang's builtin headers
+        if "/external/" in sysroot_path:
+            binding_compile_args.add("-I" + toolchain_repo + "/lib/clang/20/include")
+
     # Include directories
     binding_compile_args.add("-I" + work_dir.path)
     binding_compile_args.add("-I" + bindings_dir.path)
@@ -353,8 +380,8 @@ def _cpp_component_impl(ctx):
         arguments = [binding_compile_args],
         inputs = [work_dir, bindings_dir] + sysroot_files.files.to_list() + dep_headers + external_headers,
         outputs = [binding_obj_file],
-        mnemonic = "CompileCppBindings",
-        progress_message = "Compiling WIT bindings for %s" % ctx.label,
+        mnemonic = "Compile" + ("C" if ctx.attr.language == "c" else "Cpp") + "Bindings",
+        progress_message = "Compiling %s WIT bindings for %s" % (ctx.attr.language.upper(), ctx.label),
     )
 
     # Add compiled binding object file and pre-compiled component type object to linking
@@ -370,8 +397,8 @@ def _cpp_component_impl(ctx):
             else:
                 compile_args.add("-l" + lib)  # Library name (e.g., "m" -> "-lm")
     else:
-        # Standard library linking for C++ language
-        if ctx.attr.language == "cpp":
+        # Standard library linking for C++ source files
+        if needs_cpp_compilation:
             compile_args.add("-lc++")
             compile_args.add("-lc++abi")
 
@@ -394,8 +421,8 @@ def _cpp_component_impl(ctx):
         arguments = [compile_args],
         inputs = [work_dir, bindings_dir, binding_obj_file] + sysroot_files.files.to_list() + dep_libraries + dep_headers + external_headers,
         outputs = [wasm_binary],
-        mnemonic = "CompileCppWasm",
-        progress_message = "Compiling C/C++ to WASM for %s" % ctx.label,
+        mnemonic = "Compile" + ("C" if ctx.attr.language == "c" else "Cpp") + "Wasm",
+        progress_message = "Compiling %s to WASM for %s" % (ctx.attr.language.upper(), ctx.label),
     )
 
     # Embed WIT metadata and create component in one step
@@ -414,8 +441,8 @@ def _cpp_component_impl(ctx):
         arguments = [embed_args],
         inputs = [wasm_binary, wit_file],
         outputs = [component_wasm],
-        mnemonic = "CreateCppComponent",
-        progress_message = "Creating WebAssembly component for %s" % ctx.label,
+        mnemonic = "Create" + ("C" if ctx.attr.language == "c" else "Cpp") + "Component",
+        progress_message = "Creating %s WebAssembly component for %s" % (ctx.attr.language.upper(), ctx.label),
     )
 
     # Optional WIT validation
@@ -469,10 +496,12 @@ def _cpp_component_impl(ctx):
         exports = [ctx.attr.world] if ctx.attr.world else [],
         metadata = {
             "name": ctx.label.name,
-            "language": "cpp",
+            "language": ctx.attr.language,
             "target": "wasm32-wasip2",
             "wasi_sdk": True,
             "toolchain": "wasi-sdk",
+            "cxx_std": ctx.attr.cxx_std if ctx.attr.cxx_std else None,
+            "optimization": ctx.attr.optimize,
         },
         profile = ctx.attr.optimization if hasattr(ctx.attr, "optimization") else "release",
         profile_variants = {},
@@ -625,7 +654,7 @@ def _cpp_wit_bindgen_impl(ctx):
 
     # Generate C/C++ bindings
     args = ctx.actions.args()
-    args.add("c")
+    args.add(ctx.attr.language)
     args.add("--out-dir", bindings_dir.path)
 
     if ctx.attr.world:
@@ -634,7 +663,8 @@ def _cpp_wit_bindgen_impl(ctx):
     if ctx.attr.stubs_only:
         args.add("--stubs-only")
 
-    if ctx.attr.string_encoding:
+    # string-encoding is only supported for C bindings
+    if ctx.attr.string_encoding and ctx.attr.language == "c":
         args.add("--string-encoding", ctx.attr.string_encoding)
 
     args.add(wit_file.path)
@@ -644,8 +674,8 @@ def _cpp_wit_bindgen_impl(ctx):
         arguments = [args],
         inputs = [wit_file],
         outputs = [bindings_dir],
-        mnemonic = "CppWitBindgen",
-        progress_message = "Generating C/C++ WIT bindings for %s" % ctx.label,
+        mnemonic = ("C" if ctx.attr.language == "c" else "Cpp") + "WitBindgen",
+        progress_message = "Generating %s WIT bindings for %s" % (ctx.attr.language.upper(), ctx.label),
     )
 
     return [
@@ -674,6 +704,11 @@ cpp_wit_bindgen = rule(
         "string_encoding": attr.string(
             values = ["utf8", "utf16", "compact-utf16"],
             doc = "String encoding to use in generated bindings",
+        ),
+        "language": attr.string(
+            default = "cpp",
+            values = ["c", "cpp"],
+            doc = "Language variant (c or cpp)",
         ),
     },
     toolchains = [
@@ -750,6 +785,10 @@ def _cc_component_library_impl(ctx):
     sysroot = cpp_toolchain.sysroot
     sysroot_files = cpp_toolchain.sysroot_files
 
+    # Detect if we need C++ compilation support (for source files)
+    has_cpp_sources = any([src.extension in ["cpp", "cc", "cxx", "C", "CPP"] for src in ctx.files.srcs])
+    needs_cpp_compilation = ctx.attr.language == "cpp" or has_cpp_sources
+
     # Output library
     library = ctx.actions.declare_file("lib{}.a".format(ctx.attr.name))
 
@@ -821,8 +860,8 @@ def _cc_component_library_impl(ctx):
             compile_args.add("-O0")
             compile_args.add("-g")
 
-        # C++ specific flags
-        if ctx.attr.language == "cpp":
+        # C++ specific flags (for source compilation)
+        if needs_cpp_compilation:
             if ctx.attr.enable_exceptions:
                 # Enable exceptions if specifically requested
                 pass
@@ -837,7 +876,7 @@ def _cc_component_library_impl(ctx):
         compile_args.add("-I" + work_dir.path)  # Workspace with staged headers
 
         # Add C++ standard library paths for wasm32-wasip2 target
-        if ctx.attr.language == "cpp":
+        if needs_cpp_compilation:
             # WASI SDK stores C++ headers in share/wasi-sysroot, not just sysroot
             if "/external/" in sysroot_dir:
                 toolchain_repo = sysroot_dir.split("/sysroot")[0]
@@ -897,8 +936,8 @@ def _cc_component_library_impl(ctx):
             arguments = [compile_args],
             inputs = all_inputs,
             outputs = [obj_file],
-            mnemonic = "CompileCppObject",
-            progress_message = "Compiling {} for component library".format(src.basename),
+            mnemonic = "Compile" + ("C" if ctx.attr.language == "c" else "Cpp") + "Object",
+            progress_message = "Compiling {} {} for component library".format(ctx.attr.language.upper(), src.basename),
         )
 
     # Create static library
@@ -912,8 +951,8 @@ def _cc_component_library_impl(ctx):
         arguments = [ar_args],
         inputs = object_files,
         outputs = [library],
-        mnemonic = "CreateCppLibrary",
-        progress_message = "Creating component library %s" % ctx.label,
+        mnemonic = "Create" + ("C" if ctx.attr.language == "c" else "Cpp") + "Library",
+        progress_message = "Creating %s component library %s" % (ctx.attr.language.upper(), ctx.label),
     )
 
     # Collect transitive headers and libraries from dependencies
