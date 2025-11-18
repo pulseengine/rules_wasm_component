@@ -23,7 +23,8 @@ cc_component_library(
     optimize = True,
 )
 
-# Calculator component (C++)
+# Calculator component (C++ source with C bindings)
+# This demonstrates using C++ internally but exposing a C ABI through WIT bindings
 cpp_component(
     name = "calculator_cpp_component",
     package_name = "example:calculator@1.0.0",
@@ -35,7 +36,7 @@ cpp_component(
     ],
     cxx_std = "c++20",
     enable_exceptions = False,  # WASI SDK doesn't support C++ exceptions
-    language = "cpp",
+    language = "c",  # Use C bindings (C++ source auto-detected)
     optimize = True,
     validate_wit = True,  # Validate WIT compliance
     wit = "wit/calculator.wit",

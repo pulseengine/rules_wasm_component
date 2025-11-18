@@ -1,9 +1,8 @@
-#include "simple_calculator.h"
-#include "calculator.h"  // Generated WIT bindings
-
-extern "C" {
+#include "calculator_cpp.h"  // Generated C++ WIT bindings
 
 // Simple C++ implementations without stdlib dependencies
+namespace {
+
 double simple_add(double a, double b) {
     return a + b;
 }
@@ -23,21 +22,28 @@ double simple_divide(double a, double b) {
     return a / b;
 }
 
-// WIT binding implementations - exact names expected by generated bindings
-double exports_example_simple_calculator_calc_add(double a, double b) {
+} // anonymous namespace
+
+// C++ bindings API implementation using namespaces
+namespace exports {
+namespace example {
+namespace simple_calculator {
+namespace calc {
+
+double Add(double a, double b) {
     return simple_add(a, b);
 }
 
-double exports_example_simple_calculator_calc_subtract(double a, double b) {
+double Subtract(double a, double b) {
     return simple_subtract(a, b);
 }
 
-double exports_example_simple_calculator_calc_multiply(double a, double b) {
+double Multiply(double a, double b) {
     return simple_multiply(a, b);
 }
 
-double exports_example_simple_calculator_calc_divide(double a, double b) {
+double Divide(double a, double b) {
     return simple_divide(a, b);
 }
 
-} // extern "C"
+}}}} // namespace exports::example::simple_calculator::calc

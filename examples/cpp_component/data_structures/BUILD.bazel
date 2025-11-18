@@ -3,6 +3,7 @@ load("//cpp:defs.bzl", "cc_component_library", "cpp_component", "cpp_wit_bindgen
 # WIT bindings generation
 cpp_wit_bindgen(
     name = "data_structures_bindings",
+    language = "cpp",
     wit = "wit/data_structures.wit",
     world = "data-structures-world",
 )
@@ -12,6 +13,7 @@ cc_component_library(
     name = "memory_pool",
     srcs = ["src/memory_pool.cpp"],
     hdrs = ["src/memory_pool.h"],
+    language = "cpp",
     target_compatible_with = ["@platforms//cpu:wasm32"],
 )
 
@@ -55,10 +57,12 @@ cc_component_library(
 # )
 
 # Main data structures component
+# Note: C++ source with C bindings (uses C-style API)
 cpp_component(
     name = "data_structures_component",
     srcs = ["src/data_structures.cpp"],
     hdrs = ["src/data_structures.h"],
+    language = "c",  # C bindings (C++ source auto-detected)
     target_compatible_with = ["@platforms//cpu:wasm32"],
     validate_wit = True,  # Enable WIT validation
     visibility = ["//visibility:public"],

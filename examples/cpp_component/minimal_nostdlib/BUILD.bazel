@@ -10,7 +10,7 @@ cpp_component(
     srcs = ["minimal_math.cpp"],
     hdrs = ["minimal_math.h"],
     cxx_std = "c++17",
-    language = "cpp",
+    language = "c",  # Use C bindings (C++ source auto-detected)
     libs = ["m"],  # Only link math library
     nostdlib = True,
     optimize = True,
@@ -24,7 +24,7 @@ cpp_component(
     name = "minimal_system_component",
     srcs = ["minimal_system.cpp"],
     cxx_std = "c++17",
-    language = "cpp",
+    language = "c",  # Use C bindings (C++ source auto-detected)
     libs = [
         "m",  # Math library
         "c",  # Basic C library
@@ -42,7 +42,7 @@ cpp_component(
     name = "standard_component",
     srcs = ["standard_math.cpp"],
     cxx_std = "c++17",
-    language = "cpp",
+    language = "c",  # Use C bindings (C++ source auto-detected)
     libs = ["m"],  # Additional library on top of standard libraries
     nostdlib = False,
     optimize = True,
