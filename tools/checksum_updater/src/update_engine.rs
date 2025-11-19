@@ -184,6 +184,15 @@ impl UpdateEngine {
             summary.tools_processed, summary.tools_updated, summary.errors, summary.duration
         );
 
+        // Regenerate registry.bzl if we actually made updates (not dry-run)
+        if !config.dry_run && !updates.is_empty() {
+            info!("Regenerating registry.bzl with updated checksums");
+            self.manager
+                .update_registry_bzl()
+                .await
+                .context("Failed to update registry.bzl")?;
+        }
+
         Ok(UpdateResults {
             summary,
             updates,
@@ -237,7 +246,12 @@ impl UpdateEngine {
             .await
             .with_context(|| format!("Failed to get latest release for {}", tool_name))?;
 
-        let latest_version = latest_release.tag_name.trim_start_matches('v');
+        // Strip tool-specific tag prefix from version
+        let latest_version = if let Some(prefix) = &tool_config.tag_prefix {
+            latest_release.tag_name.trim_start_matches(prefix.as_str())
+        } else {
+            latest_release.tag_name.trim_start_matches('v')
+        };
 
         // Check if update is needed
         if !config.force && latest_version == current_tool_info.latest_version {

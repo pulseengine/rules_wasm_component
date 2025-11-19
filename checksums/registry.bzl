@@ -48,7 +48,7 @@ def _get_fallback_checksums(tool_name):
         "wasm-tools": {
             "tool_name": "wasm-tools",
             "github_repo": "bytecodealliance/wasm-tools",
-            "latest_version": "1.240.0",
+            "latest_version": "1.241.2",
             "versions": {
                 "1.235.0": {
                     "release_date": "2024-12-15",
@@ -142,6 +142,31 @@ def _get_fallback_checksums(tool_name):
                         },
                         "windows_amd64": {
                             "sha256": "81f012832e80fe09d384d86bb961d4779f6372a35fa965cc64efe318001ab27e",
+                            "url_suffix": "x86_64-windows.zip",
+                        },
+                    },
+                },
+                "1.241.2": {
+                    "release_date": "2025-11-14",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "ded5228bd4f7b06c7ec7bee31b570daa72022c28fdd890d23cd2837e3914d117",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "96dbe14cde4a1e48781af959b623e045a2cab106756476039309f8e6266906a3",
+                            "url_suffix": "aarch64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "5ead4459eef50f4b83b47151332f22e4bcfea9c1917e816273b807b2d6567199",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "abc5a70c5cade497805998fd0b5cd545df9b484c62f16d33dd6a4cad135302aa",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
                             "url_suffix": "x86_64-windows.zip",
                         },
                     },
