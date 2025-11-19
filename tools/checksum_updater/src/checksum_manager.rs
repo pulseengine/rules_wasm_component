@@ -246,14 +246,14 @@ impl ChecksumManager {
             String::new()
         };
 
-        // Find the hardcoded data section
-        let start_marker = "hardcoded_data = {";
-        let end_marker = "    return hardcoded_data.get(tool_name, {})";
+        // Find the fallback data section
+        let start_marker = "fallback_data = {";
+        let end_marker = "    return fallback_data.get(tool_name, {})";
 
         if let Some(start_pos) = content.find(start_marker) {
             if let Some(end_pos) = content.find(end_marker) {
-                // Generate new hardcoded data
-                let new_data = self.generate_hardcoded_data().await?;
+                // Generate new fallback data
+                let new_data = self.generate_fallback_data().await?;
 
                 // Replace the section
                 let before = &content[..start_pos];
@@ -262,16 +262,18 @@ impl ChecksumManager {
 
                 fs::write(&registry_path, new_content).await?;
                 info!("Updated registry.bzl with latest tool data");
+            } else {
+                warn!("Could not find end marker in registry.bzl");
             }
         } else {
-            warn!("Could not find hardcoded data section in registry.bzl");
+            warn!("Could not find fallback data section in registry.bzl");
         }
 
         Ok(())
     }
 
-    /// Generate hardcoded data for registry.bzl
-    async fn generate_hardcoded_data(&self) -> Result<String> {
+    /// Generate fallback data for registry.bzl
+    async fn generate_fallback_data(&self) -> Result<String> {
         let tools = self.list_all_tools().await?;
         let mut data_entries = Vec::new();
 
@@ -282,7 +284,7 @@ impl ChecksumManager {
         }
 
         Ok(format!(
-            "hardcoded_data = {{\n{}\n    }}",
+            "fallback_data = {{\n{}\n    }}",
             data_entries.join(",\n")
         ))
     }

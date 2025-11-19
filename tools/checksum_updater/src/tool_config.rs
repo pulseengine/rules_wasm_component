@@ -17,6 +17,8 @@ pub struct ToolConfigEntry {
     pub github_repo: String,
     pub platforms: Vec<String>,
     pub url_pattern: UrlPattern,
+    /// Prefix to strip from GitHub release tag names (e.g., "v" for "v1.0.0", "wasi-sdk-" for "wasi-sdk-29")
+    pub tag_prefix: Option<String>,
 }
 
 /// URL pattern for downloading tool releases
@@ -71,6 +73,7 @@ impl ToolConfig {
                         map
                     },
                 },
+                tag_prefix: Some("v".to_string()),
             },
         );
 
@@ -97,6 +100,7 @@ impl ToolConfig {
                         map
                     },
                 },
+                tag_prefix: Some("v".to_string()),
             },
         );
 
@@ -138,6 +142,7 @@ impl ToolConfig {
                         map
                     },
                 },
+                tag_prefix: Some("v".to_string()),
             },
         );
 
@@ -165,6 +170,7 @@ impl ToolConfig {
                         map
                     },
                 },
+                tag_prefix: Some("v".to_string()),
             },
         );
 
@@ -179,6 +185,7 @@ impl ToolConfig {
                     "linux_amd64".to_string(),
                     "linux_arm64".to_string(),
                     "windows_amd64".to_string(),
+                    "windows_arm64".to_string(),
                 ],
                 url_pattern: UrlPattern::Custom {
                     pattern: "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-{version}/wasi-sdk-{version}.0-{platform}.tar.gz".to_string(),
@@ -187,11 +194,13 @@ impl ToolConfig {
                         map.insert("darwin_amd64".to_string(), "x86_64-macos".to_string());
                         map.insert("darwin_arm64".to_string(), "arm64-macos".to_string());
                         map.insert("linux_amd64".to_string(), "x86_64-linux".to_string());
-                        map.insert("linux_arm64".to_string(), "x86_64-linux".to_string()); // Note: same as amd64
+                        map.insert("linux_arm64".to_string(), "arm64-linux".to_string());
                         map.insert("windows_amd64".to_string(), "x86_64-windows".to_string());
+                        map.insert("windows_arm64".to_string(), "arm64-windows".to_string());
                         map
                     },
                 },
+                tag_prefix: Some("wasi-sdk-".to_string()),
             },
         );
 
@@ -232,6 +241,7 @@ impl ToolConfig {
                     map
                 },
             },
+            tag_prefix: Some("v".to_string()),
         }
     }
 }

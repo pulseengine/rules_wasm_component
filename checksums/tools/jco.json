@@ -11,6 +11,8 @@
       "release_date": "2024-11-25",
       "platforms": {
         "universal": {
+          "sha256": "",
+          "url_suffix": "",
           "npm_package": "@bytecodealliance/jco",
           "npm_version": "1.4.0",
           "dependencies": ["@bytecodealliance/componentize-js"]
