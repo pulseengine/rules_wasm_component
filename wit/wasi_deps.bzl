@@ -5,7 +5,8 @@ following the Bazel-first approach instead of using shell scripts or wit-deps to
 
 Provides WASI versions:
 - 0.2.0 (maximum compatibility with older toolchains)
-- 0.2.3 (default - stable release with versioned dependencies)
+- 0.2.3 (default - stable release, used by wasi-sdk 26/27)
+- 0.2.6 (used by wasi-sdk 29)
 - 0.2.8 (latest stable - newest features)
 
 See docs-site/src/content/docs/guides/external-wit-dependencies.mdx for usage guide.
@@ -19,7 +20,7 @@ def wasi_wit_dependencies():
     This follows the Bazel-native approach by using http_archive rules
     instead of shell scripts or external dependency management tools.
 
-    Provides WASI 0.2.0, 0.2.3, and 0.2.8 versions with correct dependency chains.
+    Provides WASI 0.2.0, 0.2.3, 0.2.6, and 0.2.8 versions with correct dependency chains.
     """
 
     # ========================================================================
@@ -297,6 +298,154 @@ wit_library(
         "@wasi_clocks//:clocks",
         "@wasi_cli//:cli",
         "@wasi_random//:random",
+    ],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # ========================================================================
+    # WASI 0.2.6 (Used by wasi-sdk 29)
+    # ========================================================================
+
+    # WASI IO interfaces v0.2.6
+    http_archive(
+        name = "wasi_io_v026",
+        urls = ["https://github.com/WebAssembly/wasi-io/archive/refs/tags/v0.2.6.tar.gz"],
+        sha256 = "e3cb3c21d7c49219e885b4564f2dd34beec7403062749c35d73c016043ad6c95",
+        strip_prefix = "wasi-io-0.2.6",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "streams",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:io@0.2.6",
+    interfaces = ["error", "poll", "streams"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI CLI interfaces v0.2.6
+    http_archive(
+        name = "wasi_cli_v026",
+        urls = ["https://github.com/WebAssembly/wasi-cli/archive/refs/tags/v0.2.6.tar.gz"],
+        sha256 = "91fa27b6f83c0199e2fe7912d770609871d350b5242edf44bbdc3fbf17e3e1aa",
+        strip_prefix = "wasi-cli-0.2.6",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "cli",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:cli@0.2.6",
+    interfaces = ["environment", "exit", "stdin", "stdout", "stderr", "terminal-input", "terminal-output", "terminal-stdin", "terminal-stdout", "terminal-stderr"],
+    deps = ["@wasi_io_v026//:streams"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Clocks interfaces v0.2.6
+    http_archive(
+        name = "wasi_clocks_v026",
+        urls = ["https://github.com/WebAssembly/wasi-clocks/archive/refs/tags/v0.2.6.tar.gz"],
+        sha256 = "771f45e21ba86d4cfefc4e3e1348059bc6d3f95400728feaa4c1c77708f531a6",
+        strip_prefix = "wasi-clocks-0.2.6",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "clocks",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:clocks@0.2.6",
+    interfaces = ["wall-clock", "monotonic-clock"],
+    deps = ["@wasi_io_v026//:streams"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Filesystem interfaces v0.2.6
+    http_archive(
+        name = "wasi_filesystem_v026",
+        urls = ["https://github.com/WebAssembly/wasi-filesystem/archive/refs/tags/v0.2.6.tar.gz"],
+        sha256 = "5d1d01dad6e873ceaf7c04ab92cf2a1243842b4798680003c44c57216eb65e78",
+        strip_prefix = "wasi-filesystem-0.2.6",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "filesystem",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:filesystem@0.2.6",
+    interfaces = ["types", "preopens"],
+    deps = ["@wasi_io_v026//:streams", "@wasi_clocks_v026//:clocks"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Sockets interfaces v0.2.6
+    http_archive(
+        name = "wasi_sockets_v026",
+        urls = ["https://github.com/WebAssembly/wasi-sockets/archive/refs/tags/v0.2.6.tar.gz"],
+        sha256 = "ae27539cf51c44d3a3b4ec16a7343ed1d1705c8a2a101b5c78b1be346cf5febc",
+        strip_prefix = "wasi-sockets-0.2.6",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "sockets",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:sockets@0.2.6",
+    interfaces = ["network", "udp", "tcp", "udp-create-socket", "tcp-create-socket", "instance-network", "ip-name-lookup"],
+    deps = ["@wasi_io_v026//:streams", "@wasi_clocks_v026//:clocks"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Random interfaces v0.2.6
+    http_archive(
+        name = "wasi_random_v026",
+        urls = ["https://github.com/WebAssembly/wasi-random/archive/refs/tags/v0.2.6.tar.gz"],
+        sha256 = "91c68fb6b22de83b9bdcd775b489086febeaa07bb95fd609b48e6a9dc5b46583",
+        strip_prefix = "wasi-random-0.2.6",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "random",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:random@0.2.6",
+    interfaces = ["random", "insecure", "insecure-seed"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI HTTP interfaces v0.2.6
+    http_archive(
+        name = "wasi_http_v026",
+        urls = ["https://github.com/WebAssembly/wasi-http/archive/refs/tags/v0.2.6.tar.gz"],
+        sha256 = "d65e9b04faa28333fb008a1e89e5ee704474007b36e7c798f5fbb27025ce9ddc",
+        strip_prefix = "wasi-http-0.2.6",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "http",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:http@0.2.6",
+    interfaces = ["types", "incoming-handler", "outgoing-handler"],
+    world = "proxy",
+    deps = [
+        "@wasi_io_v026//:streams",
+        "@wasi_clocks_v026//:clocks",
+        "@wasi_cli_v026//:cli",
+        "@wasi_random_v026//:random",
     ],
     visibility = ["//visibility:public"],
 )
