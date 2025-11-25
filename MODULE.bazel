@@ -99,6 +99,14 @@ use_repo(
     "wasi_io_v020",
     "wasi_random_v020",
     "wasi_sockets_v020",
+    # WASI 0.2.6 (used by wasi-sdk 29)
+    "wasi_cli_v026",
+    "wasi_clocks_v026",
+    "wasi_filesystem_v026",
+    "wasi_http_v026",
+    "wasi_io_v026",
+    "wasi_random_v026",
+    "wasi_sockets_v026",
     # WASI 0.2.8
     "wasi_cli_v028",
     "wasi_clocks_v028",
