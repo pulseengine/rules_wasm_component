@@ -859,13 +859,13 @@ def validate_tool_compatibility(tools_config):
     # Define compatibility matrix (sourced from tool_versions.bzl)
     compatibility_matrix = {
         "1.235.0": {
-            "wac": ["0.7.0", "0.8.0"],
+            "wac": ["0.7.0", "0.8.0", "0.8.1"],
             "wit-bindgen": ["0.43.0", "0.46.0"],
             "wkg": ["0.11.0"],
             "wasmsign2": ["0.2.6"],
         },
         "1.239.0": {
-            "wac": ["0.7.0", "0.8.0"],
+            "wac": ["0.7.0", "0.8.0", "0.8.1"],
             "wit-bindgen": ["0.43.0", "0.46.0"],
             "wkg": ["0.11.0"],
             "wasmsign2": ["0.2.6"],
@@ -906,7 +906,7 @@ def get_recommended_versions(stability = "stable"):
     default_versions = {
         "stable": {
             "wasm-tools": "1.239.0",
-            "wac": "0.8.0",
+            "wac": "0.8.1",
             "wit-bindgen": "0.46.0",
             "wkg": "0.11.0",
             "wasmsign2": "0.2.6",
@@ -915,7 +915,7 @@ def get_recommended_versions(stability = "stable"):
         },
         "latest": {
             "wasm-tools": "1.239.0",
-            "wac": "0.8.0",
+            "wac": "0.8.1",
             "wit-bindgen": "0.46.0",
             "wkg": "0.11.0",
             "wasmsign2": "0.2.6",

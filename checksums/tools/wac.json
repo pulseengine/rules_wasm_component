@@ -1,36 +1,11 @@
 {
   "tool_name": "wac",
   "github_repo": "bytecodealliance/wac",
-  "latest_version": "0.7.0",
-  "last_checked": "2025-08-02T04:35:39.525232Z",
+  "latest_version": "0.8.1",
+  "last_checked": "2025-11-25T18:00:00.000000Z",
   "versions": {
-    "0.7.0": {
-      "release_date": "2024-11-20",
-      "platforms": {
-        "linux_amd64": {
-          "sha256": "dd734c4b049287b599a3f8c553325307687a17d070290907e3d5bbe481b89cc6",
-          "platform_name": "x86_64-unknown-linux-musl"
-        },
-        "linux_arm64": {
-          "sha256": "af966d4efbd411900073270bd4261ac42d9550af8ba26ed49288bb942476c5a9",
-          "platform_name": "aarch64-unknown-linux-musl"
-        },
-        "darwin_amd64": {
-          "sha256": "023645743cfcc167a3004d3c3a62e8209a55cde438e6561172bafcaaafc33a40",
-          "platform_name": "x86_64-apple-darwin"
-        },
-        "darwin_arm64": {
-          "sha256": "4e2d22c65c51f0919b10c866ef852038b804d3dbcf515c696412566fc1eeec66",
-          "platform_name": "aarch64-apple-darwin"
-        },
-        "windows_amd64": {
-          "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
-          "platform_name": "x86_64-pc-windows-gnu"
-        }
-      }
-    },
     "0.8.0": {
-      "release_date": "2024-08-20",
+      "release_date": "2025-08-20",
       "platforms": {
         "linux_amd64": {
           "sha256": "9fee2d8603dc50403ebed580b47b8661b582ffde8a9174bf193b89ca00decf0f",
@@ -50,6 +25,31 @@
         },
         "windows_amd64": {
           "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
+          "platform_name": "x86_64-pc-windows-gnu"
+        }
+      }
+    },
+    "0.8.1": {
+      "release_date": "2025-11-11",
+      "platforms": {
+        "linux_amd64": {
+          "sha256": "ce30f33c5bc40095cfb4e74ae5fb4ba515d4f4bef2d597831bc7afaaf0d55b6c",
+          "platform_name": "x86_64-unknown-linux-musl"
+        },
+        "linux_arm64": {
+          "sha256": "3b78ae7c732c1376d1c21b570d07152a07342e9c4f75bff1511cde5f6af01f12",
+          "platform_name": "aarch64-unknown-linux-musl"
+        },
+        "darwin_amd64": {
+          "sha256": "d5fa365a4920d19a61837a42c9273b0b8ec696fd3047af864a860f46005773a5",
+          "platform_name": "x86_64-apple-darwin"
+        },
+        "darwin_arm64": {
+          "sha256": "f08496f49312abd68d9709c735a987d6a17d2295a1240020d217a9de8dcaaacd",
+          "platform_name": "aarch64-apple-darwin"
+        },
+        "windows_amd64": {
+          "sha256": "b3509dfc3bb9d1e598e7b2790ef6efe5b6c8b696f2ad0e997e9ae6dd20bb6f13",
           "platform_name": "x86_64-pc-windows-gnu"
         }
       }
