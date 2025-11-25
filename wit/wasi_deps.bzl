@@ -3,7 +3,11 @@
 This file provides Bazel-native http_archive rules for WASI WIT definitions,
 following the Bazel-first approach instead of using shell scripts or wit-deps tool.
 
-Provides both WASI 0.2.0 (maximum compatibility) and 0.2.3 (latest features).
+Provides WASI versions:
+- 0.2.0 (maximum compatibility with older toolchains)
+- 0.2.3 (default - stable release with versioned dependencies)
+- 0.2.8 (latest stable - newest features)
+
 See docs-site/src/content/docs/guides/external-wit-dependencies.mdx for usage guide.
 """
 
@@ -15,7 +19,7 @@ def wasi_wit_dependencies():
     This follows the Bazel-native approach by using http_archive rules
     instead of shell scripts or external dependency management tools.
 
-    Provides both WASI 0.2.0 and 0.2.3 versions for maximum compatibility.
+    Provides WASI 0.2.0, 0.2.3, and 0.2.8 versions with correct dependency chains.
     """
 
     # ========================================================================
@@ -189,6 +193,7 @@ wit_library(
     )
 
     # WASI Clocks interfaces
+    # Note: monotonic-clock uses wasi:io/poll@0.2.3 for pollable
     http_archive(
         name = "wasi_clocks",
         urls = ["https://github.com/WebAssembly/wasi-clocks/archive/refs/tags/v0.2.3.tar.gz"],
@@ -202,6 +207,7 @@ wit_library(
     srcs = glob(["wit/*.wit"]),
     package_name = "wasi:clocks@0.2.3",
     interfaces = ["wall-clock", "monotonic-clock"],
+    deps = ["@wasi_io//:streams"],
     visibility = ["//visibility:public"],
 )
 """,
@@ -228,6 +234,7 @@ wit_library(
     )
 
     # WASI Sockets interfaces
+    # Note: tcp/udp use wasi:io/streams, wasi:io/poll, and wasi:clocks/monotonic-clock
     http_archive(
         name = "wasi_sockets",
         urls = ["https://github.com/WebAssembly/wasi-sockets/archive/refs/tags/v0.2.3.tar.gz"],
@@ -241,7 +248,7 @@ wit_library(
     srcs = glob(["wit/*.wit"]),
     package_name = "wasi:sockets@0.2.3",
     interfaces = ["network", "udp", "tcp", "udp-create-socket", "tcp-create-socket", "instance-network", "ip-name-lookup"],
-    deps = ["@wasi_io//:streams"],
+    deps = ["@wasi_io//:streams", "@wasi_clocks//:clocks"],
     visibility = ["//visibility:public"],
 )
 """,
@@ -267,6 +274,10 @@ wit_library(
     )
 
     # WASI HTTP interfaces
+    # Note: wasi:http@0.2.3 has different dependency structure than 0.2.0:
+    # - Uses @0.2.3 version references for all WASI dependencies
+    # - proxy world imports cli/stdout, cli/stderr, cli/stdin, random/random
+    # - types interface uses io/streams, io/error, io/poll, clocks/monotonic-clock
     http_archive(
         name = "wasi_http",
         urls = ["https://github.com/WebAssembly/wasi-http/archive/refs/tags/v0.2.3.tar.gz"],
@@ -279,8 +290,168 @@ wit_library(
     name = "http",
     srcs = glob(["wit/*.wit"]),
     package_name = "wasi:http@0.2.3",
-    interfaces = ["types", "handler", "outgoing-handler", "proxy"],
-    deps = ["@wasi_io//:streams", "@wasi_clocks//:clocks"],
+    interfaces = ["types", "incoming-handler", "outgoing-handler"],
+    world = "proxy",
+    deps = [
+        "@wasi_io//:streams",
+        "@wasi_clocks//:clocks",
+        "@wasi_cli//:cli",
+        "@wasi_random//:random",
+    ],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # ========================================================================
+    # WASI 0.2.8 (Latest stable release)
+    # ========================================================================
+
+    # WASI IO interfaces v0.2.8
+    http_archive(
+        name = "wasi_io_v028",
+        urls = ["https://github.com/WebAssembly/wasi-io/archive/refs/tags/v0.2.8.tar.gz"],
+        sha256 = "5e4c867b06d4e38276e9b80c80ee29dc34943e6b5db678fee8e9f9c249061b61",
+        strip_prefix = "wasi-io-0.2.8",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "streams",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:io@0.2.8",
+    interfaces = ["error", "poll", "streams"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI CLI interfaces v0.2.8
+    # Note: stdin/stdout/stderr use wasi:io/streams@0.2.8
+    http_archive(
+        name = "wasi_cli_v028",
+        urls = ["https://github.com/WebAssembly/wasi-cli/archive/refs/tags/v0.2.8.tar.gz"],
+        sha256 = "2ca56bbbf56ce30edea6aa69a2ebc43bba0138a8fccae641e6ee0902e346ead9",
+        strip_prefix = "wasi-cli-0.2.8",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "cli",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:cli@0.2.8",
+    interfaces = ["environment", "exit", "stdin", "stdout", "stderr", "terminal-input", "terminal-output", "terminal-stdin", "terminal-stdout", "terminal-stderr"],
+    deps = ["@wasi_io_v028//:streams"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Clocks interfaces v0.2.8
+    # Note: monotonic-clock uses wasi:io/poll@0.2.8 for pollable
+    http_archive(
+        name = "wasi_clocks_v028",
+        urls = ["https://github.com/WebAssembly/wasi-clocks/archive/refs/tags/v0.2.8.tar.gz"],
+        sha256 = "292274abf4449453bb78110dc9d93486ea4730874fcabea45b49e3311e00c625",
+        strip_prefix = "wasi-clocks-0.2.8",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "clocks",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:clocks@0.2.8",
+    interfaces = ["wall-clock", "monotonic-clock"],
+    deps = ["@wasi_io_v028//:streams"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Filesystem interfaces v0.2.8
+    # Note: types use wasi:io/streams@0.2.8 and wasi:clocks/wall-clock@0.2.8
+    http_archive(
+        name = "wasi_filesystem_v028",
+        urls = ["https://github.com/WebAssembly/wasi-filesystem/archive/refs/tags/v0.2.8.tar.gz"],
+        sha256 = "c0c724ff36f8a8222051e3409ca357fc0ff5c03c9b4ceadbdd9192aedba9adad",
+        strip_prefix = "wasi-filesystem-0.2.8",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "filesystem",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:filesystem@0.2.8",
+    interfaces = ["types", "preopens"],
+    deps = ["@wasi_io_v028//:streams", "@wasi_clocks_v028//:clocks"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Sockets interfaces v0.2.8
+    # Note: tcp/udp use wasi:io/streams, wasi:io/poll, and wasi:clocks/monotonic-clock
+    http_archive(
+        name = "wasi_sockets_v028",
+        urls = ["https://github.com/WebAssembly/wasi-sockets/archive/refs/tags/v0.2.8.tar.gz"],
+        sha256 = "b230f2968957cad739c5b86ee20cf9cc9cd5de138e50d4f67b10ad14104eca09",
+        strip_prefix = "wasi-sockets-0.2.8",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "sockets",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:sockets@0.2.8",
+    interfaces = ["network", "udp", "tcp", "udp-create-socket", "tcp-create-socket", "instance-network", "ip-name-lookup"],
+    deps = ["@wasi_io_v028//:streams", "@wasi_clocks_v028//:clocks"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI Random interfaces v0.2.8
+    http_archive(
+        name = "wasi_random_v028",
+        urls = ["https://github.com/WebAssembly/wasi-random/archive/refs/tags/v0.2.8.tar.gz"],
+        sha256 = "25970acd8089a1b3f1bf7f266ab207b5f1134a424da26a3637d7cc3dee912a3a",
+        strip_prefix = "wasi-random-0.2.8",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "random",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:random@0.2.8",
+    interfaces = ["random", "insecure", "insecure-seed"],
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    # WASI HTTP interfaces v0.2.8
+    # Note: proxy world imports cli/stdout, cli/stderr, cli/stdin, random/random
+    # types interface uses io/streams, io/error, io/poll, clocks/monotonic-clock
+    http_archive(
+        name = "wasi_http_v028",
+        urls = ["https://github.com/WebAssembly/wasi-http/archive/refs/tags/v0.2.8.tar.gz"],
+        sha256 = "95a6da213c7f0e30d34e40a2032508b2281d751b6027f57521564dbb348db16f",
+        strip_prefix = "wasi-http-0.2.8",
+        build_file_content = """
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+wit_library(
+    name = "http",
+    srcs = glob(["wit/*.wit"]),
+    package_name = "wasi:http@0.2.8",
+    interfaces = ["types", "incoming-handler", "outgoing-handler"],
+    world = "proxy",
+    deps = [
+        "@wasi_io_v028//:streams",
+        "@wasi_clocks_v028//:clocks",
+        "@wasi_cli_v028//:cli",
+        "@wasi_random_v028//:random",
+    ],
     visibility = ["//visibility:public"],
 )
 """,
