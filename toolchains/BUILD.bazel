@@ -199,7 +199,7 @@ bzl_library(
 file_ops_toolchain(
     name = "file_ops_toolchain_impl",
     file_ops_component = "//tools/file_ops:file_ops",
-    wit_files = ["//tools/file_operations_component:wit_files"],
+    wit_files = ["//tools/file_ops:wit_files"],
 )
 
 toolchain(
@@ -215,7 +215,7 @@ toolchain(
 file_ops_toolchain(
     name = "file_ops_toolchain_external_impl",
     file_ops_component = "//tools/file_ops_external:file_ops_external",
-    wit_files = ["//tools/file_operations_component:wit_files"],
+    wit_files = ["//tools/file_ops:wit_files"],
 )
 
 toolchain(
