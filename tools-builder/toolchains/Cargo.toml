@@ -17,7 +17,7 @@ log = "0.4"
 
 # WebAssembly parsing and manipulation
 wasmparser = "0.240"
-wasm-encoder = "0.240"
+wasm-encoder = "0.241"
 wat = "1.240"
 
 # Component model support
