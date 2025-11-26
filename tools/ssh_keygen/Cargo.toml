@@ -7,7 +7,7 @@ license = "MIT"
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "4.5.51", features = ["derive"] }
+clap = { version = "4.5.53", features = ["derive"] }
 ssh-key = { version = "0.6", features = ["ed25519", "rsa", "ecdsa", "rand_core"] }
 rand = "0.8"
 # Uses OsRng for cryptographic key generation (OS-backed CSPRNG)
