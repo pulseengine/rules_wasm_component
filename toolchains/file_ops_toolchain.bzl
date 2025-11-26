@@ -43,7 +43,7 @@ load("@rules_wasm_component//toolchains:file_ops_toolchain.bzl", "file_ops_toolc
 file_ops_toolchain(
     name = "file_ops_toolchain_impl",
     file_ops_component = "@rules_wasm_component//tools/file_ops:file_ops",
-    wit_files = ["@rules_wasm_component//tools/file_operations_component:wit_files"],
+    wit_files = ["@rules_wasm_component//tools/file_ops:wit_files"],
     visibility = ["//visibility:public"],
 )
 

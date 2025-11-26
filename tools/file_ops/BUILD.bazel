@@ -20,3 +20,11 @@ alias(
     actual = ":file_ops",
     visibility = ["//visibility:public"],
 )
+
+# Export WIT interface for toolchain use
+# This defines the file operations interface contract
+filegroup(
+    name = "wit_files",
+    srcs = ["wit/file-operations.wit"],
+    visibility = ["//visibility:public"],
+)

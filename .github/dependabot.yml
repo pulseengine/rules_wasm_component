@@ -82,26 +82,6 @@ updates:
       - "performance"
 
   - package-ecosystem: "cargo"
-    directory: "/tools/file_operations_component"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "rust/file-ops"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "rust"
-      - "automated"
-      - "wasm"
-
-  - package-ecosystem: "cargo"
     directory: "/tools-builder/toolchains"
     schedule:
       interval: "weekly"

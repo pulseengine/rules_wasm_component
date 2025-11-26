@@ -6,28 +6,29 @@ load("//toolchains:dual_file_ops_toolchain.bzl", "dual_file_ops_toolchain")
 package(default_visibility = ["//visibility:public"])
 
 # Test dual toolchain with actual components
+# Uses Go-based file_ops for both implementations (production pattern)
 dual_file_ops_toolchain(
     name = "test_dual_toolchain",
     implementation_preference = "auto",
-    rust_component = "//tools/file_operations_component:file_ops",  # Actual Rust implementation
-    tinygo_component = "//tools/file_operations_component:file_ops",  # Current Rust implementation as mock TinyGo
-    wit_files = ["//tools/file_operations_component:wit_files"],
+    rust_component = "//tools/file_ops:file_ops",
+    tinygo_component = "//tools/file_ops:file_ops",
+    wit_files = ["//tools/file_ops:wit_files"],
 )
 
 # Test security-focused configuration
 dual_file_ops_toolchain(
     name = "test_security_toolchain",
     implementation_preference = "tinygo",
-    tinygo_component = "//tools/file_operations_component:file_ops",
-    wit_files = ["//tools/file_operations_component:wit_files"],
+    tinygo_component = "//tools/file_ops:file_ops",
+    wit_files = ["//tools/file_ops:wit_files"],
 )
 
 # Test performance-focused configuration
 dual_file_ops_toolchain(
     name = "test_performance_toolchain",
     implementation_preference = "rust",
-    rust_component = "//tools/file_operations_component:file_ops",
-    wit_files = ["//tools/file_operations_component:wit_files"],
+    rust_component = "//tools/file_ops:file_ops",
+    wit_files = ["//tools/file_ops:wit_files"],
 )
 
 # Build tests to verify toolchain configurations
