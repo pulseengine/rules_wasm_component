@@ -48,7 +48,7 @@ def _get_fallback_checksums(tool_name):
         "wasm-tools": {
             "tool_name": "wasm-tools",
             "github_repo": "bytecodealliance/wasm-tools",
-            "latest_version": "1.241.2",
+            "latest_version": "1.243.0",
             "versions": {
                 "1.235.0": {
                     "release_date": "2024-12-15",
@@ -258,8 +258,33 @@ def _get_fallback_checksums(tool_name):
         "wac": {
             "tool_name": "wac",
             "github_repo": "bytecodealliance/wac",
-            "latest_version": "0.8.0",
+            "latest_version": "0.8.1",
             "versions": {
+                "0.8.1": {
+                    "release_date": "2025-11-11",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "d5fa365a4920d19a61837a42c9273b0b8ec696fd3047af864a860f46005773a5",
+                            "platform_name": "x86_64-apple-darwin",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "f08496f49312abd68d9709c735a987d6a17d2295a1240020d217a9de8dcaaacd",
+                            "platform_name": "aarch64-apple-darwin",
+                        },
+                        "linux_amd64": {
+                            "sha256": "ce30f33c5bc40095cfb4e74ae5fb4ba515d4f4bef2d597831bc7afaaf0d55b6c",
+                            "platform_name": "x86_64-unknown-linux-musl",
+                        },
+                        "linux_arm64": {
+                            "sha256": "3b78ae7c732c1376d1c21b570d07152a07342e9c4f75bff1511cde5f6af01f12",
+                            "platform_name": "aarch64-unknown-linux-musl",
+                        },
+                        "windows_amd64": {
+                            "sha256": "b3509dfc3bb9d1e598e7b2790ef6efe5b6c8b696f2ad0e997e9ae6dd20bb6f13",
+                            "platform_name": "x86_64-pc-windows-gnu",
+                        },
+                    },
+                },
                 "0.7.0": {
                     "release_date": "2024-11-20",
                     "platforms": {
@@ -883,16 +908,22 @@ def validate_tool_compatibility(tools_config):
 
     # Define compatibility matrix (sourced from tool_versions.bzl)
     compatibility_matrix = {
+        "1.243.0": {
+            "wac": ["0.8.0", "0.8.1"],
+            "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
+            "wkg": ["0.11.0", "0.12.0", "0.13.0"],
+            "wasmsign2": ["0.2.6"],
+        },
         "1.235.0": {
             "wac": ["0.7.0", "0.8.0", "0.8.1"],
             "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
-            "wkg": ["0.11.0"],
+            "wkg": ["0.11.0", "0.12.0", "0.13.0"],
             "wasmsign2": ["0.2.6"],
         },
         "1.239.0": {
             "wac": ["0.7.0", "0.8.0", "0.8.1"],
             "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
-            "wkg": ["0.11.0"],
+            "wkg": ["0.11.0", "0.12.0", "0.13.0"],
             "wasmsign2": ["0.2.6"],
         },
     }
