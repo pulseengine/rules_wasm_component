@@ -24,6 +24,31 @@ wit_docs_collection(
 # All outputs include Astro frontmatter for docs-site integration
 
 # ----------------------------------------------------------------------------
+# Toolchain Configuration (Tool Versions)
+# ----------------------------------------------------------------------------
+
+stardoc(
+    name = "tool_versions_stardoc_raw",
+    out = "tool_versions_raw.md",
+    input = "//toolchains:tool_versions.bzl",
+    deps = ["//toolchains:tool_versions"],
+)
+
+genrule(
+    name = "tool_versions_stardoc",
+    srcs = [":tool_versions_stardoc_raw"],
+    outs = ["tool_versions.md"],
+    cmd = """
+        echo '---' > $@
+        echo 'title: Toolchain Versions API' >> $@
+        echo 'description: Canonical versions and compatibility information for all WebAssembly ecosystem tools' >> $@
+        echo '---' >> $@
+        echo '' >> $@
+        cat $(SRCS) >> $@
+    """,
+)
+
+# ----------------------------------------------------------------------------
 # Example Rules (Tutorial/Demo)
 # ----------------------------------------------------------------------------
 

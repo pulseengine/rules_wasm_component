@@ -77,11 +77,19 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Bzl library for tool versions (single source of truth)
+bzl_library(
+    name = "tool_versions",
+    srcs = ["tool_versions.bzl"],
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for toolchain implementation
 bzl_library(
     name = "wasm_toolchain",
     srcs = ["wasm_toolchain.bzl"],
     visibility = ["//visibility:public"],
+    deps = [":tool_versions"],
 )
 
 # Bzl library for wkg toolchain implementation
