@@ -1,9 +1,59 @@
 {
   "tool_name": "wit-bindgen",
   "github_repo": "bytecodealliance/wit-bindgen",
-  "latest_version": "0.48.0",
-  "last_checked": "2025-11-18T00:00:00.000000Z",
+  "latest_version": "0.49.0",
+  "last_checked": "2025-12-04T00:00:00.000000Z",
   "versions": {
+    "0.49.0": {
+      "release_date": "2025-12-03",
+      "platforms": {
+        "linux_arm64": {
+          "sha256": "81a48c27604930543d6cc6bd99b71eac0654c2341a5d350baa5a85ceb58272d2",
+          "url_suffix": "aarch64-linux.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "b4fd152a408da7a048102b599aac617cf88a2f23dd20c47143d1166569823366",
+          "url_suffix": "x86_64-linux.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "70f86d5381de89c50171bc82dd0c8bb0c15839acdb8a65994f67de324ba35cfa",
+          "url_suffix": "aarch64-macos.tar.gz"
+        },
+        "darwin_amd64": {
+          "sha256": "8c8186feb76352b553e3571cbce82025930a35146687afd2fd779fef0496a75d",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "d8135e07a68870b0cc0ab27a1a6209b2ddbbe56e489cfbaf80bdfd64b4ba9b7c",
+          "url_suffix": "x86_64-windows.zip"
+        }
+      }
+    },
+    "0.48.1": {
+      "release_date": "2025-11-22",
+      "platforms": {
+        "linux_arm64": {
+          "sha256": "cf22136f544cb466bb650b04170ea1df2d8a7d2492d926ee330320270f632104",
+          "url_suffix": "aarch64-linux.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "319b8ed9445cf2f017c7e2f508cd9b3d8fa6bc1ff4b48b4d9983981c2a6b87b0",
+          "url_suffix": "x86_64-linux.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "38be6c864dc77a4aaaa5881fed723ead5352101f10a615478d4c34d536ddc6e5",
+          "url_suffix": "aarch64-macos.tar.gz"
+        },
+        "darwin_amd64": {
+          "sha256": "a81f9a9a1a76267f7e6d1985869feb1de2fd689c1426ba7acff76ab2e5312ac4",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "22ba86276ab059fa5cb2fd33faf5517c4eea5e48c9df5218d01f1db2400ec39f",
+          "url_suffix": "x86_64-windows.zip"
+        }
+      }
+    },
     "0.48.0": {
       "release_date": "2025-11-14",
       "platforms": {

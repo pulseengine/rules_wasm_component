@@ -176,8 +176,58 @@ def _get_fallback_checksums(tool_name):
         "wit-bindgen": {
             "tool_name": "wit-bindgen",
             "github_repo": "bytecodealliance/wit-bindgen",
-            "latest_version": "0.46.0",
+            "latest_version": "0.49.0",
             "versions": {
+                "0.49.0": {
+                    "release_date": "2025-12-03",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "8c8186feb76352b553e3571cbce82025930a35146687afd2fd779fef0496a75d",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "70f86d5381de89c50171bc82dd0c8bb0c15839acdb8a65994f67de324ba35cfa",
+                            "url_suffix": "aarch64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "b4fd152a408da7a048102b599aac617cf88a2f23dd20c47143d1166569823366",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "81a48c27604930543d6cc6bd99b71eac0654c2341a5d350baa5a85ceb58272d2",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "d8135e07a68870b0cc0ab27a1a6209b2ddbbe56e489cfbaf80bdfd64b4ba9b7c",
+                            "url_suffix": "x86_64-windows.zip",
+                        },
+                    },
+                },
+                "0.48.1": {
+                    "release_date": "2025-11-22",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "a81f9a9a1a76267f7e6d1985869feb1de2fd689c1426ba7acff76ab2e5312ac4",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "38be6c864dc77a4aaaa5881fed723ead5352101f10a615478d4c34d536ddc6e5",
+                            "url_suffix": "aarch64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "319b8ed9445cf2f017c7e2f508cd9b3d8fa6bc1ff4b48b4d9983981c2a6b87b0",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "cf22136f544cb466bb650b04170ea1df2d8a7d2492d926ee330320270f632104",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "22ba86276ab059fa5cb2fd33faf5517c4eea5e48c9df5218d01f1db2400ec39f",
+                            "url_suffix": "x86_64-windows.zip",
+                        },
+                    },
+                },
                 "0.43.0": {
                     "release_date": "2025-06-24",
                     "platforms": {
@@ -199,31 +249,6 @@ def _get_fallback_checksums(tool_name):
                         },
                         "windows_amd64": {
                             "sha256": "e133d9f18bc0d8a3d848df78960f9974a4333bee7ed3f99b4c9e900e9e279029",
-                            "url_suffix": "x86_64-windows.zip",
-                        },
-                    },
-                },
-                "0.46.0": {
-                    "release_date": "2024-09-10",
-                    "platforms": {
-                        "darwin_amd64": {
-                            "sha256": "98767eb96f2a181998fa35a1df932adf743403c5f621ed6eedaa7d7c0533d543",
-                            "url_suffix": "x86_64-macos.tar.gz",
-                        },
-                        "darwin_arm64": {
-                            "sha256": "dc96da8f3d12bf5e2e3e3b00ce1474d2a8e77e36088752633380f0c85e18632c",
-                            "url_suffix": "aarch64-macos.tar.gz",
-                        },
-                        "linux_amd64": {
-                            "sha256": "8f426d9b0ed0150c71feea697effe4b90b1426a49e22e48bc1d4f4c6396bf771",
-                            "url_suffix": "x86_64-linux.tar.gz",
-                        },
-                        "linux_arm64": {
-                            "sha256": "dcd446b35564105c852eadb4244ae35625a83349ed1434a1c8e5497a2a267b44",
-                            "url_suffix": "aarch64-linux.tar.gz",
-                        },
-                        "windows_amd64": {
-                            "sha256": "95c6380ec7c1e385be8427a2da1206d90163fd66b6cbb573a516390988ccbad2",
                             "url_suffix": "x86_64-windows.zip",
                         },
                     },
@@ -860,13 +885,13 @@ def validate_tool_compatibility(tools_config):
     compatibility_matrix = {
         "1.235.0": {
             "wac": ["0.7.0", "0.8.0", "0.8.1"],
-            "wit-bindgen": ["0.43.0", "0.46.0"],
+            "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
             "wkg": ["0.11.0"],
             "wasmsign2": ["0.2.6"],
         },
         "1.239.0": {
             "wac": ["0.7.0", "0.8.0", "0.8.1"],
-            "wit-bindgen": ["0.43.0", "0.46.0"],
+            "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
             "wkg": ["0.11.0"],
             "wasmsign2": ["0.2.6"],
         },
