@@ -18,7 +18,7 @@ TOOL_VERSIONS = {
     "wasmtime": "28.0.0",     # WebAssembly runtime for testing/execution
 
     # WIT and binding generation
-    "wit-bindgen": "0.46.0",  # WIT binding generator (MUST match Cargo.toml if used as crate)
+    "wit-bindgen": "0.49.0",  # WIT binding generator (MUST match Cargo.toml if used as crate)
     "wac": "0.8.0",           # WebAssembly Composition tool
     "wkg": "0.11.0",          # WebAssembly package manager
 
@@ -41,21 +41,21 @@ TOOL_VERSIONS = {
 # Value: Dict of compatible tool versions
 TOOL_COMPATIBILITY_MATRIX = {
     "1.240.0": {
-        "wit-bindgen": ["0.46.0"],
+        "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
         "wac": ["0.7.0", "0.8.0"],
         "wkg": ["0.11.0"],
         "wasmsign2": ["0.2.6"],
         "wasmtime": ["27.0.0", "28.0.0"],
     },
     "1.239.0": {
-        "wit-bindgen": ["0.43.0", "0.46.0"],
+        "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
         "wac": ["0.7.0", "0.8.0"],
         "wkg": ["0.11.0"],
         "wasmsign2": ["0.2.6"],
         "wasmtime": ["27.0.0", "28.0.0"],
     },
     "1.235.0": {
-        "wit-bindgen": ["0.43.0", "0.46.0"],
+        "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
         "wac": ["0.7.0", "0.8.0"],
         "wkg": ["0.11.0"],
         "wasmsign2": ["0.2.6"],
