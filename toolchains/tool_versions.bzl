@@ -14,22 +14,22 @@ IMPORTANT: When updating versions here:
 # Tool versions - single source of truth
 TOOL_VERSIONS = {
     # Core WebAssembly toolchain
-    "wasm-tools": "1.240.0",  # Component model tools (validate, parse, compose, etc.)
-    "wasmtime": "28.0.0",     # WebAssembly runtime for testing/execution
+    "wasm-tools": "1.243.0",  # Component model tools (validate, parse, compose, etc.)
+    "wasmtime": "39.0.1",     # WebAssembly runtime for testing/execution
 
     # WIT and binding generation
     "wit-bindgen": "0.49.0",  # WIT binding generator (MUST match Cargo.toml if used as crate)
-    "wac": "0.8.0",           # WebAssembly Composition tool
-    "wkg": "0.11.0",          # WebAssembly package manager
+    "wac": "0.8.1",           # WebAssembly Composition tool
+    "wkg": "0.13.0",          # WebAssembly package manager
 
     # Optimization and initialization
-    "wizer": "8.1.0",         # WebAssembly pre-initialization tool
+    "wizer": "10.0.0",        # WebAssembly pre-initialization tool
 
     # Signatures and security
     "wasmsign2": "0.2.6",     # WebAssembly signing tool
 
     # Platform SDKs
-    "wasi-sdk": "26",         # WASI SDK for C/C++ compilation
+    "wasi-sdk": "29",         # WASI SDK for C/C++ compilation
     "tinygo": "0.39.0",       # TinyGo compiler for Go→WASM
 
     # Node.js ecosystem
@@ -40,26 +40,33 @@ TOOL_VERSIONS = {
 # Key: wasm-tools version
 # Value: Dict of compatible tool versions
 TOOL_COMPATIBILITY_MATRIX = {
+    "1.243.0": {
+        "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
+        "wac": ["0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["37.0.2", "39.0.1"],
+    },
     "1.240.0": {
         "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
-        "wac": ["0.7.0", "0.8.0"],
-        "wkg": ["0.11.0"],
+        "wac": ["0.7.0", "0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
         "wasmsign2": ["0.2.6"],
-        "wasmtime": ["27.0.0", "28.0.0"],
+        "wasmtime": ["27.0.0", "28.0.0", "37.0.2", "39.0.1"],
     },
     "1.239.0": {
         "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
-        "wac": ["0.7.0", "0.8.0"],
-        "wkg": ["0.11.0"],
+        "wac": ["0.7.0", "0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
         "wasmsign2": ["0.2.6"],
-        "wasmtime": ["27.0.0", "28.0.0"],
+        "wasmtime": ["27.0.0", "28.0.0", "37.0.2", "39.0.1"],
     },
     "1.235.0": {
         "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
-        "wac": ["0.7.0", "0.8.0"],
-        "wkg": ["0.11.0"],
+        "wac": ["0.7.0", "0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
         "wasmsign2": ["0.2.6"],
-        "wasmtime": ["27.0.0"],
+        "wasmtime": ["27.0.0", "37.0.2", "39.0.1"],
     },
 }
 

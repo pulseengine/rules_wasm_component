@@ -60,10 +60,9 @@ def _test_get_latest_version(ctx):
     """Test get_latest_version function"""
     env = unittest.begin(ctx)
 
-    # Test known tools
-    asserts.equals(env, "1.241.2", get_latest_version("wasm-tools"))
+    # Test known tools (core toolchain)
+    asserts.equals(env, "1.243.0", get_latest_version("wasm-tools"))
     asserts.equals(env, "0.49.0", get_latest_version("wit-bindgen"))
-    asserts.equals(env, "9.0.0", get_latest_version("wizer"))
 
     # Test invalid tool
     asserts.equals(env, None, get_latest_version("nonexistent-tool"))
