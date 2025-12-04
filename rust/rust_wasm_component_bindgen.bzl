@@ -61,7 +61,7 @@ def _generate_wrapper_impl(ctx):
     # The CLI also generates the export! macro with --pub-export-macro flag
     #
     # COMPATIBILITY: This embedded runtime is compatible with wit-bindgen CLI versions:
-    # - 0.44.0, 0.45.0, 0.46.0 (tested and verified)
+    # - 0.44.0 through 0.49.0 (tested and verified)
     # - Requires API: Cleanup, CleanupGuard, run_ctors_once(), maybe_link_cabi_realloc()
     # - Uses: --runtime-path crate::wit_bindgen::rt, --pub-export-macro flags
     #
@@ -70,7 +70,7 @@ def _generate_wrapper_impl(ctx):
     # Check generated bindings for any new runtime requirements.
 
     # Validate CLI version compatibility
-    COMPATIBLE_CLI_VERSIONS = ["0.44.0", "0.45.0", "0.46.0"]
+    COMPATIBLE_CLI_VERSIONS = ["0.44.0", "0.45.0", "0.46.0", "0.47.0", "0.48.0", "0.48.1", "0.49.0"]
     cli_version = get_tool_version("wit-bindgen")
     if cli_version not in COMPATIBLE_CLI_VERSIONS:
         fail(
@@ -86,7 +86,7 @@ def _generate_wrapper_impl(ctx):
     if ctx.attr.mode == "native-guest":
         wrapper_content = """// Generated wrapper for WIT bindings (native-guest mode)
 //
-// COMPATIBILITY: wit-bindgen CLI 0.44.0 - 0.46.0
+// COMPATIBILITY: wit-bindgen CLI 0.44.0 - 0.49.0
 // This wrapper provides a wit_bindgen::rt module compatible with the CLI-generated code.
 // The runtime provides allocation helpers and cleanup guards expected by generated bindings.
 //
@@ -182,7 +182,7 @@ macro_rules! export {
     else:
         wrapper_content = """// Generated wrapper for WIT bindings (guest mode)
 //
-// COMPATIBILITY: wit-bindgen CLI 0.44.0 - 0.46.0
+// COMPATIBILITY: wit-bindgen CLI 0.44.0 - 0.49.0
 // This wrapper provides a wit_bindgen::rt module compatible with the CLI-generated code.
 // The runtime provides allocation helpers and cleanup guards expected by generated bindings.
 //
