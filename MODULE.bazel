@@ -126,7 +126,7 @@ wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
     strategy = "download",  # Download prebuilt binaries from GitHub releases
-    version = "1.241.2",
+    version = "1.243.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
@@ -137,7 +137,7 @@ wkg = use_extension("//wasm:extensions.bzl", "wkg")
 wkg.register(
     name = "wkg",
     strategy = "download",
-    version = "0.12.0",
+    version = "0.13.0",
 )
 use_repo(wkg, "wkg_toolchain")
 
@@ -148,7 +148,7 @@ wasi_sdk = use_extension("//wasm:extensions.bzl", "wasi_sdk")
 wasi_sdk.register(
     name = "wasi",
     strategy = "download",
-    version = "27",
+    version = "29",
 )
 use_repo(wasi_sdk, "wasi_sdk")
 
@@ -176,7 +176,7 @@ wizer = use_extension("//wasm:extensions.bzl", "wizer")
 wizer.register(
     name = "wizer",
     strategy = "download",
-    version = "9.0.0",
+    version = "10.0.0",
 )
 use_repo(wizer, "wizer_toolchain")
 
@@ -187,7 +187,7 @@ wasmtime = use_extension("//wasm:extensions.bzl", "wasmtime")
 wasmtime.register(
     name = "wasmtime",
     strategy = "download",
-    version = "37.0.2",
+    version = "39.0.1",
 )
 use_repo(wasmtime, "wasmtime_toolchain")
 
