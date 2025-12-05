@@ -87,14 +87,12 @@ impl UpdateEngine {
 
     /// List all available tools that can be updated
     pub async fn list_available_tools(&self) -> Result<Vec<String>> {
-        // Combine existing tools with configured tools
-        let mut tools = self.manager.list_all_tools().await?;
+        // Only return tools that have GitHub API configurations
+        // This filters out WASM components and other tools that use fallback checksums
+        let mut tools = Vec::new();
 
-        // Add any configured tools that might not exist yet
         for tool_name in self.tool_config.get_all_tool_names() {
-            if !tools.contains(&tool_name) {
-                tools.push(tool_name);
-            }
+            tools.push(tool_name);
         }
 
         tools.sort();
