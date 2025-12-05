@@ -231,7 +231,6 @@ def prepare_workspace_action(ctx, config):
             config.get("workspace_type", "generic"),
             ctx.label,
         ),
-        tools = [file_ops_tool],
     )
 
     return workspace_dir
@@ -458,7 +457,6 @@ def setup_js_workspace_action(ctx, sources, package_json = None, npm_deps = None
         outputs = [workspace_dir],
         mnemonic = "SetupJSWorkspace",
         progress_message = "Setting up JavaScript workspace for %s" % ctx.label,
-        tools = [file_ops_tool],
     )
 
     return workspace_dir
