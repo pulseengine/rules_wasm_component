@@ -93,11 +93,11 @@ jobs:
 
           echo "Running checksum updater with tools: $TOOLS"
 
-          # Run the updater and capture output
+          # Run the updater and capture output (stderr to stdout is visible, stdout to file for JSON parsing)
           if [ "$TOOLS" = "all" ]; then
-            bazel run //tools/checksum_updater:checksum_updater_bin -- update-all $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json
+            bazel run //tools/checksum_updater:checksum_updater_bin -- update-all $FORCE_FLAG $DRY_RUN_FLAG --output-format json 2>&1 | tail -n 1 > update_results.json
           else
-            bazel run //tools/checksum_updater:checksum_updater_bin -- update --tools "$TOOLS" $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json
+            bazel run //tools/checksum_updater:checksum_updater_bin -- update --tools "$TOOLS" $FORCE_FLAG $DRY_RUN_FLAG --output-format json 2>&1 | tail -n 1 > update_results.json
           fi
 
           # Check if any updates were made
@@ -112,8 +112,8 @@ jobs:
           # Store results for later steps
           cp update_results.json ./update_results.json
 
-          # Generate summary for PR description
-          bazel run //tools/checksum_updater:checksum_updater_bin -- generate-summary update_results.json > ./update_summary.md
+          # Generate summary for PR description (suppress Bazel logs, keep only command output)
+          bazel run //tools/checksum_updater:checksum_updater_bin -- generate-summary update_results.json 2>&1 | tail -n +1 | grep -v "^INFO\|^WARN\|^ERROR\|^Computing\|^Loading\|^Analyzing\|^Target\|^INFO:" > ./update_summary.md || true
 
       - name: Validate updated checksums
         if: steps.update.outputs.updates_count > 0
