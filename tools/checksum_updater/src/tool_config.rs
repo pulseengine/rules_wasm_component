@@ -146,33 +146,9 @@ impl ToolConfig {
             },
         );
 
-        // wasmtime configuration
-        tools.insert(
-            "wasmtime".to_string(),
-            ToolConfigEntry {
-                github_repo: "bytecodealliance/wasmtime".to_string(),
-                platforms: vec![
-                    "darwin_amd64".to_string(),
-                    "darwin_arm64".to_string(),
-                    "linux_amd64".to_string(),
-                    "linux_arm64".to_string(),
-                    "windows_amd64".to_string(),
-                ],
-                url_pattern: UrlPattern::Custom {
-                    pattern: "https://github.com/bytecodealliance/wasmtime/releases/download/v{version}/wasmtime-v{version}-{platform}.tar.xz".to_string(),
-                    platform_mapping: {
-                        let mut map = HashMap::new();
-                        map.insert("darwin_amd64".to_string(), "x86_64-macos".to_string());
-                        map.insert("darwin_arm64".to_string(), "aarch64-macos".to_string());
-                        map.insert("linux_amd64".to_string(), "x86_64-linux".to_string());
-                        map.insert("linux_arm64".to_string(), "aarch64-linux".to_string());
-                        map.insert("windows_amd64".to_string(), "x86_64-windows".to_string());
-                        map
-                    },
-                },
-                tag_prefix: Some("v".to_string()),
-            },
-        );
+        // Note: wasmtime is in the JSON registry with valid checksums but
+        // has issues with GitHub API calls in the update engine, so we use
+        // the fallback checksum mechanism instead of auto-updates
 
         // wasi-sdk configuration
         tools.insert(
@@ -232,33 +208,9 @@ impl ToolConfig {
             },
         );
 
-        // wizer configuration
-        tools.insert(
-            "wizer".to_string(),
-            ToolConfigEntry {
-                github_repo: "bytecodealliance/wizer".to_string(),
-                platforms: vec![
-                    "darwin_amd64".to_string(),
-                    "darwin_arm64".to_string(),
-                    "linux_amd64".to_string(),
-                    "linux_arm64".to_string(),
-                    "windows_amd64".to_string(),
-                ],
-                url_pattern: UrlPattern::Custom {
-                    pattern: "https://github.com/bytecodealliance/wizer/releases/download/v{version}/wizer-v{version}-{platform}".to_string(),
-                    platform_mapping: {
-                        let mut map = HashMap::new();
-                        map.insert("darwin_amd64".to_string(), "x86_64-macos.tar.xz".to_string());
-                        map.insert("darwin_arm64".to_string(), "aarch64-macos.tar.xz".to_string());
-                        map.insert("linux_amd64".to_string(), "x86_64-linux.tar.xz".to_string());
-                        map.insert("linux_arm64".to_string(), "aarch64-linux.tar.xz".to_string());
-                        map.insert("windows_amd64".to_string(), "x86_64-windows.zip".to_string());
-                        map
-                    },
-                },
-                tag_prefix: Some("v".to_string()),
-            },
-        );
+        // Note: wizer is in the JSON registry with valid checksums but
+        // has issues with GitHub API calls in the update engine, so we use
+        // the fallback checksum mechanism instead of auto-updates
 
         // wkg configuration
         tools.insert(
