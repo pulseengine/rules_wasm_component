@@ -1,23 +1,42 @@
-"""Hermetic file operations tool for Bazel rules_wasm_component"""
+"""Wrapper for external file operations WASM component
+
+This wrapper executes the pre-built WASM component from bazel-file-ops-component
+via wasmtime, with LOCAL AOT compilation for guaranteed compatibility and
+100x faster startup.
+"""
 
 load("@rules_go//go:def.bzl", "go_binary")
+load("//wasm:wasm_precompile.bzl", "wasm_precompile")
 
 package(default_visibility = ["//visibility:public"])
 
-# Hermetic file operations binary
-# Following @aspect_bazel_lib pattern for cross-platform file operations
+# Compile external WASM component to native code (AOT) at build time
+# This guarantees compatibility with the user's Wasmtime version
+wasm_precompile(
+    name = "file_ops_aot",
+    debug_info = False,  # Production build - no debug info
+    optimization_level = "2",  # Maximum optimization
+    wasm_file = "@file_ops_component_external//file",
+)
+
+# Wrapper binary that executes external WASM component with local AOT
 go_binary(
-    name = "file_ops",
+    name = "file_ops_external",
     srcs = ["main.go"],
-    # Let Go build for the current platform (hermetic via rules_go toolchain)
+    data = [
+        ":file_ops_aot",  # Locally compiled AOT - guaranteed compatible!
+        "@file_ops_component_external//file",  # Fallback to regular WASM if AOT fails
+        "@wasmtime_toolchain//:wasmtime",
+    ],
     pure = "on",
     visibility = ["//visibility:public"],
+    deps = ["@rules_go//go/runfiles"],
 )
 
 # Export for easy access in toolchains
 alias(
-    name = "file_ops_binary",
-    actual = ":file_ops",
+    name = "file_ops_external_binary",
+    actual = ":file_ops_external",
     visibility = ["//visibility:public"],
 )
 

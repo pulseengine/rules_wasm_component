@@ -39,7 +39,7 @@ def _file_ops_toolchain_repository_impl(repository_ctx):
     repository_ctx.file("BUILD.bazel", """
 load("@rules_wasm_component//toolchains:file_ops_toolchain.bzl", "file_ops_toolchain")
 
-# File Operations Toolchain using built component
+# File Operations Toolchain using external WASM component
 file_ops_toolchain(
     name = "file_ops_toolchain_impl",
     file_ops_component = "@rules_wasm_component//tools/file_ops:file_ops",
