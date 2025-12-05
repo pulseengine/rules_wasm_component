@@ -228,7 +228,7 @@ register_toolchains("@nodejs_toolchains//:all")
 register_toolchains("@jco_toolchain//:jco_toolchain")
 
 # File Operations Component toolchain for universal file handling
-register_toolchains("//toolchains:file_ops_toolchain_local")
+register_toolchains("//toolchains:file_ops_toolchain_target")
 
 # External File Operations Component from bazel-file-ops-component
 # Phase 2: External component with LOCAL AOT compilation
