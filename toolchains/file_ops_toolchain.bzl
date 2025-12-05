@@ -9,9 +9,11 @@ def _file_ops_toolchain_impl(ctx):
 
     return [platform_common.ToolchainInfo(
         file_ops_component = ctx.executable.file_ops_component,
+        file_ops_wasm_component = ctx.file.wasm_component,
         file_ops_info = struct(
             component = ctx.executable.file_ops_component,
             wit_files = ctx.files.wit_files,
+            wasm_component = ctx.file.wasm_component,
         ),
     )]
 
@@ -23,6 +25,12 @@ file_ops_toolchain = rule(
             executable = True,
             cfg = "exec",
             doc = "File Operations Component executable",
+        ),
+        "wasm_component": attr.label(
+            mandatory = True,
+            allow_single_file = [".wasm"],
+            cfg = "exec",
+            doc = "WASM component file for file operations",
         ),
         "wit_files": attr.label_list(
             allow_files = [".wit"],

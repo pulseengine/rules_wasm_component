@@ -211,6 +211,7 @@ bzl_library(
 file_ops_toolchain(
     name = "file_ops_toolchain_impl",
     file_ops_component = "//tools/file_ops:file_ops",
+    wasm_component = "@file_ops_component_external//file",
     wit_files = ["//tools/file_ops:wit_files"],
 )
 
