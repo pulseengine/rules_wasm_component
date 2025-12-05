@@ -204,6 +204,118 @@ impl ToolConfig {
             },
         );
 
+        // nodejs configuration
+        tools.insert(
+            "nodejs".to_string(),
+            ToolConfigEntry {
+                github_repo: "nodejs/node".to_string(),
+                platforms: vec![
+                    "darwin_amd64".to_string(),
+                    "darwin_arm64".to_string(),
+                    "linux_amd64".to_string(),
+                    "linux_arm64".to_string(),
+                    "windows_amd64".to_string(),
+                ],
+                url_pattern: UrlPattern::Custom {
+                    pattern: "https://nodejs.org/dist/v{version}/node-v{version}-{platform}.tar.gz".to_string(),
+                    platform_mapping: {
+                        let mut map = HashMap::new();
+                        map.insert("darwin_amd64".to_string(), "darwin-x64".to_string());
+                        map.insert("darwin_arm64".to_string(), "darwin-arm64".to_string());
+                        map.insert("linux_amd64".to_string(), "linux-x64".to_string());
+                        map.insert("linux_arm64".to_string(), "linux-arm64".to_string());
+                        map.insert("windows_amd64".to_string(), "win-x64".to_string());
+                        map
+                    },
+                },
+                tag_prefix: Some("v".to_string()),
+            },
+        );
+
+        // wizer configuration
+        tools.insert(
+            "wizer".to_string(),
+            ToolConfigEntry {
+                github_repo: "bytecodealliance/wizer".to_string(),
+                platforms: vec![
+                    "darwin_amd64".to_string(),
+                    "darwin_arm64".to_string(),
+                    "linux_amd64".to_string(),
+                    "linux_arm64".to_string(),
+                    "windows_amd64".to_string(),
+                ],
+                url_pattern: UrlPattern::Custom {
+                    pattern: "https://github.com/bytecodealliance/wizer/releases/download/v{version}/wizer-v{version}-{platform}".to_string(),
+                    platform_mapping: {
+                        let mut map = HashMap::new();
+                        map.insert("darwin_amd64".to_string(), "x86_64-macos.tar.xz".to_string());
+                        map.insert("darwin_arm64".to_string(), "aarch64-macos.tar.xz".to_string());
+                        map.insert("linux_amd64".to_string(), "x86_64-linux.tar.xz".to_string());
+                        map.insert("linux_arm64".to_string(), "aarch64-linux.tar.xz".to_string());
+                        map.insert("windows_amd64".to_string(), "x86_64-windows.zip".to_string());
+                        map
+                    },
+                },
+                tag_prefix: Some("v".to_string()),
+            },
+        );
+
+        // wkg configuration
+        tools.insert(
+            "wkg".to_string(),
+            ToolConfigEntry {
+                github_repo: "bytecodealliance/wasm-pkg-tools".to_string(),
+                platforms: vec![
+                    "darwin_amd64".to_string(),
+                    "darwin_arm64".to_string(),
+                    "linux_amd64".to_string(),
+                    "linux_arm64".to_string(),
+                    "windows_amd64".to_string(),
+                ],
+                url_pattern: UrlPattern::Custom {
+                    pattern: "https://github.com/bytecodealliance/wasm-pkg-tools/releases/download/v{version}/wkg-{platform}".to_string(),
+                    platform_mapping: {
+                        let mut map = HashMap::new();
+                        map.insert("darwin_amd64".to_string(), "x86_64-apple-darwin".to_string());
+                        map.insert("darwin_arm64".to_string(), "aarch64-apple-darwin".to_string());
+                        map.insert("linux_amd64".to_string(), "x86_64-unknown-linux-gnu".to_string());
+                        map.insert("linux_arm64".to_string(), "aarch64-unknown-linux-gnu".to_string());
+                        map.insert("windows_amd64".to_string(), "x86_64-pc-windows-gnu".to_string());
+                        map
+                    },
+                },
+                tag_prefix: Some("v".to_string()),
+            },
+        );
+
+        // tinygo configuration
+        tools.insert(
+            "tinygo".to_string(),
+            ToolConfigEntry {
+                github_repo: "tinygo-org/tinygo".to_string(),
+                platforms: vec![
+                    "darwin_amd64".to_string(),
+                    "darwin_arm64".to_string(),
+                    "linux_amd64".to_string(),
+                    "linux_arm64".to_string(),
+                    "windows_amd64".to_string(),
+                ],
+                url_pattern: UrlPattern::Custom {
+                    pattern: "https://github.com/tinygo-org/tinygo/releases/download/v{version}/tinygo{version}.{platform}.tar.gz".to_string(),
+                    platform_mapping: {
+                        let mut map = HashMap::new();
+                        map.insert("darwin_amd64".to_string(), ".darwin-amd64".to_string());
+                        map.insert("darwin_arm64".to_string(), ".darwin-arm64".to_string());
+                        map.insert("linux_amd64".to_string(), ".linux-amd64".to_string());
+                        map.insert("linux_arm64".to_string(), ".linux-arm64".to_string());
+                        map.insert("windows_amd64".to_string(), ".windows-amd64".to_string());
+                        map
+                    },
+                },
+                tag_prefix: Some("v".to_string()),
+            },
+        );
+
         Self { tools }
     }
 
