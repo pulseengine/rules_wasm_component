@@ -21,7 +21,7 @@ wasm_precompile(
 
 # Wrapper binary that executes external WASM component with local AOT
 go_binary(
-    name = "file_ops_external",
+    name = "file_ops",
     srcs = ["main.go"],
     data = [
         ":file_ops_aot",  # Locally compiled AOT - guaranteed compatible!
@@ -31,13 +31,6 @@ go_binary(
     pure = "on",
     visibility = ["//visibility:public"],
     deps = ["@rules_go//go/runfiles"],
-)
-
-# Export for easy access in toolchains
-alias(
-    name = "file_ops_external_binary",
-    actual = ":file_ops_external",
-    visibility = ["//visibility:public"],
 )
 
 # Export WIT interface for toolchain use
