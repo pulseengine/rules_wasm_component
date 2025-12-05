@@ -831,6 +831,7 @@ go_wasm_component = rule(
         "@rules_wasm_component//toolchains:tinygo_toolchain_type",
         "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
         "@rules_wasm_component//toolchains:file_ops_toolchain_type",
+        "@rules_wasm_component//toolchains:wasmtime_toolchain_type",
     ],
     doc = """Builds a WebAssembly component from Go source using TinyGo + WASI Preview 2.
 

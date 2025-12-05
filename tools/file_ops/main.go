@@ -1,15 +1,29 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
-
-	"github.com/bazelbuild/rules_go/go/runfiles"
 )
+
+// Config structure for file operations
+type FileOpsConfig struct {
+	WorkspaceDir      string        `json:"workspace_dir"`
+	Operations        []interface{} `json:"operations"`
+	WasmtimePath      string        `json:"wasmtime_path"`
+	WasmComponentPath string        `json:"wasm_component_path"`
+}
+
+// Helper to panic on error
+func must(s string, err error) string {
+	if err != nil {
+		panic(err)
+	}
+	return s
+}
 
 // Wrapper for external file operations WASM component with LOCAL AOT
 // This wrapper executes the WASM component via wasmtime, using locally-compiled
@@ -17,79 +31,142 @@ import (
 //
 // Security: Maps only necessary directories to WASI instead of full filesystem access.
 func main() {
-	// Initialize Bazel runfiles
-	r, err := runfiles.New()
-	if err != nil {
-		log.Fatalf("Failed to initialize runfiles: %v", err)
+	// Read configuration from JSON file (passed as first argument)
+	if len(os.Args) < 2 {
+		log.Fatalf("Usage: file_ops <config.json>")
 	}
 
-	// Locate wasmtime binary
-	wasmtimeBinary, err := r.Rlocation("+wasmtime+wasmtime_toolchain/wasmtime")
-	if err != nil {
-		log.Fatalf("Failed to locate wasmtime: %v", err)
-	}
+	configPath := os.Args[1]
 
-	if _, err := os.Stat(wasmtimeBinary); err != nil {
-		log.Fatalf("Wasmtime binary not found at %s: %v", wasmtimeBinary, err)
-	}
+	// Always log when invoked (for debugging)
+	log.Printf("file_ops wrapper started with config: %s", configPath)
+	log.Printf("Current directory: %s", must(os.Getwd()))
+	log.Printf("Executable path: %s", os.Args[0])
 
-	// Try to locate locally-compiled AOT artifact
-	// This is compiled at build time with the user's Wasmtime version - guaranteed compatible!
-	aotPath, err := r.Rlocation("_main/tools/file_ops/file_ops_aot.cwasm")
-	useAOT := err == nil
-
-	if useAOT {
-		if _, err := os.Stat(aotPath); err != nil {
-			useAOT = false
+	// List files in current directory for debugging
+	if entries, err := ioutil.ReadDir("."); err == nil {
+		log.Printf("Files in current directory:")
+		for _, entry := range entries {
+			log.Printf("  - %s (dir=%v)", entry.Name(), entry.IsDir())
 		}
 	}
 
-	// Locate regular WASM component for fallback
-	wasmComponent, err := r.Rlocation("+_repo_rules+file_ops_component_external/file/file_ops_component.wasm")
+	configData, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		log.Fatalf("Failed to locate WASM component: %v", err)
+		log.Fatalf("Failed to read config file %s: %v", configPath, err)
 	}
 
-	if _, err := os.Stat(wasmComponent); err != nil {
-		log.Fatalf("WASM component not found at %s: %v", wasmComponent, err)
+	log.Printf("Successfully read config file")
+
+
+	var config FileOpsConfig
+	if err := json.Unmarshal(configData, &config); err != nil {
+		log.Fatalf("Failed to parse config file: %v", err)
 	}
+
+	// Get wasmtime path from config (provided by Bazel)
+	// The path may be relative to the sandbox root, try to resolve it
+	wasmtimeBinary := config.WasmtimePath
+	if wasmtimeBinary == "" {
+		log.Fatalf("wasmtime_path not specified in config")
+	}
+
+	// Try to find wasmtime - may need to resolve relative path
+	wasmtimeResolved := wasmtimeBinary
+	if _, err := os.Stat(wasmtimeResolved); err != nil {
+		// Try looking in common locations
+		alternativePaths := []string{
+			"wasmtime",
+			"./wasmtime",
+			filepath.Join(filepath.Dir(os.Args[0]), "wasmtime"),
+		}
+		found := false
+		for _, path := range alternativePaths {
+			if _, err := os.Stat(path); err == nil {
+				wasmtimeResolved = path
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Fatalf("Wasmtime binary not found at %s or alternative locations: %v", wasmtimeBinary, err)
+		}
+	}
+
+	wasmtimeBinary = wasmtimeResolved
+
+	// Get WASM component path from config (provided by Bazel)
+	wasmComponentPath := config.WasmComponentPath
+	if wasmComponentPath == "" {
+		log.Fatalf("wasm_component_path not specified in config")
+	}
+
+	// Try to find component - may need to resolve relative path
+	componentResolved := wasmComponentPath
+	if _, err := os.Stat(componentResolved); err != nil {
+		// Try looking in common locations
+		alternativePaths := []string{
+			"file_ops_component.wasm",
+			"./file_ops_component.wasm",
+			filepath.Join(filepath.Dir(os.Args[0]), "file_ops_component.wasm"),
+		}
+		found := false
+		for _, path := range alternativePaths {
+			if _, err := os.Stat(path); err == nil {
+				componentResolved = path
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Fatalf("WASM component not found at %s or alternative locations: %v", wasmComponentPath, err)
+		}
+	}
+
+	wasmComponentPath = componentResolved
 
 	// Parse file-ops arguments and resolve paths
-	resolvedArgs, dirs, err := resolveFileOpsPaths(os.Args[1:])
+	resolvedArgs, _, err := resolveFileOpsPaths(config.WorkspaceDir, config.Operations)
 	if err != nil {
-		log.Fatalf("Failed to resolve paths: %v", err)
+		log.Fatalf("Failed to process file operations: %v", err)
 	}
 
-	// Build wasmtime command with limited directory mappings
+	// Build wasmtime command - map current working directory (Bazel sandbox root) to /
+	// This gives the WASM component access to all Bazel-provided inputs
 	var args []string
 	args = append(args, "run")
 
-	// Add unique directory mappings (instead of --dir=/::/  for full access)
-	uniqueDirs := uniqueStrings(dirs)
-	for _, dir := range uniqueDirs {
-		args = append(args, "--dir", dir)
+	// Map current directory to / in WASI sandbox
+	// This way, all paths in the Bazel sandbox are accessible with the same relative paths
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get current working directory: %v", err)
 	}
 
-	if useAOT {
-		// Use locally-compiled AOT - guaranteed compatible with current Wasmtime version
-		if os.Getenv("FILE_OPS_DEBUG") != "" {
-			log.Printf("DEBUG: Using locally-compiled AOT at %s", aotPath)
-			log.Printf("DEBUG: Mapped directories: %v", uniqueDirs)
-		}
+	args = append(args, "--dir", cwd+"::/")
 
-		args = append(args, "--allow-precompiled", aotPath)
-	} else {
-		// Fallback to regular WASM (still much faster than embedded Go binary)
-		if os.Getenv("FILE_OPS_DEBUG") != "" {
-			log.Printf("DEBUG: AOT not available, using regular WASM")
-			log.Printf("DEBUG: Mapped directories: %v", uniqueDirs)
+	// Optionally also map the workspace directory as-is for direct access
+	if config.WorkspaceDir != "" {
+		absWorkspace, err := filepath.Abs(config.WorkspaceDir)
+		if err == nil {
+			// Map workspace to itself so files can be created there
+			args = append(args, "--dir", absWorkspace)
 		}
-
-		args = append(args, wasmComponent)
 	}
+
+	// Execute WASM component via wasmtime
+	log.Printf("DEBUG: Executing file_ops WASM component")
+	log.Printf("DEBUG: Wasmtime: %s", wasmtimeBinary)
+	log.Printf("DEBUG: Component: %s", wasmComponentPath)
+	log.Printf("DEBUG: Workspace dir: %s", config.WorkspaceDir)
+	log.Printf("DEBUG: Operations: %v", resolvedArgs)
+
+	args = append(args, wasmComponentPath)
 
 	// Append resolved file-ops arguments
 	args = append(args, resolvedArgs...)
+
+	log.Printf("DEBUG: Final wasmtime args: %v", args)
 
 	// Execute wasmtime
 	cmd := exec.Command(wasmtimeBinary, args...)
@@ -99,84 +176,81 @@ func main() {
 
 	if err := cmd.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
+			log.Printf("DEBUG: Wasmtime exited with code %d", exitErr.ExitCode())
 			os.Exit(exitErr.ExitCode())
 		}
 		log.Fatalf("Failed to execute wasmtime: %v", err)
 	}
 }
 
-// resolveFileOpsPaths resolves file paths in file-ops arguments
-// Returns resolved arguments and list of directories to map
-func resolveFileOpsPaths(args []string) ([]string, []string, error) {
-	resolvedArgs := make([]string, 0, len(args))
-	dirs := make([]string, 0)
+// resolveFileOpsPaths converts the JSON config operations into WASM component arguments
+// Converts all paths to absolute sandbox-root paths that will work when mapped via --dir cwd::/
+func resolveFileOpsPaths(workspaceDir string, operations []interface{}) ([]string, []string, error) {
+	resolvedArgs := []string{}
+	dirs := []string{}
 
-	// Flags that expect file/directory paths
-	pathFlags := map[string]bool{
-		"--src":    true,
-		"--dest":   true,
-		"--path":   true,
-		"--dir":    true,
-		"--output": true,
+	// Get current directory (sandbox root) for path conversion
+	cwd, err := os.Getwd()
+	if err != nil {
+		cwd = "."
 	}
 
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
+	// For each operation, build the corresponding WASM component arguments
+	// Convert relative sandbox paths to absolute paths that work in WASI sandbox
+	for _, op := range operations {
+		opMap, ok := op.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
-		// Check if this is a flag that expects a path
-		if pathFlags[arg] && i+1 < len(args) {
-			// Next argument is a file path
-			resolvedArgs = append(resolvedArgs, arg)
-			i++
-			path := args[i]
+		opType, ok := opMap["type"].(string)
+		if !ok {
+			continue
+		}
 
-			// Resolve to real path (follows symlinks)
-			realPath, err := filepath.EvalSymlinks(path)
-			if err != nil {
-				// If symlink evaluation fails, try absolute path
-				realPath, err = filepath.Abs(path)
-				if err != nil {
-					return nil, nil, fmt.Errorf("failed to resolve path %s: %w", path, err)
-				}
+		// Helper function to convert sandbox-relative to absolute paths
+		toAbsPath := func(relPath string) string {
+			if filepath.IsAbs(relPath) {
+				return relPath
+			}
+			// Path is relative to sandbox root, make it absolute for WASI access
+			return "/" + relPath
+		}
+
+		// Build arguments based on operation type
+		switch opType {
+		case "copy_file":
+			resolvedArgs = append(resolvedArgs, "copy_file")
+			if src, ok := opMap["src_path"].(string); ok {
+				absPath := toAbsPath(src)
+				resolvedArgs = append(resolvedArgs, "--src", absPath)
+			}
+			if dest, ok := opMap["dest_path"].(string); ok {
+				absDest := toAbsPath(filepath.Join(workspaceDir, dest))
+				resolvedArgs = append(resolvedArgs, "--dest", absDest)
 			}
 
-			resolvedArgs = append(resolvedArgs, realPath)
-
-			// Add directory for mapping
-			dir := filepath.Dir(realPath)
-			dirs = append(dirs, dir)
-		} else if strings.Contains(arg, "=") && (strings.HasPrefix(arg, "--src=") ||
-			strings.HasPrefix(arg, "--dest=") ||
-			strings.HasPrefix(arg, "--path=") ||
-			strings.HasPrefix(arg, "--dir=") ||
-			strings.HasPrefix(arg, "--output=")) {
-			// Handle --flag=value format
-			parts := strings.SplitN(arg, "=", 2)
-			if len(parts) == 2 {
-				flag := parts[0]
-				path := parts[1]
-
-				realPath, err := filepath.EvalSymlinks(path)
-				if err != nil {
-					realPath, err = filepath.Abs(path)
-					if err != nil {
-						return nil, nil, fmt.Errorf("failed to resolve path %s: %w", path, err)
-					}
-				}
-
-				resolvedArgs = append(resolvedArgs, flag+"="+realPath)
-
-				dir := filepath.Dir(realPath)
-				dirs = append(dirs, dir)
-			} else {
-				resolvedArgs = append(resolvedArgs, arg)
+		case "copy_directory_contents":
+			resolvedArgs = append(resolvedArgs, "copy_directory")
+			if src, ok := opMap["src_path"].(string); ok {
+				absPath := toAbsPath(src)
+				resolvedArgs = append(resolvedArgs, "--src", absPath)
 			}
-		} else {
-			// Not a path argument, pass through as-is
-			resolvedArgs = append(resolvedArgs, arg)
+			if dest, ok := opMap["dest_path"].(string); ok {
+				absDest := toAbsPath(filepath.Join(workspaceDir, dest))
+				resolvedArgs = append(resolvedArgs, "--dest", absDest)
+			}
+
+		case "mkdir":
+			resolvedArgs = append(resolvedArgs, "create_directory")
+			if path, ok := opMap["path"].(string); ok {
+				absPath := toAbsPath(filepath.Join(workspaceDir, path))
+				resolvedArgs = append(resolvedArgs, "--path", absPath)
+			}
 		}
 	}
 
+	_ = cwd // suppress unused warning
 	return resolvedArgs, dirs, nil
 }
 

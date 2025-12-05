@@ -151,8 +151,14 @@ def prepare_workspace_action(ctx, config):
     file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
     file_ops_tool = file_ops_toolchain.file_ops_component
 
+    # Get wasmtime and WASM component from toolchain
+    wasmtime_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasmtime_toolchain_type"]
+    wasmtime_binary = wasmtime_toolchain.wasmtime
+
+    wasm_component = file_ops_toolchain.file_ops_wasm_component
+
     # Collect all input files and build operations list
-    all_inputs = []
+    all_inputs = [wasmtime_binary, wasm_component]
     operations = []
 
     # Process source files
@@ -208,9 +214,13 @@ def prepare_workspace_action(ctx, config):
         ])
 
     # Build JSON config for file operations tool
+    # Use absolute paths in the sandbox - wasmtime_binary and wasm_component are Files
+    # so we can get their paths relative to the execution root
     file_ops_config = {
-        "workspace_dir": workspace_dir.path,
+        "workspace_dir": workspace_dir.short_path,
         "operations": operations,
+        "wasmtime_path": wasmtime_binary.path,
+        "wasm_component_path": wasm_component.path,
     }
 
     # Write config to a JSON file
@@ -457,6 +467,7 @@ def setup_js_workspace_action(ctx, sources, package_json = None, npm_deps = None
         outputs = [workspace_dir],
         mnemonic = "SetupJSWorkspace",
         progress_message = "Setting up JavaScript workspace for %s" % ctx.label,
+        use_default_shell_env = True,  # Allow access to environment for runfiles discovery
     )
 
     return workspace_dir
