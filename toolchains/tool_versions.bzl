@@ -71,16 +71,13 @@ TOOL_COMPATIBILITY_MATRIX = {
 }
 
 def get_tool_version(tool_name):
-    """Get the canonical version for a tool
+    """Returns the canonical version for the given tool name.
 
     Args:
-        tool_name: Name of the tool (e.g., "wasm-tools", "wit-bindgen")
+        tool_name: The name of the tool (e.g., "wasm-tools", "wit-bindgen").
 
     Returns:
-        String: Version number
-
-    Fails:
-        If tool_name is not defined in TOOL_VERSIONS
+        The version string for the tool, or fails if tool_name is not defined.
     """
     if tool_name not in TOOL_VERSIONS:
         fail("Unknown tool: {}. Available tools: {}".format(
@@ -90,28 +87,27 @@ def get_tool_version(tool_name):
     return TOOL_VERSIONS[tool_name]
 
 def get_compatible_versions(base_tool, base_version):
-    """Get compatible versions for other tools based on a base tool version
+    """Returns compatible versions for other tools based on a base tool version.
 
     Args:
-        base_tool: Name of the base tool (usually "wasm-tools")
-        base_version: Version of the base tool
+        base_tool: The name of the base tool (usually "wasm-tools").
+        base_version: The version of the base tool.
 
     Returns:
-        Dict: Mapping of tool names to list of compatible versions
-        Empty dict if no compatibility info available
+        A dict mapping tool names to lists of compatible versions, or an empty dict if no compatibility info is available.
     """
     if base_tool == "wasm-tools" and base_version in TOOL_COMPATIBILITY_MATRIX:
         return TOOL_COMPATIBILITY_MATRIX[base_version]
     return {}
 
 def validate_tool_versions(tools_config):
-    """Validate that a set of tool versions are compatible
+    """Validates that a set of tool versions are compatible with each other.
 
     Args:
-        tools_config: Dict mapping tool names to versions
+        tools_config: A dict mapping tool names to their versions.
 
     Returns:
-        List: List of warning messages (empty if all compatible)
+        A list of warning messages (empty if all versions are compatible).
     """
     warnings = []
 

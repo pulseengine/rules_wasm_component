@@ -3,6 +3,11 @@
 load("//checksums:registry.bzl", "get_tool_info")
 
 WIZER_VERSIONS = {
+    "10.0.0": {
+        "release_date": "2025-08-27",
+        "cargo_install": True,  # Primary installation method
+        "git_commit": "main",
+    },
     "9.0.0": {
         "release_date": "2024-06-03",
         "cargo_install": True,  # Primary installation method
