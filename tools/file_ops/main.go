@@ -35,7 +35,7 @@ func main() {
 
 	// Try to locate locally-compiled AOT artifact
 	// This is compiled at build time with the user's Wasmtime version - guaranteed compatible!
-	aotPath, err := r.Rlocation("_main/tools/file_ops_external/file_ops_aot.cwasm")
+	aotPath, err := r.Rlocation("_main/tools/file_ops/file_ops_aot.cwasm")
 	useAOT := err == nil
 
 	if useAOT {
