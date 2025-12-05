@@ -316,69 +316,9 @@ impl ToolConfig {
             },
         );
 
-        // wasmsign2-cli configuration (WASM component - platform independent)
-        tools.insert(
-            "wasmsign2-cli".to_string(),
-            ToolConfigEntry {
-                github_repo: "pulseengine/wasmsign2".to_string(),
-                platforms: vec!["wasm_component".to_string()],
-                url_pattern: UrlPattern::Custom {
-                    pattern: "https://github.com/pulseengine/wasmsign2/releases/download/v{version}/wasmsign2-cli.wasm".to_string(),
-                    platform_mapping: {
-                        let mut map = HashMap::new();
-                        map.insert("wasm_component".to_string(), "wasmsign2-cli.wasm".to_string());
-                        map
-                    },
-                },
-                tag_prefix: Some("v".to_string()),
-            },
-        );
-
-        // jco configuration (Node.js based tooling)
-        tools.insert(
-            "jco".to_string(),
-            ToolConfigEntry {
-                github_repo: "bytecodealliance/jco".to_string(),
-                platforms: vec![
-                    "darwin_amd64".to_string(),
-                    "darwin_arm64".to_string(),
-                    "linux_amd64".to_string(),
-                    "linux_arm64".to_string(),
-                    "windows_amd64".to_string(),
-                ],
-                url_pattern: UrlPattern::Custom {
-                    pattern: "https://github.com/bytecodealliance/jco/releases/download/v{version}/jco-v{version}-{platform}.tar.gz".to_string(),
-                    platform_mapping: {
-                        let mut map = HashMap::new();
-                        map.insert("darwin_amd64".to_string(), "x86_64-macos".to_string());
-                        map.insert("darwin_arm64".to_string(), "aarch64-macos".to_string());
-                        map.insert("linux_amd64".to_string(), "x86_64-linux".to_string());
-                        map.insert("linux_arm64".to_string(), "aarch64-linux".to_string());
-                        map.insert("windows_amd64".to_string(), "x86_64-windows".to_string());
-                        map
-                    },
-                },
-                tag_prefix: Some("v".to_string()),
-            },
-        );
-
-        // file-ops-component configuration (WASM component - platform independent)
-        tools.insert(
-            "file-ops-component".to_string(),
-            ToolConfigEntry {
-                github_repo: "pulseengine/bazel-file-ops-component".to_string(),
-                platforms: vec!["wasm".to_string()],
-                url_pattern: UrlPattern::Custom {
-                    pattern: "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v{version}/file_ops_component.wasm".to_string(),
-                    platform_mapping: {
-                        let mut map = HashMap::new();
-                        map.insert("wasm".to_string(), "file_ops_component.wasm".to_string());
-                        map
-                    },
-                },
-                tag_prefix: Some("v".to_string()),
-            },
-        );
+        // Note: wasmsign2-cli, jco, and file-ops-component are in the JSON registry but use
+        // a fallback mechanism rather than GitHub API updates. They're handled by the
+        // checksum manager's fallback checksums, not the update engine.
 
         Self { tools }
     }
