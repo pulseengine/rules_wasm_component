@@ -171,6 +171,31 @@ def _get_fallback_checksums(tool_name):
                         },
                     },
                 },
+                "1.243.0": {
+                    "release_date": "2025-12-03",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "3d03bc02fed63998e0ee8d88eb86d90bdb8e32e7cadc77d2f9e792b9dff8433a",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "6690a33a06ef705a63dbc066210bc0f09b1c08a82952d3cde9fbebd0d484b46f",
+                            "url_suffix": "aarch64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "f261622f8015d38ebe9c3345cc2f7bb5de055d3a66ab44efdf78f11068ed9d9f",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "ad06ba3c527992a1e6e9a7e807cc2bb914072f0a0ae6ce71680de91b1054d2e9",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "bb04533ff517f6c90df129f2a358b18ca45b7400a3676ba935bbd787908ff6b8",
+                            "url_suffix": "x86_64-windows.zip",
+                        },
+                    },
+                },
             },
         },
         "wit-bindgen": {
@@ -340,8 +365,33 @@ def _get_fallback_checksums(tool_name):
         "wkg": {
             "tool_name": "wkg",
             "github_repo": "bytecodealliance/wasm-pkg-tools",
-            "latest_version": "0.12.0",
+            "latest_version": "0.13.0",
             "versions": {
+                "0.13.0": {
+                    "release_date": "2025-11-10",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "6e9e260d45c8873d942ea5a1640692fdf01268c4b7906b48705dadaf1726a458",
+                            "binary_name": "wkg-x86_64-apple-darwin",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "e8abc8195201fab2769a79ca3f831c3a7830714cd9508c3d1defff348942cbc6",
+                            "binary_name": "wkg-aarch64-apple-darwin",
+                        },
+                        "linux_amd64": {
+                            "sha256": "59bb3bce8a0f7d150ab57cef7743fddd7932772c4df71d09072ed83acb609323",
+                            "binary_name": "wkg-x86_64-unknown-linux-gnu",
+                        },
+                        "linux_arm64": {
+                            "sha256": "522d400dc919f026137c97a35bccc8a7b583aa29722a8cb4f470ff39de8161a0",
+                            "binary_name": "wkg-aarch64-unknown-linux-gnu",
+                        },
+                        "windows_amd64": {
+                            "sha256": "fdb964cc986578778543890b19c9e96d6b8f1cbb2c1c45a6dafcf542141a59a4",
+                            "binary_name": "wkg-x86_64-pc-windows-gnu",
+                        },
+                    },
+                },
                 "0.11.0": {
                     "release_date": "2025-06-19",
                     "platforms": {
@@ -454,8 +504,29 @@ def _get_fallback_checksums(tool_name):
         "wasi-sdk": {
             "tool_name": "wasi-sdk",
             "github_repo": "WebAssembly/wasi-sdk",
-            "latest_version": "27",
+            "latest_version": "29",
             "versions": {
+                "29": {
+                    "release_date": "2025-11-08",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "d0de2fd3ea5c57060efa87e4356c164bec3689972f2386f0c9a89c58e10cec8d",
+                            "url_suffix": "macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "e11552913e3f99e834d7fe7da1bd081abaf764759ed76b6097a34c63fc83665e",
+                            "url_suffix": "macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "87d1d1a2879d139cdc624b968efad3d4a97b8078cdff95e63ac88ecafd1a0171",
+                            "url_suffix": "linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "052ad773397dc9e5aa99fb4cfef694175e6b1e81bb2ad1d3c8e7b3fc81441b7c",
+                            "url_suffix": "linux.tar.gz",
+                        },
+                    },
+                },
                 "27": {
                     "release_date": "2025-07-28",
                     "platforms": {
@@ -680,8 +751,38 @@ def _get_fallback_checksums(tool_name):
         "wizer": {
             "tool_name": "wizer",
             "github_repo": "bytecodealliance/wizer",
-            "latest_version": "9.0.0",
+            "latest_version": "10.0.0",
             "versions": {
+                "10.0.0": {
+                    "release_date": "2025-08-27",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "d6b2073efb38624399c1c6fc0d8c1e19ba24d7ab934f51c346b7d97d4bd8115c",
+                            "url_suffix": "x86_64-macos.tar.xz",
+                            "strip_prefix": "wizer-v10.0.0-x86_64-macos",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "5e3977e25defc869141dd8df3d25dde1dabe37ea377b7c01fa24693fe5bc7b3f",
+                            "url_suffix": "aarch64-macos.tar.xz",
+                            "strip_prefix": "wizer-v10.0.0-aarch64-macos",
+                        },
+                        "linux_amd64": {
+                            "sha256": "1e9dfaa2f6c436ca7acfdbb82c166f5b8a0062068f12916a554e82c97ca8d371",
+                            "url_suffix": "x86_64-linux.tar.xz",
+                            "strip_prefix": "wizer-v10.0.0-x86_64-linux",
+                        },
+                        "linux_arm64": {
+                            "sha256": "8ec7e50622aa7af37b5152f19d7a371f185c7af138033759caa3fdd3e17e2830",
+                            "url_suffix": "aarch64-linux.tar.xz",
+                            "strip_prefix": "wizer-v10.0.0-aarch64-linux",
+                        },
+                        "windows_amd64": {
+                            "sha256": "29a3aebb70927e9af7c505d3f3d14c5f8577eb307e8bd45151c184885a580d2f",
+                            "url_suffix": "x86_64-windows.zip",
+                            "strip_prefix": "wizer-v10.0.0-x86_64-windows",
+                        },
+                    },
+                },
                 "9.0.0": {
                     "release_date": "2024-06-03",
                     "platforms": {
