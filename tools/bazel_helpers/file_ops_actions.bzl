@@ -151,14 +151,8 @@ def prepare_workspace_action(ctx, config):
     file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
     file_ops_tool = file_ops_toolchain.file_ops_component
 
-    # Get wasmtime and WASM component from toolchain
-    wasmtime_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasmtime_toolchain_type"]
-    wasmtime_binary = wasmtime_toolchain.wasmtime
-
-    wasm_component = file_ops_toolchain.file_ops_wasm_component
-
     # Collect all input files and build operations list
-    all_inputs = [wasmtime_binary, wasm_component]
+    all_inputs = [file_ops_tool]
     operations = []
 
     # Process source files
@@ -220,8 +214,6 @@ def prepare_workspace_action(ctx, config):
     file_ops_config = {
         "workspace_dir": workspace_dir.path,  # Use full path for local execution
         "operations": operations,
-        "wasmtime_path": wasmtime_binary.path,
-        "wasm_component_path": wasm_component.path,
     }
 
     # Write config to a JSON file
