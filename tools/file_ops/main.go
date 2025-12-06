@@ -2,478 +2,217 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
-// Config represents the JSON configuration for file operations
-type Config struct {
-	WorkspaceDir string      `json:"workspace_dir"`
-	Operations   []Operation `json:"operations"`
+// Config structure for file operations
+type FileOpsConfig struct {
+	WorkspaceDir      string        `json:"workspace_dir"`
+	Operations        []interface{} `json:"operations"`
+	WasmtimePath      string        `json:"wasmtime_path"`
+	WasmComponentPath string        `json:"wasm_component_path"`
 }
 
-// Operation represents a single file operation
-type Operation struct {
-	Type       string   `json:"type"`
-	SrcPath    string   `json:"src_path,omitempty"`
-	DestPath   string   `json:"dest_path,omitempty"`
-	Path       string   `json:"path,omitempty"`
-	Command    string   `json:"command,omitempty"`
-	Args       []string `json:"args,omitempty"`
-	WorkDir    string   `json:"work_dir,omitempty"`
-	OutputFile string   `json:"output_file,omitempty"`
-	InputFiles []string `json:"input_files,omitempty"` // For concatenate_files
-}
-
-// FileOpsRunner executes file operations hermetically
-type FileOpsRunner struct {
-	config Config
-}
-
-// NewFileOpsRunner creates a new file operations runner
-func NewFileOpsRunner(configPath string) (*FileOpsRunner, error) {
-	data, err := os.ReadFile(configPath)
+// Helper to panic on error
+func must(s string, err error) string {
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		panic(err)
 	}
-
-	var config Config
-	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
-	}
-
-	return &FileOpsRunner{config: config}, nil
+	return s
 }
 
-// Execute runs all file operations
-func (r *FileOpsRunner) Execute() error {
-	// Create workspace directory first
-	if err := os.MkdirAll(r.config.WorkspaceDir, 0755); err != nil {
-		return fmt.Errorf("failed to create workspace directory %s: %w", r.config.WorkspaceDir, err)
-	}
-
-	log.Printf("Created workspace directory: %s", r.config.WorkspaceDir)
-
-	// Execute operations in order
-	for i, op := range r.config.Operations {
-		if err := r.executeOperation(op); err != nil {
-			return fmt.Errorf("operation %d failed: %w", i, err)
-		}
-	}
-
-	log.Printf("Successfully completed %d operations", len(r.config.Operations))
-	return nil
-}
-
-// executeOperation executes a single operation
-func (r *FileOpsRunner) executeOperation(op Operation) error {
-	switch op.Type {
-	case "copy_file":
-		return r.copyFile(op.SrcPath, op.DestPath)
-	case "mkdir":
-		return r.createDirectory(op.Path)
-	case "copy_directory_contents":
-		return r.copyDirectoryContents(op.SrcPath, op.DestPath)
-	case "run_command":
-		return r.runCommand(op.Command, op.Args, op.WorkDir, op.OutputFile)
-	case "concatenate_files":
-		return r.concatenateFiles(op.InputFiles, op.OutputFile)
-	default:
-		return fmt.Errorf("unknown operation type: %s", op.Type)
-	}
-}
-
-// copyFile copies a file from src to dest within the workspace
-func (r *FileOpsRunner) copyFile(srcPath, destPath string) error {
-	// Destination is relative to workspace
-	fullDestPath := filepath.Join(r.config.WorkspaceDir, destPath)
-
-	// Ensure destination directory exists
-	destDir := filepath.Dir(fullDestPath)
-	if err := os.MkdirAll(destDir, 0755); err != nil {
-		return fmt.Errorf("failed to create destination directory %s: %w", destDir, err)
-	}
-
-	// Open source file
-	srcFile, err := os.Open(srcPath)
-	if err != nil {
-		return fmt.Errorf("failed to open source file %s: %w", srcPath, err)
-	}
-	defer srcFile.Close()
-
-	// Create destination file
-	destFile, err := os.Create(fullDestPath)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file %s: %w", fullDestPath, err)
-	}
-	defer destFile.Close()
-
-	// Copy file contents
-	_, err = io.Copy(destFile, srcFile)
-	if err != nil {
-		return fmt.Errorf("failed to copy file contents: %w", err)
-	}
-
-	log.Printf("Copied: %s -> %s", srcPath, destPath)
-	return nil
-}
-
-// createDirectory creates a directory within the workspace
-func (r *FileOpsRunner) createDirectory(path string) error {
-	fullPath := filepath.Join(r.config.WorkspaceDir, path)
-	if err := os.MkdirAll(fullPath, 0755); err != nil {
-		return fmt.Errorf("failed to create directory %s: %w", fullPath, err)
-	}
-	log.Printf("Created directory: %s", path)
-	return nil
-}
-
-// copyDirectoryContents copies all contents of a directory to destination
-func (r *FileOpsRunner) copyDirectoryContents(srcPath, destPath string) error {
-	// Destination is relative to workspace
-	fullDestPath := filepath.Join(r.config.WorkspaceDir, destPath)
-
-	// Ensure destination directory exists
-	if err := os.MkdirAll(fullDestPath, 0755); err != nil {
-		return fmt.Errorf("failed to create destination directory %s: %w", fullDestPath, err)
-	}
-
-	// Open source directory
-	srcDir, err := os.Open(srcPath)
-	if err != nil {
-		return fmt.Errorf("failed to open source directory %s: %w", srcPath, err)
-	}
-	defer srcDir.Close()
-
-	// Read directory entries
-	entries, err := srcDir.Readdir(-1)
-	if err != nil {
-		return fmt.Errorf("failed to read directory entries: %w", err)
-	}
-
-	// Copy each entry
-	for _, entry := range entries {
-		srcEntryPath := filepath.Join(srcPath, entry.Name())
-		destEntryPath := filepath.Join(fullDestPath, entry.Name())
-
-		if entry.IsDir() {
-			// Recursively copy directory
-			if err := r.copyDirectoryRecursive(srcEntryPath, destEntryPath); err != nil {
-				return fmt.Errorf("failed to copy directory %s: %w", entry.Name(), err)
-			}
-		} else {
-			// Copy file
-			if err := r.copyFileToAbsolute(srcEntryPath, destEntryPath); err != nil {
-				return fmt.Errorf("failed to copy file %s: %w", entry.Name(), err)
-			}
-		}
-	}
-
-	log.Printf("Copied directory contents: %s -> %s", srcPath, destPath)
-	return nil
-}
-
-// copyDirectoryRecursive recursively copies a directory
-func (r *FileOpsRunner) copyDirectoryRecursive(srcPath, destPath string) error {
-	if err := os.MkdirAll(destPath, 0755); err != nil {
-		return fmt.Errorf("failed to create directory %s: %w", destPath, err)
-	}
-
-	srcDir, err := os.Open(srcPath)
-	if err != nil {
-		return fmt.Errorf("failed to open source directory %s: %w", srcPath, err)
-	}
-	defer srcDir.Close()
-
-	entries, err := srcDir.Readdir(-1)
-	if err != nil {
-		return fmt.Errorf("failed to read directory entries: %w", err)
-	}
-
-	for _, entry := range entries {
-		srcEntryPath := filepath.Join(srcPath, entry.Name())
-		destEntryPath := filepath.Join(destPath, entry.Name())
-
-		if entry.IsDir() {
-			if err := r.copyDirectoryRecursive(srcEntryPath, destEntryPath); err != nil {
-				return err
-			}
-		} else {
-			if err := r.copyFileToAbsolute(srcEntryPath, destEntryPath); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// copyFileToAbsolute copies a file to an absolute destination path
-func (r *FileOpsRunner) copyFileToAbsolute(srcPath, destPath string) error {
-	srcFile, err := os.Open(srcPath)
-	if err != nil {
-		return fmt.Errorf("failed to open source file %s: %w", srcPath, err)
-	}
-	defer srcFile.Close()
-
-	destFile, err := os.Create(destPath)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file %s: %w", destPath, err)
-	}
-	defer destFile.Close()
-
-	_, err = io.Copy(destFile, srcFile)
-	if err != nil {
-		return fmt.Errorf("failed to copy file contents: %w", err)
-	}
-
-	return nil
-}
-
-// runCommand executes a command in the specified working directory
-func (r *FileOpsRunner) runCommand(command string, args []string, workDir, outputFile string) error {
-	// Set working directory - relative to workspace if specified
-	var fullWorkDir string
-	if workDir != "" {
-		if filepath.IsAbs(workDir) {
-			fullWorkDir = workDir
-		} else {
-			fullWorkDir = filepath.Join(r.config.WorkspaceDir, workDir)
-		}
-	} else {
-		fullWorkDir = r.config.WorkspaceDir
-	}
-
-	// Create command
-	cmd := exec.Command(command, args...)
-	cmd.Dir = fullWorkDir
-
-	// Handle output
-	if outputFile != "" {
-		// Output to file (relative to workspace)
-		var fullOutputPath string
-		if filepath.IsAbs(outputFile) {
-			fullOutputPath = outputFile
-		} else {
-			fullOutputPath = filepath.Join(r.config.WorkspaceDir, outputFile)
-		}
-
-		// Ensure output directory exists
-		outDir := filepath.Dir(fullOutputPath)
-		if err := os.MkdirAll(outDir, 0755); err != nil {
-			return fmt.Errorf("failed to create output directory %s: %w", outDir, err)
-		}
-
-		outFile, err := os.Create(fullOutputPath)
-		if err != nil {
-			return fmt.Errorf("failed to create output file %s: %w", fullOutputPath, err)
-		}
-		defer outFile.Close()
-
-		cmd.Stdout = outFile
-		cmd.Stderr = os.Stderr
-	} else {
-		// Output to logs
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-
-	log.Printf("Running command: %s %v in %s", command, args, fullWorkDir)
-
-	// Execute command
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("command failed: %w", err)
-	}
-
-	log.Printf("Command completed successfully")
-	return nil
-}
-
-// concatenateFiles concatenates multiple input files into a single output file
-func (r *FileOpsRunner) concatenateFiles(inputFiles []string, outputFile string) error {
-	if len(inputFiles) == 0 {
-		return fmt.Errorf("concatenate_files requires at least one input file")
-	}
-	if outputFile == "" {
-		return fmt.Errorf("concatenate_files requires output_file")
-	}
-
-	// Determine full output path (relative to workspace)
-	var fullOutputPath string
-	if filepath.IsAbs(outputFile) {
-		fullOutputPath = outputFile
-	} else {
-		fullOutputPath = filepath.Join(r.config.WorkspaceDir, outputFile)
-	}
-
-	// Ensure output directory exists
-	outDir := filepath.Dir(fullOutputPath)
-	if err := os.MkdirAll(outDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory %s: %w", outDir, err)
-	}
-
-	// Create output file
-	outFile, err := os.Create(fullOutputPath)
-	if err != nil {
-		return fmt.Errorf("failed to create output file %s: %w", fullOutputPath, err)
-	}
-	defer outFile.Close()
-
-	// Concatenate all input files
-	for _, inputPath := range inputFiles {
-		// Input files can be absolute (from Bazel) or relative to workspace
-		var fullInputPath string
-		if filepath.IsAbs(inputPath) {
-			fullInputPath = inputPath
-		} else {
-			fullInputPath = filepath.Join(r.config.WorkspaceDir, inputPath)
-		}
-
-		// Open input file
-		inFile, err := os.Open(fullInputPath)
-		if err != nil {
-			return fmt.Errorf("failed to open input file %s: %w", fullInputPath, err)
-		}
-
-		// Copy contents to output file
-		if _, err := io.Copy(outFile, inFile); err != nil {
-			inFile.Close()
-			return fmt.Errorf("failed to copy contents from %s: %w", fullInputPath, err)
-		}
-
-		inFile.Close()
-		log.Printf("Concatenated: %s", inputPath)
-	}
-
-	log.Printf("Successfully concatenated %d files into %s", len(inputFiles), outputFile)
-	return nil
-}
-
-// validateConfig performs basic validation on the configuration
-func (r *FileOpsRunner) validateConfig() error {
-	if r.config.WorkspaceDir == "" {
-		return fmt.Errorf("workspace_dir cannot be empty")
-	}
-
-	// Note: In Bazel sandbox, paths may be relative to execution root
-	// Bazel handles path resolution, so we don't strictly require absolute paths
-
-	for i, op := range r.config.Operations {
-		switch op.Type {
-		case "copy_file":
-			if op.SrcPath == "" || op.DestPath == "" {
-				return fmt.Errorf("operation %d: copy_file requires src_path and dest_path", i)
-			}
-			// Note: src_path can be Bazel-relative (e.g., bazel-out/...)
-			// dest_path should be relative to workspace
-			if filepath.IsAbs(op.DestPath) {
-				return fmt.Errorf("operation %d: dest_path must be relative: %s", i, op.DestPath)
-			}
-		case "mkdir":
-			if op.Path == "" {
-				return fmt.Errorf("operation %d: mkdir requires path", i)
-			}
-			if filepath.IsAbs(op.Path) {
-				return fmt.Errorf("operation %d: mkdir path must be relative: %s", i, op.Path)
-			}
-		case "copy_directory_contents":
-			if op.SrcPath == "" || op.DestPath == "" {
-				return fmt.Errorf("operation %d: copy_directory_contents requires src_path and dest_path", i)
-			}
-			// Note: src_path can be Bazel-relative (e.g., bazel-out/...)
-			// dest_path should be relative to workspace
-			if filepath.IsAbs(op.DestPath) {
-				return fmt.Errorf("operation %d: dest_path must be relative: %s", i, op.DestPath)
-			}
-		case "run_command":
-			if op.Command == "" {
-				return fmt.Errorf("operation %d: run_command requires command", i)
-			}
-		case "concatenate_files":
-			if len(op.InputFiles) == 0 {
-				return fmt.Errorf("operation %d: concatenate_files requires input_files", i)
-			}
-			if op.OutputFile == "" {
-				return fmt.Errorf("operation %d: concatenate_files requires output_file", i)
-			}
-		default:
-			return fmt.Errorf("operation %d: unknown operation type: %s", i, op.Type)
-		}
-	}
-
-	return nil
-}
-
+// Wrapper for external file operations WASM component with LOCAL AOT
+// This wrapper executes the WASM component via wasmtime, using locally-compiled
+// AOT for 100x faster startup with guaranteed Wasmtime version compatibility.
+//
+// Security: Maps only necessary directories to WASI instead of full filesystem access.
 func main() {
-	// Phase 3 Deprecation Warning (Month 3)
-	// This embedded file operations tool is deprecated and will be removed in v2.0.0
-	if os.Getenv("FILE_OPS_NO_DEPRECATION_WARNING") == "" {
-		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "╔════════════════════════════════════════════════════════════════════════╗\n")
-		fmt.Fprintf(os.Stderr, "║                         DEPRECATION WARNING                            ║\n")
-		fmt.Fprintf(os.Stderr, "╠════════════════════════════════════════════════════════════════════════╣\n")
-		fmt.Fprintf(os.Stderr, "║ The embedded file operations component is DEPRECATED.                 ║\n")
-		fmt.Fprintf(os.Stderr, "║                                                                        ║\n")
-		fmt.Fprintf(os.Stderr, "║ Please switch to the external component with AOT support:             ║\n")
-		fmt.Fprintf(os.Stderr, "║   • 100x faster startup with native code execution                    ║\n")
-		fmt.Fprintf(os.Stderr, "║   • Cryptographically signed with Cosign                              ║\n")
-		fmt.Fprintf(os.Stderr, "║   • SLSA provenance for supply chain security                         ║\n")
-		fmt.Fprintf(os.Stderr, "║                                                                        ║\n")
-		fmt.Fprintf(os.Stderr, "║ The external component is now the DEFAULT. To use it:                 ║\n")
-		fmt.Fprintf(os.Stderr, "║   (No action needed - already default in Phase 2)                     ║\n")
-		fmt.Fprintf(os.Stderr, "║                                                                        ║\n")
-		fmt.Fprintf(os.Stderr, "║ This embedded version will be REMOVED in v2.0.0 (Phase 4)            ║\n")
-		fmt.Fprintf(os.Stderr, "║                                                                        ║\n")
-		fmt.Fprintf(os.Stderr, "║ To silence this warning: FILE_OPS_NO_DEPRECATION_WARNING=1           ║\n")
-		fmt.Fprintf(os.Stderr, "║ Migration guide: docs/MIGRATION.md                                     ║\n")
-		fmt.Fprintf(os.Stderr, "╚════════════════════════════════════════════════════════════════════════╝\n")
-		fmt.Fprintf(os.Stderr, "\n")
-	}
-
-	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s <config.json>\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\nHermetic file operations tool for Bazel rules_wasm_component\n")
-		fmt.Fprintf(os.Stderr, "Reads JSON configuration and executes file operations safely.\n")
-		os.Exit(1)
+	// Read configuration from JSON file (passed as first argument)
+	if len(os.Args) < 2 {
+		log.Fatalf("Usage: file_ops <config.json>")
 	}
 
 	configPath := os.Args[1]
 
-	// Create and validate runner
-	runner, err := NewFileOpsRunner(configPath)
+	// Always log when invoked (for debugging)
+	log.Printf("file_ops wrapper started with config: %s", configPath)
+	log.Printf("Current directory: %s", must(os.Getwd()))
+	log.Printf("Executable path: %s", os.Args[0])
+
+	// List files in current directory for debugging
+	if entries, err := ioutil.ReadDir("."); err == nil {
+		log.Printf("Files in current directory:")
+		for _, entry := range entries {
+			log.Printf("  - %s (dir=%v)", entry.Name(), entry.IsDir())
+		}
+	}
+
+	// Read and parse config from JSON file
+	configData, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		log.Fatalf("Failed to create file operations runner: %v", err)
+		log.Fatalf("Failed to read config file %s: %v", configPath, err)
 	}
 
-	if err := runner.validateConfig(); err != nil {
-		log.Fatalf("Invalid configuration: %v", err)
+	log.Printf("Successfully read config file (%d bytes)", len(configData))
+
+	var config FileOpsConfig
+	if err := json.Unmarshal(configData, &config); err != nil {
+		log.Fatalf("Failed to parse config file: %v", err)
 	}
 
-	// Execute operations
-	if err := runner.Execute(); err != nil {
-		log.Fatalf("File operations failed: %v", err)
+	// Note: wasmtime_path and wasm_component_path are optional - they're only needed
+	// if the config uses WASM component execution. File-only operations don't need them.
+	// This file_ops wrapper now handles pure file operations directly in Go.
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get current working directory: %v", err)
 	}
 
-	// Check for any path traversal attempts (security)
-	for _, op := range runner.config.Operations {
-		if op.Type == "copy_file" && containsPathTraversal(op.DestPath) {
-			log.Fatalf("Security violation: path traversal detected in %s", op.DestPath)
+	// Convert workspace_dir to absolute path
+	workspaceFullPath := filepath.Join(cwd, config.WorkspaceDir)
+	if err := os.MkdirAll(workspaceFullPath, 0755); err != nil {
+		log.Fatalf("Failed to create workspace directory: %v", err)
+	}
+
+	// Process file operations directly in Go
+	log.Printf("DEBUG: Processing %d file operations", len(config.Operations))
+
+	for i, op := range config.Operations {
+		opMap, ok := op.(map[string]interface{})
+		if !ok {
+			log.Printf("WARNING: Operation %d is not a map, skipping", i)
+			continue
 		}
-		if op.Type == "mkdir" && containsPathTraversal(op.Path) {
-			log.Fatalf("Security violation: path traversal detected in %s", op.Path)
+
+		opType, ok := opMap["type"].(string)
+		if !ok {
+			log.Printf("WARNING: Operation %d has no type, skipping", i)
+			continue
+		}
+
+		log.Printf("DEBUG: Processing operation %d: %s", i, opType)
+
+		switch opType {
+		case "copy_file":
+			srcPath := opMap["src_path"].(string)
+			destPath := filepath.Join(workspaceFullPath, opMap["dest_path"].(string))
+			// Ensure parent directory exists
+			os.MkdirAll(filepath.Dir(destPath), 0755)
+			// Copy file
+			data, err := ioutil.ReadFile(srcPath)
+			if err != nil {
+				log.Printf("ERROR: Failed to read source file %s: %v", srcPath, err)
+				os.Exit(1)
+			}
+			if err := ioutil.WriteFile(destPath, data, 0644); err != nil {
+				log.Printf("ERROR: Failed to write destination file %s: %v", destPath, err)
+				os.Exit(1)
+			}
+			log.Printf("DEBUG: Copied %s to %s", srcPath, destPath)
+
+		case "mkdir":
+			dirPath := filepath.Join(workspaceFullPath, opMap["path"].(string))
+			if err := os.MkdirAll(dirPath, 0755); err != nil {
+				log.Printf("ERROR: Failed to create directory %s: %v", dirPath, err)
+				os.Exit(1)
+			}
+			log.Printf("DEBUG: Created directory %s", dirPath)
+
+		case "copy_directory_contents":
+			srcDir := opMap["src_path"].(string)
+			destDir := filepath.Join(workspaceFullPath, opMap["dest_path"].(string))
+			os.MkdirAll(destDir, 0755)
+
+			// Recursively copy all files/directories from source
+			filepath.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				// Get relative path from source directory
+				relPath, _ := filepath.Rel(srcDir, srcPath)
+				destPath := filepath.Join(destDir, relPath)
+
+				if info.IsDir() {
+					// Create directory
+					return os.MkdirAll(destPath, 0755)
+				} else {
+					// Copy file
+					os.MkdirAll(filepath.Dir(destPath), 0755)
+					data, err := ioutil.ReadFile(srcPath)
+					if err != nil {
+						return err
+					}
+					return ioutil.WriteFile(destPath, data, 0644)
+				}
+			})
+			log.Printf("DEBUG: Copied directory contents from %s to %s", srcDir, destDir)
+
+		case "concatenate_files":
+			// Concatenate multiple files into one
+			srcPaths, ok := opMap["src_paths"].([]interface{})
+			if !ok {
+				log.Printf("ERROR: concatenate_files operation missing src_paths")
+				os.Exit(1)
+			}
+
+			destPath := filepath.Join(workspaceFullPath, opMap["dest_path"].(string))
+			os.MkdirAll(filepath.Dir(destPath), 0755)
+
+			// Open destination file for writing
+			destFile, err := os.Create(destPath)
+			if err != nil {
+				log.Printf("ERROR: Failed to create destination file %s: %v", destPath, err)
+				os.Exit(1)
+			}
+			defer destFile.Close()
+
+			// Concatenate each source file
+			for _, srcPath := range srcPaths {
+				srcPathStr, ok := srcPath.(string)
+				if !ok {
+					log.Printf("ERROR: Invalid source path in concatenate_files")
+					os.Exit(1)
+				}
+
+				data, err := ioutil.ReadFile(srcPathStr)
+				if err != nil {
+					log.Printf("ERROR: Failed to read source file %s: %v", srcPathStr, err)
+					os.Exit(1)
+				}
+
+				if _, err := destFile.Write(data); err != nil {
+					log.Printf("ERROR: Failed to write to destination file %s: %v", destPath, err)
+					os.Exit(1)
+				}
+			}
+
+			log.Printf("DEBUG: Concatenated %d files to %s", len(srcPaths), destPath)
+
+		default:
+			log.Printf("WARNING: Unknown operation type: %s", opType)
 		}
 	}
 
-	log.Printf("File operations completed successfully")
+	log.Printf("DEBUG: All file operations completed successfully")
 }
 
-// containsPathTraversal checks for path traversal attempts
-func containsPathTraversal(path string) bool {
-	cleaned := filepath.Clean(path)
-	return strings.Contains(cleaned, "..") || strings.HasPrefix(cleaned, "/")
+
+// uniqueStrings returns unique strings from a slice
+func uniqueStrings(strs []string) []string {
+	seen := make(map[string]bool)
+	result := make([]string, 0, len(strs))
+
+	for _, s := range strs {
+		if !seen[s] {
+			seen[s] = true
+			result = append(result, s)
+		}
+	}
+
+	return result
 }

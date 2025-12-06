@@ -325,8 +325,8 @@ with open(sys.argv[3], 'w') as f:
                 "workspace_dir": ".",
                 "operations": [{
                     "type": "concatenate_files",
-                    "input_files": [temp_wrapper.path, ctx.file.bindgen.path],
-                    "output_file": out_file.path,
+                    "src_paths": [temp_wrapper.path, ctx.file.bindgen.path],
+                    "dest_path": out_file.path,
                 }],
             }),
         )

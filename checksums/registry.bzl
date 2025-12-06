@@ -550,6 +550,14 @@ def _get_fallback_checksums(tool_name):
                             "sha256": "052ad773397dc9e5aa99fb4cfef694175e6b1e81bb2ad1d3c8e7b3fc81441b7c",
                             "url_suffix": "linux.tar.gz",
                         },
+                        "windows_amd64": {
+                            "sha256": "6c19b820577486f00332ad8d04ac506da67b0892316b8d485371a58cbf216dee",
+                            "url_suffix": "x86_64-windows.tar.gz",
+                        },
+                        "windows_arm64": {
+                            "sha256": "7b6eb58c88e5bd0913a90e5a8f63cb898b82372088b4c7537390a990ed03f9cd",
+                            "url_suffix": "arm64-windows.tar.gz",
+                        },
                     },
                 },
                 "27": {

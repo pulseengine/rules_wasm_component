@@ -9,9 +9,11 @@ def _file_ops_toolchain_impl(ctx):
 
     return [platform_common.ToolchainInfo(
         file_ops_component = ctx.executable.file_ops_component,
+        file_ops_wasm_component = ctx.file.wasm_component,
         file_ops_info = struct(
             component = ctx.executable.file_ops_component,
             wit_files = ctx.files.wit_files,
+            wasm_component = ctx.file.wasm_component,
         ),
     )]
 
@@ -23,6 +25,12 @@ file_ops_toolchain = rule(
             executable = True,
             cfg = "exec",
             doc = "File Operations Component executable",
+        ),
+        "wasm_component": attr.label(
+            mandatory = True,
+            allow_single_file = [".wasm"],
+            cfg = "exec",
+            doc = "WASM component file for file operations",
         ),
         "wit_files": attr.label_list(
             allow_files = [".wit"],
@@ -39,7 +47,7 @@ def _file_ops_toolchain_repository_impl(repository_ctx):
     repository_ctx.file("BUILD.bazel", """
 load("@rules_wasm_component//toolchains:file_ops_toolchain.bzl", "file_ops_toolchain")
 
-# File Operations Toolchain using built component
+# File Operations Toolchain using external WASM component
 file_ops_toolchain(
     name = "file_ops_toolchain_impl",
     file_ops_component = "@rules_wasm_component//tools/file_ops:file_ops",
