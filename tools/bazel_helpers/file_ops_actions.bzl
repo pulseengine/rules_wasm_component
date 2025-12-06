@@ -214,10 +214,11 @@ def prepare_workspace_action(ctx, config):
         ])
 
     # Build JSON config for file operations tool
-    # Use absolute paths in the sandbox - wasmtime_binary and wasm_component are Files
-    # so we can get their paths relative to the execution root
+    # Use absolute paths for local execution
+    # When file_ops runs with local:1, it needs the FULL path where Bazel expects the output
+    # This is the path property (absolute), not short_path (relative)
     file_ops_config = {
-        "workspace_dir": workspace_dir.short_path,
+        "workspace_dir": workspace_dir.path,  # Use full path for local execution
         "operations": operations,
         "wasmtime_path": wasmtime_binary.path,
         "wasm_component_path": wasm_component.path,
@@ -231,6 +232,8 @@ def prepare_workspace_action(ctx, config):
     )
 
     # Execute the hermetic file operations tool
+    # Use local execution to ensure directory is created in execroot (not in sandbox)
+    # This ensures subsequent actions that depend on this directory can access it
     ctx.actions.run(
         executable = file_ops_tool,
         arguments = [config_file.path],
@@ -241,6 +244,9 @@ def prepare_workspace_action(ctx, config):
             config.get("workspace_type", "generic"),
             ctx.label,
         ),
+        execution_requirements = {
+            "local": "1",  # Run locally to ensure directory materialization in execroot
+        },
     )
 
     return workspace_dir
@@ -261,10 +267,20 @@ def setup_go_module_action(ctx, sources, go_mod = None, go_sum = None, wit_file 
         Prepared Go module directory
     """
 
+    # Convert sources list to operations with proper destination paths
+    # For Go modules, we want source files to be copied to workspace root with their basenames
+    sources_config = []
+    for src in sources:
+        sources_config.append({
+            "source": src,
+            "destination": src.basename,  # Use basename for Go source files
+            "preserve_permissions": False,
+        })
+
     config = {
         "work_dir": ctx.label.name + "_gomod",
         "workspace_type": "go",
-        "sources": [{"source": src, "destination": None, "preserve_permissions": False} for src in sources],
+        "sources": sources_config,
         "headers": [],
         "dependencies": [],
         "go_binary": go_binary,  # Pass Go binary for dependency resolution
