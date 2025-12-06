@@ -152,6 +152,47 @@ func main() {
 			})
 			log.Printf("DEBUG: Copied directory contents from %s to %s", srcDir, destDir)
 
+		case "concatenate_files":
+			// Concatenate multiple files into one
+			srcPaths, ok := opMap["src_paths"].([]interface{})
+			if !ok {
+				log.Printf("ERROR: concatenate_files operation missing src_paths")
+				os.Exit(1)
+			}
+
+			destPath := filepath.Join(workspaceFullPath, opMap["dest_path"].(string))
+			os.MkdirAll(filepath.Dir(destPath), 0755)
+
+			// Open destination file for writing
+			destFile, err := os.Create(destPath)
+			if err != nil {
+				log.Printf("ERROR: Failed to create destination file %s: %v", destPath, err)
+				os.Exit(1)
+			}
+			defer destFile.Close()
+
+			// Concatenate each source file
+			for _, srcPath := range srcPaths {
+				srcPathStr, ok := srcPath.(string)
+				if !ok {
+					log.Printf("ERROR: Invalid source path in concatenate_files")
+					os.Exit(1)
+				}
+
+				data, err := ioutil.ReadFile(srcPathStr)
+				if err != nil {
+					log.Printf("ERROR: Failed to read source file %s: %v", srcPathStr, err)
+					os.Exit(1)
+				}
+
+				if _, err := destFile.Write(data); err != nil {
+					log.Printf("ERROR: Failed to write to destination file %s: %v", destPath, err)
+					os.Exit(1)
+				}
+			}
+
+			log.Printf("DEBUG: Concatenated %d files to %s", len(srcPaths), destPath)
+
 		default:
 			log.Printf("WARNING: Unknown operation type: %s", opType)
 		}
