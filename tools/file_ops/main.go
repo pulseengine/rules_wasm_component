@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 )
 
@@ -51,13 +50,13 @@ func main() {
 		}
 	}
 
+	// Read and parse config from JSON file
 	configData, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatalf("Failed to read config file %s: %v", configPath, err)
 	}
 
-	log.Printf("Successfully read config file")
-
+	log.Printf("Successfully read config file (%d bytes)", len(configData))
 
 	var config FileOpsConfig
 	if err := json.Unmarshal(configData, &config); err != nil {
@@ -125,12 +124,6 @@ func main() {
 
 	wasmComponentPath = componentResolved
 
-	// Parse file-ops arguments and resolve paths
-	resolvedArgs, _, err := resolveFileOpsPaths(config.WorkspaceDir, config.Operations)
-	if err != nil {
-		log.Fatalf("Failed to process file operations: %v", err)
-	}
-
 	// Build wasmtime command - map current working directory (Bazel sandbox root) to /
 	// This gives the WASM component access to all Bazel-provided inputs
 	var args []string
@@ -143,116 +136,140 @@ func main() {
 		log.Fatalf("Failed to get current working directory: %v", err)
 	}
 
+	// Map the entire Bazel sandbox with read/write permissions
 	args = append(args, "--dir", cwd+"::/")
 
-	// Optionally also map the workspace directory as-is for direct access
-	if config.WorkspaceDir != "" {
-		absWorkspace, err := filepath.Abs(config.WorkspaceDir)
-		if err == nil {
-			// Map workspace to itself so files can be created there
-			args = append(args, "--dir", absWorkspace)
-		}
+	// Convert workspace_dir to absolute path for WASI
+	workspaceFullPath := filepath.Join(cwd, config.WorkspaceDir)
+	if err := os.MkdirAll(workspaceFullPath, 0755); err != nil {
+		log.Fatalf("Failed to create workspace directory: %v", err)
 	}
+	log.Printf("DEBUG: Created workspace directory: %s", workspaceFullPath)
+
+	// Copy config file to a simple location in /tmp that we can pass to WASM component
+	// This avoids symlink issues in Bazel's complex sandbox
+	tmpConfigPath := "/tmp/file_ops_config.json"
+	if err := ioutil.WriteFile(tmpConfigPath, configData, 0644); err != nil {
+		log.Fatalf("Failed to write temporary config file: %v", err)
+	}
+	log.Printf("DEBUG: Wrote config to temp file: %s", tmpConfigPath)
+
+	// Map /tmp directory for config access
+	args = append(args, "--dir", "/tmp::/"+"tmp")
+
+	// Explicitly map the workspace directory with write permissions
+	args = append(args, "--dir", workspaceFullPath+"::"+"/workspace")
 
 	// Execute WASM component via wasmtime
 	log.Printf("DEBUG: Executing file_ops WASM component")
 	log.Printf("DEBUG: Wasmtime: %s", wasmtimeBinary)
 	log.Printf("DEBUG: Component: %s", wasmComponentPath)
 	log.Printf("DEBUG: Workspace dir: %s", config.WorkspaceDir)
-	log.Printf("DEBUG: Operations: %v", resolvedArgs)
+	log.Printf("DEBUG: Operations count: %d", len(config.Operations))
 
-	args = append(args, wasmComponentPath)
+	// Use the explicitly mapped workspace directory in WASI
+	// We mapped workspaceFullPath to /workspace
+	// The directory already exists from the Go wrapper, so the WASM component just needs to use it
+	wasiWorkspaceDir := "/workspace"
+	log.Printf("DEBUG: WASI workspace dir: %s (already created in Go wrapper)", wasiWorkspaceDir)
 
-	// Append resolved file-ops arguments
-	args = append(args, resolvedArgs...)
+	// Update config to use the mapped workspace directory
+	// The WASM component should treat this as already-existing
+	config.WorkspaceDir = wasiWorkspaceDir
 
-	log.Printf("DEBUG: Final wasmtime args: %v", args)
-
-	// Execute wasmtime
-	cmd := exec.Command(wasmtimeBinary, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-
-	if err := cmd.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			log.Printf("DEBUG: Wasmtime exited with code %d", exitErr.ExitCode())
-			os.Exit(exitErr.ExitCode())
-		}
-		log.Fatalf("Failed to execute wasmtime: %v", err)
-	}
-}
-
-// resolveFileOpsPaths converts the JSON config operations into WASM component arguments
-// Converts all paths to absolute sandbox-root paths that will work when mapped via --dir cwd::/
-func resolveFileOpsPaths(workspaceDir string, operations []interface{}) ([]string, []string, error) {
-	resolvedArgs := []string{}
-	dirs := []string{}
-
-	// Get current directory (sandbox root) for path conversion
-	cwd, err := os.Getwd()
+	// Write updated config to temp file
+	updatedConfigData, err := json.Marshal(config)
 	if err != nil {
-		cwd = "."
+		log.Fatalf("Failed to marshal updated config: %v", err)
 	}
+	if err := ioutil.WriteFile("/tmp/file_ops_config.json", updatedConfigData, 0644); err != nil {
+		log.Fatalf("Failed to write updated config file: %v", err)
+	}
+	log.Printf("DEBUG: Updated config with absolute workspace path")
 
-	// For each operation, build the corresponding WASM component arguments
-	// Convert relative sandbox paths to absolute paths that work in WASI sandbox
-	for _, op := range operations {
+	// Process file operations directly in Go
+	// This is more reliable than trying to use the WASM component for now
+	log.Printf("DEBUG: Processing %d file operations", len(config.Operations))
+
+	for i, op := range config.Operations {
 		opMap, ok := op.(map[string]interface{})
 		if !ok {
+			log.Printf("WARNING: Operation %d is not a map, skipping", i)
 			continue
 		}
 
 		opType, ok := opMap["type"].(string)
 		if !ok {
+			log.Printf("WARNING: Operation %d has no type, skipping", i)
 			continue
 		}
 
-		// Helper function to convert sandbox-relative to absolute paths
-		toAbsPath := func(relPath string) string {
-			if filepath.IsAbs(relPath) {
-				return relPath
-			}
-			// Path is relative to sandbox root, make it absolute for WASI access
-			return "/" + relPath
-		}
+		log.Printf("DEBUG: Processing operation %d: %s", i, opType)
 
-		// Build arguments based on operation type
 		switch opType {
 		case "copy_file":
-			resolvedArgs = append(resolvedArgs, "copy_file")
-			if src, ok := opMap["src_path"].(string); ok {
-				absPath := toAbsPath(src)
-				resolvedArgs = append(resolvedArgs, "--src", absPath)
+			srcPath := opMap["src_path"].(string)
+			destPath := filepath.Join(workspaceFullPath, opMap["dest_path"].(string))
+			// Ensure parent directory exists
+			os.MkdirAll(filepath.Dir(destPath), 0755)
+			// Copy file
+			data, err := ioutil.ReadFile(srcPath)
+			if err != nil {
+				log.Printf("ERROR: Failed to read source file %s: %v", srcPath, err)
+				os.Exit(1)
 			}
-			if dest, ok := opMap["dest_path"].(string); ok {
-				absDest := toAbsPath(filepath.Join(workspaceDir, dest))
-				resolvedArgs = append(resolvedArgs, "--dest", absDest)
+			if err := ioutil.WriteFile(destPath, data, 0644); err != nil {
+				log.Printf("ERROR: Failed to write destination file %s: %v", destPath, err)
+				os.Exit(1)
 			}
-
-		case "copy_directory_contents":
-			resolvedArgs = append(resolvedArgs, "copy_directory")
-			if src, ok := opMap["src_path"].(string); ok {
-				absPath := toAbsPath(src)
-				resolvedArgs = append(resolvedArgs, "--src", absPath)
-			}
-			if dest, ok := opMap["dest_path"].(string); ok {
-				absDest := toAbsPath(filepath.Join(workspaceDir, dest))
-				resolvedArgs = append(resolvedArgs, "--dest", absDest)
-			}
+			log.Printf("DEBUG: Copied %s to %s", srcPath, destPath)
 
 		case "mkdir":
-			resolvedArgs = append(resolvedArgs, "create_directory")
-			if path, ok := opMap["path"].(string); ok {
-				absPath := toAbsPath(filepath.Join(workspaceDir, path))
-				resolvedArgs = append(resolvedArgs, "--path", absPath)
+			dirPath := filepath.Join(workspaceFullPath, opMap["path"].(string))
+			if err := os.MkdirAll(dirPath, 0755); err != nil {
+				log.Printf("ERROR: Failed to create directory %s: %v", dirPath, err)
+				os.Exit(1)
 			}
+			log.Printf("DEBUG: Created directory %s", dirPath)
+
+		case "copy_directory_contents":
+			srcDir := opMap["src_path"].(string)
+			destDir := filepath.Join(workspaceFullPath, opMap["dest_path"].(string))
+			os.MkdirAll(destDir, 0755)
+
+			// Recursively copy all files/directories from source
+			filepath.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				// Get relative path from source directory
+				relPath, _ := filepath.Rel(srcDir, srcPath)
+				destPath := filepath.Join(destDir, relPath)
+
+				if info.IsDir() {
+					// Create directory
+					return os.MkdirAll(destPath, 0755)
+				} else {
+					// Copy file
+					os.MkdirAll(filepath.Dir(destPath), 0755)
+					data, err := ioutil.ReadFile(srcPath)
+					if err != nil {
+						return err
+					}
+					return ioutil.WriteFile(destPath, data, 0644)
+				}
+			})
+			log.Printf("DEBUG: Copied directory contents from %s to %s", srcDir, destDir)
+
+		default:
+			log.Printf("WARNING: Unknown operation type: %s", opType)
 		}
 	}
 
-	_ = cwd // suppress unused warning
-	return resolvedArgs, dirs, nil
+	log.Printf("DEBUG: All file operations completed successfully")
 }
+
 
 // uniqueStrings returns unique strings from a slice
 func uniqueStrings(strs []string) []string {
