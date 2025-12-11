@@ -22,6 +22,10 @@
         "linux_arm64": {
           "sha256": "052ad773397dc9e5aa99fb4cfef694175e6b1e81bb2ad1d3c8e7b3fc81441b7c",
           "url_suffix": "arm64-linux.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "ea5eb0580ffa1530644dd1fed1f7117ad72ec3d7956901561470a3b8c54cce43",
+          "url_suffix": "x86_64-windows.tar.gz"
         }
       }
     },
