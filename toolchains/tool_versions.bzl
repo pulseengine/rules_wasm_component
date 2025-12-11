@@ -3,12 +3,23 @@
 This file defines the canonical versions for all WebAssembly toolchain components.
 All toolchain setup code MUST reference these constants to ensure version consistency.
 
+TOOLCHAIN BUNDLES:
+For validated, tested combinations of tool versions, see checksums/toolchain_bundles.json.
+Bundles provide:
+- Pre-tested tool version combinations
+- Guaranteed compatibility
+- Easy atomic upgrades
+
+To use a bundle:
+    wasm_component_toolchains(bundle = "stable-2025-12")
+
 IMPORTANT: When updating versions here:
 1. Update corresponding JSON registry in checksums/tools/<tool>.json
 2. Verify compatibility using validate_tool_compatibility() in checksums/registry.bzl
 3. Check embedded runtimes (rust_wasm_component_bindgen.bzl) for API compatibility
 4. Update Cargo.toml dependencies if using the tool as a crate
 5. Test the full build pipeline
+6. Update checksums/toolchain_bundles.json with new validated combinations
 """
 
 # Tool versions - single source of truth
