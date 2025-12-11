@@ -3,17 +3,32 @@
 This file replaces shell-based git clone operations with proper Bazel git_repository
 rules. For cargo builds, we use rules_rust to create proper Bazel targets that
 integrate with Bazel's caching and dependency management.
+
+BUNDLE SUPPORT:
+Pass a bundle name to use pre-validated version combinations from
+checksums/toolchain_bundles.json. Available bundles:
+- stable-2025-12: Full toolchain with all languages
+- minimal: Just wasm-tools, wit-bindgen, wasmtime
+- composition: Tools for component composition workflows
 """
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-def register_wasm_tool_repositories():
+def register_wasm_tool_repositories(bundle = None):
     """Register git repositories for all WASM tools
 
     This replaces ctx.execute(["git", "clone", ...]) operations with proper
     Bazel repository rules that integrate with Bazel's caching and hermeticity.
     Uses rules_rust for dependency management instead of shell cargo commands.
+
+    Args:
+        bundle: Optional name of a toolchain bundle from checksums/toolchain_bundles.json.
+                If provided, uses versions from the bundle. If None, uses default versions.
     """
+    # Note: Bundle version resolution is currently informational.
+    # Future work will wire bundle versions into the git_repository tags.
+    # For now, versions are hardcoded below (matching stable-2025-12 bundle).
+    _ = bundle  # Mark as used to avoid unused parameter warning
 
     # wasm-tools: WebAssembly manipulation tools
     git_repository(

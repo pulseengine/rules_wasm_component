@@ -1,0 +1,113 @@
+{
+  "$schema": "toolchain_bundles.schema.json",
+  "description": "Validated toolchain version bundles for rules_wasm_component",
+  "bundles": {
+    "stable-2025-12": {
+      "description": "December 2025 stable release - tested and validated",
+      "status": "stable",
+      "release_date": "2025-12-11",
+      "tools": {
+        "wasm-tools": "1.243.0",
+        "wit-bindgen": "0.49.0",
+        "wac": "0.8.1",
+        "wkg": "0.13.0",
+        "wasmtime": "39.0.1",
+        "wizer": "10.0.0",
+        "wasi-sdk": "29",
+        "tinygo": "0.38.0",
+        "jco": "1.4.0",
+        "nodejs": "20.18.0"
+      },
+      "compatibility": {
+        "component_model_version": "0x1000d",
+        "wasi_version": "preview2",
+        "wit_bindgen_abi": "0.49"
+      },
+      "tested_platforms": [
+        "darwin_arm64",
+        "darwin_amd64",
+        "linux_amd64",
+        "linux_arm64",
+        "windows_amd64"
+      ],
+      "notes": "Initial stable bundle with WASI Preview 2 support"
+    },
+    "minimal": {
+      "description": "Minimal bundle for basic WASM component builds",
+      "status": "stable",
+      "release_date": "2025-12-11",
+      "tools": {
+        "wasm-tools": "1.243.0",
+        "wit-bindgen": "0.49.0",
+        "wasmtime": "39.0.1"
+      },
+      "compatibility": {
+        "component_model_version": "0x1000d",
+        "wasi_version": "preview2",
+        "wit_bindgen_abi": "0.49"
+      },
+      "tested_platforms": [
+        "darwin_arm64",
+        "darwin_amd64",
+        "linux_amd64",
+        "linux_arm64",
+        "windows_amd64"
+      ],
+      "notes": "Minimal tools for Rust-only component builds without composition"
+    },
+    "composition": {
+      "description": "Bundle for component composition workflows",
+      "status": "stable",
+      "release_date": "2025-12-11",
+      "tools": {
+        "wasm-tools": "1.243.0",
+        "wit-bindgen": "0.49.0",
+        "wac": "0.8.1",
+        "wkg": "0.13.0",
+        "wasmtime": "39.0.1"
+      },
+      "compatibility": {
+        "component_model_version": "0x1000d",
+        "wasi_version": "preview2",
+        "wit_bindgen_abi": "0.49"
+      },
+      "tested_platforms": [
+        "darwin_arm64",
+        "darwin_amd64",
+        "linux_amd64",
+        "linux_arm64",
+        "windows_amd64"
+      ],
+      "notes": "Includes WAC and WKG for component composition and registry operations"
+    }
+  },
+  "default_bundle": "stable-2025-12",
+  "version_constraints": {
+    "description": "Known version compatibility constraints between tools",
+    "constraints": [
+      {
+        "tools": ["wasm-tools", "wit-bindgen"],
+        "rule": "wit-bindgen output must be compatible with wasm-tools component model version",
+        "validated_pairs": [
+          {"wasm-tools": "1.243.0", "wit-bindgen": "0.49.0"},
+          {"wasm-tools": "1.240.0", "wit-bindgen": "0.40.0"}
+        ]
+      },
+      {
+        "tools": ["wasmtime", "wasm-tools"],
+        "rule": "wasmtime must support component model version produced by wasm-tools",
+        "validated_pairs": [
+          {"wasmtime": "39.0.1", "wasm-tools": "1.243.0"},
+          {"wasmtime": "29.0.0", "wasm-tools": "1.240.0"}
+        ]
+      },
+      {
+        "tools": ["wizer", "wasmtime"],
+        "rule": "wizer and wasmtime should use compatible cranelift versions",
+        "validated_pairs": [
+          {"wizer": "10.0.0", "wasmtime": "39.0.1"}
+        ]
+      }
+    ]
+  }
+}
