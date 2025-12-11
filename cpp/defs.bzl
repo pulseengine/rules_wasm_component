@@ -52,6 +52,11 @@ Example usage:
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
+load(
+    "//cpp:cpp_wasm_binary.bzl",
+    _c_wasm_binary = "c_wasm_binary",
+    _cpp_wasm_binary = "cpp_wasm_binary",
+)
 
 def _cpp_component_impl(ctx):
     """Implementation of cpp_component rule for C/C++ WebAssembly components.
@@ -1083,3 +1088,7 @@ cc_component_library = rule(
         )
     """,
 )
+
+# Re-export binary rules for convenience
+cpp_wasm_binary = _cpp_wasm_binary
+c_wasm_binary = _c_wasm_binary

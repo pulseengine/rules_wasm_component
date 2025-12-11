@@ -1,0 +1,57 @@
+"""Tests for cpp_wasm_binary and c_wasm_binary rules
+
+This tests the cpp_wasm_binary and c_wasm_binary rules that create WASI CLI executables.
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//cpp:defs.bzl", "c_wasm_binary", "cpp_wasm_binary")
+
+package(default_testonly = True)
+
+# Test 1: Basic C++ CLI binary
+cpp_wasm_binary(
+    name = "hello_cpp",
+    srcs = ["hello.cpp"],
+    cxx_std = "c++17",
+)
+
+# Test 2: Basic C CLI binary
+c_wasm_binary(
+    name = "hello_c",
+    srcs = ["hello.c"],
+)
+
+# Test 3: C++ with optimizations disabled (debug mode)
+cpp_wasm_binary(
+    name = "hello_cpp_debug",
+    srcs = ["hello.cpp"],
+    cxx_std = "c++17",
+    optimize = False,
+)
+
+# Build tests to ensure compilation succeeds
+build_test(
+    name = "hello_cpp_build_test",
+    targets = [":hello_cpp"],
+)
+
+build_test(
+    name = "hello_c_build_test",
+    targets = [":hello_c"],
+)
+
+build_test(
+    name = "hello_cpp_debug_build_test",
+    targets = [":hello_cpp_debug"],
+)
+
+# Test suite
+test_suite(
+    name = "cpp_binary_tests",
+    tests = [
+        ":hello_c_build_test",
+        ":hello_cpp_build_test",
+        ":hello_cpp_debug_build_test",
+    ],
+    visibility = ["//visibility:public"],
+)
