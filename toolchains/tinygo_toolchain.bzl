@@ -10,6 +10,11 @@ Architecture:
 - wasm-tools for component transformation
 """
 
+load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
+
+_TINYGO_TOOLCHAIN_DOC = """
+"""
+
 def _detect_host_platform(repository_ctx):
     """Detect the host platform for tool downloads"""
     os_name = repository_ctx.os.name.lower()
@@ -267,7 +272,19 @@ def _tinygo_toolchain_repository_impl(repository_ctx):
     """Implementation of TinyGo toolchain repository rule"""
 
     platform = _detect_host_platform(repository_ctx)
-    tinygo_version = repository_ctx.attr.tinygo_version
+    bundle_name = repository_ctx.attr.bundle
+
+    # Resolve version from bundle if specified, otherwise use explicit version
+    if bundle_name:
+        tinygo_version = get_version_for_tool(
+            repository_ctx,
+            "tinygo",
+            bundle_name = bundle_name,
+            fallback_version = repository_ctx.attr.tinygo_version,
+        )
+        log_bundle_usage(repository_ctx, "tinygo", tinygo_version, bundle_name)
+    else:
+        tinygo_version = repository_ctx.attr.tinygo_version
 
     print("Setting up TinyGo toolchain v{} for {}".format(tinygo_version, platform))
 
@@ -387,8 +404,12 @@ toolchain(
 tinygo_toolchain_repository = repository_rule(
     implementation = _tinygo_toolchain_repository_impl,
     attrs = {
+        "bundle": attr.string(
+            doc = "Toolchain bundle name. If set, version is read from checksums/toolchain_bundles.json",
+            default = "",
+        ),
         "tinygo_version": attr.string(
-            doc = "TinyGo version to download and use",
+            doc = "TinyGo version to download and use. Ignored if bundle is specified.",
             default = "0.39.0",
         ),
     },

@@ -1,6 +1,7 @@
 """Wasmtime toolchain definitions for WebAssembly component runtime"""
 
 load("//checksums:registry.bzl", "get_tool_info")
+load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 
 def _wasmtime_toolchain_impl(ctx):
     """Implementation of wasmtime_toolchain rule"""
@@ -51,7 +52,19 @@ def _wasmtime_repository_impl(repository_ctx):
 
     strategy = repository_ctx.attr.strategy
     platform = _detect_host_platform(repository_ctx)
-    version = repository_ctx.attr.version
+    bundle_name = repository_ctx.attr.bundle
+
+    # Resolve version from bundle if specified, otherwise use explicit version
+    if bundle_name:
+        version = get_version_for_tool(
+            repository_ctx,
+            "wasmtime",
+            bundle_name = bundle_name,
+            fallback_version = repository_ctx.attr.version,
+        )
+        log_bundle_usage(repository_ctx, "wasmtime", version, bundle_name)
+    else:
+        version = repository_ctx.attr.version
 
     print("Setting up wasmtime {} for platform {} using strategy {}".format(
         version,
@@ -149,12 +162,16 @@ def _setup_downloaded_wasmtime(repository_ctx, platform, version):
 wasmtime_repository = repository_rule(
     implementation = _wasmtime_repository_impl,
     attrs = {
+        "bundle": attr.string(
+            doc = "Toolchain bundle name. If set, version is read from checksums/toolchain_bundles.json",
+            default = "",
+        ),
         "strategy": attr.string(
             doc = "Installation strategy: 'download'",
             default = "download",
         ),
         "version": attr.string(
-            doc = "Wasmtime version to install",
+            doc = "Wasmtime version to install. Ignored if bundle is specified.",
             default = "35.0.0",  # Latest version from our registry
         ),
     },

@@ -1,6 +1,7 @@
 """WebAssembly toolchain definitions with enhanced tool management"""
 
 load("//checksums:registry.bzl", "get_tool_info", "validate_tool_compatibility")
+load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error", "log_diagnostic_info", "validate_system_tool")
 load("//toolchains:monitoring.bzl", "add_build_telemetry", "create_health_check")
 load("//toolchains:tool_cache.bzl", "cache_tool", "clean_expired_cache", "retrieve_cached_tool", "validate_tool_functionality")
@@ -125,7 +126,19 @@ def _wasm_toolchain_repository_impl(repository_ctx):
 
     strategy = repository_ctx.attr.strategy
     platform = _detect_host_platform(repository_ctx)
-    version = repository_ctx.attr.version
+    bundle_name = repository_ctx.attr.bundle
+
+    # Resolve version from bundle or use explicit version attribute
+    if bundle_name:
+        version = get_version_for_tool(
+            repository_ctx,
+            "wasm-tools",
+            bundle_name = bundle_name,
+            fallback_version = repository_ctx.attr.version,
+        )
+        log_bundle_usage(repository_ctx, "wasm-tools", version, bundle_name)
+    else:
+        version = repository_ctx.attr.version
 
     # Log diagnostic information
     log_diagnostic_info(repository_ctx, "wasm-tools", platform, version, strategy)
@@ -498,7 +511,19 @@ def _download_wasm_tools(repository_ctx):
 def _download_wac(repository_ctx):
     """Download wac only"""
     platform = _detect_host_platform(repository_ctx)
-    wac_version = get_tool_version("wac")  # From tool_versions.bzl
+    bundle_name = repository_ctx.attr.bundle
+
+    # Get version from bundle if specified, otherwise from tool_versions.bzl
+    if bundle_name:
+        wac_version = get_version_for_tool(
+            repository_ctx,
+            "wac",
+            bundle_name = bundle_name,
+            fallback_version = get_tool_version("wac"),
+        )
+        log_bundle_usage(repository_ctx, "wac", wac_version, bundle_name)
+    else:
+        wac_version = get_tool_version("wac")  # From tool_versions.bzl
 
     # Get checksum and platform info from tool_versions.bzl
     tool_info = get_tool_info("wac", wac_version, platform)
@@ -520,7 +545,19 @@ def _download_wac(repository_ctx):
 def _download_wit_bindgen(repository_ctx):
     """Download wit-bindgen only"""
     platform = _detect_host_platform(repository_ctx)
-    wit_bindgen_version = get_tool_version("wit-bindgen")  # From tool_versions.bzl
+    bundle_name = repository_ctx.attr.bundle
+
+    # Get version from bundle if specified, otherwise from tool_versions.bzl
+    if bundle_name:
+        wit_bindgen_version = get_version_for_tool(
+            repository_ctx,
+            "wit-bindgen",
+            bundle_name = bundle_name,
+            fallback_version = get_tool_version("wit-bindgen"),
+        )
+        log_bundle_usage(repository_ctx, "wit-bindgen", wit_bindgen_version, bundle_name)
+    else:
+        wit_bindgen_version = get_tool_version("wit-bindgen")  # From tool_versions.bzl
 
     # Get checksum and platform info from tool_versions.bzl
     tool_info = get_tool_info("wit-bindgen", wit_bindgen_version, platform)
@@ -724,13 +761,17 @@ toolchain(
 wasm_toolchain_repository = repository_rule(
     implementation = _wasm_toolchain_repository_impl,
     attrs = {
+        "bundle": attr.string(
+            doc = "Toolchain bundle name from checksums/toolchain_bundles.json (e.g., 'stable-2025-12', 'minimal'). If set, version is read from bundle.",
+            default = "",
+        ),
         "strategy": attr.string(
             doc = "Tool acquisition strategy: 'download' only (other strategies removed in dependency management cleanup)",
             default = "download",
             values = ["download"],
         ),
         "version": attr.string(
-            doc = "Version to use (for download/build strategies)",
+            doc = "Version to use (for download/build strategies). Ignored if bundle is specified.",
             default = "1.235.0",
         ),
         "git_commit": attr.string(

@@ -1,6 +1,7 @@
 """WASI SDK toolchain definitions"""
 
 load("//checksums:registry.bzl", "get_tool_info")
+load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 
 def _get_wasi_sdk_platform_info(platform, version):
     """Get platform info and checksum for WASI SDK from centralized registry"""
@@ -121,7 +122,20 @@ def _wasi_sdk_repository_impl(repository_ctx):
 def _setup_downloaded_wasi_sdk(repository_ctx):
     """Download WASI SDK from GitHub releases"""
 
-    version = repository_ctx.attr.version
+    bundle_name = repository_ctx.attr.bundle
+
+    # Resolve version from bundle if specified, otherwise use explicit version
+    if bundle_name:
+        version = get_version_for_tool(
+            repository_ctx,
+            "wasi-sdk",
+            bundle_name = bundle_name,
+            fallback_version = repository_ctx.attr.version,
+        )
+        log_bundle_usage(repository_ctx, "wasi-sdk", version, bundle_name)
+    else:
+        version = repository_ctx.attr.version
+
     platform = _detect_host_platform(repository_ctx)
 
     # Download WASI SDK
@@ -423,13 +437,17 @@ wasm_cc_toolchain_config = rule(
 wasi_sdk_repository = repository_rule(
     implementation = _wasi_sdk_repository_impl,
     attrs = {
+        "bundle": attr.string(
+            doc = "Toolchain bundle name. If set, version is read from checksums/toolchain_bundles.json",
+            default = "",
+        ),
         "strategy": attr.string(
             doc = "Strategy: 'download'",
             default = "download",
             values = ["download"],
         ),
         "version": attr.string(
-            doc = "WASI SDK version",
+            doc = "WASI SDK version. Ignored if bundle is specified.",
             default = "27",
         ),
         "url": attr.string(
