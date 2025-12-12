@@ -198,6 +198,58 @@ def print_bundle_info(repository_ctx, bundle_name = None):
 
     return "\n".join(lines)
 
+def get_version_for_tool(repository_ctx, tool_name, bundle_name = None, fallback_version = None):
+    """Get version for a specific tool from bundle, with fallback support.
+
+    This is the main entry point for toolchain repository rules to get their version.
+
+    Args:
+        repository_ctx: Repository context for file operations.
+        tool_name: Name of the tool (e.g., "wasm-tools", "wasmtime").
+        bundle_name: Name of the bundle to use. If empty/None, uses default bundle.
+        fallback_version: Version to use if tool not found in bundle.
+
+    Returns:
+        Version string for the tool.
+    """
+    # If no bundle specified, try to use default
+    effective_bundle = bundle_name if bundle_name else None
+
+    version = get_bundle_tool_version(repository_ctx, effective_bundle, tool_name)
+
+    if version:
+        return version
+
+    # Tool not in bundle - use fallback or fail
+    if fallback_version:
+        return fallback_version
+
+    # No fallback - check if bundle exists but doesn't have this tool
+    bundle = get_bundle(repository_ctx, effective_bundle)
+    if bundle:
+        available_tools = list(bundle.get("tools", {}).keys())
+        fail("Tool '{}' not found in bundle '{}'. Available tools: {}".format(
+            tool_name,
+            effective_bundle or get_default_bundle_name(repository_ctx),
+            ", ".join(available_tools) if available_tools else "none",
+        ))
+
+    # No bundle found at all - fail with helpful message
+    fail("Could not determine version for tool '{}'. No bundle found and no fallback specified.".format(tool_name))
+
+def log_bundle_usage(repository_ctx, tool_name, version, bundle_name = None):
+    """Log which version is being used from which bundle (for debugging).
+
+    Args:
+        repository_ctx: Repository context for file operations.
+        tool_name: Name of the tool.
+        version: Version being used.
+        bundle_name: Bundle name (or None for default).
+    """
+    effective_bundle = bundle_name or get_default_bundle_name(repository_ctx)
+    # buildifier: disable=print
+    print("Bundle '{}': using {} version {}".format(effective_bundle, tool_name, version))
+
 # Public API
 bundle_api = struct(
     get_bundle = get_bundle,
@@ -207,6 +259,8 @@ bundle_api = struct(
     validate_bundle = validate_bundle,
     resolve_tool_versions = resolve_tool_versions,
     print_bundle_info = print_bundle_info,
+    get_version_for_tool = get_version_for_tool,
+    log_bundle_usage = log_bundle_usage,
 
     # Constants
     STATUS_STABLE = BUNDLE_STATUS_STABLE,

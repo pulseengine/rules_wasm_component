@@ -1,5 +1,6 @@
 """jco (JavaScript Component Tools) toolchain definitions"""
 
+load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
 load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
 load("//checksums:registry.bzl", "get_tool_info")
@@ -86,8 +87,27 @@ def _jco_toolchain_repository_impl(repository_ctx):
     """Create jco toolchain repository"""
 
     platform = _detect_host_platform(repository_ctx)
-    jco_version = repository_ctx.attr.version
-    node_version = repository_ctx.attr.node_version
+    bundle_name = repository_ctx.attr.bundle
+
+    # Resolve versions from bundle if specified, otherwise use explicit versions
+    if bundle_name:
+        jco_version = get_version_for_tool(
+            repository_ctx,
+            "jco",
+            bundle_name = bundle_name,
+            fallback_version = repository_ctx.attr.version,
+        )
+        node_version = get_version_for_tool(
+            repository_ctx,
+            "nodejs",
+            bundle_name = bundle_name,
+            fallback_version = repository_ctx.attr.node_version,
+        )
+        log_bundle_usage(repository_ctx, "jco", jco_version, bundle_name)
+        log_bundle_usage(repository_ctx, "nodejs", node_version, bundle_name)
+    else:
+        jco_version = repository_ctx.attr.version
+        node_version = repository_ctx.attr.node_version
 
     # Always use download strategy with hermetic Node.js + jco
     _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_version)
@@ -360,12 +380,16 @@ alias(
 jco_toolchain_repository = repository_rule(
     implementation = _jco_toolchain_repository_impl,
     attrs = {
+        "bundle": attr.string(
+            doc = "Toolchain bundle name. If set, versions are read from checksums/toolchain_bundles.json",
+            default = "",
+        ),
         "version": attr.string(
-            doc = "jco version to use",
+            doc = "jco version to use. Ignored if bundle is specified.",
             default = "1.4.0",
         ),
         "node_version": attr.string(
-            doc = "Node.js version to use for download strategy",
+            doc = "Node.js version to use for download strategy. Ignored if bundle is specified.",
             default = "18.19.0",
         ),
     },

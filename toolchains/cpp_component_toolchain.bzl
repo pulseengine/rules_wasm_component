@@ -1,5 +1,6 @@
 """C/C++ WebAssembly component toolchain definitions for Preview2"""
 
+load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
 
 def _cpp_component_toolchain_impl(ctx):
@@ -98,7 +99,19 @@ def _cpp_component_toolchain_repository_impl(repository_ctx):
 
     strategy = repository_ctx.attr.strategy
     platform = _detect_host_platform(repository_ctx)
-    wasi_sdk_version = repository_ctx.attr.wasi_sdk_version
+    bundle_name = repository_ctx.attr.bundle
+
+    # Resolve version from bundle if specified, otherwise use explicit version
+    if bundle_name:
+        wasi_sdk_version = get_version_for_tool(
+            repository_ctx,
+            "wasi-sdk",
+            bundle_name = bundle_name,
+            fallback_version = repository_ctx.attr.wasi_sdk_version,
+        )
+        log_bundle_usage(repository_ctx, "wasi-sdk", wasi_sdk_version, bundle_name)
+    else:
+        wasi_sdk_version = repository_ctx.attr.wasi_sdk_version
 
     if strategy == "download":
         _setup_downloaded_cpp_tools(repository_ctx, platform, wasi_sdk_version)
@@ -345,13 +358,17 @@ alias(
 cpp_component_toolchain_repository = repository_rule(
     implementation = _cpp_component_toolchain_repository_impl,
     attrs = {
+        "bundle": attr.string(
+            doc = "Toolchain bundle name. If set, wasi_sdk_version is read from checksums/toolchain_bundles.json",
+            default = "",
+        ),
         "strategy": attr.string(
             doc = "Tool acquisition strategy: 'download' or 'build'",
             default = "download",
             values = ["download", "build"],
         ),
         "wasi_sdk_version": attr.string(
-            doc = "WASI SDK version to use",
+            doc = "WASI SDK version to use. Ignored if bundle is specified.",
             default = "27",
         ),
     },

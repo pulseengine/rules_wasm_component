@@ -10,6 +10,125 @@ load("//toolchains:wizer_toolchain.bzl", "wizer_toolchain_repository")
 load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
 load("//wit:wasi_deps.bzl", "wasi_wit_dependencies")
 
+# =============================================================================
+# UNIFIED BUNDLE CONFIGURATION
+# =============================================================================
+# Use wasm_component_bundle.configure() to set up all toolchains from a
+# pre-validated version bundle. This is the recommended approach.
+#
+# Example usage in MODULE.bazel:
+#   wasm_bundle = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasm_component_bundle")
+#   wasm_bundle.configure(bundle = "stable-2025-12")
+#   use_repo(wasm_bundle, "wasm_tools_toolchains", "wasmtime_toolchain", ...)
+# =============================================================================
+
+def _wasm_component_bundle_impl(module_ctx):
+    """Implementation of unified bundle configuration extension.
+
+    This sets up all toolchains using versions from a pre-validated bundle,
+    ensuring compatibility between tools.
+    """
+    bundle_name = ""
+
+    # Get bundle configuration from tags
+    for mod in module_ctx.modules:
+        for tag in mod.tags.configure:
+            if tag.bundle:
+                bundle_name = tag.bundle
+
+    # Create all toolchain repositories with bundle parameter
+    # The bundle parameter tells each repository to read versions from
+    # checksums/toolchain_bundles.json instead of using hardcoded defaults
+
+    # Core WASM tools (wasm-tools, wac, wit-bindgen)
+    wasm_toolchain_repository(
+        name = "wasm_tools_toolchains",
+        bundle = bundle_name,
+        strategy = "download",
+    )
+
+    # Wasmtime runtime
+    wasmtime_repository(
+        name = "wasmtime_toolchain",
+        bundle = bundle_name,
+        strategy = "download",
+    )
+
+    # Wizer pre-initialization
+    wizer_toolchain_repository(
+        name = "wizer_toolchain",
+        bundle = bundle_name,
+        strategy = "download",
+    )
+
+    # WKG package manager
+    wkg_toolchain_repository(
+        name = "wkg_toolchain",
+        bundle = bundle_name,
+        strategy = "download",
+    )
+
+    # TinyGo for Go components
+    tinygo_toolchain_repository(
+        name = "tinygo_toolchain",
+        bundle = bundle_name,
+    )
+
+    # WASI SDK for C/C++ components
+    wasi_sdk_repository(
+        name = "wasi_sdk",
+        bundle = bundle_name,
+        strategy = "download",
+    )
+
+    # C/C++ component toolchain
+    cpp_component_toolchain_repository(
+        name = "cpp_component_toolchain",
+        bundle = bundle_name,
+        strategy = "download",
+    )
+
+    # JCO for JavaScript components
+    jco_toolchain_repository(
+        name = "jco_toolchain",
+        bundle = bundle_name,
+    )
+
+    # WASI WIT definitions
+    wasi_wit_dependencies()
+
+# Unified bundle configuration extension
+wasm_component_bundle = module_extension(
+    implementation = _wasm_component_bundle_impl,
+    tag_classes = {
+        "configure": tag_class(
+            attrs = {
+                "bundle": attr.string(
+                    doc = """Toolchain bundle name from checksums/toolchain_bundles.json.
+
+Available bundles:
+- stable-2025-12: Full toolchain with all languages (default)
+- minimal: Just wasm-tools, wit-bindgen, wasmtime for Rust-only builds
+- composition: Tools for component composition workflows (adds wac, wkg)
+
+Using a bundle ensures all tool versions are compatible with each other.""",
+                    default = "stable-2025-12",
+                ),
+            },
+        ),
+    },
+    doc = """Unified WebAssembly toolchain configuration using version bundles.
+
+This extension sets up all WASM toolchains using pre-validated version
+combinations from checksums/toolchain_bundles.json.
+
+Example:
+    wasm_bundle = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasm_component_bundle")
+    wasm_bundle.configure(bundle = "stable-2025-12")
+    use_repo(wasm_bundle, "wasm_tools_toolchains", "wasmtime_toolchain", "wizer_toolchain", ...)
+""",
+)
+
 def _wasm_toolchain_extension_impl(module_ctx):
     """Implementation of wasm_toolchain module extension"""
 

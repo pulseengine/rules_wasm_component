@@ -1,5 +1,7 @@
 """WebAssembly Package Tools (wkg) toolchain definitions"""
 
+load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
+
 # Platform-specific wkg binary information
 WKG_PLATFORMS = {
     "darwin_amd64": struct(
@@ -66,7 +68,19 @@ def _wkg_toolchain_repository_impl(ctx):
     """Repository rule implementation for wkg toolchain"""
 
     strategy = ctx.attr.strategy
-    version = ctx.attr.version
+    bundle_name = ctx.attr.bundle
+
+    # Resolve version from bundle if specified, otherwise use explicit version
+    if bundle_name:
+        version = get_version_for_tool(
+            ctx,
+            "wkg",
+            bundle_name = bundle_name,
+            fallback_version = ctx.attr.version,
+        )
+        log_bundle_usage(ctx, "wkg", version, bundle_name)
+    else:
+        version = ctx.attr.version
 
     if strategy == "download":
         platform = _detect_platform(ctx)
@@ -200,13 +214,17 @@ toolchain(
 wkg_toolchain_repository = repository_rule(
     implementation = _wkg_toolchain_repository_impl,
     attrs = {
+        "bundle": attr.string(
+            doc = "Toolchain bundle name. If set, version is read from checksums/toolchain_bundles.json",
+            default = "",
+        ),
         "strategy": attr.string(
             doc = "Tool acquisition strategy: 'download', 'build', or 'source'",
             default = "download",
             values = ["download", "build", "source"],
         ),
         "version": attr.string(
-            doc = "Version to download/build",
+            doc = "Version to download/build. Ignored if bundle is specified.",
             default = "0.11.0",
         ),
         "url": attr.string(

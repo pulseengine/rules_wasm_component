@@ -1,6 +1,7 @@
 """Wizer WebAssembly pre-initialization toolchain definitions"""
 
 load("//checksums:registry.bzl", "get_tool_info")
+load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 
 WIZER_VERSIONS = {
     "10.0.0": {
@@ -85,9 +86,21 @@ def _get_wizer_download_info(platform, version):
 def _wizer_toolchain_repository_impl(ctx):
     """Implementation of wizer_toolchain_repository repository rule"""
 
-    version = ctx.attr.version
     strategy = ctx.attr.strategy
     platform = _detect_host_platform(ctx)
+    bundle_name = ctx.attr.bundle
+
+    # Resolve version from bundle if specified, otherwise use explicit version
+    if bundle_name:
+        version = get_version_for_tool(
+            ctx,
+            "wizer",
+            bundle_name = bundle_name,
+            fallback_version = ctx.attr.version,
+        )
+        log_bundle_usage(ctx, "wizer", version, bundle_name)
+    else:
+        version = ctx.attr.version
 
     if version not in WIZER_VERSIONS:
         fail("Unsupported Wizer version: {}. Supported versions: {}".format(
@@ -287,9 +300,13 @@ toolchain(
 wizer_toolchain_repository = repository_rule(
     implementation = _wizer_toolchain_repository_impl,
     attrs = {
+        "bundle": attr.string(
+            default = "",
+            doc = "Toolchain bundle name. If set, version is read from checksums/toolchain_bundles.json",
+        ),
         "version": attr.string(
             default = "9.0.0",
-            doc = "Wizer version to install",
+            doc = "Wizer version to install. Ignored if bundle is specified.",
         ),
         "strategy": attr.string(
             default = "source",
