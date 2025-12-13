@@ -37,4 +37,4 @@ bitflags = "2.6"  # Bitflags for WASI filesystem interfaces in generated binding
 
 [dev-dependencies]
 tokio-test = "0.4"
-mockito = "1.0"
+mockito = "1.7"
