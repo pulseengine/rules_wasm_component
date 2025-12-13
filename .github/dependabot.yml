@@ -61,25 +61,7 @@ updates:
       - "automated"
       - "security"
 
-  - package-ecosystem: "cargo"
-    directory: "/tools/wizer_initializer"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "rust/wizer"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "rust"
-      - "automated"
-      - "performance"
+  # Note: /tools/wizer_initializer removed - wizer is now part of wasmtime v39.0.0+
 
   - package-ecosystem: "cargo"
     directory: "/tools-builder/toolchains"

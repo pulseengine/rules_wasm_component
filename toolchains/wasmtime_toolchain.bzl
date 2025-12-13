@@ -172,7 +172,7 @@ wasmtime_repository = repository_rule(
         ),
         "version": attr.string(
             doc = "Wasmtime version to install. Ignored if bundle is specified.",
-            default = "35.0.0",  # Latest version from our registry
+            default = "39.0.1",  # Latest version with integrated wizer support
         ),
     },
     doc = "Repository rule for setting up Wasmtime WebAssembly runtime",

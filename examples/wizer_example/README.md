@@ -2,6 +2,8 @@
 
 This example demonstrates how to use Wizer for WebAssembly component pre-initialization to achieve dramatically improved startup performance.
 
+> **Note**: As of Wasmtime v39.0.0 (November 2025), the standalone Wizer tool has been merged upstream into Wasmtime. This example now uses the `wasmtime wizer` subcommand for pre-initialization.
+
 ## What is Wizer?
 
 Wizer is a WebAssembly pre-initialization tool that:

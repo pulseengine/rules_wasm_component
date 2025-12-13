@@ -208,9 +208,7 @@ impl ToolConfig {
             },
         );
 
-        // Note: wizer is in the JSON registry with valid checksums but
-        // has issues with GitHub API calls in the update engine, so we use
-        // the fallback checksum mechanism instead of auto-updates
+        // Note: wizer removed - now part of wasmtime v39.0.0+, use `wasmtime wizer` subcommand
 
         // wkg configuration
         tools.insert(

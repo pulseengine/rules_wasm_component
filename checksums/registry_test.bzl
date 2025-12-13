@@ -20,9 +20,9 @@ def _test_get_tool_checksum(ctx):
     checksum = get_tool_checksum("wasm-tools", "1.235.0", "darwin_amd64")
     asserts.equals(env, "154e9ea5f5477aa57466cfb10e44bc62ef537e32bf13d1c35ceb4fedd9921510", checksum)
 
-    # Test wizer checksum (our new addition)
-    wizer_checksum = get_tool_checksum("wizer", "9.0.0", "linux_amd64")
-    asserts.equals(env, "d1d85703bc40f18535e673992bef723dc3f84e074bcd1e05b57f24d5adb4f058", wizer_checksum)
+    # Test wasmtime checksum (wizer functionality now included in wasmtime v39.0.0+)
+    wasmtime_checksum = get_tool_checksum("wasmtime", "39.0.1", "linux_amd64")
+    asserts.equals(env, "b90a36125387b75db59a67a1c402f2ed9d120fa43670d218a559571e2423d925", wasmtime_checksum)
 
     # Test invalid tool
     invalid_checksum = get_tool_checksum("nonexistent-tool", "1.0.0", "linux_amd64")
@@ -48,11 +48,11 @@ def _test_get_tool_info(ctx):
     asserts.equals(env, "154e9ea5f5477aa57466cfb10e44bc62ef537e32bf13d1c35ceb4fedd9921510", info["sha256"])
     asserts.equals(env, "x86_64-macos.tar.gz", info["url_suffix"])
 
-    # Test wizer info
-    wizer_info = get_tool_info("wizer", "9.0.0", "windows_amd64")
-    asserts.true(env, wizer_info != None)
-    asserts.equals(env, "d9cc5ed028ca873f40adcac513812970d34dd08cec4397ffc5a47d4acee8e782", wizer_info["sha256"])
-    asserts.equals(env, "x86_64-windows.zip", wizer_info["url_suffix"])
+    # Test wasmtime info (wizer functionality now included in wasmtime v39.0.0+)
+    wasmtime_info = get_tool_info("wasmtime", "39.0.1", "windows_amd64")
+    asserts.true(env, wasmtime_info != None)
+    asserts.equals(env, "bccf64b4227d178c0d13f2856be68876eae3f2f657f3a85d46f076a5e1976198", wasmtime_info["sha256"])
+    asserts.equals(env, "x86_64-windows.zip", wasmtime_info["url_suffix"])
 
     return unittest.end(env)
 
@@ -79,12 +79,12 @@ def _test_list_supported_platforms(ctx):
     asserts.true(env, "linux_amd64" in platforms)
     asserts.true(env, "windows_amd64" in platforms)
 
-    # Test wizer platforms
-    wizer_platforms = list_supported_platforms("wizer", "9.0.0")
-    asserts.true(env, "darwin_amd64" in wizer_platforms)
-    asserts.true(env, "linux_amd64" in wizer_platforms)
-    asserts.true(env, "windows_amd64" in wizer_platforms)
-    asserts.equals(env, 5, len(wizer_platforms))  # Should have 5 platforms
+    # Test wasmtime platforms (wizer functionality now included in wasmtime v39.0.0+)
+    wasmtime_platforms = list_supported_platforms("wasmtime", "39.0.1")
+    asserts.true(env, "darwin_amd64" in wasmtime_platforms)
+    asserts.true(env, "linux_amd64" in wasmtime_platforms)
+    asserts.true(env, "windows_amd64" in wasmtime_platforms)
+    asserts.equals(env, 5, len(wasmtime_platforms))  # Should have 5 platforms
 
     return unittest.end(env)
 
@@ -95,7 +95,7 @@ def _test_get_github_repo(ctx):
     # Test known repos
     asserts.equals(env, "bytecodealliance/wasm-tools", get_github_repo("wasm-tools"))
     asserts.equals(env, "bytecodealliance/wit-bindgen", get_github_repo("wit-bindgen"))
-    asserts.equals(env, "bytecodealliance/wizer", get_github_repo("wizer"))
+    asserts.equals(env, "bytecodealliance/wasmtime", get_github_repo("wasmtime"))
 
     # Test invalid tool
     asserts.equals(env, None, get_github_repo("nonexistent-tool"))
@@ -108,7 +108,7 @@ def _test_validate_tool_exists(ctx):
 
     # Test valid combinations
     asserts.true(env, validate_tool_exists("wasm-tools", "1.235.0", "darwin_amd64"))
-    asserts.true(env, validate_tool_exists("wizer", "9.0.0", "linux_amd64"))
+    asserts.true(env, validate_tool_exists("wasmtime", "39.0.1", "linux_amd64"))
 
     # Test invalid combinations
     asserts.false(env, validate_tool_exists("nonexistent-tool", "1.0.0", "linux_amd64"))
@@ -124,7 +124,7 @@ def _test_list_available_tools(ctx):
     tools = list_available_tools()
     asserts.true(env, "wasm-tools" in tools)
     asserts.true(env, "wit-bindgen" in tools)
-    asserts.true(env, "wizer" in tools)
+    asserts.true(env, "wasmtime" in tools)  # wizer functionality now in wasmtime
     asserts.true(env, "wac" in tools)
     asserts.true(env, "wkg" in tools)
 

@@ -12,7 +12,6 @@
         "wac": "0.8.1",
         "wkg": "0.13.0",
         "wasmtime": "39.0.1",
-        "wizer": "10.0.0",
         "wasi-sdk": "29",
         "tinygo": "0.38.0",
         "jco": "1.4.0",
@@ -30,7 +29,7 @@
         "linux_arm64",
         "windows_amd64"
       ],
-      "notes": "Initial stable bundle with WASI Preview 2 support"
+      "notes": "Initial stable bundle with WASI Preview 2 support. Wizer functionality now included in wasmtime v39.0.0+"
     },
     "minimal": {
       "description": "Minimal bundle for basic WASM component builds",
@@ -99,13 +98,6 @@
         "validated_pairs": [
           {"wasmtime": "39.0.1", "wasm-tools": "1.243.0"},
           {"wasmtime": "29.0.0", "wasm-tools": "1.240.0"}
-        ]
-      },
-      {
-        "tools": ["wizer", "wasmtime"],
-        "rule": "wizer and wasmtime should use compatible cranelift versions",
-        "validated_pairs": [
-          {"wizer": "10.0.0", "wasmtime": "39.0.1"}
         ]
       }
     ]
