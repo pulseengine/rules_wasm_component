@@ -75,14 +75,13 @@ Before implementing any solution:
 
 5. **Medium files IMPROVED** - 5 → 3 calls (-2)
    - ✅ wkg_toolchain.bzl: cp → symlink
-   - ✅ wizer_toolchain.bzl: which → repository_ctx.which()
+   - ✅ wizer_toolchain.bzl: REMOVED (wizer now part of wasmtime v39.0.0+)
 
-**REMAINING COMPLEX OPERATIONS (31 calls):**
+**REMAINING COMPLEX OPERATIONS (29 calls):**
 
 - **wasm_toolchain.bzl (17)**: Remaining download and build operations (hybrid approach working)
 - **tool_cache.bzl (6)**: Tool validation and file existence checks
 - **tinygo_toolchain.bzl (3)**: Tool installation and validation
-- **wizer_toolchain.bzl (2)**: Script execution and version checking
 - **Others (3)**: Package management and validation
 
 **Shell Operation Categories MODERNIZED:**
@@ -155,94 +154,48 @@ These remaining shell scripts are **appropriate complexity** for their tasks:
 
 ## WIZER INTEGRATION STATUS
 
-### 🎯 Complete Solution Architecture Implemented
+### ✅ MIGRATION COMPLETE: Wasmtime v39.0.0+ Integration
 
-**Problem**: Wizer CLI expects WebAssembly modules but WASI-enabled Rust toolchain produces components
+**As of November 2025**, Wizer has been merged into Wasmtime and is available as the `wasmtime wizer` subcommand.
+This eliminates the need for a standalone wizer toolchain and simplifies dependency management.
 
-**Solution**: Library-based approach with component parsing
+### Architecture
 
-### ✅ COMPLETED COMPONENTS
+The wizer pre-initialization workflow now uses wasmtime's built-in wizer subcommand:
 
-1. **wizer_initializer Tool** (`//tools/wizer_initializer:wizer_initializer`)
-   - ✅ Bazel-native Rust binary with proper dependency management
-   - ✅ Component model detection (version 0x1000d vs 0x1)
-   - ✅ Architecture for component → module → wizer → component workflow
-   - ✅ Placeholder implementation demonstrating complete pipeline
-   - ✅ Full CLI interface with clap and anyhow
+1. **wasm_component_wizer Rule** (`//wasm:wasm_component_wizer.bzl`)
+   - Uses `wasmtime_toolchain_type` instead of standalone wizer
+   - Invokes `wasmtime wizer` subcommand
+   - Default init function: `wizer-initialize` (breaking change from `wizer.initialize`)
 
 2. **wasm_component_wizer_library Rule** (`//wasm:wasm_component_wizer_library.bzl`)
-   - ✅ Bazel rule using wizer_initializer for programmatic control
-   - ✅ Proper argument passing (--input, --output, --init-func, --allow-wasi, --verbose)
-   - ✅ Full integration with existing Bazel ecosystem
-   - ✅ Successfully tested with wizer_example
+   - Library-based pre-initialization support
+   - Uses wasmtime toolchain for wizer functionality
 
-3. **Working Integration Test** (`//examples/wizer_example:wizer_library_test`)
-   - ✅ Successfully processes WebAssembly components (2.2MB test file)
-   - ✅ Correct component model detection and verbose logging
-   - ✅ Demonstrates complete architecture end-to-end
+3. **Working Example** (`//examples/wizer_example`)
+   - Demonstrates pre-initialization with wasmtime wizer
+   - Uses `#[export_name = "wizer-initialize"]` (new naming convention)
 
-### 🔧 CURRENT IMPLEMENTATION STATUS
+### Breaking Changes (Issue #246)
 
-**Working Foundation:**
+- Init function name changed: `wizer.initialize` → `wizer-initialize`
+- Standalone wizer toolchain removed (use wasmtime toolchain)
+- `//tools/wizer_initializer` removed (no longer needed)
+- `checksums/tools/wizer.json` removed
 
-- ✅ Component/module format detection working perfectly
-- ✅ Bazel rule integration working with proper error handling
-- ✅ CLI argument processing and verbose logging working
-- ✅ File I/O and Bazel integration working flawlessly
+### Migration Guide
 
-**Placeholder Components (for dependency resolution issues):**
-
-- ⏳ Component parsing (requires wasm-tools or wasmtime integration)
-- ⏳ Wizer library calls (requires wizer crate - complex dependencies)
-- ⏳ Component wrapping (requires wasm-tools component new functionality)
-
-### 🚀 ARCHITECTURE SUCCESS
-
-The implemented solution **perfectly demonstrates** the correct approach:
-
+**Before (standalone wizer):**
 ```rust
-// Workflow: Component → Core Module → Wizer → Component
-let is_component = is_wasm_component(&input_bytes)?;  // ✅ Working
-let core_module = extract_core_module(&input_bytes)?;  // ⏳ Placeholder
-let initialized = wizer.run(&core_module)?;           // ⏳ Placeholder
-let final_component = wrap_as_component(&initialized)?; // ⏳ Placeholder
+#[export_name = "wizer.initialize"]
+pub extern "C" fn init() { ... }
 ```
 
-**Key Achievement**: The Bazel integration and component detection work perfectly. The remaining work is adding the
-specific crate dependencies for:
-
-1. `wasm-tools` for component parsing/wrapping
-2. `wizer` crate for actual pre-initialization
-3. `wasmtime` for runtime component support
-
-### 🔬 COMPLEX DEPENDENCY ANALYSIS
-
-**Issue**: Bazel crate_universe has build conflicts with Wizer/Wasmtime ecosystem:
-
-- Cranelift (used by Wasmtime) has complex ISLE build system requirements
-- Version conflicts between transitive dependencies
-- Build script compatibility issues in sandboxed Bazel environment
-
-**Alternative Approaches**:
-
-1. **Shell out to system wizer** (against Bazel principles)
-2. **Hermetic wasm-tools + wizer binaries** (current working approach with CLI)
-3. **Library integration** (implemented architecture, requires dependency resolution)
-
-### 📊 CURRENT STATE SUMMARY
-
-| Component              | Status         | Notes                                  |
-| ---------------------- | -------------- | -------------------------------------- |
-| Architecture Design    | ✅ Complete    | Library-based approach validated       |
-| Bazel Rule Integration | ✅ Complete    | wasm_component_wizer_library working   |
-| Component Detection    | ✅ Complete    | Perfect WebAssembly format detection   |
-| CLI Tool Framework     | ✅ Complete    | Full argument processing and logging   |
-| Test Integration       | ✅ Complete    | Working end-to-end in wizer_example    |
-| Wizer Library Calls    | ⏳ Placeholder | Requires complex dependency resolution |
-| Component Parsing      | ⏳ Placeholder | Requires wasm-tools or wasmtime crates |
-
-**Bottom Line**: The architecture is complete and proven. The remaining work is purely dependency management for the
-Wizer/Wasmtime ecosystem in Bazel.
+**After (wasmtime wizer):**
+```rust
+#[export_name = "wizer-initialize"]
+pub extern "C" fn init() { ... }
+```
 
 #### 📋 Implementation Guidelines
 

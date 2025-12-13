@@ -133,30 +133,22 @@ register_toolchains("@wasmtime_toolchain//:wasmtime_toolchain")
 - Testing infrastructure (`wasm_test`, `wasm_run`)
 - WASI Preview 2 support
 
-### Wizer Toolchain
+### Wizer (Pre-initialization)
 
-Default configuration (recommended):
+> **Note:** As of wasmtime v39.0.0 (November 2025), Wizer has been integrated into wasmtime
+> and is available as the `wasmtime wizer` subcommand. No separate wizer toolchain is required.
+
+Wizer pre-initialization is automatically available through the wasmtime toolchain:
 ```starlark
-# MODULE.bazel - Included by default
+# MODULE.bazel - wasmtime toolchain includes wizer functionality
 bazel_dep(name = "rules_wasm_component", version = "1.0.0")
-```
-
-Custom version:
-```starlark
-wizer = use_extension("//wasm:extensions.bzl", "wizer")
-wizer.register(
-    name = "wizer",
-    strategy = "download",
-    version = "9.0.0",  # Or any other version
-)
-use_repo(wizer, "wizer_toolchain")
-register_toolchains("@wizer_toolchain//:wizer_toolchain_def")
 ```
 
 **Features:**
 - Pre-initialization for 1.35-6x startup improvement
 - Component model support
 - WASI imports during initialization
+- Uses `wasmtime wizer` subcommand (not standalone wizer binary)
 
 ### wkg Toolchain
 

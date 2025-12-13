@@ -6,7 +6,6 @@ load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
 load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
 load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
 load("//toolchains:wasmtime_toolchain.bzl", "wasmtime_repository")
-load("//toolchains:wizer_toolchain.bzl", "wizer_toolchain_repository")
 load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
 load("//wit:wasi_deps.bzl", "wasi_wit_dependencies")
 
@@ -47,16 +46,9 @@ def _wasm_component_bundle_impl(module_ctx):
         strategy = "download",
     )
 
-    # Wasmtime runtime
+    # Wasmtime runtime (includes wizer as of v39.0.0)
     wasmtime_repository(
         name = "wasmtime_toolchain",
-        bundle = bundle_name,
-        strategy = "download",
-    )
-
-    # Wizer pre-initialization
-    wizer_toolchain_repository(
-        name = "wizer_toolchain",
         bundle = bundle_name,
         strategy = "download",
     )
@@ -125,7 +117,7 @@ combinations from checksums/toolchain_bundles.json.
 Example:
     wasm_bundle = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasm_component_bundle")
     wasm_bundle.configure(bundle = "stable-2025-12")
-    use_repo(wasm_bundle, "wasm_tools_toolchains", "wasmtime_toolchain", "wizer_toolchain", ...)
+    use_repo(wasm_bundle, "wasm_tools_toolchains", "wasmtime_toolchain", ...)
 """,
 )
 
@@ -486,55 +478,8 @@ tinygo = module_extension(
     },
 )
 
-def _wizer_extension_impl(module_ctx):
-    """Implementation of Wizer module extension"""
-
-    registrations = {}
-
-    # Collect all Wizer registrations
-    for mod in module_ctx.modules:
-        for registration in mod.tags.register:
-            registrations[registration.name] = registration
-
-    # Create Wizer repositories
-    for name, registration in registrations.items():
-        wizer_toolchain_repository(
-            name = name + "_toolchain",
-            version = registration.version,
-            strategy = registration.strategy,
-        )
-
-    # If no registrations, create default Wizer toolchain
-    if not registrations:
-        wizer_toolchain_repository(
-            name = "wizer_toolchain",
-            version = "9.0.0",
-            strategy = "download",
-        )
-
-# Module extension for Wizer WebAssembly pre-initialization
-wizer = module_extension(
-    implementation = _wizer_extension_impl,
-    tag_classes = {
-        "register": tag_class(
-            attrs = {
-                "name": attr.string(
-                    doc = "Name for this Wizer registration",
-                    default = "wizer",
-                ),
-                "version": attr.string(
-                    doc = "Wizer version to install",
-                    default = "9.0.0",
-                ),
-                "strategy": attr.string(
-                    doc = "Installation strategy: 'download' (download prebuilt binary from GitHub releases)",
-                    default = "download",
-                    values = ["download"],
-                ),
-            },
-        ),
-    },
-)
+# Note: Standalone wizer extension removed - wizer is now part of wasmtime v39.0.0+
+# Use wasmtime extension below and invoke via `wasmtime wizer` subcommand
 
 def _wasmtime_extension_impl(module_ctx):
     """Implementation of Wasmtime module extension"""

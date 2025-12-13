@@ -64,8 +64,10 @@ wasm_toolchain.register(
 | wkg_toolchain   | ✅       | ✅    | ❌     | ❌  | ❌    |
 | jco_toolchain   | ✅       | ❌    | ❌     | ✅  | ❌    |
 | cpp_component   | ✅       | ✅    | ❌     | ❌  | ❌    |
-| wizer_toolchain | ✅       | ✅    | ❌     | ❌  | ✅    |
 | wasmtime        | ✅       | ❌    | ❌     | ❌  | ❌    |
+
+> **Note:** Wizer functionality is now included in wasmtime v39.0.0+ via the `wasmtime wizer` subcommand.
+> No separate wizer_toolchain is required.
 
 ### When to Use Each Strategy
 
@@ -164,13 +166,14 @@ jco.register(
 
 #### `"cargo"` - Rust Ecosystem
 
-**Best for:** Rust-heavy projects, when you need Wizer
+**Best for:** Rust-heavy projects building from source
 
 ```python title="MODULE.bazel"
-wizer = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wizer")
-wizer.register(
+# Example: building wasm-tools from source via cargo
+wasm_toolchain = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasm_toolchain")
+wasm_toolchain.register(
     strategy = "cargo",    # Uses cargo install
-    version = "9.0.0",
+    version = "1.243.0",
 )
 ```
 
@@ -184,7 +187,9 @@ wizer.register(
 
 - **Rust required** - System dependency
 - **Compilation time** - Builds from source
-- **Wizer only** - Limited to Wizer toolchain
+- **Limited toolchains** - Not all toolchains support cargo strategy
+
+> **Note:** The standalone wizer toolchain has been removed. Wizer is now part of wasmtime v39.0.0+ and available via the `wasmtime wizer` subcommand.
 
 ## Performance Comparison
 
@@ -423,16 +428,19 @@ bazel build //... --jobs=auto --local_ram_resources=8192
 
 #### Wizer Pre-initialization
 
-For faster component startup:
+For faster component startup, use wasmtime's built-in wizer functionality (v39.0.0+):
 
 ```python title="MODULE.bazel - Performance"
-# Enable Wizer for startup optimization
-wizer = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wizer")
-wizer.register(
-    strategy = "download",  # Fast, reliable
-    version = "9.0.0",
+# Wizer is included in wasmtime v39.0.0+
+# No separate wizer toolchain required - uses `wasmtime wizer` subcommand
+wasmtime = use_extension("@rules_wasm_component//wasm:extensions.bzl", "wasmtime")
+wasmtime.register(
+    strategy = "download",
+    version = "39.0.1",  # Includes wizer functionality
 )
 ```
+
+> **Note:** The init function name has changed from `wizer.initialize` to `wizer-initialize` in wasmtime's wizer.
 
 ## Troubleshooting
 

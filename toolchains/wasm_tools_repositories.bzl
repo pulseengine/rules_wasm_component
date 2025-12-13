@@ -63,13 +63,7 @@ def register_wasm_tool_repositories(bundle = None):
         build_file = "//toolchains:BUILD.wrpc",
     )
 
-    # wizer: WebAssembly pre-initialization tool
-    git_repository(
-        name = "wizer_src",
-        remote = "https://github.com/bytecodealliance/wizer.git",
-        tag = "v9.0.0",
-        build_file = "//toolchains:BUILD.wizer",
-    )
+    # Note: wizer removed - now part of wasmtime v39.0.0+, use `wasmtime wizer` subcommand
 
     # wasmsign2: WebAssembly component signing tool
     git_repository(

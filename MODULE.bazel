@@ -171,18 +171,8 @@ use_repo(tinygo, "tinygo_toolchain")
 
 register_toolchains("@tinygo_toolchain//:tinygo_toolchain_def")
 
-# Wizer WebAssembly pre-initialization toolchain
-wizer = use_extension("//wasm:extensions.bzl", "wizer")
-wizer.register(
-    name = "wizer",
-    strategy = "download",
-    version = "10.0.0",
-)
-use_repo(wizer, "wizer_toolchain")
-
-register_toolchains("@wizer_toolchain//:wizer_toolchain_def")
-
-# Wasmtime WebAssembly runtime
+# Wasmtime WebAssembly runtime (includes wizer as of v39.0.0)
+# Note: Standalone wizer toolchain removed - use `wasmtime wizer` subcommand instead
 wasmtime = use_extension("//wasm:extensions.bzl", "wasmtime")
 wasmtime.register(
     name = "wasmtime",
@@ -263,11 +253,6 @@ register_toolchains("//toolchains:wasm_tools_component_toolchain_local")
 # Rust crates for tools
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(
-    name = "wizer_crates",
-    cargo_lockfile = "//tools/wizer_initializer:Cargo.lock",
-    manifests = ["//tools/wizer_initializer:Cargo.toml"],
-)
-crate.from_cargo(
     name = "crates",
     cargo_lockfile = "//tools/checksum_updater:Cargo.lock",
     manifests = ["//tools/checksum_updater:Cargo.toml"],
@@ -325,7 +310,7 @@ crate.from_cargo(
 #   - wit_bindgen::rt module with correct allocator integration
 # This replaces the previously embedded runtime stubs
 
-use_repo(crate, "crates", "ssh_keygen_crates", "wasm_embed_aot_crates", "wasmsign2_crates", "wizer_crates")
+use_repo(crate, "crates", "ssh_keygen_crates", "wasm_embed_aot_crates", "wasmsign2_crates")
 
 # Modernized WASM tool repositories using git_repository + rules_rust
 wasm_tool_repos = use_extension("//toolchains:extensions.bzl", "wasm_tool_repositories")
@@ -335,6 +320,5 @@ use_repo(
     "wasm_tools_src",
     "wasmsign2_src",
     "wit_bindgen_src",
-    "wizer_src",
     "wrpc_src",
 )

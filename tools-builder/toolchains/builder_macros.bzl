@@ -38,13 +38,7 @@ def wasm_tool_suite(name, platforms, tools):
                     rust_target = platform_info["rust_target"],
                     suffix = platform_info["suffix"],
                 )
-            elif tool == "wizer":
-                _build_wizer(
-                    name = target_name,
-                    platform = platform,
-                    rust_target = platform_info["rust_target"],
-                    suffix = platform_info["suffix"],
-                )
+            # Note: wizer removed - now part of wasmtime v39.0.0+
             elif tool == "wac":
                 _build_wac(
                     name = target_name,
@@ -87,17 +81,6 @@ def _build_wit_bindgen(name, platform, rust_target, suffix):
         deps = ["@wit_bindgen_src//:wit_bindgen_cli_lib"],
         platform = platform,
         crate_name = "wit_bindgen",
-        edition = "2021",
-    )
-
-def _build_wizer(name, platform, rust_target, suffix):
-    """Build wizer for a specific platform"""
-    rust_binary(
-        name = name,
-        srcs = ["@wizer_src//:src/main.rs"],
-        deps = ["@wizer_src//:wizer_lib"],
-        platform = platform,
-        crate_name = "wizer",
         edition = "2021",
     )
 

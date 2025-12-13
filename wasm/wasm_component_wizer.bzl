@@ -1,49 +1,55 @@
-"""Wizer pre-initialization rule for WebAssembly components"""
+"""Wizer pre-initialization rule for WebAssembly components.
+
+As of Wasmtime v39.0.0 (November 2025), the standalone Wizer tool has been
+merged upstream into Wasmtime. This rule now uses `wasmtime wizer` subcommand
+instead of the standalone wizer binary for better maintenance and component
+model support.
+
+See: https://github.com/bytecodealliance/wasmtime/releases/tag/v39.0.0
+"""
 
 def _wasm_component_wizer_impl(ctx):
-    """Implementation of wasm_component_wizer rule"""
+    """Implementation of wasm_component_wizer rule using wasmtime wizer subcommand"""
 
-    # Get Wizer toolchain
-    wizer_toolchain = ctx.toolchains["//toolchains:wizer_toolchain_type"]
-    wizer = wizer_toolchain.wizer
+    # Get Wasmtime toolchain (wizer is now part of wasmtime)
+    wasmtime_toolchain = ctx.toolchains["//toolchains:wasmtime_toolchain_type"]
+    wasmtime = wasmtime_toolchain.wasmtime
 
     # Input and output files
     input_wasm = ctx.file.component
     output_wasm = ctx.outputs.wizer_component
 
-    # Create initialization script if provided
-    init_script = None
-    if ctx.attr.init_script:
-        init_script = ctx.file.init_script
-
-    # Build Wizer command arguments
+    # Build wasmtime wizer command arguments
+    # Format: wasmtime wizer [OPTIONS] <INPUT> -o <OUTPUT>
     args = ctx.actions.args()
+    args.add("wizer")  # wasmtime subcommand
     args.add("--allow-wasi")  # Allow WASI imports during initialization
-    args.add("--inherit-stdio", "true")  # Inherit stdio for debugging if needed
 
     # Add custom initialization function name if specified
+    # Note: As of wasmtime v39.0.0, the default function name changed from
+    # "wizer.initialize" to "wizer-initialize" for better component compatibility
     if ctx.attr.init_function_name:
         args.add("--init-func", ctx.attr.init_function_name)
     else:
-        args.add("--init-func", "wizer.initialize")  # Default function name
+        args.add("--init-func", "wizer-initialize")  # New default function name
 
-    # Add input and output files
+    # Add output file
     args.add("-o", output_wasm.path)
+
+    # Add input file
     args.add(input_wasm.path)
 
     # Create action inputs list
     inputs = [input_wasm]
-    if init_script:
-        inputs.append(init_script)
 
-    # Run Wizer pre-initialization
+    # Run wasmtime wizer pre-initialization
     ctx.actions.run(
-        executable = wizer,
+        executable = wasmtime,
         arguments = [args],
         inputs = inputs,
         outputs = [output_wasm],
-        mnemonic = "WizerPreInit",
-        progress_message = "Pre-initializing WebAssembly component with Wizer: {}".format(
+        mnemonic = "WasmtimeWizer",
+        progress_message = "Pre-initializing WebAssembly component with wasmtime wizer: {}".format(
             input_wasm.short_path,
         ),
         use_default_shell_env = False,
@@ -72,32 +78,35 @@ wasm_component_wizer = rule(
             doc = "Input WebAssembly component to pre-initialize",
         ),
         "init_function_name": attr.string(
-            default = "wizer.initialize",
-            doc = "Name of the initialization function to call (default: wizer.initialize)",
-        ),
-        "init_script": attr.label(
-            allow_single_file = True,
-            doc = "Optional initialization script or data file",
+            default = "wizer-initialize",
+            doc = "Name of the initialization function to call (default: wizer-initialize). " +
+                  "Note: Prior to wasmtime v39.0.0, the default was 'wizer.initialize'.",
         ),
     },
     outputs = {
         "wizer_component": "%{name}_wizer.wasm",
     },
-    toolchains = ["//toolchains:wizer_toolchain_type"],
-    doc = """Pre-initialize a WebAssembly component with Wizer.
+    toolchains = ["//toolchains:wasmtime_toolchain_type"],
+    doc = """Pre-initialize a WebAssembly component with wasmtime wizer.
 
     This rule takes a WebAssembly component and runs Wizer pre-initialization on it,
     which can provide 1.35-6x startup performance improvements by running initialization
     code at build time rather than runtime.
 
-    The input component must export a function named 'wizer.initialize' (or the name
+    As of Wasmtime v39.0.0 (November 2025), the standalone Wizer tool has been merged
+    upstream into Wasmtime. This rule uses the `wasmtime wizer` subcommand.
+
+    The input component must export a function named 'wizer-initialize' (or the name
     specified in init_function_name) that performs the initialization work.
+
+    Note: The default init function name changed from 'wizer.initialize' to
+    'wizer-initialize' in wasmtime v39.0.0 for better component model compatibility.
 
     Example:
         wasm_component_wizer(
             name = "optimized_component",
             component = ":my_component",
-            init_function_name = "wizer.initialize",
+            init_function_name = "wizer-initialize",
         )
     """,
 )
@@ -116,33 +125,35 @@ def _wizer_chain_impl(ctx):
 
     component_file = original_files[0]
 
-    # Get Wizer initializer tool (handles Component → Module → Wizer → Component)
-    wizer_initializer = ctx.executable._wizer_initializer
+    # Get Wasmtime toolchain (wizer is now part of wasmtime as of v39.0.0)
+    wasmtime_toolchain = ctx.toolchains["//toolchains:wasmtime_toolchain_type"]
+    wasmtime = wasmtime_toolchain.wasmtime
 
     # Output file
     output_wasm = ctx.outputs.wizer_component
 
-    # Build Wizer initializer arguments
+    # Build wasmtime wizer arguments
     args = ctx.actions.args()
-    args.add("--input", component_file.path)
-    args.add("--output", output_wasm.path)
+    args.add("wizer")  # wasmtime subcommand
     args.add("--allow-wasi")
-    args.add("--inherit-stdio")
-    args.add("--verbose")
 
     if ctx.attr.init_function_name:
         args.add("--init-func", ctx.attr.init_function_name)
     else:
-        args.add("--init-func", "wizer_initialize")
+        args.add("--init-func", "wizer-initialize")
 
-    # Run Wizer initializer (Component → Module → Wizer → Component)
+    # Add output and input
+    args.add("-o", output_wasm.path)
+    args.add(component_file.path)
+
+    # Run wasmtime wizer
     ctx.actions.run(
-        executable = wizer_initializer,
+        executable = wasmtime,
         arguments = [args],
         inputs = [component_file],
         outputs = [output_wasm],
-        mnemonic = "WizerChain",
-        progress_message = "Wizer pre-initializing component (via initializer): {}".format(ctx.label.name),
+        mnemonic = "WasmtimeWizerChain",
+        progress_message = "Wizer pre-initializing component: {}".format(ctx.label.name),
         use_default_shell_env = False,
         env = {"RUST_BACKTRACE": "1"},
     )
@@ -162,23 +173,21 @@ wizer_chain = rule(
             doc = "WebAssembly component target to pre-initialize",
         ),
         "init_function_name": attr.string(
-            default = "wizer_initialize",
-            doc = "Name of the initialization function",
-        ),
-        "_wizer_initializer": attr.label(
-            default = "//tools/wizer_initializer:wizer_initializer",
-            executable = True,
-            cfg = "exec",
-            doc = "Wizer initializer tool for Component → Module → Wizer → Component workflow",
+            default = "wizer-initialize",
+            doc = "Name of the initialization function (default: wizer-initialize)",
         ),
     },
     outputs = {
         "wizer_component": "%{name}_wizer.wasm",
     },
+    toolchains = ["//toolchains:wasmtime_toolchain_type"],
     doc = """Chain Wizer pre-initialization after an existing component rule.
 
     This is a convenience rule that takes the output of another component-building
-    rule and applies Wizer pre-initialization to it.
+    rule and applies Wizer pre-initialization to it using wasmtime wizer.
+
+    As of Wasmtime v39.0.0 (November 2025), the standalone Wizer tool has been merged
+    upstream into Wasmtime. This rule uses the `wasmtime wizer` subcommand.
 
     Example:
         go_wasm_component(
