@@ -42,19 +42,20 @@ rust_wasm_component_bindgen(
     wit = ":expensive_init_interfaces",
 )
 
-# Apply Wizer to the WASM module
+# Apply Wizer to the WASM module using wasmtime wizer
+# Note: As of wasmtime v39.0.0, wizer is integrated into wasmtime
 wasm_component_wizer(
     name = "wizer_optimized_module",
     component = ":component_to_module",
-    init_function_name = "wizer.initialize",
+    init_function_name = "wizer-initialize",  # New default in wasmtime v39.0.0
 )
 
-# Test the new Wizer library-based approach
+# Test the wizer library-based approach (now uses wasmtime wizer)
 wasm_component_wizer_library(
     name = "wizer_library_test",
     allow_wasi = True,
     component = ":expensive_init_simple_module",
-    init_function_name = "wizer.initialize",
+    init_function_name = "wizer-initialize",  # New default in wasmtime v39.0.0
     verbose = True,
 )
 

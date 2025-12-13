@@ -33,8 +33,7 @@ TOOL_VERSIONS = {
     "wac": "0.8.1",           # WebAssembly Composition tool
     "wkg": "0.13.0",          # WebAssembly package manager
 
-    # Optimization and initialization
-    "wizer": "10.0.0",        # WebAssembly pre-initialization tool
+    # Note: wizer removed - now part of wasmtime v39.0.0+, use `wasmtime wizer` subcommand
 
     # Signatures and security
     "wasmsign2": "0.2.6",     # WebAssembly signing tool

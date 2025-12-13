@@ -17,7 +17,9 @@ pub extern "C" fn compute(input: i32) -> i32 {
 }
 
 // Wizer initialization function - runs at build time
-#[export_name = "wizer.initialize"]
+// Note: As of wasmtime v39.0.0, the default function name changed from
+// "wizer.initialize" to "wizer-initialize" for better component compatibility
+#[export_name = "wizer-initialize"]
 pub extern "C" fn wizer_initialize() {
     // Expensive computation that would normally happen at runtime
     let mut data = HashMap::new();

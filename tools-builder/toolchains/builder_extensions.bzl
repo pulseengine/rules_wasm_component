@@ -25,14 +25,7 @@ def _git_repos_impl(module_ctx):
                 )
                 repos_created["wit_bindgen_src"] = True
 
-        for call in mod.tags.wizer:
-            if "wizer_src" not in repos_created:
-                module_ctx.download_and_extract(
-                    name = "wizer_src",
-                    url = "https://github.com/bytecodealliance/wizer/archive/refs/tags/{}.tar.gz".format(call.tag),
-                    strip_prefix = "wizer-{}".format(call.tag.lstrip("v")),
-                )
-                repos_created["wizer_src"] = True
+        # Note: wizer removed - now part of wasmtime v39.0.0+
 
         for call in mod.tags.wac:
             if "wac_src" not in repos_created:
@@ -61,10 +54,6 @@ _wit_bindgen_tag = tag_class(attrs = {
     "tag": attr.string(mandatory = True),
 })
 
-_wizer_tag = tag_class(attrs = {
-    "tag": attr.string(mandatory = True),
-})
-
 _wac_tag = tag_class(attrs = {
     "tag": attr.string(mandatory = True),
 })
@@ -79,7 +68,6 @@ git_repos = module_extension(
     tag_classes = {
         "wasm_tools": _wasm_tools_tag,
         "wit_bindgen": _wit_bindgen_tag,
-        "wizer": _wizer_tag,
         "wac": _wac_tag,
         "wasmtime": _wasmtime_tag,
     },
