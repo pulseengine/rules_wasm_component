@@ -73,7 +73,7 @@ jobs:
 
       - name: Upload Execution Log (on failure)
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: hermiticity-execution-log
           path: /tmp/exec.json
@@ -516,7 +516,7 @@ jobs:
           tar -czf rules_wasm_component.tar.gz -C release_tmp .
 
       - name: Upload Release Asset
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: rules_wasm_component
           path: rules_wasm_component.tar.gz
