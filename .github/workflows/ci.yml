@@ -100,7 +100,7 @@ jobs:
           submodules: false
 
       - name: Cache Bazel
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/bazel
@@ -199,7 +199,7 @@ jobs:
           submodules: false
 
       - name: Cache Bazel
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/bazel
