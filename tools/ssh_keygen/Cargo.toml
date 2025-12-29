@@ -14,7 +14,7 @@ rand = "0.8"
 # Note: Cannot upgrade to rand 0.9 until ssh-key supports rand_core 0.9
 
 [dev-dependencies]
-tempfile = "3.23"
+tempfile = "3.24"
 
 [[bin]]
 name = "ssh-keygen"
