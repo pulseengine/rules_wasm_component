@@ -7,7 +7,7 @@ module(
 )
 
 # Dependencies for WebAssembly tooling
-bazel_dep(name = "rules_rust", version = "0.65.0")
+bazel_dep(name = "rules_rust", version = "0.68.1")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.14")
@@ -27,15 +27,6 @@ bazel_dep(name = "stardoc", version = "0.7.2", dev_dependency = True)
 single_version_override(
     module_name = "protobuf",
     version = "33.0",
-)
-
-# Test fix for Windows wasm-component-ld.exe issue
-# https://github.com/avrabe/rules_rust/issues/8
-# https://github.com/bazelbuild/rules_rust/pull/3727
-git_override(
-    module_name = "rules_rust",
-    remote = "https://github.com/avrabe/rules_rust.git",
-    branch = "fix/add-missing-rustc-binaries",
 )
 
 # Test dependencies for cross-package C++ header examples
