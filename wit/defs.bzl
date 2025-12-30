@@ -68,6 +68,10 @@ load(
     "//wit/private:wasi_deps.bzl",
     _wasi_wit_dependencies = "wasi_wit_dependencies",
 )
+load(
+    "//wit/private:wit_deps_check.bzl",
+    _wit_deps_check = "wit_deps_check",
+)
 
 # Re-export public rules
 wit_library = _wit_library
@@ -76,3 +80,4 @@ symmetric_wit_bindgen = _symmetric_wit_bindgen
 wit_markdown = _wit_markdown
 wit_docs_collection = _wit_docs_collection
 wasi_wit_dependencies = _wasi_wit_dependencies
+wit_deps_check = _wit_deps_check

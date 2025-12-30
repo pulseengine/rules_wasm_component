@@ -4,4 +4,50 @@
 # PRIVATE IMPLEMENTATION - DO NOT DEPEND ON DIRECTLY
 # Public API: //wac:defs.bzl
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(default_visibility = ["//wac:__subpackages__"])
+
+# bzl_library targets for stardoc
+bzl_library(
+    name = "wac_bundle",
+    srcs = ["wac_bundle.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wac:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wac_compose",
+    srcs = ["wac_compose.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wac:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wac_plug",
+    srcs = ["wac_plug.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wac:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wac_remote_compose",
+    srcs = ["wac_remote_compose.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wac:__pkg__",
+    ],
+    deps = [
+        "//providers:providers",
+        "//wkg:defs",
+    ],
+)
