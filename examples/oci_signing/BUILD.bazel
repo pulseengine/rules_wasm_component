@@ -1,31 +1,22 @@
-"""Example demonstrating OCI image signing for WebAssembly components.
+"""Example demonstrating OCI image creation for WebAssembly components.
 
-This example shows how to use dual-layer security:
-1. WASM component signing with wasmsign2
-2. OCI image signing with cosign
+This example shows how to create OCI images for WASM components.
 
-Prerequisites:
-- Local OCI registry running on localhost:5000
-- cosign key pair generated
+Note: The advanced signing features (wasm_component_signed_oci_image) have been
+removed. For component signing, use wasm_sign from //wasm:defs.bzl separately.
 """
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load(
-    "@rules_wasm_component//wkg:oci_signing.bzl",
-    "wasm_component_secure_publish",
-    "wasm_component_signed_oci_image",
-    "wasm_component_verify_signatures",
-)
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_image")
 
-# Basic component for signing demo
+# Basic component for OCI image demo
 wit_library(
     name = "greeting_interfaces",
     package_name = "example:greeting@1.0.0",
     srcs = ["greeting.wit"],
-    world = "greeter",
+    world = "greeting",
 )
 
 rust_wasm_component_bindgen(
@@ -34,129 +25,26 @@ rust_wasm_component_bindgen(
     wit = ":greeting_interfaces",
 )
 
-# Generate keys for dual-layer signing
-wasm_keygen(
-    name = "component_signing_keys",
-    openssh_format = False,  # wasmsign2 uses its own format
-    public_key_name = "oci-signing-demo.public",
-    secret_key_name = "oci-signing-demo.secret",
-)
-
-# Note: In production, you would generate cosign keys externally:
-# cosign generate-key-pair --output-key-prefix oci-signing-demo
-# For this example, we'll use a placeholder
-genrule(
-    name = "cosign_key_placeholder",
-    outs = ["cosign.key"],
-    cmd = """
-    echo "# Placeholder cosign key" > $@
-    echo "# In production, generate with: cosign generate-key-pair" >> $@
-    """,
-)
-
-# Create signed OCI image with both security layers
-wasm_component_signed_oci_image(
-    name = "secure_greeting_image",
-    package_name = "secure-greeting",
+# Create OCI image for the component
+wasm_component_oci_image(
+    name = "greeting_oci_image",
+    package_name = "greeting",
     annotations = [
-        "org.opencontainers.image.title=Secure Greeting Component",
-        "com.example.security.level=high",
-        "com.example.signing.method=dual-layer",
+        "org.opencontainers.image.title=Greeting Component",
     ],
-    authors = ["security-team@example.com"],
     component = ":greeting_component",
-    component_signing_keys = ":component_signing_keys",
-
-    # Metadata
-    description = "Example component with dual-layer security",
-    license = "Apache-2.0",
-    namespace = "examples",
-    oci_signing_key = ":cosign_key_placeholder",
-    oci_signing_method = "cosign",
-
-    # Registry configuration
-    registry = "localhost:5000",
-
-    # Component-level signing (wasmsign2)
-    sign_component = True,
-
-    # OCI image-level signing (cosign) - disabled for now due to placeholder key
-    sign_oci_image = False,  # TODO: Enable when we have real cosign keys
-    signature_type = "embedded",
-    tag = "dual-signed-v1.0.0",
-)
-
-# Publish the secure image
-wasm_component_secure_publish(
-    name = "publish_secure_greeting",
-    dry_run = False,
-    signed_oci_image = ":secure_greeting_image",
-)
-
-# Verification example (placeholder implementation)
-wasm_component_verify_signatures(
-    name = "verify_secure_greeting",
-    component_public_key = ":component_signing_keys",  # TODO: Extract public key
-    oci_image_ref = "localhost:5000/examples/secure-greeting:dual-signed-v1.0.0",
-    oci_public_key = ":cosign_key_placeholder",
-)
-
-# Comparison targets showing different security levels
-
-# 1. No signing (baseline)
-wasm_component_signed_oci_image(
-    name = "unsecured_greeting_image",
-    package_name = "unsecured-greeting",
-    component = ":greeting_component",
-    description = "Example component with no security",
+    description = "Example greeting component",
     namespace = "examples",
     registry = "localhost:5000",
-    tag = "no-signing-v1.0.0",
+    tag = "v1.0.0",
 )
 
-# 2. Component signing only
-wasm_component_signed_oci_image(
-    name = "component_signed_greeting_image",
-    package_name = "component-signed-greeting",
-    component = ":greeting_component",
-    component_signing_keys = ":component_signing_keys",
-    description = "Example component with WASM-level signing only",
-    namespace = "examples",
-    registry = "localhost:5000",
-    sign_component = True,
-    tag = "component-only-v1.0.0",
-)
-
-# 3. Full dual-layer signing (when cosign keys are available)
-# wasm_component_signed_oci_image(
-#     name = "fully_secure_greeting_image",
-#     component = ":greeting_component",
-#     sign_component = True,
-#     component_signing_keys = ":component_signing_keys",
-#     sign_oci_image = True,
-#     oci_signing_key = ":real_cosign_key",  # When available
-#     registry = "localhost:5000",
-#     namespace = "examples",
-#     package_name = "fully-secure-greeting",
-#     tag = "dual-signed-v1.0.0",
-#     description = "Example component with full dual-layer security",
-# )
-
-# Test suite for all security levels
-# Test build to verify examples compile and keys generate
+# Test build to verify examples compile
 build_test(
-    name = "test_component_signing",
+    name = "test_oci_image",
     targets = [
-        ":component_signing_keys",
         ":greeting_component",
-        ":all_examples",
-    ],
-)
-
-test_suite(
-    name = "oci_signing_tests",
-    tests = [
-        ":test_component_signing",
+        ":greeting_oci_image",
     ],
 )
 
@@ -164,8 +52,6 @@ test_suite(
 filegroup(
     name = "all_examples",
     srcs = [
-        ":component_signed_greeting_image",
-        ":secure_greeting_image",
-        ":unsecured_greeting_image",
+        ":greeting_oci_image",
     ],
 )

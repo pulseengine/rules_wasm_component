@@ -1,14 +1,21 @@
-"""Example demonstrating Wizer pre-initialization for startup optimization"""
+"""Example demonstrating a component that could benefit from Wizer pre-initialization.
+
+Note: As of wasmtime v39.0.0, wizer is integrated into wasmtime. However, wasmtime wizer
+currently has limitations with component model function exports - it expects functions
+to be exported at the core module level, not through WIT interfaces.
+
+For components with expensive initialization, consider:
+1. Using core modules (not components) with wizer
+2. Lazy initialization patterns (as demonstrated in this example)
+3. Waiting for improved component model support in wasmtime wizer
+"""
 
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//rust:rust_wasm_module.bzl", "rust_wasm_module")
-load("@rules_wasm_component//wasm:wasm_component_wizer.bzl", "wasm_component_wizer")
-load("@rules_wasm_component//wasm:wasm_component_wizer_library.bzl", "wasm_component_wizer_library")
 
 package(default_visibility = ["//visibility:public"])
 
-# Define WIT interfaces for expensive initialization
+# Define WIT interfaces for the compute example
 wit_library(
     name = "expensive_init_interfaces",
     package_name = "expensive-init:api",
@@ -16,25 +23,8 @@ wit_library(
     world = "expensive-init",
 )
 
-# Create WASM module using hermetic Bazel approach (without WIT bindings)
-# This applies WASM transition directly to rust_shared_library
-rust_wasm_module(
-    name = "expensive_init_simple_module",
-    srcs = ["src/lib_simple.rs"],
-    edition = "2021",
-    # This will produce a proper WASM module that Wizer can process
-)
-
-# Convert component to module for Wizer processing
-genrule(
-    name = "component_to_module",
-    srcs = [":expensive_init_simple_module"],
-    outs = ["expensive_init_module.wasm"],
-    cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) component wit $< > /dev/null 2>&1 && cp $< $@ || cp $< $@",
-    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
-)
-
-# Build regular component for comparison
+# Build the component with WIT bindings
+# This component demonstrates lazy initialization pattern
 rust_wasm_component_bindgen(
     name = "expensive_init_component",
     srcs = ["src/lib.rs"],
@@ -42,68 +32,22 @@ rust_wasm_component_bindgen(
     wit = ":expensive_init_interfaces",
 )
 
-# Apply Wizer to the WASM module using wasmtime wizer
-# Note: As of wasmtime v39.0.0, wizer is integrated into wasmtime
-wasm_component_wizer(
-    name = "wizer_optimized_module",
-    component = ":component_to_module",
-    init_function_name = "wizer-initialize",  # New default in wasmtime v39.0.0
-)
-
-# Test the wizer library-based approach (now uses wasmtime wizer)
-wasm_component_wizer_library(
-    name = "wizer_library_test",
-    allow_wasi = True,
-    component = ":expensive_init_simple_module",
-    init_function_name = "wizer-initialize",  # New default in wasmtime v39.0.0
-    verbose = True,
-)
-
-# Create the final optimized component using separate source
-# (Note: In a real implementation, this would use the Wizer-processed module)
-rust_wasm_component_bindgen(
-    name = "optimized_component",
-    srcs = ["src/lib_simple.rs"],
-    wit = ":expensive_init_interfaces",
-)
-
-# Pure Bazel validation - just check that components were built
+# Pure Bazel validation - check that the component was built
 filegroup(
     name = "components_built",
-    srcs = [
-        ":expensive_init_component",
-        ":optimized_component",
-    ],
+    srcs = [":expensive_init_component"],
 )
 
-# Use wasm-tools validate directly as separate actions (no shell scripting)
+# Use wasm-tools validate to verify the component
 genrule(
-    name = "validate_normal_component",
+    name = "validate_component",
     srcs = [":expensive_init_component"],
-    outs = ["normal_component_valid.marker"],
+    outs = ["component_valid.marker"],
     cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) validate $(location :expensive_init_component) && touch $@",
     tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
 )
 
-genrule(
-    name = "validate_wizer_component",
-    srcs = [":optimized_component"],
-    outs = ["wizer_component_valid.marker"],
-    cmd = "$(location @@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools) validate $(location :optimized_component) && touch $@",
-    tools = ["@@+wasm_toolchain+wasm_tools_toolchains//:wasm-tools"],
-)
-
-# Test that both components are valid (depends on validation markers)
-filegroup(
-    name = "validation_test",
-    srcs = [
-        ":validate_normal_component",
-        ":validate_wizer_component",
-    ],
-)
-
-# Build test - simply ensure both components can be built successfully
-# This is the most reliable cross-platform test
+# Build test - ensure the component builds successfully
 alias(
     name = "build_test",
     actual = ":components_built",

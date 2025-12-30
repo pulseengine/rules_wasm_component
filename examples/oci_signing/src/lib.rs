@@ -1,5 +1,5 @@
 #[cfg(target_arch = "wasm32")]
-use greeting_component_bindings::Guest;
+use greeting_component_bindings::exports::example::greeting::greet::Guest;
 
 struct Component;
 

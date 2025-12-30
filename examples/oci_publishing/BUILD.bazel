@@ -1,7 +1,6 @@
 """Example demonstrating WebAssembly component OCI publishing with signing"""
 
-load("//wasm:defs.bzl", "wasm_keygen", "wasm_sign")
-load("//wasm:ssh_keygen.bzl", "ssh_keygen")
+load("//wasm:defs.bzl", "ssh_keygen", "wasm_keygen", "wasm_sign")
 load("//wkg:defs.bzl", "enhanced_oci_annotations", "wasm_component_metadata_extract", "wasm_component_multi_arch_package", "wasm_component_multi_arch_publish", "wasm_component_oci_image", "wasm_component_oci_metadata_mapper", "wasm_component_oci_publish", "wasm_component_publish", "wasm_component_secure_publish", "wasm_security_policy", "wkg_multi_registry_publish", "wkg_registry_config")
 
 # Use existing component from basic example

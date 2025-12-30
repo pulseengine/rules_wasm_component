@@ -1,33 +1,29 @@
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 // Import the generated WIT bindings
 use expensive_init_component_bindings::exports::expensive_init::api::compute::Guest;
 
-// Global state that gets initialized by Wizer
-static mut EXPENSIVE_DATA: Option<HashMap<String, i32>> = None;
+// Global state that gets initialized once at startup
+// Using OnceLock for safe, lazy initialization (Rust 2024 compatible)
+// Note: Wizer pre-initialization would capture this state at build time,
+// but wasmtime wizer currently has limitations with component model exports.
+static EXPENSIVE_DATA: OnceLock<HashMap<String, i32>> = OnceLock::new();
 
 // Component implementation
 struct Component;
 
 impl Guest for Component {
     fn compute(input: i32) -> i32 {
-        // Use the pre-computed data (initialized by Wizer)
-        unsafe {
-            if let Some(ref data) = EXPENSIVE_DATA {
-                data.get("multiplier").unwrap_or(&1) * input
-            } else {
-                input // Fallback if not pre-initialized
-            }
-        }
+        // Get or initialize the data (would be pre-initialized with Wizer)
+        let data = EXPENSIVE_DATA.get_or_init(initialize_data);
+        data.get("multiplier").unwrap_or(&1) * input
     }
 }
 
-// Wizer initialization function - runs at build time
-// Note: As of wasmtime v39.0.0, the default function name changed from
-// "wizer.initialize" to "wizer-initialize" for better component compatibility
-#[export_name = "wizer-initialize"]
-pub extern "C" fn wizer_initialize() {
-    // Expensive computation that would normally happen at runtime
+/// Initialize expensive data
+/// In a full Wizer setup, this would run at build time via wizer-initialize export
+fn initialize_data() -> HashMap<String, i32> {
     let mut data = HashMap::new();
 
     // Simulate expensive initialization work
@@ -40,10 +36,7 @@ pub extern "C" fn wizer_initialize() {
     // Store the pre-computed multiplier
     data.insert("multiplier".to_string(), 42);
 
-    // Set global state (this gets captured by Wizer)
-    unsafe {
-        EXPENSIVE_DATA = Some(data);
-    }
+    data
 }
 
 fn expensive_computation(n: i32) -> i32 {

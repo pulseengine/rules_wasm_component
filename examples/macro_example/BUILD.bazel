@@ -1,36 +1,15 @@
-"""Example demonstrating wit-bindgen macro approach
+"""wit-bindgen macro example (demonstration only)."""
 
-This example shows how to use wit_bindgen::generate!() macro directly
-in source code instead of generating separate binding crates.
-"""
-
-load("//rust:defs.bzl", "rust_wasm_component_macro")
 load("//wit:defs.bzl", "wit_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 
-# WIT interface definition
 wit_library(
     name = "macro_interfaces",
     srcs = ["wit/macro-example.wit"],
     world = "macro-world",
 )
 
-# Component using wit-bindgen macro approach
-rust_wasm_component_macro(
-    name = "macro_component",
-    srcs = ["src/lib.rs"],
-    profiles = [
-        "debug",
-        "release",
-    ],
-    visibility = ["//visibility:public"],
-    wit = ":macro_interfaces",
-)
-
-# Host application using the generated bindings
-load("@rules_rust//rust:defs.bzl", "rust_binary")
-
 rust_binary(
     name = "host_app",
     srcs = ["src/host.rs"],
-    deps = [":macro_component_host"],  # Use host-platform bindings
 )
