@@ -1,8 +1,25 @@
-"""Unit tests for rules_wasm_component rule implementations."""
+"""Unit tests for rules_wasm_component rule implementations.
+
+This package contains:
+- Provider tests: Verify rules provide correct provider types and fields
+- Action tests: Verify rules create correct actions with proper arguments
+
+Following rules_rust patterns for comprehensive analysis testing.
+"""
 
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//wit:defs.bzl", "wit_bindgen", "wit_library")
+load(
+    ":action_tests.bzl",
+    "component_metadata_test",
+    "component_profile_test",
+    "rust_component_actions_test",
+    "rust_component_wasm_target_test",
+    "wac_compose_actions_test",
+    "wit_bindgen_actions_test",
+    "wit_library_actions_test",
+)
 load(
     ":unit_tests.bzl",
     "provider_test",
@@ -94,9 +111,54 @@ provider_test(
     target_under_test = ":test_component_simple",
 )
 
-# Test suite for all unit tests
+# =============================================================================
+# Action-Level Tests (new)
+# =============================================================================
+# These tests verify the action graph structure and command-line arguments,
+# providing deeper coverage than provider-only tests.
+
+wit_library_actions_test(
+    name = "test_wit_library_actions",
+    target_under_test = ":test_wit_simple",
+)
+
+wit_bindgen_actions_test(
+    name = "test_wit_bindgen_actions",
+    target_under_test = ":test_component_simple",
+)
+
+rust_component_actions_test(
+    name = "test_rust_component_actions",
+    target_under_test = ":test_component_simple",
+)
+
+rust_component_wasm_target_test(
+    name = "test_rust_component_wasm_target",
+    target_under_test = ":test_component_simple",
+)
+
+wac_compose_actions_test(
+    name = "test_wac_compose_actions",
+    target_under_test = ":test_composition",
+)
+
+component_metadata_test(
+    name = "test_component_metadata",
+    target_under_test = ":test_component_simple",
+)
+
+component_profile_test(
+    name = "test_component_profile",
+    target_under_test = ":test_component_simple",
+)
+
+# =============================================================================
+# Test Suites
+# =============================================================================
+
+# Provider-focused tests (original)
 test_suite(
-    name = "unit_tests",
+    name = "provider_tests",
     tests = [
         ":test_rust_component_basic",
         ":test_rust_component_with_deps",
@@ -105,6 +167,29 @@ test_suite(
         ":test_wit_info_provider",
         ":test_wit_library_basic",
         ":test_wit_library_with_deps",
+    ],
+)
+
+# Action-level tests (new)
+test_suite(
+    name = "action_tests",
+    tests = [
+        ":test_component_metadata",
+        ":test_component_profile",
+        ":test_rust_component_actions",
+        ":test_rust_component_wasm_target",
+        ":test_wac_compose_actions",
+        ":test_wit_bindgen_actions",
+        ":test_wit_library_actions",
+    ],
+)
+
+# All unit tests combined
+test_suite(
+    name = "unit_tests",
+    tests = [
+        ":action_tests",
+        ":provider_tests",
     ],
     visibility = ["//visibility:public"],
 )
