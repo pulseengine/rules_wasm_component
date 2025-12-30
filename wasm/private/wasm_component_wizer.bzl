@@ -21,9 +21,9 @@ def _wasm_component_wizer_impl(ctx):
 
     # Build wasmtime wizer command arguments
     # Format: wasmtime wizer [OPTIONS] <INPUT> -o <OUTPUT>
+    # Note: wasmtime wizer (v39.0.0+) handles WASI through runtime config, no --allow-wasi flag
     args = ctx.actions.args()
     args.add("wizer")  # wasmtime subcommand
-    args.add("--allow-wasi")  # Allow WASI imports during initialization
 
     # Add custom initialization function name if specified
     # Note: As of wasmtime v39.0.0, the default function name changed from
@@ -133,9 +133,9 @@ def _wizer_chain_impl(ctx):
     output_wasm = ctx.outputs.wizer_component
 
     # Build wasmtime wizer arguments
+    # Note: wasmtime wizer (v39.0.0+) handles WASI through runtime config, no --allow-wasi flag
     args = ctx.actions.args()
     args.add("wizer")  # wasmtime subcommand
-    args.add("--allow-wasi")
 
     if ctx.attr.init_function_name:
         args.add("--init-func", ctx.attr.init_function_name)

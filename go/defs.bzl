@@ -1,4 +1,4 @@
-# Copyright 2024 Ralf Anton Beier. All rights reserved.
+# Copyright 2025 Ralf Anton Beier. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""TinyGo WASI Preview 2 WebAssembly component rules
+"""TinyGo WASI Preview 2 WebAssembly component rules - PUBLIC API
+
+STABILITY: Public API
+
+The rules and macros in this file are the public API of rules_wasm_component
+for Go component development. They are subject to semantic versioning guarantees:
+- Major version: Breaking changes allowed
+- Minor version: Backwards-compatible additions
+- Patch version: Bug fixes only
+
+DO NOT depend on //go/private - those are implementation details.
+
+Available rules:
+    go_wasm_component: Build Go WebAssembly component using TinyGo
+    go_wit_bindgen: Generate Go bindings from WIT (deprecated, use go_wasm_component)
+
+TinyGo WASI Preview 2 WebAssembly component rules
 
 State-of-the-art Go support for WebAssembly Component Model using:
 - TinyGo v0.38.0+ with native WASI Preview 2 support

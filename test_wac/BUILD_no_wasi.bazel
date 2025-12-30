@@ -1,7 +1,9 @@
 """Test WAC composition with non-WASI components"""
 
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("//rust:rust_wasm_component.bzl", "_wasm_rust_library")
+# TODO: This test uses an internal function (_wasm_rust_library) which is not part of the public API.
+# Consider exposing a public API for this use case or refactoring the test.
+load("//rust/private:rust_wasm_component.bzl", "_wasm_rust_library")
 
 # Simple WIT interface for testing
 wit_library(

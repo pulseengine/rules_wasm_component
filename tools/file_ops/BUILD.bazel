@@ -6,7 +6,7 @@ via wasmtime, with LOCAL AOT compilation for guaranteed compatibility and
 """
 
 load("@rules_go//go:def.bzl", "go_binary")
-load("//wasm:wasm_precompile.bzl", "wasm_precompile")
+load("//wasm:defs.bzl", "wasm_precompile")
 
 package(default_visibility = ["//visibility:public"])
 

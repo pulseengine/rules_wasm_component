@@ -1,8 +1,7 @@
 """Rust WASM component with WIT bindgen integration"""
 
 load("@rules_rust//rust:defs.bzl", "rust_common", "rust_library")
-load("//wit:wit_bindgen.bzl", "wit_bindgen")
-load("//wit:symmetric_wit_bindgen.bzl", "symmetric_wit_bindgen")
+load("//wit:defs.bzl", "symmetric_wit_bindgen", "wit_bindgen")
 load("//toolchains:tool_versions.bzl", "get_tool_version")
 load(":rust_wasm_component.bzl", "rust_wasm_component")
 load(":transitions.bzl", "wasm_transition")

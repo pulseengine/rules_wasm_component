@@ -1,6 +1,6 @@
 """Debug targets for investigating Windows issues"""
 
-load("//rust:debug_windows.bzl", "debug_rust_toolchain")
+load("//rust/private:debug_windows.bzl", "debug_rust_toolchain")
 
 # Debug target that will show us what's visible in the Bazel sandbox on Windows
 debug_rust_toolchain(

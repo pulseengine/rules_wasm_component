@@ -24,18 +24,9 @@ def _wasm_rust_library_macro_impl(ctx):
     if CcInfo in target_info:
         providers.append(target_info[CcInfo])
 
-    # Forward Rust-specific providers
-    rust_common = ctx.toolchains["@rules_rust//rust:toolchain_type"].rust_std
-    if hasattr(rust_common, "crate_info") and rust_common.crate_info in target_info:
-        providers.append(target_info[rust_common.crate_info])
-
-    if hasattr(rust_common, "dep_info") and rust_common.dep_info in target_info:
-        providers.append(target_info[rust_common.dep_info])
-
-    # Forward other common providers
-    for provider in [CcInfo, InstrumentedFilesInfo]:
-        if provider in target_info:
-            providers.append(target_info[provider])
+    # Forward InstrumentedFilesInfo if present
+    if InstrumentedFilesInfo in target_info:
+        providers.append(target_info[InstrumentedFilesInfo])
 
     return providers
 

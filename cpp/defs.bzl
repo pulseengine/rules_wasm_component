@@ -1,4 +1,4 @@
-# Copyright 2024 Ralf Anton Beier. All rights reserved.
+# Copyright 2025 Ralf Anton Beier. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""C/C++ WebAssembly Component Model rules
+"""C/C++ WebAssembly Component Model rules - PUBLIC API
+
+STABILITY: Public API
+
+The rules and macros in this file are the public API of rules_wasm_component
+for C/C++ component development. They are subject to semantic versioning guarantees:
+- Major version: Breaking changes allowed
+- Minor version: Backwards-compatible additions
+- Patch version: Bug fixes only
+
+DO NOT depend on //cpp/private - those are implementation details.
+
+Available rules:
+    cpp_component: Build C++ WebAssembly component
+    cpp_wit_bindgen: Generate C/C++ bindings from WIT
+    cc_component_library: Create reusable C/C++ component library
+    cpp_wasm_binary: Build C++ WASM binary (CLI executable)
+    c_wasm_binary: Build C WASM binary (CLI executable)
+
+C/C++ WebAssembly Component Model rules
 
 Production-ready C/C++ support for WebAssembly Component Model using:
 - WASI SDK v27+ with native Preview2 support
@@ -53,7 +72,7 @@ load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
 load(
-    "//cpp:cpp_wasm_binary.bzl",
+    "//cpp/private:cpp_wasm_binary.bzl",
     _c_wasm_binary = "c_wasm_binary",
     _cpp_wasm_binary = "cpp_wasm_binary",
 )
