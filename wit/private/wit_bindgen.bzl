@@ -57,7 +57,10 @@ def _wit_bindgen_impl(ctx):
         # Include generation_mode in Bazel output filename to avoid conflicts between guest and native-guest
         mode_suffix = "_" + ctx.attr.generation_mode.replace("-", "_") if ctx.attr.generation_mode != "guest" else ""
         rust_filename = base_filename + mode_suffix + ".rs"
-        out_file = ctx.actions.declare_file(rust_filename)
+
+        # Output to target-specific subdirectory to avoid conflicts when multiple targets
+        # share the same WIT library/world (they would otherwise generate the same filename)
+        out_file = ctx.actions.declare_file(ctx.label.name + "/" + rust_filename)
     elif ctx.attr.language == "c":
         # C generates multiple files
         out_dir = ctx.actions.declare_directory(ctx.label.name + "_bindings")

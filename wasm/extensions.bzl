@@ -7,7 +7,7 @@ load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
 load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
 load("//toolchains:wasmtime_toolchain.bzl", "wasmtime_repository")
 load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
-load("//wit:wasi_deps.bzl", "wasi_wit_dependencies")
+load("//wit:defs.bzl", "wasi_wit_dependencies")
 
 # =============================================================================
 # UNIFIED BUNDLE CONFIGURATION

@@ -1,4 +1,40 @@
-"""Bazel rules for WebAssembly Package Tools (wkg) with OCI support"""
+# Copyright 2025 Ralf Anton Beier. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Bazel rules for WebAssembly Package Tools (wkg) with OCI support - PUBLIC API
+
+STABILITY: Public API
+
+The rules and macros in this file are the public API of rules_wasm_component
+for WKG package management and OCI publishing. They are subject to semantic
+versioning guarantees:
+- Major version: Breaking changes allowed
+- Minor version: Backwards-compatible additions
+- Patch version: Bug fixes only
+
+DO NOT depend on //wkg/private - those are implementation details.
+
+Available rules:
+    wkg_fetch: Fetch WebAssembly packages from registries
+    wkg_publish: Publish components to OCI registries
+    oci_component: Publish component with OCI metadata
+    wasm_oci_image: Create OCI images from components
+    wasm_oci_publish: Publish WASM components to OCI registries
+    wasm_sign: Sign WASM components cryptographically
+    wasm_verify: Verify component signatures
+
+Bazel rules for WebAssembly Package Tools (wkg) with OCI support"""
 
 load("//providers:providers.bzl", "WacCompositionInfo", "WasmComponentInfo", "WasmComponentMetadataInfo", "WasmKeyInfo", "WasmMultiArchInfo", "WasmOciInfo", "WasmOciMetadataMappingInfo", "WasmRegistryInfo", "WasmSecurityPolicyInfo", "WasmSignatureInfo")
 

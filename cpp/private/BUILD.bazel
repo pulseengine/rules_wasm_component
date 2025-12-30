@@ -1,0 +1,7 @@
+# Copyright 2025 Ralf Anton Beier. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# PRIVATE IMPLEMENTATION - DO NOT DEPEND ON DIRECTLY
+# Public API: //cpp:defs.bzl
+
+package(default_visibility = ["//cpp:__subpackages__"])

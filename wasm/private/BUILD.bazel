@@ -12,18 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""WASM platform transitions - shared utilities.
+# PRIVATE IMPLEMENTATION - DO NOT DEPEND ON DIRECTLY
+#
+# This package contains internal implementation details for WASM component rules.
+# The public API is exposed through //wasm:defs.bzl
+#
+# Stability: These files may change without notice between versions.
+# Users should only depend on //wasm:defs.bzl for stable API.
 
-NOTE: This file re-exports from //rust/private for backwards compatibility.
-These transitions are used by multiple language packages (rust, go, cpp, js).
-
-For new code, prefer importing from //rust:defs.bzl when possible.
-"""
-
-load(
-    "//rust/private:transitions.bzl",
-    _wasm_transition = "wasm_transition",
-)
-
-# Re-export for backwards compatibility
-wasm_transition = _wasm_transition
+package(default_visibility = [
+    "//rust:__subpackages__",
+    "//wasm:__subpackages__",
+])

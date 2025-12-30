@@ -1,4 +1,4 @@
-# Copyright 2024 Ralf Anton Beier. All rights reserved.
+# Copyright 2025 Ralf Anton Beier. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Rust WebAssembly Component Model rules
+"""Rust WebAssembly Component Model rules - PUBLIC API
+
+STABILITY: Public API
+The rules and macros in this file are the public API of rules_wasm_component
+for Rust. They are subject to semantic versioning guarantees:
+- Major version: Breaking changes allowed
+- Minor version: Backwards-compatible additions
+- Patch version: Bug fixes only
+
+DO NOT depend on //rust/private - those are implementation details.
 
 State-of-the-art Rust support for WebAssembly Component Model using:
 - Rust 1.88.0+ with native WASI Preview 2 support
@@ -24,6 +33,8 @@ State-of-the-art Rust support for WebAssembly Component Model using:
 - Component composition and macro system
 
 Example usage:
+
+    load("//rust:defs.bzl", "rust_wasm_component")
 
     rust_wasm_component(
         name = "my_service",
@@ -42,29 +53,33 @@ Example usage:
 """
 
 load(
-    "//rust:clippy.bzl",
+    "//rust/private:clippy.bzl",
     _rust_clippy_all = "rust_clippy_all",
     _rust_wasm_component_clippy = "rust_wasm_component_clippy",
 )
 load(
-    "//rust:rust_wasm_component.bzl",
+    "//rust/private:rust_wasm_binary.bzl",
+    _rust_wasm_binary = "rust_wasm_binary",
+)
+load(
+    "//rust/private:rust_wasm_component.bzl",
     _rust_wasm_component = "rust_wasm_component",
 )
 load(
-    "//rust:rust_wasm_component_bindgen.bzl",
+    "//rust/private:rust_wasm_component_bindgen.bzl",
     _rust_wasm_component_bindgen = "rust_wasm_component_bindgen",
 )
 load(
-    "//rust:rust_wasm_component_test.bzl",
+    "//rust/private:rust_wasm_component_macro.bzl",
+    _rust_wasm_component_macro = "rust_wasm_component_macro",
+)
+load(
+    "//rust/private:rust_wasm_component_test.bzl",
     _rust_wasm_component_test = "rust_wasm_component_test",
 )
 load(
-    "//rust:rust_wasm_component_wizer.bzl",
+    "//rust/private:rust_wasm_component_wizer.bzl",
     _rust_wasm_component_wizer = "rust_wasm_component_wizer",
-)
-load(
-    "//rust:rust_wasm_binary.bzl",
-    _rust_wasm_binary = "rust_wasm_binary",
 )
 
 # Re-export public rules
@@ -73,5 +88,6 @@ rust_wasm_component_test = _rust_wasm_component_test
 rust_wasm_component_bindgen = _rust_wasm_component_bindgen
 rust_wasm_component_wizer = _rust_wasm_component_wizer
 rust_wasm_component_clippy = _rust_wasm_component_clippy
+rust_wasm_component_macro = _rust_wasm_component_macro
 rust_clippy_all = _rust_clippy_all
 rust_wasm_binary = _rust_wasm_binary

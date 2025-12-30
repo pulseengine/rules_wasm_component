@@ -1,7 +1,7 @@
 """Rust WebAssembly component with Wizer pre-initialization"""
 
-load("//rust:rust_wasm_component.bzl", "rust_wasm_component")
-load("//wasm:wasm_component_wizer.bzl", "wizer_chain")
+load("//rust/private:rust_wasm_component.bzl", "rust_wasm_component")
+load("//wasm/private:wasm_component_wizer.bzl", "wizer_chain")
 
 def rust_wasm_component_wizer(
         name,

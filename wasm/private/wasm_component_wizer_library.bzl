@@ -19,12 +19,15 @@ def _wasm_component_wizer_library_impl(ctx):
     wasmtime = wasmtime_toolchain.wasmtime
 
     # Build wasmtime wizer command arguments
+    # Note: wasmtime wizer (v39.0.0+) doesn't have --allow-wasi flag;
+    # WASI support is handled through wasmtime's runtime configuration
     args = ctx.actions.args()
     args.add("wizer")  # wasmtime subcommand
     args.add("--init-func", ctx.attr.init_function_name)
 
-    if ctx.attr.allow_wasi:
-        args.add("--allow-wasi")
+    # Keep init function exported if requested (useful for debugging)
+    if ctx.attr.keep_init_func:
+        args.add("--keep-init-func=true")
 
     # Add output and input
     args.add("-o", output_wasm.path)
@@ -70,13 +73,10 @@ wasm_component_wizer_library = rule(
             doc = "Name of the initialization function to call (default: wizer-initialize). " +
                   "Note: Prior to wasmtime v39.0.0, the default was 'wizer.initialize'.",
         ),
-        "allow_wasi": attr.bool(
-            default = True,
-            doc = "Allow WASI calls during initialization",
-        ),
-        "verbose": attr.bool(
+        "keep_init_func": attr.bool(
             default = False,
-            doc = "Enable verbose output (currently unused, kept for API compatibility)",
+            doc = "Keep the initialization function exported after pre-initialization. " +
+                  "Useful for debugging or when the init function needs to be callable at runtime.",
         ),
     },
     outputs = {
@@ -102,7 +102,6 @@ wasm_component_wizer_library = rule(
             name = "optimized_component",
             component = ":my_component",
             init_function_name = "wizer-initialize",
-            allow_wasi = True,
         )
     """,
 )
