@@ -5,7 +5,9 @@
 //! is extracted at runtime to access the files.
 
 #[cfg(target_arch = "wasm32")]
-use web_service_component_bindings::Guest;
+use bundled_service_component_bindings::exports::example::web_service::web_service::{
+    FormatType, Guest, RequestOptions, ServiceConfig,
+};
 
 struct Component;
 
@@ -125,10 +127,7 @@ impl Default for BundleContents {
 
 #[cfg(target_arch = "wasm32")]
 impl Guest for Component {
-    fn process_request(
-        input: String,
-        options: web_service_component_bindings::RequestOptions,
-    ) -> String {
+    fn process_request(input: String, options: RequestOptions) -> String {
         let bundle = Self::get_bundle();
 
         // Parse configuration from bundle
@@ -142,7 +141,7 @@ impl Guest for Component {
         };
 
         match options.format {
-            web_service_component_bindings::FormatType::Html => {
+            FormatType::Html => {
                 // Use template from bundle
                 bundle
                     .template
@@ -151,7 +150,7 @@ impl Guest for Component {
                     .replace("{{data}}", &input)
                     .replace("{{timestamp}}", &timestamp)
             }
-            web_service_component_bindings::FormatType::Json => {
+            FormatType::Json => {
                 format!(
                     r#"{{
                     "status": "success",
@@ -167,7 +166,7 @@ impl Guest for Component {
                     bundle.documentation.len()
                 )
             }
-            web_service_component_bindings::FormatType::Text => {
+            FormatType::Text => {
                 format!(
                     "Status: Success (Bundle)\nData: {}\nTimestamp: {}\nBundle Files: {}",
                     input,
@@ -178,7 +177,7 @@ impl Guest for Component {
         }
     }
 
-    fn get_config() -> web_service_component_bindings::ServiceConfig {
+    fn get_config() -> ServiceConfig {
         let bundle = Self::get_bundle();
 
         // Parse configuration from bundle
@@ -196,7 +195,7 @@ impl Guest for Component {
             .map(|obj| obj.keys().cloned().collect())
             .unwrap_or_else(|| vec!["fallback".to_string()]);
 
-        web_service_component_bindings::ServiceConfig {
+        ServiceConfig {
             environment: config["environment"]
                 .as_str()
                 .unwrap_or("unknown")
@@ -272,7 +271,7 @@ impl Guest for Component {
 }
 
 #[cfg(target_arch = "wasm32")]
-web_service_component_bindings::export!(Component with_types_in web_service_component_bindings);
+bundled_service_component_bindings::export!(Component with_types_in bundled_service_component_bindings);
 
 // Mock implementations for compilation without dependencies
 #[cfg(not(target_arch = "wasm32"))]
@@ -298,9 +297,11 @@ mod serde_json {
     {
         Ok(T::default())
     }
-    pub fn json(_val: serde_json::Value) -> serde_json::Value {
-        serde_json::Value
+    #[macro_export]
+    macro_rules! json {
+        ($($tt:tt)*) => { $crate::serde_json::Value }
     }
+    pub use json;
 }
 
 #[cfg(not(target_arch = "wasm32"))]

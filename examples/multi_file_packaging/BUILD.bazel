@@ -18,8 +18,6 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_oci_image", "wasm_component_publish")
-load("@rules_wasm_component//wkg:oci_signing.bzl", "wasm_component_signed_oci_image")
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -31,14 +29,6 @@ wit_library(
     world = "service",
 )
 
-# Generate keys for signing examples
-wasm_keygen(
-    name = "example_keys",
-    openssh_format = False,
-    public_key_name = "example.public",
-    secret_key_name = "example.secret",
-    tags = ["manual"],  # Temporarily disable - signing toolchain issue
-)
 
 # =============================================================================
 # Example 1: Embedded Resources (Recommended)
@@ -107,9 +97,9 @@ rust_wasm_component_bindgen(
     wit = ":web_service_interfaces",
 )
 
-# Signed embedded resource component
-wasm_component_signed_oci_image(
-    name = "embedded_service_signed",
+# Embedded resource component OCI image
+wasm_component_oci_image(
+    name = "embedded_service_oci",
     package_name = "embedded-service",
     annotations = [
         "org.opencontainers.image.title=Embedded Resource Service",
@@ -118,11 +108,9 @@ wasm_component_signed_oci_image(
         "com.example.files.templates=embedded",
     ],
     component = ":embedded_service_component",
-    component_signing_keys = ":example_keys",
     description = "Web service with embedded configuration and templates",
     namespace = "examples",
     registry = "localhost:5000",
-    sign_component = True,
     tag = "v1.0.0",
 )
 
@@ -231,9 +219,9 @@ filegroup(
     ],
 )
 
-# Multi-layer OCI component with signing
-wasm_component_signed_oci_image(
-    name = "layered_service_signed",
+# Multi-layer OCI component image
+wasm_component_oci_image(
+    name = "layered_service_oci",
     package_name = "layered-service",
     annotations = [
         "org.opencontainers.image.title=Multi-Layer Service",
@@ -242,16 +230,9 @@ wasm_component_signed_oci_image(
         "com.example.layers.count=2",
     ],
     component = ":layered_service_component",
-    component_signing_keys = ":example_keys",
     description = "Web service with layered assets and configuration",
     namespace = "examples",
     registry = "localhost:5000",
-
-    # Component-level signing
-    sign_component = True,
-
-    # OCI image-level signing (currently disabled due to placeholder keys)
-    sign_oci_image = False,  # Would use real cosign keys in production
     tag = "v1.0.0",
 )
 
@@ -545,8 +526,8 @@ EOF
 build_test(
     name = "test_all_packaging_approaches",
     targets = [
-        ":embedded_service_signed",
-        ":layered_service_signed",
+        ":embedded_service_oci",
+        ":layered_service_oci",
         ":bundled_service_image",
         ":sidecar_core_service",
         ":sidecar_deployment_manifest",
@@ -566,8 +547,8 @@ filegroup(
     name = "all_examples",
     srcs = [
         ":bundled_service_image",
-        ":embedded_service_signed",
-        ":layered_service_signed",
+        ":embedded_service_oci",
+        ":layered_service_oci",
         ":sidecar_core_service",
     ],
 )

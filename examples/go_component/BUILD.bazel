@@ -8,7 +8,7 @@ This example shows state-of-the-art Go support for WebAssembly Component Model:
 
 load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
-load("@rules_wasm_component//wit:wit_bindgen.bzl", "wit_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_bindgen")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -76,17 +76,6 @@ go_wasm_component(
         "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
-    go_mod = "go.mod",
-    go_sum = "go.sum",
-    optimization = "release",
-    wit = ":calculator_wit",
-    world = "calculator-world",
-)
-
-# Simplified calculator component with manual exports - test with WIT
-go_wasm_component(
-    name = "calculator_simple",
-    srcs = ["calculator_main.go"],
     go_mod = "go.mod",
     go_sum = "go.sum",
     optimization = "release",

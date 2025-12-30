@@ -5,7 +5,9 @@
 //! through external coordination mechanisms.
 
 #[cfg(target_arch = "wasm32")]
-use web_service_component_bindings::Guest;
+use sidecar_service_component_bindings::exports::example::web_service::web_service::{
+    FormatType, Guest, RequestOptions, ServiceConfig,
+};
 
 struct Component;
 
@@ -123,7 +125,7 @@ struct SidecarStatus {
 impl Guest for Component {
     fn process_request(
         input: String,
-        options: web_service_component_bindings::RequestOptions,
+        options: RequestOptions,
     ) -> String {
         let config = Self::get_config_from_sidecar()
             .unwrap_or_else(|_| serde_json::json!({"environment": "error"}));
@@ -135,7 +137,7 @@ impl Guest for Component {
         };
 
         match options.format {
-            web_service_component_bindings::FormatType::Html => {
+            FormatType::Html => {
                 let template_name = options.template_name.unwrap_or("response".to_string());
                 match Self::get_template_from_sidecar(&template_name) {
                     Ok(template) => template
@@ -148,7 +150,7 @@ impl Guest for Component {
                     }
                 }
             }
-            web_service_component_bindings::FormatType::Json => {
+            FormatType::Json => {
                 let sidecar_status = Self::check_sidecar_availability();
                 format!(
                     r#"{{
@@ -171,7 +173,7 @@ impl Guest for Component {
                     sidecar_status.documentation_available
                 )
             }
-            web_service_component_bindings::FormatType::Text => {
+            FormatType::Text => {
                 format!(
                     "Status: Success (Sidecar)\nData: {}\nTimestamp: {}\nSidecars Active: {}",
                     input,
@@ -186,7 +188,7 @@ impl Guest for Component {
         }
     }
 
-    fn get_config() -> web_service_component_bindings::ServiceConfig {
+    fn get_config() -> ServiceConfig {
         let config = Self::get_config_from_sidecar().unwrap_or_else(|_| {
             serde_json::json!({
                 "environment": "fallback",
@@ -201,7 +203,7 @@ impl Guest for Component {
             .map(|obj| obj.keys().cloned().collect())
             .unwrap_or_else(|| vec!["standalone".to_string()]);
 
-        web_service_component_bindings::ServiceConfig {
+        ServiceConfig {
             environment: config["environment"]
                 .as_str()
                 .unwrap_or("unknown")
@@ -296,7 +298,7 @@ impl Guest for Component {
 }
 
 #[cfg(target_arch = "wasm32")]
-web_service_component_bindings::export!(Component with_types_in web_service_component_bindings);
+sidecar_service_component_bindings::export!(Component with_types_in sidecar_service_component_bindings);
 
 // Mock implementations for compilation without dependencies
 #[cfg(not(target_arch = "wasm32"))]
@@ -330,9 +332,11 @@ mod serde_json {
     {
         Ok(T::default())
     }
-    pub fn json(_val: serde_json::Value) -> serde_json::Value {
-        serde_json::Value
+    #[macro_export]
+    macro_rules! json {
+        ($($tt:tt)*) => { $crate::serde_json::Value }
     }
+    pub use json;
 }
 
 #[cfg(not(target_arch = "wasm32"))]

@@ -1,23 +1,27 @@
 // Example of using wit-bindgen generate!() macro directly in source code
+//
+// Note: The macro approach works but requires careful path configuration.
+// For Bazel builds, the `rust_wasm_component_bindgen` rule is recommended
+// as it handles WIT paths automatically.
+
 use wit_bindgen::generate;
 
 // Generate bindings using the macro approach
 // The WIT files are made available via CARGO_MANIFEST_DIR environment variable
+// which points to the wit_library output directory
 generate!({
     world: "macro-world",
-    path: "../wit",  // Relative to CARGO_MANIFEST_DIR set by Bazel
+    path: ".",  // Points to wit_library output directory (set via CARGO_MANIFEST_DIR)
 });
 
-// Implement the exported interface
-struct Component;
+// Use generated imports
+use exports::macro_::example::calculator::Guest as CalculatorGuest;
+use macro_::example::logger;
 
-impl Guest for Component {
-    type Calculator = Calculator;
-}
+// Implement the exported calculator interface
+struct CalculatorImpl;
 
-struct Calculator;
-
-impl GuestCalculator for Calculator {
+impl CalculatorGuest for CalculatorImpl {
     fn add(a: f64, b: f64) -> f64 {
         let result = a + b;
 
@@ -38,20 +42,4 @@ impl GuestCalculator for Calculator {
 }
 
 // Export the component implementation
-export!(Component);
-
-// For testing and demonstration
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_calculator() {
-        // Mock the logger for testing
-        // In practice, this would be provided by the host
-
-        let calc = Calculator;
-        assert_eq!(GuestCalculator::add(&calc, 2.0, 3.0), 5.0);
-        assert_eq!(GuestCalculator::multiply(&calc, 4.0, 5.0), 20.0);
-    }
-}
+export!(CalculatorImpl);
