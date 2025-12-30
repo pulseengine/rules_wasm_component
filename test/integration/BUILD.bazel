@@ -8,8 +8,7 @@ workflows from WIT interface definition through component composition.
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("@rules_wasm_component//wac:defs.bzl", "wac_compose")
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
-load("@rules_wasm_component//wit:wit_deps_check.bzl", "wit_deps_check")
+load("@rules_wasm_component//wit:defs.bzl", "wit_deps_check", "wit_library")
 load(":integration_tests.bzl", "component_validation_test")
 
 # Test 1: Basic component workflow

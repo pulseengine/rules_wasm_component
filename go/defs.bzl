@@ -49,9 +49,13 @@ Example usage:
     )
 """
 
+load("//go/private:go_wasm_component_test.bzl", _go_wasm_component_test = "go_wasm_component_test")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_go_module_action")
+
+# Re-export test rule from private implementation
+go_wasm_component_test = _go_wasm_component_test
 
 def _assert_valid_go_component_attrs(ctx):
     """Validates go_wasm_component attributes for common mistakes and deprecated patterns.

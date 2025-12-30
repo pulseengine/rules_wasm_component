@@ -221,7 +221,7 @@ func generateRuleSchemas() map[string]RuleSchema {
 			Name:        "wit_deps_check",
 			Type:        "rule",
 			Description: "Analyzes a WIT file for missing dependencies and suggests fixes. Helps developers identify and resolve dependency issues.",
-			LoadFrom:    "@rules_wasm_component//wit:wit_deps_check.bzl",
+			LoadFrom:    "@rules_wasm_component//wit:defs.bzl",
 			Attributes: map[string]Attribute{
 				"name": {
 					Type:        "string",
