@@ -8,16 +8,6 @@ module(
 
 # Dependencies for WebAssembly tooling
 bazel_dep(name = "rules_rust", version = "0.68.1")
-
-# TEMPORARY: Use fork with wasm-component-ld.exe fix for Windows support
-# See: https://github.com/bazelbuild/rules_rust/pull/3727 (still open)
-# Remove this override once PR #3727 is merged into upstream rules_rust
-git_override(
-    module_name = "rules_rust",
-    remote = "https://github.com/avrabe/rules_rust.git",
-    commit = "1720224d4bd9fd03c7024b038bf2ab5c79488ca7",
-)
-
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.14")
