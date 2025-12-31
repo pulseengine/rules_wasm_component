@@ -8,14 +8,15 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     deps = [
-        ":wasm_aot_aspect",
-        ":wasm_component_new",
-        ":wasm_component_wizer",
-        ":wasm_embed_aot",
-        ":wasm_precompile",
-        ":wasm_run",
-        ":wasm_signing",
-        ":wasm_validate",
+        "//wasm/private:wasm_aot_aspect",
+        "//wasm/private:wasm_component_new",
+        "//wasm/private:wasm_component_wizer",
+        "//wasm/private:wasm_component_wizer_library",
+        "//wasm/private:wasm_embed_aot",
+        "//wasm/private:wasm_precompile",
+        "//wasm/private:wasm_run",
+        "//wasm/private:wasm_signing",
+        "//wasm/private:wasm_validate",
     ],
 )
 
@@ -24,69 +25,5 @@ bzl_library(
     srcs = ["extensions.bzl"],
     deps = [
         "//toolchains:wasm_toolchain",
-    ],
-)
-
-bzl_library(
-    name = "wasm_validate",
-    srcs = ["wasm_validate.bzl"],
-    deps = [
-        "//providers",
-    ],
-)
-
-bzl_library(
-    name = "wasm_component_new",
-    srcs = ["wasm_component_new.bzl"],
-    deps = [
-        "//providers",
-    ],
-)
-
-bzl_library(
-    name = "wasm_component_wizer",
-    srcs = ["wasm_component_wizer.bzl"],
-    deps = [
-        "//providers",
-    ],
-)
-
-bzl_library(
-    name = "wasm_signing",
-    srcs = ["wasm_signing.bzl"],
-    deps = [
-        "//providers",
-    ],
-)
-
-bzl_library(
-    name = "wasm_precompile",
-    srcs = ["wasm_precompile.bzl"],
-    deps = [
-        "//providers",
-    ],
-)
-
-bzl_library(
-    name = "wasm_run",
-    srcs = ["wasm_run.bzl"],
-    deps = [
-        "//providers",
-    ],
-)
-
-bzl_library(
-    name = "wasm_aot_aspect",
-    srcs = ["wasm_aot_aspect.bzl"],
-    deps = [
-        "//providers",
-    ],
-)
-
-bzl_library(
-    name = "wasm_embed_aot",
-    srcs = ["wasm_embed_aot.bzl"],
-    deps = [
-        "//providers",
     ],
 )

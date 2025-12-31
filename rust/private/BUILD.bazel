@@ -20,6 +20,8 @@
 # Stability: These files may change without notice between versions.
 # Users should only depend on //rust:defs.bzl for stable API.
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 # Visibility for private implementation files
 # - //rust:__subpackages__ - rust package can access all
 # - //go:__pkg__, //cpp:__pkg__, //js:__pkg__ - for shared transitions.bzl
@@ -32,3 +34,125 @@ package(default_visibility = [
     "//test_wac:__pkg__",
     "//wasm:__pkg__",
 ])
+
+# bzl_library targets for stardoc documentation
+bzl_library(
+    name = "rust_wasm_component",
+    srcs = ["rust_wasm_component.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = [
+        ":transitions",
+        "//common",
+        "//providers:providers",
+        "//tools/bazel_helpers:wasm_tools_actions",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_component_bindgen",
+    srcs = ["rust_wasm_component_bindgen.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = [
+        ":rust_wasm_component",
+        ":transitions",
+        "//providers:providers",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_component_wizer",
+    srcs = ["rust_wasm_component_wizer.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "rust_wasm_binary",
+    srcs = ["rust_wasm_binary.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = [
+        ":transitions",
+        "//common",
+    ],
+)
+
+bzl_library(
+    name = "clippy",
+    srcs = ["clippy.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "transitions",
+    srcs = ["transitions.bzl"],
+    visibility = [
+        "//cpp:__pkg__",
+        "//docs:__pkg__",
+        "//go:__pkg__",
+        "//js:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = ["//common"],
+)
+
+bzl_library(
+    name = "rust_wasm_component_test",
+    srcs = ["rust_wasm_component_test.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = [
+        ":rust_wasm_component",
+        "//providers:providers",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_module",
+    srcs = ["rust_wasm_module.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = [
+        ":transitions",
+        "//common",
+        "//providers:providers",
+    ],
+)
+
+bzl_library(
+    name = "rust_wasm_component_macro",
+    srcs = ["rust_wasm_component_macro.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+    deps = [":rust_wasm_component"],
+)
+
+bzl_library(
+    name = "debug_windows",
+    srcs = ["debug_windows.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//rust:__pkg__",
+    ],
+)

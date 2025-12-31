@@ -20,7 +20,109 @@
 # Stability: These files may change without notice between versions.
 # Users should only depend on //wasm:defs.bzl for stable API.
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(default_visibility = [
     "//rust:__subpackages__",
     "//wasm:__subpackages__",
 ])
+
+# bzl_library targets for stardoc documentation
+bzl_library(
+    name = "wasm_validate",
+    srcs = ["wasm_validate.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasm_component_new",
+    srcs = ["wasm_component_new.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasm_component_wizer",
+    srcs = ["wasm_component_wizer.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasm_component_wizer_library",
+    srcs = ["wasm_component_wizer_library.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasm_signing",
+    srcs = ["wasm_signing.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasm_precompile",
+    srcs = ["wasm_precompile.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasm_run",
+    srcs = ["wasm_run.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasm_aot_aspect",
+    srcs = ["wasm_aot_aspect.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasm_embed_aot",
+    srcs = ["wasm_embed_aot.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "ssh_keygen",
+    srcs = ["ssh_keygen.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+)
