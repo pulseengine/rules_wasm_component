@@ -16,6 +16,7 @@ def rust_wasm_component_wizer(
         crate_root = None,
         edition = "2021",
         init_function_name = "wizer-initialize",
+        tags = [],
         **kwargs):
     """Builds a Rust WebAssembly component with Wizer pre-initialization.
 
@@ -32,6 +33,7 @@ def rust_wasm_component_wizer(
         crate_root: Rust crate root file
         edition: Rust edition (default: "2021")
         init_function_name: Wizer initialization function name (default: "wizer-initialize")
+        tags: Tags to apply to all generated targets
         **kwargs: Additional arguments passed to rust_library
     """
 
@@ -84,6 +86,9 @@ def rust_wasm_component_wizer(
         # Filter out conflicting kwargs
         filtered_kwargs = {k: v for k, v in kwargs.items() if k != "tags"}
 
+        # Combine user tags with internal tags
+        component_tags = tags + ["wasm_component"]
+
         rust_wasm_component(
             name = component_name,
             srcs = all_srcs,
@@ -95,7 +100,7 @@ def rust_wasm_component_wizer(
             wit = wit,
             adapter = adapter,
             visibility = ["//visibility:private"],
-            tags = ["wasm_component"],
+            tags = component_tags,
             **filtered_kwargs
         )
 
@@ -106,6 +111,7 @@ def rust_wasm_component_wizer(
             component = ":" + component_name,
             init_function_name = init_function_name,
             visibility = ["//visibility:private"],
+            tags = tags,
         )
 
     # Create aliases for the default profile

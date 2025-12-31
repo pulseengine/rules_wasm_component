@@ -166,8 +166,6 @@
     "https://bcr.bazel.build/modules/rules_python/0.40.0/MODULE.bazel": "9d1a3cd88ed7d8e39583d9ffe56ae8a244f67783ae89b60caafc9f5cf318ada7",
     "https://bcr.bazel.build/modules/rules_python/1.6.0/MODULE.bazel": "7e04ad8f8d5bea40451cf80b1bd8262552aa73f841415d20db96b7241bd027d8",
     "https://bcr.bazel.build/modules/rules_python/1.6.0/source.json": "e980f654cf66ec4928672f41fc66c4102b5ea54286acf4aecd23256c84211be6",
-    "https://bcr.bazel.build/modules/rules_rust/0.68.1/MODULE.bazel": "8d3332ef4079673385eb81f8bd68b012decc04ac00c9d5a01a40eff90301732c",
-    "https://bcr.bazel.build/modules/rules_rust/0.68.1/source.json": "3378e746f81b62457fdfd37391244fa8ff075ba85c05931ee4f3a20ac1efe963",
     "https://bcr.bazel.build/modules/rules_shell/0.2.0/MODULE.bazel": "fda8a652ab3c7d8fee214de05e7a9916d8b28082234e8d2c0094505c5268ed3c",
     "https://bcr.bazel.build/modules/rules_shell/0.3.0/MODULE.bazel": "de4402cd12f4cc8fda2354fce179fdb068c0b9ca1ec2d2b17b3e21b24c1a937b",
     "https://bcr.bazel.build/modules/rules_shell/0.6.1/MODULE.bazel": "72e76b0eea4e81611ef5452aa82b3da34caca0c8b7b5c0c9584338aa93bae26b",
@@ -1738,7 +1736,7 @@
     },
     "@@rules_rust+//crate_universe:extension.bzl%crate": {
       "general": {
-        "bzlTransitiveDigest": "dTlKbRqsBuDU75xorECikvyTZyJtS25UfD67JFzfEj4=",
+        "bzlTransitiveDigest": "DHd+nN0U4OLdhDafSylvQBxLCA9lHvuamuqdEIWmbvI=",
         "usagesDigest": "iOQX0KZHZHBd7Nry3QuQ8lYl4RpiPmUMkGHHcy0Ldd0=",
         "recordedFileInputs": {
           "@@+wasm_tool_repositories+wasmsign2_src//Cargo.toml": "fd9646fb96e6ca6dda4420f08e8f238a3ec86ba525ccd4311a6c7e3a398eef99",
@@ -10719,6 +10717,11 @@
           ],
           [
             "rules_rust+",
+            "cargo_bazel_bootstrap",
+            "rules_rust++cu_nr+cargo_bazel_bootstrap"
+          ],
+          [
+            "rules_rust+",
             "rules_cc",
             "rules_cc+"
           ],
@@ -10732,7 +10735,7 @@
     },
     "@@rules_rust+//crate_universe/private:internal_extensions.bzl%cu_nr": {
       "general": {
-        "bzlTransitiveDigest": "eojbNu33bdC0HyXn/uBPD2CumpZOE9d3tRNyymvX148=",
+        "bzlTransitiveDigest": "tnHU4PDSzOsLHwg1fT1ELXBqvVfJnkDTg1cQsLpURqM=",
         "usagesDigest": "oUK0ytEbfl+CaIzEjRqZCnsb5eUCZOx9usreQy09/3o=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
