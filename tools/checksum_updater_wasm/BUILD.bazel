@@ -61,6 +61,10 @@ alias(
     actual = ":checksum_updater_wasm_component",
 )
 
+# Note: Wizer pre-initialization with WebAssembly components requires the init
+# function to be exported via WIT interface, not just #[export_name]. This target
+# is experimental until proper component model integration is implemented.
+# Tagged manual to exclude from `bazel build //...`
 rust_wasm_component_wizer(
     name = "checksum_updater_wasm_wizer",
     srcs = ["src/main.rs"],
@@ -68,8 +72,9 @@ rust_wasm_component_wizer(
         "default",
         "wizer",
     ],
-    init_function_name = "wizer_initialize",
+    init_function_name = "wizer-initialize",
     profiles = ["release"],
+    tags = ["manual"],  # Excluded from default builds - experimental
     deps = [
         "@crates//:anyhow",
         "@crates//:chrono",

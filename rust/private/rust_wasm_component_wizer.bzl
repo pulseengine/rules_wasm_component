@@ -15,7 +15,7 @@ def rust_wasm_component_wizer(
         visibility = None,
         crate_root = None,
         edition = "2021",
-        init_function_name = "wizer.initialize",
+        init_function_name = "wizer-initialize",
         **kwargs):
     """Builds a Rust WebAssembly component with Wizer pre-initialization.
 
@@ -31,7 +31,7 @@ def rust_wasm_component_wizer(
         visibility: Target visibility
         crate_root: Rust crate root file
         edition: Rust edition (default: "2021")
-        init_function_name: Wizer initialization function name (default: "wizer.initialize")
+        init_function_name: Wizer initialization function name (default: "wizer-initialize")
         **kwargs: Additional arguments passed to rust_library
     """
 
