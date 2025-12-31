@@ -161,6 +161,8 @@ jobs:
             //wasm/... \
             //wit/... \
             //tools/... \
+            -//tools/checksum_updater_wasm:checksum_updater_wasm_wizer_release \
+            -//tools/checksum_updater_wasm:checksum_updater_wasm_wizer_component_release \
             //providers/... \
             //test/go/... \
             //test/cpp/... \
