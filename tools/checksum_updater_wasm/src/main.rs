@@ -904,8 +904,8 @@ fn get_tool_info(tool: &str) -> Result<ToolRuleInfo> {
 }
 
 /// Wizer initialization function
-#[no_mangle]
-pub fn wizer_initialize() {
+#[export_name = "wizer-initialize"]
+pub extern "C" fn wizer_initialize() {
     // Pre-load the registry for faster startup
     if let Ok(manager) = ChecksumManager::new() {
         if let Ok(tools) = manager.discover_tools() {
