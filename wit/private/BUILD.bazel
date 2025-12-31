@@ -4,9 +4,73 @@
 # PRIVATE IMPLEMENTATION - DO NOT DEPEND ON DIRECTLY
 # Public API: //wit:defs.bzl
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(default_visibility = [
     "//cpp:__pkg__",
     "//go:__pkg__",
     "//rust:__subpackages__",
     "//wit:__subpackages__",
 ])
+
+# bzl_library targets for stardoc documentation
+bzl_library(
+    name = "wit_library",
+    srcs = ["wit_library.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wit:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wit_bindgen",
+    srcs = ["wit_bindgen.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wit:__pkg__",
+    ],
+    deps = [
+        "//providers:providers",
+        "@bazel_skylib//lib:paths",
+    ],
+)
+
+bzl_library(
+    name = "symmetric_wit_bindgen",
+    srcs = ["symmetric_wit_bindgen.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wit:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wit_markdown",
+    srcs = ["wit_markdown.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wit:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)
+
+bzl_library(
+    name = "wasi_deps",
+    srcs = ["wasi_deps.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wit:__pkg__",
+    ],
+)
+
+bzl_library(
+    name = "wit_deps_check",
+    srcs = ["wit_deps_check.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wit:__pkg__",
+    ],
+)
