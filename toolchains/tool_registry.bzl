@@ -69,7 +69,8 @@ _URL_PATTERNS = {
     },
     "wac": {
         "base": "https://github.com/{repo}/releases/download/v{version}",
-        "filename": "wac-v{version}-{platform_name}.tar.gz",
+        "filename": "wac-cli-{platform_name}",
+        "is_binary": True,  # wac releases are standalone binaries
     },
     "wkg": {
         # wkg releases are standalone binaries, not archives
