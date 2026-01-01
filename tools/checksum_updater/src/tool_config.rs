@@ -19,6 +19,18 @@ pub struct ToolConfigEntry {
     pub url_pattern: UrlPattern,
     /// Prefix to strip from GitHub release tag names (e.g., "v" for "v1.0.0", "wasi-sdk-" for "wasi-sdk-29")
     pub tag_prefix: Option<String>,
+    /// Version filter for selecting which releases to consider
+    pub version_filter: VersionFilter,
+}
+
+/// Filter for selecting which versions to consider during updates
+#[derive(Debug, Clone, Default)]
+pub enum VersionFilter {
+    /// Accept any stable release (default behavior)
+    #[default]
+    Any,
+    /// Only accept LTS versions (for Node.js: even major versions like 20, 22, 24)
+    LtsOnly,
 }
 
 /// URL pattern for downloading tool releases
@@ -74,6 +86,7 @@ impl ToolConfig {
                     },
                 },
                 tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::Any,
             },
         );
 
@@ -101,6 +114,7 @@ impl ToolConfig {
                     },
                 },
                 tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::Any,
             },
         );
 
@@ -143,6 +157,7 @@ impl ToolConfig {
                     },
                 },
                 tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::Any,
             },
         );
 
@@ -177,10 +192,12 @@ impl ToolConfig {
                     },
                 },
                 tag_prefix: Some("wasi-sdk-".to_string()),
+                version_filter: VersionFilter::Any,
             },
         );
 
         // nodejs configuration
+        // Uses LtsOnly filter to only accept even-numbered major versions (20, 22, 24, etc.)
         tools.insert(
             "nodejs".to_string(),
             ToolConfigEntry {
@@ -205,6 +222,7 @@ impl ToolConfig {
                     },
                 },
                 tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::LtsOnly,
             },
         );
 
@@ -235,10 +253,13 @@ impl ToolConfig {
                     },
                 },
                 tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::Any,
             },
         );
 
         // tinygo configuration
+        // Note: Windows uses .zip instead of .tar.gz, so we skip it in automated updates
+        // Windows checksums need to be added manually
         tools.insert(
             "tinygo".to_string(),
             ToolConfigEntry {
@@ -248,21 +269,21 @@ impl ToolConfig {
                     "darwin_arm64".to_string(),
                     "linux_amd64".to_string(),
                     "linux_arm64".to_string(),
-                    "windows_amd64".to_string(),
+                    // Note: windows_amd64 excluded - uses .zip extension
                 ],
                 url_pattern: UrlPattern::Custom {
                     pattern: "https://github.com/tinygo-org/tinygo/releases/download/v{version}/tinygo{version}.{platform}.tar.gz".to_string(),
                     platform_mapping: {
                         let mut map = HashMap::new();
-                        map.insert("darwin_amd64".to_string(), ".darwin-amd64".to_string());
-                        map.insert("darwin_arm64".to_string(), ".darwin-arm64".to_string());
-                        map.insert("linux_amd64".to_string(), ".linux-amd64".to_string());
-                        map.insert("linux_arm64".to_string(), ".linux-arm64".to_string());
-                        map.insert("windows_amd64".to_string(), ".windows-amd64".to_string());
+                        map.insert("darwin_amd64".to_string(), "darwin-amd64".to_string());
+                        map.insert("darwin_arm64".to_string(), "darwin-arm64".to_string());
+                        map.insert("linux_amd64".to_string(), "linux-amd64".to_string());
+                        map.insert("linux_arm64".to_string(), "linux-arm64".to_string());
                         map
                     },
                 },
                 tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::Any,
             },
         );
 
@@ -308,6 +329,31 @@ impl ToolConfig {
                 },
             },
             tag_prefix: Some("v".to_string()),
+            version_filter: VersionFilter::Any,
+        }
+    }
+}
+
+impl VersionFilter {
+    /// Check if a version passes the filter
+    pub fn accepts(&self, version: &str) -> bool {
+        match self {
+            VersionFilter::Any => true,
+            VersionFilter::LtsOnly => {
+                // For Node.js, even major versions are LTS (20, 22, 24, etc.)
+                // Odd major versions are "Current" (21, 23, 25, etc.)
+                if let Ok(semver) = semver::Version::parse(version) {
+                    semver.major % 2 == 0
+                } else {
+                    // If we can't parse the version, try to extract major version
+                    version
+                        .split('.')
+                        .next()
+                        .and_then(|major| major.parse::<u64>().ok())
+                        .map(|major| major % 2 == 0)
+                        .unwrap_or(false)
+                }
+            }
         }
     }
 }
