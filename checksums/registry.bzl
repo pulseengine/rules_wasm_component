@@ -201,8 +201,33 @@ def _get_fallback_checksums(tool_name):
         "wit-bindgen": {
             "tool_name": "wit-bindgen",
             "github_repo": "bytecodealliance/wit-bindgen",
-            "latest_version": "0.49.0",
+            "latest_version": "0.50.0",
             "versions": {
+                "0.50.0": {
+                    "release_date": "2025-12-23",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "05aee2cd072c4964b2964a29877ac88d02fb640594a0207f419941acb0f6e301",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "67bef921145fc43e9c47b88af5ce6acc4c96cb68175280e1e71d672f5acc5dba",
+                            "url_suffix": "aarch64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "a8d6710d11f71d80c2977fa925dc8d9b2fa31ba8044f71aa5c633ce6e1dcd72c",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "e7bf93e209b23be04ce22de9d5d4e15f8b1c3c270f84dfc0469a8167d24ab865",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "7fa1bdff1f6667da74d76a421bfa3df80beb60ab8fbf0ff8ef14e29a8ca2b500",
+                            "url_suffix": "x86_64-windows.zip",
+                        },
+                    },
+                },
                 "0.49.0": {
                     "release_date": "2025-12-03",
                     "platforms": {
@@ -671,9 +696,45 @@ def _get_fallback_checksums(tool_name):
         "nodejs": {
             "tool_name": "nodejs",
             "github_repo": "nodejs/node",
-            "latest_version": "20.18.0",
+            "latest_version": "24.12.0",
             "build_type": "download",
             "versions": {
+                "24.12.0": {
+                    "release_date": "2025-12-10",
+                    "lts": "Krypton",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "b82ea4c62fd08e250cab59d625e75d77cc5b0a3d60c6698ebee4545c88a169c5",
+                            "url_suffix": "darwin-x64.tar.gz",
+                            "binary_path": "node-v{}-darwin-x64/bin/node",
+                            "npm_path": "node-v{}-darwin-x64/bin/npm",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "319f221adc5e44ff0ed57e8a441b2284f02b8dc6fc87b8eb92a6a93643fd8080",
+                            "url_suffix": "darwin-arm64.tar.gz",
+                            "binary_path": "node-v{}-darwin-arm64/bin/node",
+                            "npm_path": "node-v{}-darwin-arm64/bin/npm",
+                        },
+                        "linux_amd64": {
+                            "sha256": "6159227e0af7d7c3c6bb2fa900452b04a6cb8841a702a79acc613209d70b04d0",
+                            "url_suffix": "linux-x64.tar.gz",
+                            "binary_path": "node-v{}-linux-x64/bin/node",
+                            "npm_path": "node-v{}-linux-x64/bin/npm",
+                        },
+                        "linux_arm64": {
+                            "sha256": "9b2a2eeb98a8eb37361224e2a1d060300ad2dd143af58dfdb16de785df0f1228",
+                            "url_suffix": "linux-arm64.tar.gz",
+                            "binary_path": "node-v{}-linux-arm64/bin/node",
+                            "npm_path": "node-v{}-linux-arm64/bin/npm",
+                        },
+                        "windows_amd64": {
+                            "sha256": "9c125f61ae947b52e779095830f9cac267846a043ef7192183c84016aaad2812",
+                            "url_suffix": "win-x64.zip",
+                            "binary_path": "node-v{}-win-x64/node.exe",
+                            "npm_path": "node-v{}-win-x64/npm.cmd",
+                        },
+                    },
+                },
                 "18.19.0": {
                     "release_date": "2024-01-09",
                     "platforms": {
