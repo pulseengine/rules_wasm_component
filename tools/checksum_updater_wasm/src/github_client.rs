@@ -28,11 +28,17 @@ pub struct GitHubAsset {
 /// GitHub API client
 pub struct GitHubClient {
     client: reqwest::Client,
+    auth_header: Option<String>,
 }
 
 impl GitHubClient {
-    /// Create a new GitHub client
+    /// Create a new GitHub client with optional authentication.
+    ///
+    /// Automatically reads GITHUB_TOKEN from environment for authenticated API access.
+    /// Authenticated requests get 5,000 requests/hour vs 60 for unauthenticated.
     pub fn new() -> Self {
+        let token = std::env::var("GITHUB_TOKEN").ok();
+
         // For WASI, we use a simpler client configuration
         let client = reqwest::Client::builder()
             .user_agent("checksum_updater_wasm/0.1.0")
@@ -40,7 +46,35 @@ impl GitHubClient {
             .build()
             .expect("Failed to create HTTP client");
 
-        Self { client }
+        if token.is_some() {
+            info!("GitHub API: Using authenticated requests (5000 req/hour limit)");
+        } else {
+            info!("GitHub API: Using unauthenticated requests (60 req/hour limit)");
+            info!("Tip: Set GITHUB_TOKEN environment variable for higher rate limits");
+        }
+
+        Self {
+            client,
+            auth_header: token.map(|t| format!("Bearer {}", t)),
+        }
+    }
+
+    /// Build a GET request with optional authentication
+    fn authenticated_request(&self, url: &str) -> reqwest::RequestBuilder {
+        let mut request = self.client.get(url);
+        if let Some(ref auth) = self.auth_header {
+            request = request.header("Authorization", auth);
+        }
+        request
+    }
+
+    /// Build a HEAD request with optional authentication
+    fn authenticated_head_request(&self, url: &str) -> reqwest::RequestBuilder {
+        let mut request = self.client.head(url);
+        if let Some(ref auth) = self.auth_header {
+            request = request.header("Authorization", auth);
+        }
+        request
     }
 
     /// Get the latest release for a repository
@@ -49,8 +83,7 @@ impl GitHubClient {
         debug!("Fetching latest release: {}", url);
 
         let response = self
-            .client
-            .get(&url)
+            .authenticated_request(&url)
             .send()
             .await
             .with_context(|| format!("Failed to fetch release from {}", url))?;
@@ -119,8 +152,7 @@ impl GitHubClient {
             debug!("Fetching releases page {}: {}", page, url);
 
             let response = self
-                .client
-                .get(&url)
+                .authenticated_request(&url)
                 .send()
                 .await
                 .with_context(|| format!("Failed to fetch releases from {}", url))?;
@@ -162,8 +194,7 @@ impl GitHubClient {
         debug!("Checking if release exists: {}", url);
 
         let response = self
-            .client
-            .head(&url)
+            .authenticated_head_request(&url)
             .send()
             .await
             .with_context(|| format!("Failed to check release existence at {}", url))?;
@@ -177,8 +208,7 @@ impl GitHubClient {
         debug!("Checking rate limit: {}", url);
 
         let response = self
-            .client
-            .get(url)
+            .authenticated_request(url)
             .send()
             .await
             .context("Failed to check rate limit")?;
