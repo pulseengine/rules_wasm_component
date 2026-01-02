@@ -146,6 +146,7 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
         Dict with download results:
             - binary_path: Path to the main binary
             - extract_dir: Directory where files were extracted (if applicable)
+            - tool_info: Full tool info dict from registry (for custom paths like npm_path)
     """
     if platform == None:
         platform = _detect_platform(repository_ctx)
@@ -187,6 +188,7 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
         return {
             "binary_path": binary_name,
             "extract_dir": None,
+            "tool_info": tool_info,
         }
 
     # Archive download - determine type from URL suffix
@@ -216,6 +218,7 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
     return {
         "binary_path": binary_path,
         "extract_dir": ".",
+        "tool_info": tool_info,
     }
 
 def _calculate_strip_prefix(tool_name, version, tool_info):

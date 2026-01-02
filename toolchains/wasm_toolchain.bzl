@@ -480,8 +480,8 @@ def _download_wasm_tools(repository_ctx):
     tool_registry.download(repository_ctx, "wasm-tools", version, platform)
 
 def _download_wac(repository_ctx):
-    """Download wac only"""
-    platform = _detect_host_platform(repository_ctx)
+    """Download wac using unified tool registry"""
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Get version from bundle if specified, otherwise from tool_versions.bzl
@@ -496,22 +496,8 @@ def _download_wac(repository_ctx):
     else:
         wac_version = get_tool_version("wac")  # From tool_versions.bzl
 
-    # Get checksum and platform info from tool_versions.bzl
-    tool_info = get_tool_info("wac", wac_version, platform)
-    if not tool_info:
-        fail("Unsupported platform {} for wac version {}".format(platform, wac_version))
-
-    wac_url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-cli-{}".format(
-        wac_version,
-        tool_info["platform_name"],
-    )
-
-    repository_ctx.download(
-        url = wac_url,
-        output = "wac",
-        sha256 = tool_info["sha256"],
-        executable = True,
-    )
+    # Use unified tool_registry for download (wac is a standalone binary)
+    tool_registry.download(repository_ctx, "wac", wac_version, platform, output_name = "wac")
 
 def _download_wit_bindgen(repository_ctx):
     """Download wit-bindgen using unified tool registry"""

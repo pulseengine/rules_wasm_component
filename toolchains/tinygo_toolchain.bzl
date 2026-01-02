@@ -11,28 +11,12 @@ Architecture:
 """
 
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 
 _TINYGO_TOOLCHAIN_DOC = """
 """
 
-def _detect_host_platform(repository_ctx):
-    """Detect the host platform for tool downloads"""
-    os_name = repository_ctx.os.name.lower()
-    arch = repository_ctx.os.arch.lower()
-
-    # Use Bazel's native architecture detection instead of uname -m
-    if "mac" in os_name or "darwin" in os_name:
-        if arch == "aarch64" or "arm64" in arch:
-            return "darwin_arm64"
-        return "darwin_amd64"
-    elif "linux" in os_name:
-        if arch == "aarch64" or "arm64" in arch:
-            return "linux_arm64"
-        return "linux_amd64"
-    elif "windows" in os_name:
-        return "windows_amd64"
-    else:
-        fail("Unsupported operating system: {}".format(os_name))
+# Platform detection now uses tool_registry.detect_platform
 
 def _download_go(repository_ctx, version, platform):
     """Download hermetic Go SDK for TinyGo to use
@@ -271,7 +255,7 @@ exec "{go_binary}" tool wit-bindgen-go "$@"
 def _tinygo_toolchain_repository_impl(repository_ctx):
     """Implementation of TinyGo toolchain repository rule"""
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Resolve version from bundle if specified, otherwise use explicit version

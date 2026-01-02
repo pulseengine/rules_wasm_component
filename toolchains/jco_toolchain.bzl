@@ -3,6 +3,7 @@
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
 load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 load("//checksums:registry.bzl", "get_tool_info")
 
 def _get_nodejs_toolchain_info(repository_ctx):
@@ -61,32 +62,12 @@ jco_toolchain = rule(
     doc = "Declares a jco (JavaScript Component Tools) toolchain",
 )
 
-def _detect_host_platform(repository_ctx):
-    """Detect the host platform for jco"""
-
-    os_name = repository_ctx.os.name.lower()
-    arch = repository_ctx.os.arch.lower()
-
-    # Normalize platform names for cross-platform compatibility
-    if "mac" in os_name or "darwin" in os_name:
-        os_name = "darwin"
-    elif "windows" in os_name:
-        os_name = "windows"
-    elif "linux" in os_name:
-        os_name = "linux"
-
-    # Normalize architecture names
-    if arch == "x86_64":
-        arch = "amd64"
-    elif arch == "aarch64":
-        arch = "arm64"
-
-    return "{}_{}".format(os_name, arch)
+# Platform detection now uses tool_registry.detect_platform
 
 def _jco_toolchain_repository_impl(repository_ctx):
     """Create jco toolchain repository"""
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Resolve versions from bundle if specified, otherwise use explicit versions
