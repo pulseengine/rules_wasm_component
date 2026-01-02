@@ -209,7 +209,7 @@ def _get_fallback_checksums(tool_name):
                     "platforms": {
                         "linux_amd64": {
                             "sha256": "064fc0c07f4d71f7369b168c337caa88ef32a6b00b16449cea44790ccadfc2b4",
-                            "url_suffix": "linux-amd64.tar.xz",
+                            "url_suffix": "linux-amd64.tar.gz",
                         },
                         "darwin_arm64": {
                             "sha256": "a20841a616de3b3403e52e3789cb60c147ab52b3fe6c33b31fdffba0164ae031",
@@ -217,7 +217,7 @@ def _get_fallback_checksums(tool_name):
                         },
                         "linux_arm64": {
                             "sha256": "4720693b333826569d5c1ed746a735c4d1983719c95af5bdd4d9dfeaa755e933",
-                            "url_suffix": "linux-arm64.tar.xz",
+                            "url_suffix": "linux-arm64.tar.gz",
                         },
                         "darwin_amd64": {
                             "sha256": "36c9423a63f9548d142908b06c67e198d878a0fed076b8ec5dbf8a3350a73eb4",
