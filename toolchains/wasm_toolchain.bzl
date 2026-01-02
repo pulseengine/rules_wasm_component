@@ -89,33 +89,13 @@ wasm_tools_toolchain = rule(
     doc = "Declares a WebAssembly toolchain with signing support",
 )
 
-def _detect_host_platform(repository_ctx):
-    """Detect the host platform"""
-
-    os_name = repository_ctx.os.name.lower()
-    arch = repository_ctx.os.arch.lower()
-
-    # Normalize platform names for cross-platform compatibility
-    if "mac" in os_name or "darwin" in os_name:
-        os_name = "darwin"
-    elif "windows" in os_name:
-        os_name = "windows"
-    elif "linux" in os_name:
-        os_name = "linux"
-
-    # Normalize architecture names
-    if arch == "x86_64":
-        arch = "amd64"
-    elif arch == "aarch64":
-        arch = "arm64"
-
-    return "{}_{}".format(os_name, arch)
+# Platform detection now uses tool_registry.detect_platform
 
 def _wasm_toolchain_repository_impl(repository_ctx):
     """Create toolchain repository with enhanced tool management"""
 
     strategy = repository_ctx.attr.strategy
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Resolve version from bundle or use explicit version attribute
@@ -160,7 +140,7 @@ def _wasm_toolchain_repository_impl(repository_ctx):
 def _setup_downloaded_tools_enhanced(repository_ctx):
     """Download prebuilt tools with enhanced error handling and caching"""
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     version = repository_ctx.attr.version
 
     tools_to_download = [
@@ -321,7 +301,7 @@ exit 1
 def _setup_downloaded_tools(repository_ctx):
     """Download prebuilt tools from GitHub releases (simple & reliable)"""
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     print("Setting up tools for platform: {}".format(platform))
 
     # Download individual tools using simple, proven methods
@@ -567,7 +547,7 @@ def _create_build_files(repository_ctx):
     """Create BUILD files for the toolchain"""
 
     strategy = repository_ctx.attr.strategy
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
 
     if strategy == "build":
         # For build strategy, reference external git repositories directly

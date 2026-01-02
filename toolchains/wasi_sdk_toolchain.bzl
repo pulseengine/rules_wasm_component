@@ -2,6 +2,7 @@
 
 load("//checksums:registry.bzl", "get_tool_info")
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 
 def _get_wasi_sdk_platform_info(platform, version):
     """Get platform info and checksum for WASI SDK from centralized registry"""
@@ -84,27 +85,7 @@ wasi_sdk_toolchain = rule(
     doc = "Declares a WASI SDK toolchain",
 )
 
-def _detect_host_platform(repository_ctx):
-    """Detect the host platform"""
-
-    os_name = repository_ctx.os.name.lower()
-    arch = repository_ctx.os.arch.lower()
-
-    # Normalize platform names for cross-platform compatibility
-    if "mac" in os_name or "darwin" in os_name:
-        os_name = "darwin"
-    elif "windows" in os_name:
-        os_name = "windows"
-    elif "linux" in os_name:
-        os_name = "linux"
-
-    # Normalize architecture names
-    if arch == "x86_64":
-        arch = "amd64"
-    elif arch == "aarch64":
-        arch = "arm64"
-
-    return "{}_{}".format(os_name, arch)
+# Platform detection now uses tool_registry.detect_platform
 
 def _wasi_sdk_repository_impl(repository_ctx):
     """Create WASI SDK repository"""
@@ -136,7 +117,7 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
     else:
         version = repository_ctx.attr.version
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
 
     # Download WASI SDK
     url = repository_ctx.attr.url
@@ -181,7 +162,7 @@ def _create_wasi_sdk_build_file(repository_ctx):
     """Create BUILD file for WASI SDK"""
 
     # Detect platform to determine binary extension
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     is_windows = platform.startswith("windows_")
     exe_ext = ".exe" if is_windows else ""
 
