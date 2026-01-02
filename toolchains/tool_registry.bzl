@@ -10,6 +10,28 @@ Usage:
     # In repository rule implementation:
     platform = tool_registry.detect_platform(ctx)
     tool_registry.download(ctx, "wasm-tools", "1.243.0", platform)
+
+Enterprise/Air-Gap Support:
+    The registry respects these environment variables for enterprise deployments:
+
+    BAZEL_WASM_OFFLINE=1
+        Use vendored files from third_party/toolchains/ (must run vendor workflow first)
+
+    BAZEL_WASM_VENDOR_DIR=/path/to/vendor
+        Use custom vendor directory (e.g., NFS mount for shared cache)
+
+    BAZEL_WASM_MIRROR=https://mirror.company.com
+        Download from corporate mirror instead of public URLs
+        Mirror structure: {mirror}/{tool}/{version}/{platform}/{filename}
+
+    Example .bazelrc for enterprise:
+        common --repo_env=BAZEL_WASM_VENDOR_DIR=/mnt/shared/wasm-tools
+        common --repo_env=BAZEL_NPM_REGISTRY=https://npm.company.com
+
+    Vendor workflow (run once by IT):
+        bazel fetch @vendored_toolchains//...
+        bazel run @vendored_toolchains//:export_to_third_party
+        rsync -av third_party/toolchains/ /mnt/shared/wasm-tools/
 """
 
 load("//checksums:registry.bzl", "get_github_repo", "get_tool_checksum", "get_tool_info")
@@ -127,6 +149,108 @@ def _build_download_url(tool_name, version, platform, tool_info, github_repo):
     return "{}/{}".format(base_url, filename)
 
 # =============================================================================
+# Enterprise/Air-Gap Source Resolution
+# =============================================================================
+
+def _resolve_download_source(repository_ctx, tool_name, version, platform, default_url, filename):
+    """Resolve download source with enterprise air-gap support.
+
+    Checks environment variables in priority order:
+    1. BAZEL_WASM_OFFLINE=1 - Use vendored files from third_party/toolchains/
+    2. BAZEL_WASM_VENDOR_DIR - Custom vendor directory (NFS/shared)
+    3. BAZEL_WASM_MIRROR - Single mirror for all tools
+    4. Default URL (github.com, go.dev, nodejs.org, etc.)
+
+    Args:
+        repository_ctx: Bazel repository context
+        tool_name: Name of the tool (e.g., "wasm-tools")
+        version: Version string (e.g., "1.243.0")
+        platform: Platform string (e.g., "darwin_arm64")
+        default_url: Default download URL
+        filename: Filename portion of the URL
+
+    Returns:
+        struct with:
+            type: "local" or "url"
+            path: Local file path (if type == "local")
+            url: Download URL (if type == "url")
+    """
+    # Priority 1: Offline mode with default vendor path
+    offline_mode = repository_ctx.os.environ.get("BAZEL_WASM_OFFLINE", "0") == "1"
+    if offline_mode:
+        # Try workspace-relative path first
+        vendor_path = repository_ctx.path(
+            repository_ctx.workspace_root
+        ).dirname.get_child("third_party").get_child("toolchains").get_child(tool_name).get_child(version).get_child(platform).get_child(filename)
+        if vendor_path.exists:
+            print("OFFLINE: Using vendored {} from {}".format(tool_name, vendor_path))
+            return struct(type = "local", path = str(vendor_path), url = None)
+
+        # Fall through to try vendor dir or fail
+        print("WARNING: BAZEL_WASM_OFFLINE=1 but {} not found at {}".format(tool_name, vendor_path))
+
+    # Priority 2: Custom vendor directory (NFS/shared)
+    vendor_dir = repository_ctx.os.environ.get("BAZEL_WASM_VENDOR_DIR")
+    if vendor_dir:
+        vendor_path = repository_ctx.path(vendor_dir).get_child(tool_name).get_child(version).get_child(platform).get_child(filename)
+        if vendor_path.exists:
+            print("Using vendored {} from {}".format(tool_name, vendor_path))
+            return struct(type = "local", path = str(vendor_path), url = None)
+
+        # Warn but don't fail - fall through to mirror or default
+        print("WARNING: BAZEL_WASM_VENDOR_DIR set but {} not found at {}".format(tool_name, vendor_path))
+
+    # Priority 3: Mirror URL
+    mirror = repository_ctx.os.environ.get("BAZEL_WASM_MIRROR")
+    if mirror:
+        mirror_url = "{}/{}/{}/{}/{}".format(
+            mirror.rstrip("/"),
+            tool_name,
+            version,
+            platform,
+            filename,
+        )
+        print("Using mirror for {}: {}".format(tool_name, mirror_url))
+        return struct(type = "url", url = mirror_url, path = None)
+
+    # Priority 4: Strict offline mode - fail if offline but no vendor found
+    if offline_mode:
+        fail("BAZEL_WASM_OFFLINE=1 but {} version {} for {} not found in vendor directories".format(
+            tool_name, version, platform,
+        ))
+
+    # Default: use original URL
+    return struct(type = "url", url = default_url, path = None)
+
+def _get_download_filename(tool_name, version, tool_info):
+    """Extract the download filename from tool info.
+
+    Args:
+        tool_name: Name of the tool
+        version: Version string
+        tool_info: Tool info dict from registry
+
+    Returns:
+        Filename string
+    """
+    url_suffix = tool_info.get("url_suffix", "")
+
+    # For binary downloads, use the binary_name
+    if tool_info.get("binary_name"):
+        return tool_info.get("binary_name")
+
+    # For archives, construct filename based on tool pattern
+    pattern = _URL_PATTERNS.get(tool_name, {})
+    filename_template = pattern.get("filename", "{tool_name}-{version}.tar.gz")
+
+    return filename_template.format(
+        version = version,
+        suffix = url_suffix,
+        platform_name = tool_info.get("platform_name", ""),
+        binary_name = tool_info.get("binary_name", ""),
+    )
+
+# =============================================================================
 # Download Functions
 # =============================================================================
 
@@ -167,31 +291,27 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
     if not github_repo:
         fail("No GitHub repo found for tool '{}'".format(tool_name))
 
-    # Build URL
-    url = _build_download_url(tool_name, version, platform, tool_info, github_repo)
+    # Build default URL
+    default_url = _build_download_url(tool_name, version, platform, tool_info, github_repo)
 
-    print("Downloading {} {} for {} from: {}".format(tool_name, version, platform, url))
+    # Get filename for enterprise source resolution
+    filename = _get_download_filename(tool_name, version, tool_info)
+
+    # Resolve download source (handles offline/mirror/vendor)
+    source = _resolve_download_source(
+        repository_ctx,
+        tool_name,
+        version,
+        platform,
+        default_url,
+        filename,
+    )
 
     # Check if this is a binary download (no extraction)
     pattern = _URL_PATTERNS.get(tool_name, {})
     is_binary = pattern.get("is_binary", False)
 
-    if is_binary:
-        # Direct binary download
-        binary_name = output_name or tool_info.get("binary_name", tool_name)
-        repository_ctx.download(
-            url = url,
-            output = binary_name,
-            sha256 = checksum,
-            executable = True,
-        )
-        return {
-            "binary_path": binary_name,
-            "extract_dir": None,
-            "tool_info": tool_info,
-        }
-
-    # Archive download - determine type from URL suffix
+    # Archive type detection
     url_suffix = tool_info.get("url_suffix", "")
     if url_suffix.endswith(".tar.gz"):
         archive_type = "tar.gz"
@@ -205,12 +325,53 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
     # Calculate strip prefix for extraction
     strip_prefix = _calculate_strip_prefix(tool_name, version, tool_info)
 
-    repository_ctx.download_and_extract(
-        url = url,
-        sha256 = checksum,
-        type = archive_type,
-        stripPrefix = strip_prefix,
-    )
+    if source.type == "local":
+        # Use vendored files - symlink or extract from local path
+        print("Using local vendored {} from: {}".format(tool_name, source.path))
+
+        if is_binary:
+            binary_name = output_name or tool_info.get("binary_name", tool_name)
+            repository_ctx.symlink(source.path, binary_name)
+            # Make executable
+            repository_ctx.execute(["chmod", "+x", binary_name])
+            return {
+                "binary_path": binary_name,
+                "extract_dir": None,
+                "tool_info": tool_info,
+            }
+        else:
+            # Extract from local archive (no checksum needed - already verified during vendor)
+            repository_ctx.extract(
+                source.path,
+                type = archive_type,
+                stripPrefix = strip_prefix,
+            )
+    else:
+        # Download from URL (mirror or default)
+        actual_url = source.url
+        print("Downloading {} {} for {} from: {}".format(tool_name, version, platform, actual_url))
+
+        if is_binary:
+            # Direct binary download
+            binary_name = output_name or tool_info.get("binary_name", tool_name)
+            repository_ctx.download(
+                url = actual_url,
+                output = binary_name,
+                sha256 = checksum,
+                executable = True,
+            )
+            return {
+                "binary_path": binary_name,
+                "extract_dir": None,
+                "tool_info": tool_info,
+            }
+
+        repository_ctx.download_and_extract(
+            url = actual_url,
+            sha256 = checksum,
+            type = archive_type,
+            stripPrefix = strip_prefix,
+        )
 
     # Find the binary after extraction
     binary_path = _find_binary_after_extract(repository_ctx, tool_name, platform, output_name)
@@ -296,4 +457,9 @@ tool_registry = struct(
     detect_platform = _detect_platform,
     download = _download_tool,
     build_url = _build_download_url,
+
+    # Enterprise/Air-Gap support
+    # Use these for custom download logic that needs enterprise support
+    resolve_source = _resolve_download_source,
+    get_filename = _get_download_filename,
 )

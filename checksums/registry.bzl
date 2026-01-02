@@ -231,6 +231,70 @@ def _get_fallback_checksums(tool_name):
                 }
             },
         },
+        "go": {
+            "tool_name": "go",
+            "download_base": "https://go.dev/dl",
+            "latest_version": "1.25.3",
+            "versions": {
+                "1.25.3": {
+                    "release_date": "2025-10-13",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "1641050b422b80dfd6299f8aa7eb8798d1cd23eac7e79f445728926e881b7bcd",
+                            "url_suffix": "darwin-amd64.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "7c083e3d2c00debfeb2f77d9a4c00a1aac97113b89b9ccc42a90487af3437382",
+                            "url_suffix": "darwin-arm64.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "0335f314b6e7bfe08c3d0cfaa7c19db961b7b99fb20be62b0a826c992ad14e0f",
+                            "url_suffix": "linux-amd64.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "1d42ebc84999b5e2069f5e31b67d6fc5d67308adad3e178d5a2ee2c9ff2001f5",
+                            "url_suffix": "linux-arm64.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "bc249a599c6fe9d0d4093c363856f6c6320dbbe05e5d5d8818b711fb4a14fc23",
+                            "url_suffix": "windows-amd64.zip",
+                        }
+                    },
+                }
+            },
+        },
+        "binaryen": {
+            "tool_name": "binaryen",
+            "github_repo": "WebAssembly/binaryen",
+            "latest_version": "123",
+            "versions": {
+                "123": {
+                    "release_date": "2025-03-27",
+                    "platforms": {
+                        "darwin_amd64": {
+                            "sha256": "cc18b14d2b673d9c66bf54f31ff2b0ceb23ba5132455b893965ae2792f9e00dd",
+                            "url_suffix": "x86_64-macos.tar.gz",
+                        },
+                        "darwin_arm64": {
+                            "sha256": "74428be348c1a09863e7b642a1fa948cabf8ec9561052233d8288e941951725b",
+                            "url_suffix": "arm64-macos.tar.gz",
+                        },
+                        "linux_amd64": {
+                            "sha256": "e959f2170af4c20c552e9de3a0253704d6a9d2766e8fdb88e4d6ac4bae9388fe",
+                            "url_suffix": "x86_64-linux.tar.gz",
+                        },
+                        "linux_arm64": {
+                            "sha256": "4b6bd61ba6cd3b18c993b4657d93426c782f9b91b74be0d38018cd8be1319376",
+                            "url_suffix": "aarch64-linux.tar.gz",
+                        },
+                        "windows_amd64": {
+                            "sha256": "7b3568424a0f871a52865d5c78177db646b1832a8c487321e27703103f936880",
+                            "url_suffix": "x86_64-windows.tar.gz",
+                        }
+                    },
+                }
+            },
+        },
         "wac": {
             "tool_name": "wac",
             "github_repo": "bytecodealliance/wac",
@@ -954,6 +1018,9 @@ def list_available_tools():
         "jco",
         "file-ops-component",
         "wasmsign2-cli",
+        "go",
+        "binaryen",
+        "tinygo",
     ]
 
 def validate_tool_compatibility(tools_config):

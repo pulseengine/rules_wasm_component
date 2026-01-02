@@ -20,3 +20,15 @@ cc_binary(
         "@platforms//os:wasi",
     ],
 )
+
+# Enterprise air-gap support test
+# Verifies that BAZEL_WASM_MIRROR, BAZEL_WASM_VENDOR_DIR, and BAZEL_WASM_OFFLINE
+# environment variables are properly supported in tool_registry.bzl
+sh_test(
+    name = "enterprise_mirror_test",
+    timeout = "short",
+    srcs = ["enterprise_mirror_test.sh"],
+    data = [
+        "//toolchains:tool_registry.bzl",
+    ],
+)
