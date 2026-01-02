@@ -14,165 +14,18 @@ load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:tool_registry.bzl", "tool_registry")
 
 _TINYGO_TOOLCHAIN_DOC = """
+TinyGo WASI Preview 2 toolchain using unified tool_registry for enterprise air-gap support.
+
+All tools (Go SDK, Binaryen, TinyGo) are downloaded via tool_registry.download() which:
+- Verifies SHA256 checksums from checksums/tools/*.json
+- Supports BAZEL_WASM_MIRROR for corporate mirrors
+- Supports BAZEL_WASM_OFFLINE for fully offline builds
+- Supports BAZEL_WASM_VENDOR_DIR for shared network caches
 """
 
-# Platform detection now uses tool_registry.detect_platform
-
-def _download_go(repository_ctx, version, platform):
-    """Download hermetic Go SDK for TinyGo to use
-
-    Supports configurable mirrors via environment variables for enterprise/air-gap deployments:
-    - BAZEL_GO_MIRROR: Override Go SDK download URL (default: https://go.dev)
-    """
-
-    go_version = "1.25.3"  # Latest stable Go version (1.25.0 doesn't exist)
-
-    # Map platform to Go's naming convention
-    go_platform_map = {
-        "darwin_amd64": "darwin-amd64",
-        "darwin_arm64": "darwin-arm64",
-        "linux_amd64": "linux-amd64",
-        "windows_amd64": "windows-amd64",
-    }
-
-    go_platform = go_platform_map.get(platform)
-    if not go_platform:
-        fail("Unsupported platform for Go SDK: {}".format(platform))
-
-    # Get mirror configuration from environment (enterprise support)
-    go_mirror = repository_ctx.os.environ.get("BAZEL_GO_MIRROR", "https://go.dev")
-
-    # Windows uses .zip, others use .tar.gz
-    go_extension = ".zip" if platform == "windows_amd64" else ".tar.gz"
-    go_url = "{}/dl/go{}.{}{}".format(go_mirror, go_version, go_platform, go_extension)
-
-    print("Downloading Go {} for TinyGo from: {}".format(go_version, go_url))
-
-    # Download and extract Go SDK
-    repository_ctx.download_and_extract(
-        url = go_url,
-        output = "go_sdk",
-        stripPrefix = "go",
-    )
-
-    # Verify Go installation (use .exe on Windows)
-    go_binary_name = "go.exe" if platform == "windows_amd64" else "go"
-    go_binary = repository_ctx.path("go_sdk/bin/{}".format(go_binary_name))
-    if not go_binary.exists:
-        fail("Go binary not found after download: {}".format(go_binary))
-
-    print("Go SDK downloaded for TinyGo")
-
-    return go_binary
-
-def _download_binaryen(repository_ctx, platform):
-    """Download Binaryen (wasm-opt) for the specified platform"""
-
-    binaryen_version = "123"  # Latest stable version
-
-    # Map platform to Binaryen's naming convention
-    binaryen_platform_map = {
-        "darwin_amd64": "x86_64-macos",
-        "darwin_arm64": "arm64-macos",
-        "linux_amd64": "x86_64-linux",
-        "windows_amd64": "x86_64-windows",
-    }
-
-    binaryen_platform = binaryen_platform_map.get(platform)
-    if not binaryen_platform:
-        fail("Unsupported platform for Binaryen: {}".format(platform))
-
-    binaryen_url = "https://github.com/WebAssembly/binaryen/releases/download/version_{}/binaryen-version_{}-{}.tar.gz".format(
-        binaryen_version,
-        binaryen_version,
-        binaryen_platform,
-    )
-
-    print("Downloading Binaryen {} for {}".format(binaryen_version, platform))
-
-    # Download and extract Binaryen
-    repository_ctx.download_and_extract(
-        url = binaryen_url,
-        output = "binaryen",
-        stripPrefix = "binaryen-version_{}".format(binaryen_version),
-    )
-
-    # Verify wasm-opt installation (use .exe on Windows)
-    wasm_opt_binary_name = "wasm-opt.exe" if platform == "windows_amd64" else "wasm-opt"
-    wasm_opt_binary = repository_ctx.path("binaryen/bin/{}".format(wasm_opt_binary_name))
-    if not wasm_opt_binary.exists:
-        fail("wasm-opt binary not found after download: {}".format(wasm_opt_binary))
-
-    print("Binaryen downloaded")
-
-    return wasm_opt_binary
-
-def _download_tinygo(repository_ctx, version, platform):
-    """Download TinyGo release for the specified platform and version"""
-
-    # TinyGo release URL pattern (use .zip for Windows, .tar.gz for others)
-    extension = ".zip" if platform == "windows_amd64" else ".tar.gz"
-    tinygo_url = "https://github.com/tinygo-org/tinygo/releases/download/v{version}/tinygo{version}.{platform}{extension}".format(
-        version = version,
-        platform = _get_tinygo_platform_suffix(platform),
-        extension = extension,
-    )
-
-    print("Downloading TinyGo {} for {}".format(version, platform))
-
-    # Download and extract TinyGo
-    repository_ctx.download_and_extract(
-        url = tinygo_url,
-        output = "tinygo",
-        stripPrefix = "tinygo",
-    )
-
-    # Verify installation (use .exe on Windows)
-    tinygo_binary_name = "tinygo.exe" if platform == "windows_amd64" else "tinygo"
-    tinygo_binary = repository_ctx.path("tinygo/bin/{}".format(tinygo_binary_name))
-    if not tinygo_binary.exists:
-        fail("TinyGo binary not found after download: {}".format(tinygo_binary))
-
-    print("TinyGo downloaded")
-
-    # Rebuild WASI-libc with TinyGo's LLVM tools to fix missing headers
-    wasi_libc_dir = repository_ctx.path("tinygo/lib/wasi-libc")
-    if wasi_libc_dir.exists:
-        print("Rebuilding WASI-libc with TinyGo's LLVM tools...")
-
-        # TinyGo's LLVM tool paths
-        tinygo_root = repository_ctx.path("tinygo")
-        clang_path = tinygo_root.get_child("bin").get_child("clang")
-        ar_path = tinygo_root.get_child("bin").get_child("llvm-ar")
-        nm_path = tinygo_root.get_child("bin").get_child("llvm-nm")
-
-        # Check if TinyGo's LLVM tools exist
-        if clang_path.exists and ar_path.exists and nm_path.exists:
-            print("TinyGo LLVM tools available for WASI-libc build")
-
-            # Skip actual rebuild to eliminate ctx.execute calls
-            print("Using downloaded WASI-libc (build skipped for hermeticity)")
-        else:
-            print("Using downloaded WASI-libc")
-    else:
-        print("Warning: WASI-libc directory not found in TinyGo installation")
-
-    return tinygo_binary
-
-def _get_tinygo_platform_suffix(platform):
-    """Get TinyGo platform suffix for download URLs"""
-    platform_map = {
-        "darwin_amd64": "darwin-amd64",
-        "darwin_arm64": "darwin-arm64",
-        "linux_amd64": "linux-amd64",
-        "linux_arm64": "linux-arm64",
-        "windows_amd64": "windows-amd64",
-    }
-
-    if platform not in platform_map:
-        fail("Unsupported platform for TinyGo: {}".format(platform))
-
-    return platform_map[platform]
+# Version constants - centralized for easy updates
+_GO_VERSION = "1.25.3"
+_BINARYEN_VERSION = "123"
 
 def _setup_go_wit_bindgen(repository_ctx, go_binary):
     """Install wit-bindgen-go Go tool for WIT binding generation
@@ -253,7 +106,13 @@ exec "{go_binary}" tool wit-bindgen-go "$@"
                 print("Warning: wit-bindgen-go not available as Go tool either")
 
 def _tinygo_toolchain_repository_impl(repository_ctx):
-    """Implementation of TinyGo toolchain repository rule"""
+    """Implementation of TinyGo toolchain repository rule
+
+    Uses tool_registry.download() for ALL downloads with:
+    - SHA256 checksum verification
+    - Enterprise mirror support (BAZEL_WASM_MIRROR)
+    - Offline mode support (BAZEL_WASM_OFFLINE)
+    """
 
     platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
@@ -272,14 +131,35 @@ def _tinygo_toolchain_repository_impl(repository_ctx):
 
     print("Setting up TinyGo toolchain v{} for {}".format(tinygo_version, platform))
 
-    # Download hermetic Go SDK for TinyGo
-    go_binary = _download_go(repository_ctx, tinygo_version, platform)
+    # Download hermetic Go SDK via unified registry (with checksums!)
+    go_result = tool_registry.download(
+        repository_ctx,
+        "go",
+        _GO_VERSION,
+        platform,
+        output_dir = "go_sdk",
+    )
+    go_binary = repository_ctx.path(go_result["binary_path"])
 
-    # Download Binaryen (wasm-opt) for TinyGo optimization
-    wasm_opt_binary = _download_binaryen(repository_ctx, platform)
+    # Download Binaryen (wasm-opt) via unified registry (with checksums!)
+    binaryen_result = tool_registry.download(
+        repository_ctx,
+        "binaryen",
+        _BINARYEN_VERSION,
+        platform,
+        output_dir = "binaryen",
+    )
+    wasm_opt_binary = repository_ctx.path(binaryen_result["binary_path"])
 
-    # Download and set up TinyGo
-    tinygo_binary = _download_tinygo(repository_ctx, tinygo_version, platform)
+    # Download TinyGo via unified registry (with checksums!)
+    tinygo_result = tool_registry.download(
+        repository_ctx,
+        "tinygo",
+        tinygo_version,
+        platform,
+        output_dir = "tinygo",
+    )
+    tinygo_binary = repository_ctx.path(tinygo_result["binary_path"])
 
     # Set up wit-bindgen-go using hermetic Go binary
     _setup_go_wit_bindgen(repository_ctx, go_binary)
@@ -394,7 +274,7 @@ tinygo_toolchain_repository = repository_rule(
         ),
         "tinygo_version": attr.string(
             doc = "TinyGo version to download and use. Ignored if bundle is specified.",
-            default = "0.39.0",
+            default = "0.40.1",  # Must match a version in checksums/tools/tinygo.json
         ),
     },
     # Remove environ to prevent system PATH inheritance

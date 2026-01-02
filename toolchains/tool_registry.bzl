@@ -95,10 +95,10 @@ _URL_PATTERNS = {
         "is_binary": True,  # wac releases are standalone binaries
     },
     "wkg": {
-        # wkg releases are standalone binaries, not archives
+        # wkg releases are standalone binaries (url_suffix contains full filename)
         "base": "https://github.com/{repo}/releases/download/v{version}",
-        "filename": "{binary_name}",
-        "is_binary": True,  # Download as binary, not archive
+        "filename": "{suffix}",  # url_suffix IS the filename (e.g., "wkg-aarch64-apple-darwin")
+        "is_binary": True,
     },
     "wasi-sdk": {
         "base": "https://github.com/{repo}/releases/download/wasi-sdk-{version}",
@@ -112,6 +112,14 @@ _URL_PATTERNS = {
         "base": "https://github.com/{repo}/releases/download/v{version}",
         "filename": "tinygo{version}.{suffix}",
     },
+    "go": {
+        "base": "https://go.dev/dl",
+        "filename": "go{version}.{suffix}",
+    },
+    "binaryen": {
+        "base": "https://github.com/{repo}/releases/download/version_{version}",
+        "filename": "binaryen-version_{version}-{suffix}",
+    },
 }
 
 def _build_download_url(tool_name, version, platform, tool_info, github_repo):
@@ -122,7 +130,7 @@ def _build_download_url(tool_name, version, platform, tool_info, github_repo):
         version: Version to download
         platform: Platform string (e.g., "darwin_arm64")
         tool_info: Tool info dict from registry
-        github_repo: GitHub repo in "owner/repo" format
+        github_repo: GitHub repo in "owner/repo" format (can be None for non-GitHub tools)
 
     Returns:
         Download URL string
@@ -131,10 +139,14 @@ def _build_download_url(tool_name, version, platform, tool_info, github_repo):
     if not pattern:
         fail("No URL pattern defined for tool '{}'. Add it to _URL_PATTERNS.".format(tool_name))
 
-    base_url = pattern["base"].format(
-        repo = github_repo,
-        version = version,
-    )
+    # Build base URL - handle both GitHub and non-GitHub tools
+    base_template = pattern["base"]
+    if "{repo}" in base_template:
+        if not github_repo:
+            fail("Tool '{}' requires github_repo but none provided".format(tool_name))
+        base_url = base_template.format(repo = github_repo, version = version)
+    else:
+        base_url = base_template.format(version = version)
 
     # Get filename pattern fields from tool_info
     filename_params = {
@@ -254,7 +266,7 @@ def _get_download_filename(tool_name, version, tool_info):
 # Download Functions
 # =============================================================================
 
-def _download_tool(repository_ctx, tool_name, version, platform = None, output_name = None):
+def _download_tool(repository_ctx, tool_name, version, platform = None, output_name = None, output_dir = None):
     """Download a tool with checksum verification from the centralized registry.
 
     This is the SINGLE download function all toolchains should use.
@@ -265,6 +277,7 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
         version: Version to download
         platform: Platform string (auto-detected if None)
         output_name: Custom output name for the binary (optional)
+        output_dir: Directory to extract to (optional, defaults to repo root)
 
     Returns:
         Dict with download results:
@@ -286,10 +299,8 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
     if not checksum:
         fail("No checksum found for {} {} {}".format(tool_name, version, platform))
 
-    # Get GitHub repo
+    # Get GitHub repo (optional - some tools like Go use go.dev, not GitHub)
     github_repo = get_github_repo(tool_name)
-    if not github_repo:
-        fail("No GitHub repo found for tool '{}'".format(tool_name))
 
     # Build default URL
     default_url = _build_download_url(tool_name, version, platform, tool_info, github_repo)
@@ -325,24 +336,32 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
     # Calculate strip prefix for extraction
     strip_prefix = _calculate_strip_prefix(tool_name, version, tool_info)
 
+    # Determine output directory
+    extract_dir = output_dir if output_dir else "."
+
     if source.type == "local":
         # Use vendored files - symlink or extract from local path
         print("Using local vendored {} from: {}".format(tool_name, source.path))
 
         if is_binary:
             binary_name = output_name or tool_info.get("binary_name", tool_name)
-            repository_ctx.symlink(source.path, binary_name)
+            if output_dir:
+                binary_path = "{}/{}".format(output_dir, binary_name)
+            else:
+                binary_path = binary_name
+            repository_ctx.symlink(source.path, binary_path)
             # Make executable
-            repository_ctx.execute(["chmod", "+x", binary_name])
+            repository_ctx.execute(["chmod", "+x", binary_path])
             return {
-                "binary_path": binary_name,
-                "extract_dir": None,
+                "binary_path": binary_path,
+                "extract_dir": extract_dir,
                 "tool_info": tool_info,
             }
         else:
             # Extract from local archive (no checksum needed - already verified during vendor)
             repository_ctx.extract(
                 source.path,
+                output = output_dir if output_dir else "",
                 type = archive_type,
                 stripPrefix = strip_prefix,
             )
@@ -354,31 +373,36 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
         if is_binary:
             # Direct binary download
             binary_name = output_name or tool_info.get("binary_name", tool_name)
+            if output_dir:
+                binary_path = "{}/{}".format(output_dir, binary_name)
+            else:
+                binary_path = binary_name
             repository_ctx.download(
                 url = actual_url,
-                output = binary_name,
+                output = binary_path,
                 sha256 = checksum,
                 executable = True,
             )
             return {
-                "binary_path": binary_name,
-                "extract_dir": None,
+                "binary_path": binary_path,
+                "extract_dir": extract_dir,
                 "tool_info": tool_info,
             }
 
         repository_ctx.download_and_extract(
             url = actual_url,
+            output = output_dir if output_dir else "",
             sha256 = checksum,
             type = archive_type,
             stripPrefix = strip_prefix,
         )
 
     # Find the binary after extraction
-    binary_path = _find_binary_after_extract(repository_ctx, tool_name, platform, output_name)
+    binary_path = _find_binary_after_extract(repository_ctx, tool_name, version, platform, tool_info, output_name, output_dir)
 
     return {
         "binary_path": binary_path,
-        "extract_dir": ".",
+        "extract_dir": extract_dir,
         "tool_info": tool_info,
     }
 
@@ -408,22 +432,35 @@ def _calculate_strip_prefix(tool_name, version, tool_info):
         platform_name = tool_info.get("platform_name", "")
         return "wac-v{}-{}".format(version, platform_name)
     elif tool_name == "wasi-sdk":
-        return "wasi-sdk-{}.0".format(version)
+        # WASI SDK archive contains versioned+platform directory: wasi-sdk-29.0-arm64-macos/
+        url_suffix = tool_info.get("url_suffix", "")
+        # Extract platform part from url_suffix (e.g., "arm64-macos.tar.gz" -> "arm64-macos")
+        platform_part = url_suffix.replace(".tar.gz", "").replace(".zip", "")
+        return "wasi-sdk-{}.0-{}".format(version, platform_part)
     elif tool_name == "nodejs":
-        return ""  # Node.js has complex directory structure
+        # Node.js keeps its directory structure (node-v20.18.0-darwin-arm64/)
+        # Paths are accessed via tool_info["binary_path"] and tool_info["npm_path"]
+        return ""
     elif tool_name == "tinygo":
         return "tinygo"
+    elif tool_name == "go":
+        return "go"  # Go SDK extracts to "go" directory
+    elif tool_name == "binaryen":
+        return "binaryen-version_{}".format(version)
 
     return ""
 
-def _find_binary_after_extract(repository_ctx, tool_name, platform, output_name = None):
+def _find_binary_after_extract(repository_ctx, tool_name, version, platform, tool_info, output_name = None, output_dir = None):
     """Find the main binary after archive extraction.
 
     Args:
         repository_ctx: Repository context
         tool_name: Name of the tool
+        version: Version string (needed for some path templates)
         platform: Platform string
+        tool_info: Tool info dict from registry
         output_name: Optional custom output name
+        output_dir: Directory where files were extracted
 
     Returns:
         Path to the binary (symlinked if needed)
@@ -431,22 +468,38 @@ def _find_binary_after_extract(repository_ctx, tool_name, platform, output_name 
     target_name = output_name or tool_name
     is_windows = platform.startswith("windows")
     exe_suffix = ".exe" if is_windows else ""
+    prefix = (output_dir + "/") if output_dir else ""
 
-    # Common binary locations to check
-    possible_paths = [
-        tool_name + exe_suffix,
-        "bin/" + tool_name + exe_suffix,
-        tool_name + "/" + tool_name + exe_suffix,
-    ]
+    # Tools with custom binary_path in registry (like Node.js)
+    if tool_info.get("binary_path"):
+        binary_path = prefix + tool_info["binary_path"].format(version)
+        if repository_ctx.path(binary_path).exists:
+            return binary_path
+        # Fallback - try without version formatting
+        return prefix + tool_info["binary_path"]
+
+    # Tool-specific binary locations
+    if tool_name == "go":
+        possible_paths = [prefix + "bin/go" + exe_suffix]
+    elif tool_name == "binaryen":
+        # Binaryen's main binary is wasm-opt
+        possible_paths = [prefix + "bin/wasm-opt" + exe_suffix]
+    elif tool_name == "tinygo":
+        possible_paths = [prefix + "bin/tinygo" + exe_suffix]
+    else:
+        # Common binary locations to check
+        possible_paths = [
+            prefix + tool_name + exe_suffix,
+            prefix + "bin/" + tool_name + exe_suffix,
+            prefix + tool_name + "/" + tool_name + exe_suffix,
+        ]
 
     for path in possible_paths:
         if repository_ctx.path(path).exists:
-            if path != target_name + exe_suffix:
-                repository_ctx.symlink(path, target_name + exe_suffix)
-            return target_name + exe_suffix
+            return path
 
     # Binary should exist at root after strip_prefix
-    return tool_name + exe_suffix
+    return prefix + tool_name + exe_suffix
 
 # =============================================================================
 # Public API (struct for namespacing)

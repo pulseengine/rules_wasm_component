@@ -1,19 +1,14 @@
-"""WASI SDK toolchain definitions"""
+"""WASI SDK toolchain definitions
 
-load("//checksums:registry.bzl", "get_tool_info")
+Uses tool_registry.download() for enterprise air-gap support:
+- SHA256 checksum verification from checksums/tools/wasi-sdk.json
+- BAZEL_WASM_MIRROR for corporate mirrors
+- BAZEL_WASM_OFFLINE for fully offline builds
+- BAZEL_WASM_VENDOR_DIR for shared network caches
+"""
+
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:tool_registry.bzl", "tool_registry")
-
-def _get_wasi_sdk_platform_info(platform, version):
-    """Get platform info and checksum for WASI SDK from centralized registry"""
-    from_registry = get_tool_info("wasi-sdk", version, platform)
-    if not from_registry:
-        fail("Unsupported platform {} for wasi-sdk version {}".format(platform, version))
-
-    return struct(
-        sha256 = from_registry["sha256"],
-        url_suffix = from_registry["url_suffix"],
-    )
 
 def _wasi_sdk_toolchain_impl(ctx):
     """Implementation of wasi_sdk_toolchain rule"""
@@ -101,7 +96,7 @@ def _wasi_sdk_repository_impl(repository_ctx):
     _create_wasi_sdk_build_file(repository_ctx)
 
 def _setup_downloaded_wasi_sdk(repository_ctx):
-    """Download WASI SDK from GitHub releases"""
+    """Download WASI SDK via tool_registry with enterprise support"""
 
     bundle_name = repository_ctx.attr.bundle
 
@@ -119,44 +114,16 @@ def _setup_downloaded_wasi_sdk(repository_ctx):
 
     platform = tool_registry.detect_platform(repository_ctx)
 
-    # Download WASI SDK
-    url = repository_ctx.attr.url
-    if not url:
-        # WASI SDK URL format: wasi-sdk-{VERSION.0}-{ARCH}-{OS}.tar.gz
-        # Convert platform format from "darwin_arm64" to "arm64-macos"
-        platform_mapping = {
-            "darwin_amd64": "x86_64-macos",
-            "darwin_arm64": "arm64-macos",
-            "linux_amd64": "x86_64-linux",
-            "linux_arm64": "arm64-linux",
-            "windows_amd64": "x86_64-windows",
-        }
+    print("Downloading WASI SDK version {} for platform {}".format(version, platform))
 
-        if platform not in platform_mapping:
-            fail("Unsupported platform: {}. Supported: {}".format(platform, platform_mapping.keys()))
-
-        platform_suffix = platform_mapping[platform]
-        full_version = version + ".0" if "." not in version else version
-
-        url = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-{}/wasi-sdk-{}-{}.tar.gz".format(
-            version,
-            full_version,
-            platform_suffix,
-        )
-
-    # Get checksum from centralized registry
-    platform_info = _get_wasi_sdk_platform_info(platform, version)
-
-    # The archive contains the full version and platform in the prefix
-    strip_prefix = "wasi-sdk-{}-{}".format(full_version, platform_suffix)
-
-    repository_ctx.download_and_extract(
-        url = url,
-        sha256 = platform_info.sha256,
-        stripPrefix = strip_prefix,
+    # Download WASI SDK via unified registry (with checksums + enterprise support!)
+    # Note: tool_registry.download() handles enterprise env vars automatically
+    wasi_sdk_result = tool_registry.download(
+        repository_ctx,
+        "wasi-sdk",
+        version,
+        platform,
     )
-
-    # No need for symlink, use direct paths in BUILD file
 
 def _create_wasi_sdk_build_file(repository_ctx):
     """Create BUILD file for WASI SDK"""
