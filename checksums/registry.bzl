@@ -318,6 +318,10 @@ def _get_fallback_checksums(tool_name):
                         "darwin_arm64": {
                             "sha256": "f08496f49312abd68d9709c735a987d6a17d2295a1240020d217a9de8dcaaacd",
                             "platform_name": "aarch64-apple-darwin",
+                        },
+                        "darwin_amd64": {
+                            "sha256": "d5fa365a4920d19a61837a42c9273b0b8ec696fd3047af864a860f46005773a5",
+                            "platform_name": "x86_64-apple-darwin",
                         }
                     },
                 },

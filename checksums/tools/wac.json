@@ -17,6 +17,11 @@
           "url_suffix": "",
           "platform_name": "aarch64-apple-darwin"
         },
+        "darwin_amd64": {
+          "sha256": "d5fa365a4920d19a61837a42c9273b0b8ec696fd3047af864a860f46005773a5",
+          "url_suffix": "",
+          "platform_name": "x86_64-apple-darwin"
+        },
         "linux_arm64": {
           "sha256": "3b78ae7c732c1376d1c21b570d07152a07342e9c4f75bff1511cde5f6af01f12",
           "url_suffix": "",
