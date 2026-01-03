@@ -86,6 +86,10 @@
           "sha256": "6690a33a06ef705a63dbc066210bc0f09b1c08a82952d3cde9fbebd0d484b46f",
           "url_suffix": "aarch64-macos.tar.gz"
         },
+        "darwin_amd64": {
+          "sha256": "3d03bc02fed63998e0ee8d88eb86d90bdb8e32e7cadc77d2f9e792b9dff8433a",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
         "linux_amd64": {
           "sha256": "f261622f8015d38ebe9c3345cc2f7bb5de055d3a66ab44efdf78f11068ed9d9f",
           "url_suffix": "x86_64-linux.tar.gz"
@@ -93,6 +97,10 @@
         "linux_arm64": {
           "sha256": "ad06ba3c527992a1e6e9a7e807cc2bb914072f0a0ae6ce71680de91b1054d2e9",
           "url_suffix": "aarch64-linux.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "bb04533ff517f6c90df129f2a358b18ca45b7400a3676ba935bbd787908ff6b8",
+          "url_suffix": "x86_64-windows.zip"
         }
       }
     }
