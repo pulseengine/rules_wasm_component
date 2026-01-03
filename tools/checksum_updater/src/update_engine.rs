@@ -237,19 +237,11 @@ impl UpdateEngine {
                 .await?
         };
 
-        // Get latest release from GitHub
-        let latest_release = self
-            .github_client
-            .get_latest_release(&tool_config.github_repo)
+        // Get release from GitHub, respecting version filter
+        let (latest_release, latest_version) = self
+            .get_filtered_release(&tool_config)
             .await
-            .with_context(|| format!("Failed to get latest release for {}", tool_name))?;
-
-        // Strip tool-specific tag prefix from version
-        let latest_version = if let Some(prefix) = &tool_config.tag_prefix {
-            latest_release.tag_name.trim_start_matches(prefix.as_str())
-        } else {
-            latest_release.tag_name.trim_start_matches('v')
-        };
+            .with_context(|| format!("Failed to get release for {}", tool_name))?;
 
         // Check if update is needed
         if !config.force && latest_version == current_tool_info.latest_version {
@@ -264,7 +256,7 @@ impl UpdateEngine {
         let version_change = if current_tool_info.latest_version == "0.0.0" {
             "initial".to_string()
         } else {
-            self.classify_version_change(&current_tool_info.latest_version, latest_version)
+            self.classify_version_change(&current_tool_info.latest_version, &latest_version)
         };
 
         info!(
@@ -274,7 +266,7 @@ impl UpdateEngine {
 
         // Download and validate checksums for all platforms
         let platforms_info = self
-            .download_platform_checksums(tool_name, latest_version, &tool_config)
+            .download_platform_checksums(tool_name, &latest_version, &tool_config)
             .await
             .with_context(|| format!("Failed to download checksums for {}", tool_name))?;
 
@@ -286,6 +278,7 @@ impl UpdateEngine {
         let version_info = VersionInfo {
             release_date: latest_release.published_at.format("%Y-%m-%d").to_string(),
             platforms: platforms_info,
+            extra: HashMap::new(),
         };
 
         let platforms_count = version_info.platforms.len();
@@ -293,7 +286,7 @@ impl UpdateEngine {
         // Save updates if not dry run
         if !config.dry_run {
             self.manager
-                .update_tool_version(tool_name, latest_version, version_info)
+                .update_tool_version(tool_name, &latest_version, version_info)
                 .await
                 .with_context(|| format!("Failed to save updates for {}", tool_name))?;
         }
@@ -316,6 +309,71 @@ impl UpdateEngine {
             )),
             update_duration,
         }))
+    }
+
+    /// Get a release from GitHub that passes the version filter
+    async fn get_filtered_release(
+        &self,
+        tool_config: &crate::tool_config::ToolConfigEntry,
+    ) -> Result<(crate::github_client::GitHubRelease, String)> {
+        use crate::tool_config::VersionFilter;
+
+        match &tool_config.version_filter {
+            VersionFilter::Any => {
+                // Standard behavior: get the latest release
+                let release = self
+                    .github_client
+                    .get_latest_release(&tool_config.github_repo)
+                    .await?;
+
+                let version = if let Some(prefix) = &tool_config.tag_prefix {
+                    release.tag_name.trim_start_matches(prefix.as_str()).to_string()
+                } else {
+                    release.tag_name.trim_start_matches('v').to_string()
+                };
+
+                Ok((release, version))
+            }
+            VersionFilter::LtsOnly => {
+                // Need to get all releases and filter
+                info!(
+                    "Fetching releases for {} with LTS filter",
+                    tool_config.github_repo
+                );
+
+                let releases = self
+                    .github_client
+                    .get_all_releases(&tool_config.github_repo)
+                    .await?;
+
+                // Find the first release that passes the LTS filter
+                for release in releases {
+                    let version = if let Some(prefix) = &tool_config.tag_prefix {
+                        release.tag_name.trim_start_matches(prefix.as_str()).to_string()
+                    } else {
+                        release.tag_name.trim_start_matches('v').to_string()
+                    };
+
+                    if tool_config.version_filter.accepts(&version) {
+                        info!(
+                            "Found LTS version {} for {}",
+                            version, tool_config.github_repo
+                        );
+                        return Ok((release, version));
+                    } else {
+                        debug!(
+                            "Skipping non-LTS version {} for {}",
+                            version, tool_config.github_repo
+                        );
+                    }
+                }
+
+                Err(anyhow::anyhow!(
+                    "No releases found that match LTS filter for {}",
+                    tool_config.github_repo
+                ))
+            }
+        }
     }
 
     /// Download and validate checksums for all platforms
@@ -387,12 +445,14 @@ impl UpdateEngine {
                 sha256: checksum,
                 url_suffix: String::new(), // Not used for tools with platform names
                 platform_name: Some(tool_config.get_platform_name(platform)?),
+                extra: HashMap::new(),
             }
         } else {
             PlatformInfo {
                 sha256: checksum,
                 url_suffix: tool_config.get_url_suffix(platform)?,
                 platform_name: None,
+                extra: HashMap::new(),
             }
         };
 

@@ -1,0 +1,40 @@
+{
+  "tool_name": "binaryen",
+  "github_repo": "WebAssembly/binaryen",
+  "latest_version": "123",
+  "last_checked": "2026-01-02T00:00:00Z",
+  "versions": {
+    "123": {
+      "release_date": "2025-03-27",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "cc18b14d2b673d9c66bf54f31ff2b0ceb23ba5132455b893965ae2792f9e00dd",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "74428be348c1a09863e7b642a1fa948cabf8ec9561052233d8288e941951725b",
+          "url_suffix": "arm64-macos.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "e959f2170af4c20c552e9de3a0253704d6a9d2766e8fdb88e4d6ac4bae9388fe",
+          "url_suffix": "x86_64-linux.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "4b6bd61ba6cd3b18c993b4657d93426c782f9b91b74be0d38018cd8be1319376",
+          "url_suffix": "aarch64-linux.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "7b3568424a0f871a52865d5c78177db646b1832a8c487321e27703103f936880",
+          "url_suffix": "x86_64-windows.tar.gz"
+        }
+      }
+    }
+  },
+  "supported_platforms": [
+    "darwin_amd64",
+    "darwin_arm64",
+    "linux_amd64",
+    "linux_arm64",
+    "windows_amd64"
+  ]
+}

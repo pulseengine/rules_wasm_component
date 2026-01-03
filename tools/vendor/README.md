@@ -231,16 +231,61 @@ tar xzf bundle.tar.gz -C third_party/
 
 ## Environment Variables
 
-All environment variables from Phase 1 (PR #209) continue to work:
+The unified `tool_registry.bzl` respects these environment variables for enterprise deployments:
+
+### Core Enterprise Variables (NEW in tool_registry.bzl)
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `BAZEL_WASM_OFFLINE` | Use vendored files instead of downloading | `0` (disabled) |
+| `BAZEL_WASM_OFFLINE` | Use vendored files from `third_party/toolchains/` | `0` (disabled) |
+| `BAZEL_WASM_VENDOR_DIR` | Custom vendor directory (e.g., NFS mount) | None |
+| `BAZEL_WASM_MIRROR` | Single mirror for ALL tools | None |
+
+### Tool-Specific Mirrors (Legacy)
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
 | `BAZEL_WASM_GITHUB_MIRROR` | GitHub releases mirror URL | `https://github.com` |
 | `BAZEL_NODEJS_MIRROR` | Node.js binary download mirror | `https://nodejs.org` |
 | `BAZEL_NPM_REGISTRY` | npm package registry | `https://registry.npmjs.org` |
 | `BAZEL_GO_MIRROR` | Go SDK download mirror | `https://go.dev` |
 | `BAZEL_GOPROXY` | Go module proxy | `https://proxy.golang.org,direct` |
+
+### Priority Order
+
+The tool_registry.bzl resolves download sources in this priority:
+
+1. **BAZEL_WASM_OFFLINE=1** → Use `third_party/toolchains/{tool}/{version}/{platform}/`
+2. **BAZEL_WASM_VENDOR_DIR** → Use custom vendor directory (NFS/shared)
+3. **BAZEL_WASM_MIRROR** → Download from single corporate mirror
+4. **Default URL** → Download from public internet (github.com, go.dev, etc.)
+
+### Example .bazelrc for Enterprise
+
+```bash
+# Option 1: Use vendored files from shared NFS
+common --repo_env=BAZEL_WASM_VENDOR_DIR=/mnt/shared/wasm-tools
+common --repo_env=BAZEL_NPM_REGISTRY=https://npm.company.com
+common --repo_env=BAZEL_GOPROXY=https://goproxy.company.com
+
+# Option 2: Use corporate mirror (downloads from mirror, still verifies checksums)
+common --repo_env=BAZEL_WASM_MIRROR=https://mirror.company.com
+common --repo_env=BAZEL_NPM_REGISTRY=https://npm.company.com
+
+# Option 3: Fully offline (must run vendor workflow first)
+common --repo_env=BAZEL_WASM_OFFLINE=1
+```
+
+### Mirror URL Structure
+
+When using `BAZEL_WASM_MIRROR`, the mirror should serve files at:
+
+```
+{BAZEL_WASM_MIRROR}/{tool}/{version}/{platform}/{filename}
+
+Example:
+https://mirror.company.com/wasm-tools/1.243.0/darwin_arm64/wasm-tools-1.243.0-aarch64-macos.tar.gz
+```
 
 ## Vendored Tools
 

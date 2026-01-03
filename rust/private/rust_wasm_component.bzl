@@ -252,6 +252,7 @@ def rust_wasm_component(
         visibility = None,
         crate_root = None,
         edition = "2021",
+        tags = [],
         **kwargs):
     """Builds a Rust WebAssembly component with multi-profile support.
 
@@ -276,6 +277,7 @@ def rust_wasm_component(
         visibility: Target visibility (standard Bazel visibility).
         crate_root: Optional custom crate root file (defaults to src/lib.rs).
         edition: Rust edition to use (default: "2021").
+        tags: Tags to apply to all generated targets (e.g., ["manual"]).
         **kwargs: Additional arguments forwarded to rust_shared_library.
     """
 
@@ -352,7 +354,7 @@ def rust_wasm_component(
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags,
             visibility = ["//visibility:private"],
-            tags = ["wasm_component"],  # Tag to identify WASM components
+            tags = tags + ["wasm_component"],  # Propagate user tags + wasm_component marker
             **filtered_kwargs
         )
 
@@ -379,7 +381,7 @@ def rust_wasm_component(
             crate_features = crate_features,
             rustc_flags = profile_rustc_flags,
             visibility = ["//visibility:private"],
-            tags = ["manual"],  # Manual tag prevents inclusion in wildcard builds
+            tags = tags + ["manual"],  # Propagate user tags + manual to prevent wildcard builds
             **filtered_kwargs
         )
 
@@ -387,6 +389,7 @@ def rust_wasm_component(
         _wasm_rust_shared_library(
             name = rust_library_name,
             target = ":" + wasm_library_base_name,
+            tags = tags,
         )
 
         # Convert to component for this profile
@@ -399,6 +402,7 @@ def rust_wasm_component(
             component_type = "component",
             validate_wit = validate_wit,
             visibility = ["//visibility:private"],
+            tags = tags,
         )
 
         profile_variants[profile] = ":" + component_name
@@ -409,6 +413,7 @@ def rust_wasm_component(
         name = name,
         actual = profile_variants[main_profile],
         visibility = visibility,
+        tags = tags,
     )
 
     # Create a filegroup that includes all profiles for those who need it
@@ -416,4 +421,5 @@ def rust_wasm_component(
         name = name + "_all_profiles",
         srcs = [profile_variants[p] for p in profiles],
         visibility = visibility,
+        tags = tags,
     )

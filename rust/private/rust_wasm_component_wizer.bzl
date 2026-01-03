@@ -118,10 +118,12 @@ def rust_wasm_component_wizer(
     default_profile = profiles[0] if profiles else "release"
 
     # Main component alias (points to default profile)
+    # Important: propagate tags (including "manual") to ensure proper exclusion
     native.alias(
         name = name,
         actual = ":{}_{}".format(name, default_profile),
         visibility = visibility,
+        tags = tags,
     )
 
     # Profile-specific aliases for easy access
@@ -130,4 +132,5 @@ def rust_wasm_component_wizer(
             name = "{}_all_profiles".format(name),
             actual = ":{}_{}".format(name, profiles[0]),  # Points to first profile
             visibility = visibility,
+            tags = tags,
         )

@@ -29,6 +29,9 @@ pub struct ToolInfo {
 pub struct VersionInfo {
     pub release_date: String,
     pub platforms: HashMap<String, PlatformInfo>,
+    /// Extra fields from JSON that aren't explicitly defined (e.g., "lts" for Node.js)
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
 }
 
 /// Platform-specific checksum and URL information
@@ -38,6 +41,9 @@ pub struct PlatformInfo {
     pub url_suffix: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub platform_name: Option<String>,
+    /// Extra fields from JSON that aren't explicitly defined (e.g., "binary_path", "npm_path" for Node.js)
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
 }
 
 /// Manager for checksum data operations
@@ -297,17 +303,42 @@ impl ChecksumManager {
             let mut platforms_data = Vec::new();
 
             for (platform, platform_info) in &version_info.platforms {
-                let platform_entry = if let Some(platform_name) = &platform_info.platform_name {
-                    format!(
-                        "                        \"{}\": {{\n                            \"sha256\": \"{}\",\n                            \"platform_name\": \"{}\",\n                        }}",
-                        platform, platform_info.sha256, platform_name
-                    )
+                // Build the list of fields for this platform entry
+                let mut fields = Vec::new();
+                fields.push(format!("\"sha256\": \"{}\"", platform_info.sha256));
+
+                if let Some(platform_name) = &platform_info.platform_name {
+                    fields.push(format!("\"platform_name\": \"{}\"", platform_name));
                 } else {
-                    format!(
-                        "                        \"{}\": {{\n                            \"sha256\": \"{}\",\n                            \"url_suffix\": \"{}\",\n                        }}",
-                        platform, platform_info.sha256, platform_info.url_suffix
-                    )
-                };
+                    fields.push(format!("\"url_suffix\": \"{}\"", platform_info.url_suffix));
+                }
+
+                // Include extra fields (binary_path, npm_path, etc.) - sorted for determinism
+                let mut extra_keys: Vec<_> = platform_info.extra.keys().collect();
+                extra_keys.sort();
+                for key in extra_keys {
+                    if let Some(value) = platform_info.extra.get(key) {
+                        // Format the value based on its type
+                        let formatted = match value {
+                            serde_json::Value::String(s) => format!("\"{}\"", s),
+                            serde_json::Value::Bool(b) => b.to_string(),
+                            serde_json::Value::Number(n) => n.to_string(),
+                            _ => value.to_string(),
+                        };
+                        fields.push(format!("\"{}\": {}", key, formatted));
+                    }
+                }
+
+                let fields_str = fields
+                    .iter()
+                    .map(|f| format!("                            {},", f))
+                    .collect::<Vec<_>>()
+                    .join("\n");
+
+                let platform_entry = format!(
+                    "                        \"{}\": {{\n{}\n                        }}",
+                    platform, fields_str
+                );
                 platforms_data.push(platform_entry);
             }
 
@@ -445,10 +476,12 @@ mod tests {
                         sha256: "abc123".to_string(),
                         url_suffix: "linux.tar.gz".to_string(),
                         platform_name: None,
+                        extra: HashMap::new(),
                     },
                 );
                 platforms
             },
+            extra: HashMap::new(),
         };
 
         manager

@@ -2,6 +2,7 @@
 
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 
 def _cpp_component_toolchain_impl(ctx):
     """Implementation of cpp_component_toolchain rule"""
@@ -72,33 +73,13 @@ cpp_component_toolchain = rule(
     doc = "Declares a C/C++ WebAssembly component toolchain",
 )
 
-def _detect_host_platform(repository_ctx):
-    """Detect the host platform"""
-
-    os_name = repository_ctx.os.name.lower()
-    arch = repository_ctx.os.arch.lower()
-
-    # Normalize platform names for cross-platform compatibility
-    if "mac" in os_name or "darwin" in os_name:
-        os_name = "darwin"
-    elif "windows" in os_name:
-        os_name = "windows"
-    elif "linux" in os_name:
-        os_name = "linux"
-
-    # Normalize architecture names
-    if arch == "x86_64":
-        arch = "amd64"
-    elif arch == "aarch64":
-        arch = "arm64"
-
-    return "{}_{}".format(os_name, arch)
+# Platform detection now uses tool_registry.detect_platform
 
 def _cpp_component_toolchain_repository_impl(repository_ctx):
     """Create C/C++ component toolchain repository"""
 
     strategy = repository_ctx.attr.strategy
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Resolve version from bundle if specified, otherwise use explicit version
@@ -179,7 +160,7 @@ def _setup_built_cpp_tools(repository_ctx):
     # This would involve building LLVM/Clang with WebAssembly support
     # For now, fall back to download strategy
     print("Build strategy not yet implemented for C/C++ toolchain, using download strategy")
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     _setup_downloaded_cpp_tools(repository_ctx, platform, "27")
 
 def _get_wasi_sdk_url(platform, version):

@@ -1,9 +1,8 @@
 """jco (JavaScript Component Tools) toolchain definitions"""
 
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
-load("//toolchains:diagnostics.bzl", "format_diagnostic_error", "validate_system_tool")
-load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool", "validate_tool_functionality")
-load("//checksums:registry.bzl", "get_tool_info")
+load("//toolchains:diagnostics.bzl", "format_diagnostic_error")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 
 def _get_nodejs_toolchain_info(repository_ctx):
     """Get Node.js toolchain info from the registered hermetic toolchain"""
@@ -61,32 +60,12 @@ jco_toolchain = rule(
     doc = "Declares a jco (JavaScript Component Tools) toolchain",
 )
 
-def _detect_host_platform(repository_ctx):
-    """Detect the host platform for jco"""
-
-    os_name = repository_ctx.os.name.lower()
-    arch = repository_ctx.os.arch.lower()
-
-    # Normalize platform names for cross-platform compatibility
-    if "mac" in os_name or "darwin" in os_name:
-        os_name = "darwin"
-    elif "windows" in os_name:
-        os_name = "windows"
-    elif "linux" in os_name:
-        os_name = "linux"
-
-    # Normalize architecture names
-    if arch == "x86_64":
-        arch = "amd64"
-    elif arch == "aarch64":
-        arch = "arm64"
-
-    return "{}_{}".format(os_name, arch)
+# Platform detection now uses tool_registry.detect_platform
 
 def _jco_toolchain_repository_impl(repository_ctx):
     """Create jco toolchain repository"""
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Resolve versions from bundle if specified, otherwise use explicit versions
@@ -118,19 +97,14 @@ def _jco_toolchain_repository_impl(repository_ctx):
 def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_version):
     """Download hermetic Node.js and install jco via npm
 
-    Supports configurable mirrors via environment variables for enterprise/air-gap deployments:
-    - BAZEL_NODEJS_MIRROR: Override Node.js download URL (default: https://nodejs.org)
+    Uses tool_registry.download() for Node.js with:
+    - SHA256 checksum verification from checksums/tools/nodejs.json
+    - Enterprise mirror support (BAZEL_WASM_MIRROR)
+    - Offline mode support (BAZEL_WASM_OFFLINE)
+
+    npm registry can be configured via:
     - BAZEL_NPM_REGISTRY: Override npm registry URL (default: https://registry.npmjs.org)
     """
-
-    # Get Node.js info from registry
-    node_info = get_tool_info("nodejs", node_version, platform)
-    if not node_info:
-        fail(format_diagnostic_error(
-            "E001",
-            "Unsupported platform {} for Node.js {}".format(platform, node_version),
-            "Check //checksums/tools/nodejs.json for supported platforms",
-        ))
 
     print("Setting up hermetic Node.js {} + jco {} for platform {}".format(
         node_version,
@@ -138,51 +112,26 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
         platform,
     ))
 
-    # Get mirror configuration from environment (enterprise support)
-    nodejs_mirror = repository_ctx.os.environ.get("BAZEL_NODEJS_MIRROR", "https://nodejs.org")
-    npm_registry = repository_ctx.os.environ.get("BAZEL_NPM_REGISTRY", "https://registry.npmjs.org")
+    # Download Node.js via unified registry (with checksums + enterprise support!)
+    node_result = tool_registry.download(
+        repository_ctx,
+        "nodejs",
+        node_version,
+        platform,
+    )
 
-    # Download Node.js from configurable mirror
-    archive_name = "node-v{}-{}".format(node_version, node_info["url_suffix"])
-    node_url = "{}/dist/v{}/{}".format(nodejs_mirror, node_version, archive_name)
-
-    print("Downloading Node.js from: {}".format(node_url))
-
-    # Download and extract Node.js with SHA256 verification
-    if archive_name.endswith(".tar.xz"):
-        # For .tar.xz files (Linux)
-        result = repository_ctx.download_and_extract(
-            url = node_url,
-            sha256 = node_info["sha256"],
-            type = "tar.xz",
-        )
-    elif archive_name.endswith(".tar.gz"):
-        # For .tar.gz files (macOS)
-        result = repository_ctx.download_and_extract(
-            url = node_url,
-            sha256 = node_info["sha256"],
-            type = "tar.gz",
-        )
-    elif archive_name.endswith(".zip"):
-        # For .zip files (Windows)
-        result = repository_ctx.download_and_extract(
-            url = node_url,
-            sha256 = node_info["sha256"],
-            type = "zip",
-        )
-    else:
-        fail("Unsupported Node.js archive format: {}".format(archive_name))
-
-    if not result or (hasattr(result, "return_code") and result.return_code != 0):
+    # Get paths from tool_info
+    tool_info = node_result["tool_info"]
+    if not tool_info:
         fail(format_diagnostic_error(
-            "E003",
-            "Failed to download Node.js {}".format(node_version),
-            "Check network connectivity and Node.js version availability",
+            "E001",
+            "Unsupported platform {} for Node.js {}".format(platform, node_version),
+            "Check //checksums/tools/nodejs.json for supported platforms",
         ))
 
     # Get paths to Node.js binaries
-    node_binary_path = node_info["binary_path"].format(node_version)
-    npm_binary_path = node_info["npm_path"].format(node_version)
+    node_binary_path = tool_info["binary_path"].format(node_version)
+    npm_binary_path = tool_info["npm_path"].format(node_version)
 
     # Verify Node.js installation
     node_binary = repository_ctx.path(node_binary_path)
@@ -193,6 +142,9 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
 
     if not npm_binary.exists:
         fail("npm binary not found at: {}".format(npm_binary_path))
+
+    # Get npm registry configuration
+    npm_registry = repository_ctx.os.environ.get("BAZEL_NPM_REGISTRY", "https://registry.npmjs.org")
 
     print("Node.js toolchain configured")
 

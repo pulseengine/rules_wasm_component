@@ -2,27 +2,9 @@
 
 load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 
-def _detect_host_platform(repository_ctx):
-    """Detect the host platform"""
-    os_name = repository_ctx.os.name.lower()
-    arch = repository_ctx.os.arch.lower()
-
-    # Normalize platform names for cross-platform compatibility
-    if "mac" in os_name or "darwin" in os_name:
-        os_name = "darwin"
-    elif "windows" in os_name:
-        os_name = "windows"
-    elif "linux" in os_name:
-        os_name = "linux"
-
-    # Normalize architecture names
-    if arch == "x86_64":
-        arch = "amd64"
-    elif arch == "aarch64":
-        arch = "arm64"
-
-    return "{}_{}".format(os_name, arch)
+# Platform detection now uses tool_registry.detect_platform
 
 def _symmetric_wit_bindgen_toolchain_impl(ctx):
     """Implementation of symmetric wit-bindgen toolchain rule"""
@@ -56,7 +38,7 @@ symmetric_wit_bindgen_toolchain = rule(
 def _symmetric_wit_bindgen_repository_impl(repository_ctx):
     """Create repository with both official and symmetric wit-bindgen tools"""
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     print("Setting up symmetric wit-bindgen toolchain for platform: {}".format(platform))
 
     # Download official wit-bindgen
