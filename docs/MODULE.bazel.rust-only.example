@@ -1,0 +1,64 @@
+"""Example MODULE.bazel for Rust-only WebAssembly components.
+
+This configuration downloads only ~50MB of toolchains instead of ~900MB.
+First build completes in ~2 minutes instead of 10+ minutes.
+"""
+
+module(
+    name = "my_wasm_project",
+    version = "1.0.0",
+)
+
+# Core dependencies
+bazel_dep(name = "rules_wasm_component", version = "1.0.0")
+bazel_dep(name = "rules_rust", version = "0.68.1")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+# Rust toolchain
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2021",
+    extra_target_triples = [
+        "wasm32-wasip1",
+        "wasm32-wasip2",
+    ],
+    versions = ["1.91.1"],
+)
+use_repo(rust, "rust_toolchains")
+register_toolchains("@rust_toolchains//:all")
+
+# ============================================================================
+# LAZY TOOLCHAIN LOADING - Rust Only (~50MB)
+# ============================================================================
+# This loads only the core WASM tools needed for Rust:
+# - wasm-tools (component manipulation)
+# - wasmtime (runtime with wizer for pre-initialization)
+# - wkg (package management)
+# - WASI WIT definitions
+
+rust_wasm = use_extension(
+    "@rules_wasm_component//wasm:language_extensions.bzl",
+    "rust_wasm",
+)
+rust_wasm.configure()
+use_repo(
+    rust_wasm,
+    "wasm_tools_toolchains",
+    "wasmtime_toolchain",
+    "wkg_toolchain",
+    # WASI WIT repos
+    "wasi_cli",
+    "wasi_clocks",
+    "wasi_filesystem",
+    "wasi_http",
+    "wasi_io",
+    "wasi_random",
+    "wasi_sockets",
+)
+
+register_toolchains(
+    "@wasm_tools_toolchains//:wasm_tools_toolchain",
+    "@wasmtime_toolchain//:wasmtime_toolchain",
+    "@wkg_toolchain//:wkg_toolchain_def",
+)

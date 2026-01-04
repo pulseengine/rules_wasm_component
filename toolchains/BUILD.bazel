@@ -130,6 +130,30 @@ bzl_library(
     ],
 )
 
+# Bzl library for WASI SDK toolchain implementation
+bzl_library(
+    name = "wasi_sdk_toolchain",
+    srcs = ["wasi_sdk_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":diagnostics",
+        ":tool_cache",
+        "//checksums:registry",
+    ],
+)
+
+# Bzl library for Wasmtime runtime toolchain implementation
+bzl_library(
+    name = "wasmtime_toolchain",
+    srcs = ["wasmtime_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":diagnostics",
+        ":tool_cache",
+        "//checksums:registry",
+    ],
+)
+
 # Enhanced toolchain management libraries
 
 bzl_library(

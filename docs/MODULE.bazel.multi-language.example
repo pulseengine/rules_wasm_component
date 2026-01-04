@@ -1,0 +1,99 @@
+"""Example MODULE.bazel for multi-language WebAssembly components.
+
+This shows how to incrementally add language support.
+Uncomment sections as needed - each adds its own download cost.
+"""
+
+module(
+    name = "my_multi_lang_project",
+    version = "1.0.0",
+)
+
+# Core dependencies
+bazel_dep(name = "rules_wasm_component", version = "1.0.0")
+bazel_dep(name = "rules_rust", version = "0.68.1")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+# ============================================================================
+# CORE: Rust WebAssembly (~50MB)
+# ============================================================================
+# Always needed - provides core WASM tools
+
+rust_wasm = use_extension(
+    "@rules_wasm_component//wasm:language_extensions.bzl",
+    "rust_wasm",
+)
+rust_wasm.configure()
+use_repo(
+    rust_wasm,
+    "wasm_tools_toolchains",
+    "wasmtime_toolchain",
+    "wkg_toolchain",
+    "wasi_cli",
+    "wasi_io",
+)
+register_toolchains(
+    "@wasm_tools_toolchains//:wasm_tools_toolchain",
+    "@wasmtime_toolchain//:wasmtime_toolchain",
+    "@wkg_toolchain//:wkg_toolchain_def",
+)
+
+# ============================================================================
+# OPTIONAL: Go WebAssembly (+500MB for TinyGo)
+# ============================================================================
+# Uncomment to enable Go component support
+
+bazel_dep(name = "rules_go", version = "0.59.0")
+
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.25.2")
+use_repo(go_sdk, "go_toolchains")
+register_toolchains("@go_toolchains//:all")
+
+go_wasm = use_extension(
+    "@rules_wasm_component//wasm:language_extensions.bzl",
+    "go_wasm",
+)
+go_wasm.configure()
+use_repo(go_wasm, "tinygo_toolchain")
+register_toolchains("@tinygo_toolchain//:tinygo_toolchain_def")
+
+# ============================================================================
+# OPTIONAL: C++ WebAssembly (+300MB for WASI SDK)
+# ============================================================================
+# Uncomment to enable C++ component support
+
+bazel_dep(name = "rules_cc", version = "0.2.14")
+
+cpp_wasm = use_extension(
+    "@rules_wasm_component//wasm:language_extensions.bzl",
+    "cpp_wasm",
+)
+cpp_wasm.configure()
+use_repo(cpp_wasm, "wasi_sdk", "cpp_toolchain")
+register_toolchains(
+    "@wasi_sdk//:wasi_sdk_toolchain",
+    "@wasi_sdk//:cc_toolchain",
+    "@cpp_toolchain//:cpp_component_toolchain",
+)
+
+# ============================================================================
+# OPTIONAL: JavaScript WebAssembly (+100MB for Node.js/JCO)
+# ============================================================================
+# Uncomment to enable JavaScript component support
+
+bazel_dep(name = "rules_nodejs", version = "6.5.0")
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "20.18.0")
+use_repo(node, "nodejs_toolchains")
+register_toolchains("@nodejs_toolchains//:all")
+
+js_wasm = use_extension(
+    "@rules_wasm_component//wasm:language_extensions.bzl",
+    "js_wasm",
+)
+js_wasm.configure()
+use_repo(js_wasm, "jco_toolchain")
+register_toolchains("@jco_toolchain//:jco_toolchain")
