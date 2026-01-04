@@ -289,18 +289,18 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
         platform = _detect_platform(repository_ctx)
 
     # Get tool info from centralized registry
-    tool_info = get_tool_info(tool_name, version, platform)
+    tool_info = get_tool_info(repository_ctx, tool_name, version, platform)
     if not tool_info:
         fail("Tool '{}' version '{}' platform '{}' not found in registry. Check //checksums/tools/{}.json".format(
             tool_name, version, platform, tool_name))
 
     # Get checksum
-    checksum = get_tool_checksum(tool_name, version, platform)
+    checksum = get_tool_checksum(repository_ctx, tool_name, version, platform)
     if not checksum:
         fail("No checksum found for {} {} {}".format(tool_name, version, platform))
 
     # Get GitHub repo (optional - some tools like Go use go.dev, not GitHub)
-    github_repo = get_github_repo(tool_name)
+    github_repo = get_github_repo(repository_ctx, tool_name)
 
     # Build default URL
     default_url = _build_download_url(tool_name, version, platform, tool_info, github_repo)

@@ -186,7 +186,7 @@ exit 1
 def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform, is_tarball):
     """Download a single tool with enhanced error handling"""
 
-    tool_info = get_tool_info(tool_name, version, platform)
+    tool_info = get_tool_info(repository_ctx, tool_name, version, platform)
     if not tool_info:
         fail(format_diagnostic_error(
             "E001",

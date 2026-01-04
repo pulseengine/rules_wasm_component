@@ -16,7 +16,7 @@ def secure_download_tool(ctx, tool_name, version, platform):
     """
 
     # Get verified checksum from central registry
-    expected_checksum = get_tool_checksum(tool_name, version, platform)
+    expected_checksum = get_tool_checksum(ctx, tool_name, version, platform)
     if not expected_checksum:
         fail("SECURITY: Tool '{}' version '{}' platform '{}' not in verified checksum registry. Check //checksums/tools/{}.json".format(
             tool_name,
@@ -26,7 +26,7 @@ def secure_download_tool(ctx, tool_name, version, platform):
         ))
 
     # Get additional tool info for URL construction
-    tool_info = get_tool_info(tool_name, version, platform)
+    tool_info = get_tool_info(ctx, tool_name, version, platform)
     if not tool_info:
         fail("SECURITY: Tool info not found for '{}' version '{}' platform '{}'".format(tool_name, version, platform))
 
@@ -79,7 +79,7 @@ def _build_download_url(ctx, tool_name, version, platform, tool_info, github_mir
     """
 
     # Get GitHub repository from registry
-    github_repo = get_github_repo(tool_name)
+    github_repo = get_github_repo(ctx, tool_name)
     if not github_repo:
         fail("GitHub repository not found for tool '{}'".format(tool_name))
 

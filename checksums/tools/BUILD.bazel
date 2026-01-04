@@ -1,0 +1,12 @@
+# Tool checksum JSON files - single source of truth for tool downloads
+#
+# These files are generated and updated by //tools/checksum_updater
+# and are read at repository rule execution time by registry.bzl.
+#
+# To add or update checksums:
+#   bazel run //tools/checksum_updater -- --tool=<tool_name>
+
+exports_files(
+    glob(["*.json"]),
+    visibility = ["//visibility:public"],
+)
