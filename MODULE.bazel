@@ -165,7 +165,7 @@ register_toolchains("@bazel_tools//tools/cpp:all")
 tinygo = use_extension("//wasm:extensions.bzl", "tinygo")
 tinygo.register(
     name = "tinygo",
-    tinygo_version = "0.39.0",
+    tinygo_version = "0.40.1",  # Must match version in checksums/tools/tinygo.json
 )
 use_repo(tinygo, "tinygo_toolchain")
 

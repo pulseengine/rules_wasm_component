@@ -2,67 +2,74 @@
   "tool_name": "wac",
   "github_repo": "bytecodealliance/wac",
   "latest_version": "0.8.1",
-  "last_checked": "2025-11-25T18:00:00.000000Z",
+  "last_checked": "2026-01-01T13:28:49.001476Z",
   "versions": {
     "0.8.1": {
       "release_date": "2025-11-11",
       "platforms": {
-        "linux_amd64": {
-          "sha256": "ce30f33c5bc40095cfb4e74ae5fb4ba515d4f4bef2d597831bc7afaaf0d55b6c",
-          "url_suffix": "x86_64-unknown-linux-musl",
-          "platform_name": "x86_64-unknown-linux-musl"
-        },
-        "linux_arm64": {
-          "sha256": "3b78ae7c732c1376d1c21b570d07152a07342e9c4f75bff1511cde5f6af01f12",
-          "url_suffix": "aarch64-unknown-linux-musl",
-          "platform_name": "aarch64-unknown-linux-musl"
-        },
-        "darwin_amd64": {
-          "sha256": "d5fa365a4920d19a61837a42c9273b0b8ec696fd3047af864a860f46005773a5",
-          "url_suffix": "x86_64-apple-darwin",
-          "platform_name": "x86_64-apple-darwin"
+        "windows_amd64": {
+          "sha256": "b3509dfc3bb9d1e598e7b2790ef6efe5b6c8b696f2ad0e997e9ae6dd20bb6f13",
+          "url_suffix": "",
+          "platform_name": "x86_64-pc-windows-gnu"
         },
         "darwin_arm64": {
           "sha256": "f08496f49312abd68d9709c735a987d6a17d2295a1240020d217a9de8dcaaacd",
-          "url_suffix": "aarch64-apple-darwin",
+          "url_suffix": "",
           "platform_name": "aarch64-apple-darwin"
         },
-        "windows_amd64": {
-          "sha256": "b3509dfc3bb9d1e598e7b2790ef6efe5b6c8b696f2ad0e997e9ae6dd20bb6f13",
-          "url_suffix": "x86_64-pc-windows-gnu",
-          "platform_name": "x86_64-pc-windows-gnu"
+        "darwin_amd64": {
+          "sha256": "d5fa365a4920d19a61837a42c9273b0b8ec696fd3047af864a860f46005773a5",
+          "url_suffix": "",
+          "platform_name": "x86_64-apple-darwin"
+        },
+        "linux_arm64": {
+          "sha256": "3b78ae7c732c1376d1c21b570d07152a07342e9c4f75bff1511cde5f6af01f12",
+          "url_suffix": "",
+          "platform_name": "aarch64-unknown-linux-musl"
+        },
+        "linux_amd64": {
+          "sha256": "ce30f33c5bc40095cfb4e74ae5fb4ba515d4f4bef2d597831bc7afaaf0d55b6c",
+          "url_suffix": "",
+          "platform_name": "x86_64-unknown-linux-musl"
         }
       }
     },
     "0.8.0": {
       "release_date": "2025-08-20",
       "platforms": {
-        "linux_amd64": {
-          "sha256": "9fee2d8603dc50403ebed580b47b8661b582ffde8a9174bf193b89ca00decf0f",
-          "url_suffix": "x86_64-unknown-linux-musl",
-          "platform_name": "x86_64-unknown-linux-musl"
+        "windows_amd64": {
+          "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
+          "url_suffix": "x86_64-pc-windows-gnu",
+          "platform_name": "x86_64-pc-windows-gnu"
         },
         "linux_arm64": {
           "sha256": "af966d4efbd411900073270bd4261ac42d9550af8ba26ed49288bb942476c5a9",
           "url_suffix": "aarch64-unknown-linux-musl",
           "platform_name": "aarch64-unknown-linux-musl"
         },
-        "darwin_amd64": {
-          "sha256": "cc58f94c611b3b7f27b16dd0a9a9fc63c91c662582ac7eaa9a14f2dac87b07f8",
-          "url_suffix": "x86_64-apple-darwin",
-          "platform_name": "x86_64-apple-darwin"
-        },
         "darwin_arm64": {
           "sha256": "6ca7f69f3e2bbab41f375a35e486d53e5b4968ea94271ea9d9bd59b0d2b65c13",
           "url_suffix": "aarch64-apple-darwin",
           "platform_name": "aarch64-apple-darwin"
         },
-        "windows_amd64": {
-          "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
-          "url_suffix": "x86_64-pc-windows-gnu",
-          "platform_name": "x86_64-pc-windows-gnu"
+        "darwin_amd64": {
+          "sha256": "cc58f94c611b3b7f27b16dd0a9a9fc63c91c662582ac7eaa9a14f2dac87b07f8",
+          "url_suffix": "x86_64-apple-darwin",
+          "platform_name": "x86_64-apple-darwin"
+        },
+        "linux_amd64": {
+          "sha256": "9fee2d8603dc50403ebed580b47b8661b582ffde8a9174bf193b89ca00decf0f",
+          "url_suffix": "x86_64-unknown-linux-musl",
+          "platform_name": "x86_64-unknown-linux-musl"
         }
       }
     }
-  }
+  },
+  "supported_platforms": [
+    "darwin_amd64",
+    "darwin_arm64",
+    "linux_amd64",
+    "linux_arm64",
+    "windows_amd64"
+  ]
 }

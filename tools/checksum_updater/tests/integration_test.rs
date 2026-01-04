@@ -201,12 +201,14 @@ async fn test_checksum_manager_file_operations() -> Result<()> {
             sha256: "test-checksum".to_string(),
             url_suffix: "linux_amd64.tar.gz".to_string(),
             platform_name: None,
+            extra: std::collections::HashMap::new(),
         },
     );
 
     let version_info = VersionInfo {
         release_date: "2024-01-01".to_string(),
         platforms,
+        extra: std::collections::HashMap::new(),
     };
 
     manager

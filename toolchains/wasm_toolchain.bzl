@@ -2,6 +2,7 @@
 
 load("//checksums:registry.bzl", "get_tool_info", "validate_tool_compatibility")
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error", "log_diagnostic_info", "validate_system_tool")
 load("//toolchains:monitoring.bzl", "add_build_telemetry", "create_health_check")
 load("//toolchains:tool_cache.bzl", "cache_tool", "clean_expired_cache", "retrieve_cached_tool", "validate_tool_functionality")
@@ -36,17 +37,6 @@ def _get_rust_toolchain_info(repository_ctx):
     # or using a different pattern (like using rules_rust's own repository rules)
 
     return None
-
-def _get_wasm_tools_platform_info(platform, version):
-    """Get platform info and checksum for wasm-tools from centralized registry"""
-    from_registry = get_tool_info("wasm-tools", version, platform)
-    if not from_registry:
-        fail("Unsupported platform {} for wasm-tools version {}".format(platform, version))
-
-    return struct(
-        sha256 = from_registry["sha256"],
-        url_suffix = from_registry["url_suffix"],
-    )
 
 def _wasm_tools_toolchain_impl(ctx):
     """Implementation of wasm_tools_toolchain rule"""
@@ -99,33 +89,13 @@ wasm_tools_toolchain = rule(
     doc = "Declares a WebAssembly toolchain with signing support",
 )
 
-def _detect_host_platform(repository_ctx):
-    """Detect the host platform"""
-
-    os_name = repository_ctx.os.name.lower()
-    arch = repository_ctx.os.arch.lower()
-
-    # Normalize platform names for cross-platform compatibility
-    if "mac" in os_name or "darwin" in os_name:
-        os_name = "darwin"
-    elif "windows" in os_name:
-        os_name = "windows"
-    elif "linux" in os_name:
-        os_name = "linux"
-
-    # Normalize architecture names
-    if arch == "x86_64":
-        arch = "amd64"
-    elif arch == "aarch64":
-        arch = "arm64"
-
-    return "{}_{}".format(os_name, arch)
+# Platform detection now uses tool_registry.detect_platform
 
 def _wasm_toolchain_repository_impl(repository_ctx):
     """Create toolchain repository with enhanced tool management"""
 
     strategy = repository_ctx.attr.strategy
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Resolve version from bundle or use explicit version attribute
@@ -170,7 +140,7 @@ def _wasm_toolchain_repository_impl(repository_ctx):
 def _setup_downloaded_tools_enhanced(repository_ctx):
     """Download prebuilt tools with enhanced error handling and caching"""
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     version = repository_ctx.attr.version
 
     tools_to_download = [
@@ -216,7 +186,7 @@ exit 1
 def _download_single_tool_enhanced(repository_ctx, tool_name, version, platform, is_tarball):
     """Download a single tool with enhanced error handling"""
 
-    tool_info = get_tool_info(tool_name, version, platform)
+    tool_info = get_tool_info(repository_ctx, tool_name, version, platform)
     if not tool_info:
         fail(format_diagnostic_error(
             "E001",
@@ -331,7 +301,7 @@ exit 1
 def _setup_downloaded_tools(repository_ctx):
     """Download prebuilt tools from GitHub releases (simple & reliable)"""
 
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
     print("Setting up tools for platform: {}".format(platform))
 
     # Download individual tools using simple, proven methods
@@ -481,36 +451,17 @@ def _setup_hybrid_tools_original(repository_ctx):
         _download_wrpc(repository_ctx)
 
 def _download_wasm_tools(repository_ctx):
-    """Download wasm-tools only"""
-    platform = _detect_host_platform(repository_ctx)
+    """Download wasm-tools using unified tool registry"""
+    platform = tool_registry.detect_platform(repository_ctx)
     version = repository_ctx.attr.version
 
-    # Get platform info and checksum from centralized registry
-    platform_info = _get_wasm_tools_platform_info(platform, version)
-
-    wasm_tools_url = "https://github.com/bytecodealliance/wasm-tools/releases/download/v{}/wasm-tools-{}-{}".format(
-        version,
-        version,
-        platform_info.url_suffix,
-    )
-
-    # Determine stripPrefix based on archive format
-    # Windows uses .zip, others use .tar.gz
-    if platform_info.url_suffix.endswith(".zip"):
-        strip_prefix = "wasm-tools-{}-{}".format(version, platform_info.url_suffix.replace(".zip", ""))
-    else:
-        strip_prefix = "wasm-tools-{}-{}".format(version, platform_info.url_suffix.replace(".tar.gz", ""))
-
-    # Download and extract archive, letting Bazel handle the structure
-    repository_ctx.download_and_extract(
-        url = wasm_tools_url,
-        sha256 = platform_info.sha256,
-        stripPrefix = strip_prefix,
-    )
+    # Use unified tool_registry for download - handles URL construction,
+    # checksum verification, and archive extraction automatically
+    tool_registry.download(repository_ctx, "wasm-tools", version, platform)
 
 def _download_wac(repository_ctx):
-    """Download wac only"""
-    platform = _detect_host_platform(repository_ctx)
+    """Download wac using unified tool registry"""
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Get version from bundle if specified, otherwise from tool_versions.bzl
@@ -525,26 +476,12 @@ def _download_wac(repository_ctx):
     else:
         wac_version = get_tool_version("wac")  # From tool_versions.bzl
 
-    # Get checksum and platform info from tool_versions.bzl
-    tool_info = get_tool_info("wac", wac_version, platform)
-    if not tool_info:
-        fail("Unsupported platform {} for wac version {}".format(platform, wac_version))
-
-    wac_url = "https://github.com/bytecodealliance/wac/releases/download/v{}/wac-cli-{}".format(
-        wac_version,
-        tool_info["platform_name"],
-    )
-
-    repository_ctx.download(
-        url = wac_url,
-        output = "wac",
-        sha256 = tool_info["sha256"],
-        executable = True,
-    )
+    # Use unified tool_registry for download (wac is a standalone binary)
+    tool_registry.download(repository_ctx, "wac", wac_version, platform, output_name = "wac")
 
 def _download_wit_bindgen(repository_ctx):
-    """Download wit-bindgen only"""
-    platform = _detect_host_platform(repository_ctx)
+    """Download wit-bindgen using unified tool registry"""
+    platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
     # Get version from bundle if specified, otherwise from tool_versions.bzl
@@ -559,22 +496,8 @@ def _download_wit_bindgen(repository_ctx):
     else:
         wit_bindgen_version = get_tool_version("wit-bindgen")  # From tool_versions.bzl
 
-    # Get checksum and platform info from tool_versions.bzl
-    tool_info = get_tool_info("wit-bindgen", wit_bindgen_version, platform)
-    if not tool_info:
-        fail("Unsupported platform {} for wit-bindgen version {}".format(platform, wit_bindgen_version))
-
-    wit_bindgen_url = "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{}/wit-bindgen-{}-{}".format(
-        wit_bindgen_version,
-        wit_bindgen_version,
-        tool_info["url_suffix"],
-    )
-
-    repository_ctx.download_and_extract(
-        url = wit_bindgen_url,
-        sha256 = tool_info["sha256"],
-        stripPrefix = "wit-bindgen-{}-{}".format(wit_bindgen_version, tool_info["url_suffix"].replace(".tar.gz", "").replace(".zip", "")),
-    )
+    # Use unified tool_registry for download
+    tool_registry.download(repository_ctx, "wit-bindgen", wit_bindgen_version, platform)
 
 def _download_wrpc(repository_ctx):
     """Download wrpc using modernized git_repository approach"""
@@ -624,7 +547,7 @@ def _create_build_files(repository_ctx):
     """Create BUILD files for the toolchain"""
 
     strategy = repository_ctx.attr.strategy
-    platform = _detect_host_platform(repository_ctx)
+    platform = tool_registry.detect_platform(repository_ctx)
 
     if strategy == "build":
         # For build strategy, reference external git repositories directly
