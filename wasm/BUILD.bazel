@@ -8,11 +8,13 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     deps = [
+        "//wasm/private:ssh_keygen",
         "//wasm/private:wasm_aot_aspect",
         "//wasm/private:wasm_component_new",
         "//wasm/private:wasm_component_wizer",
         "//wasm/private:wasm_component_wizer_library",
         "//wasm/private:wasm_embed_aot",
+        "//wasm/private:wasm_optimize",
         "//wasm/private:wasm_precompile",
         "//wasm/private:wasm_run",
         "//wasm/private:wasm_signing",

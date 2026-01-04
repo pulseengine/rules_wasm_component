@@ -27,6 +27,7 @@ This module provides utilities for:
 - Component validation (wasm_validate)
 - Component creation (wasm_component_new)
 - Pre-initialization (wasm_component_wizer, wizer_chain)
+- Optimization (wasm_optimize)
 - Cryptographic signing (wasm_keygen, wasm_sign, wasm_verify)
 - AOT compilation (wasm_precompile, wasm_precompile_multi)
 - Runtime execution (wasm_run, wasm_test)
@@ -90,6 +91,10 @@ load(
     "//wasm/private:ssh_keygen.bzl",
     _ssh_keygen = "ssh_keygen",
 )
+load(
+    "//wasm/private:wasm_optimize.bzl",
+    _wasm_optimize = "wasm_optimize",
+)
 
 # Re-export public rules
 wasm_validate = _wasm_validate
@@ -116,3 +121,6 @@ wasm_extract_aot = _wasm_extract_aot
 
 # SSH key generation (for signing workflows)
 ssh_keygen = _ssh_keygen
+
+# WebAssembly optimization rules
+wasm_optimize = _wasm_optimize

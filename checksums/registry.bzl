@@ -173,6 +173,8 @@ def list_available_tools():
         "go",
         "binaryen",
         "tinygo",
+        "loom",
+        "wsc",
     ]
 
 def validate_tool_compatibility(tools_config):

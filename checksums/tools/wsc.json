@@ -1,0 +1,27 @@
+{
+  "tool_name": "wsc",
+  "github_repo": "pulseengine/wsc",
+  "description": "WebAssembly Signature Component - signing and verification toolkit",
+  "latest_version": "0.4.0",
+  "supported_platforms": ["wasm"],
+  "versions": {
+    "0.4.0": {
+      "release_date": "2025-01-04",
+      "platforms": {
+        "wasm": {
+          "sha256": "44f15aa50787bf27f64623458b680ba0d49b3d56863737dad00909ba21fbe854",
+          "url_suffix": "wsc-cli.wasm"
+        }
+      }
+    },
+    "0.2.7-rc.1": {
+      "release_date": "2024-11-01",
+      "platforms": {
+        "wasm": {
+          "sha256": "cb3125ce35704fed117bee95d56ab34576c6c1c8b940234aba5dc9893c224fa7",
+          "url_suffix": "wsc-cli.wasm"
+        }
+      }
+    }
+  }
+}
