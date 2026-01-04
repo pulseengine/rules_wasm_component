@@ -77,7 +77,7 @@ wasm_optimize = rule(
         ),
         "_loom_wasm": attr.label(
             doc = "LOOM WebAssembly component",
-            default = "@loom_wasm//file",
+            default = "@loom_wasm//file:file",
             allow_single_file = True,
         ),
     },
