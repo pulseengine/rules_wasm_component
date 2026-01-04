@@ -27,3 +27,18 @@ bzl_library(
         "//toolchains:wasm_toolchain",
     ],
 )
+
+bzl_library(
+    name = "language_extensions",
+    srcs = ["language_extensions.bzl"],
+    deps = [
+        "//toolchains:cpp_component_toolchain",
+        "//toolchains:jco_toolchain",
+        "//toolchains:tinygo_toolchain",
+        "//toolchains:wasi_sdk_toolchain",
+        "//toolchains:wasm_toolchain",
+        "//toolchains:wasmtime_toolchain",
+        "//toolchains:wkg_toolchain",
+        "//wit:defs",
+    ],
+)
