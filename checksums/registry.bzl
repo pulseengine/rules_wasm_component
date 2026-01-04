@@ -361,7 +361,7 @@ def _get_fallback_checksums(tool_name):
                     "release_date": "2025-11-15",
                     "platforms": {
                         "windows_amd64": {
-                            "sha256": "ea5eb0580ffa1530644dd1fed1f7117ad72ec3d7956901561470a3b8c54cce43",
+                            "sha256": "6c19b820577486f00332ad8d04ac506da67b0892316b8d485371a58cbf216dee",
                             "url_suffix": "x86_64-windows.tar.gz",
                         },
                         "darwin_amd64": {
