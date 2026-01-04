@@ -126,3 +126,13 @@ bzl_library(
         "//wasm:__pkg__",
     ],
 )
+
+bzl_library(
+    name = "wasm_optimize",
+    srcs = ["wasm_optimize.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers:providers"],
+)

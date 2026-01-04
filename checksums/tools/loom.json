@@ -1,0 +1,35 @@
+{
+  "tool_name": "loom",
+  "github_repo": "pulseengine/loom",
+  "description": "WebAssembly optimizer with formal verification support",
+  "latest_version": "0.1.0-rc1",
+  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "windows_amd64", "wasm"],
+  "versions": {
+    "0.1.0-rc1": {
+      "release_date": "2025-01-04",
+      "prerelease": true,
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "db66f0ada03452962d06e11b4b24f5776be4ace55b30437fe212f49cd2d581fd",
+          "url_suffix": "loom-macos-x64.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "a767963acf2e3620790d91e7ff3ff5e8ad64d26e6c0524e3076148f554e67e09",
+          "url_suffix": "loom-macos-arm64.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "b02174132faf5bfbbb3f64f585ca2139622e3ff9ed14a8ce6c8ad831c5f1b0d3",
+          "url_suffix": "loom-linux-x64.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "8b4da02d3195ae2d94382fa4c6b247da69bd6ccf8156067f32de4e479fff5c48",
+          "url_suffix": "loom-windows-x64.zip"
+        },
+        "wasm": {
+          "sha256": "0ba00eea1e6b43b4782f5a75f979503094a3bed33f878acc043e5d6b4734274b",
+          "url_suffix": "loom.wasm"
+        }
+      }
+    }
+  }
+}

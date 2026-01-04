@@ -227,24 +227,33 @@ register_toolchains("//toolchains:file_ops_toolchain_target")
 # wasm_precompile rules. This guarantees compatibility with the user's
 # Wasmtime version while maintaining 100x faster startup.
 #
-# Version information tracked in: //checksums/tools/file-ops-component.json
-# Current: v0.1.0-rc.3 (regular WASM, 853KB)
-# AOT compilation happens at build time for perfect compatibility
-http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+# WASM component downloads using centralized JSON registry
+# All checksums verified from //checksums/tools/*.json
+wasm_component_download = use_repo_rule("//toolchains:wasm_component_download.bzl", "wasm_component_download")
 
-http_file(
+# File operations component (version in //checksums/tools/file-ops-component.json)
+wasm_component_download(
     name = "file_ops_component_external",
-    downloaded_file_path = "file_ops_component.wasm",
-    sha256 = "8a9b1aa8a2c9d3dc36f1724ccbf24a48c473808d9017b059c84afddc55743f1e",
-    url = "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.1.0-rc.3/file_ops_component.wasm",
+    tool_name = "file-ops-component",
+    version = "0.1.0-rc.3",
+    filename = "file_ops_component.wasm",
 )
 
-# wasmsign2 CLI WASM binary for component signing (from pulseengine/wsc)
-http_file(
+# WSC (WebAssembly Signature Component) for signing (version in //checksums/tools/wsc.json)
+# Note: kept as wasmsign2_cli_wasm for backward compatibility with existing wrappers
+wasm_component_download(
     name = "wasmsign2_cli_wasm",
-    downloaded_file_path = "wasmsign2.wasm",
-    sha256 = "cb3125ce35704fed117bee95d56ab34576c6c1c8b940234aba5dc9893c224fa7",
-    url = "https://github.com/pulseengine/wsc/releases/download/v0.2.7-rc.1/wsc-cli.wasm",
+    tool_name = "wsc",
+    version = "0.4.0",
+    filename = "wasmsign2.wasm",
+)
+
+# LOOM WebAssembly optimizer (version in //checksums/tools/loom.json)
+wasm_component_download(
+    name = "loom_wasm",
+    tool_name = "loom",
+    version = "0.1.0-rc1",
+    filename = "loom.wasm",
 )
 
 # WASM Tools Component toolchain for universal wasm-tools operations

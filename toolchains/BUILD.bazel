@@ -208,6 +208,14 @@ bzl_library(
     ],
 )
 
+# Bzl library for WASM component download repository rule
+bzl_library(
+    name = "wasm_component_download",
+    srcs = ["wasm_component_download.bzl"],
+    visibility = ["//visibility:public"],
+    deps = ["//checksums:registry"],
+)
+
 # Note: C++ toolchain configuration has been moved to @wasi_sdk repository
 # The cc_toolchain is now registered via @wasi_sdk//:cc_toolchain in MODULE.bazel
 
