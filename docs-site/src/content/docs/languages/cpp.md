@@ -415,6 +415,97 @@ cpp_component(
 )
 ```
 
+## Testing
+
+### Component Validation
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_validate")
+
+# Validate component structure
+wasm_validate(
+    name = "calculator_validated",
+    component = ":calculator",
+)
+```
+
+### Runtime Testing with Wasmtime
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_test")
+
+# Test component execution
+wasm_test(
+    name = "calculator_test",
+    component = ":calculator",
+    args = ["--test"],  # Passed to component
+)
+```
+
+### Integration Testing
+
+Test your C++ component from a host application:
+
+```cpp title="tests/host_test.cpp"
+#include <wasmtime.hh>
+#include <cassert>
+
+int main() {
+    wasmtime::Engine engine;
+    wasmtime::Store store(engine);
+
+    // Load the component
+    auto component = wasmtime::Component::from_file(
+        engine, "bazel-bin/calculator.wasm"
+    );
+
+    // Instantiate and test
+    wasmtime::Linker linker(engine);
+    auto instance = linker.instantiate(store, component);
+
+    // Call exported functions
+    auto add = instance.get_func(store, "add");
+    // ... test assertions
+}
+```
+
+## Performance Optimization
+
+### LOOM Optimization
+
+Optimize your component with the LOOM WebAssembly optimizer:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_optimize")
+
+wasm_optimize(
+    name = "calculator_optimized",
+    component = ":calculator",
+    stats = True,      # Show optimization statistics
+    verify = False,    # Enable for Z3 formal verification
+)
+```
+
+LOOM performs:
+- **Constant folding** - Compile-time evaluation
+- **Strength reduction** - Replace expensive ops (x * 8 → x << 3)
+- **Function inlining** - Cross-function optimization
+
+Typical results: 80-95% binary size reduction.
+
+### AOT Compilation
+
+Pre-compile for faster startup:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_precompile")
+
+wasm_precompile(
+    name = "calculator_aot",
+    component = ":calculator",
+)
+```
+
 ## Debugging
 
 ### Validate Component Structure

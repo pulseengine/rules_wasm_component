@@ -426,6 +426,41 @@ impl Guest for OptimizedCalculator {
 }
 ```
 
+### LOOM Optimization
+
+Optimize your component with the LOOM WebAssembly optimizer:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_optimize")
+
+wasm_optimize(
+    name = "calculator_optimized",
+    component = ":calculator_component",
+    stats = True,      # Show optimization statistics
+    verify = False,    # Enable for Z3 formal verification
+)
+```
+
+LOOM performs expression-level optimizations:
+- **Constant folding** - Compile-time evaluation of expressions
+- **Strength reduction** - Replace expensive operations (x * 8 → x << 3)
+- **Function inlining** - Cross-function optimization
+
+Typical results: 80-95% binary size reduction, 10-30µs optimization time.
+
+### AOT Compilation
+
+Pre-compile for faster cold starts:
+
+```python title="BUILD.bazel"
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_precompile")
+
+wasm_precompile(
+    name = "calculator_aot",
+    component = ":calculator_component",
+)
+```
+
 ## Troubleshooting
 
 ### Common Issues
