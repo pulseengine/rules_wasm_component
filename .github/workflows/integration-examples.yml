@@ -1,0 +1,155 @@
+name: Integration Examples Test
+
+# Triggers integration tests in wasm-component-examples repo
+# to validate that rules changes don't break downstream users.
+#
+# This is an optional check - it provides early warning but
+# won't block merges if the examples repo has its own issues.
+
+on:
+  pull_request:
+    branches: [main]
+    # Only run for significant changes, not docs-only updates
+    paths:
+      - '*.bzl'
+      - 'MODULE.bazel'
+      - 'rust/**'
+      - 'go/**'
+      - 'cpp/**'
+      - 'js/**'
+      - 'wasm/**'
+      - 'wit/**'
+      - 'toolchains/**'
+      - 'providers/**'
+
+  # Allow manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      examples_repo:
+        description: 'Examples repository to test against'
+        required: false
+        default: 'pulseengine/wasm-component-examples'
+        type: string
+
+env:
+  CI: true
+  # The examples repository to trigger
+  EXAMPLES_REPO: ${{ github.event.inputs.examples_repo || 'pulseengine/wasm-component-examples' }}
+
+jobs:
+  trigger-integration:
+    name: Trigger Integration Tests
+    runs-on: ubuntu-latest
+
+    # This job requires a PAT with repo scope stored as INTEGRATION_TEST_TOKEN
+    # If the secret is not configured, the job will be skipped gracefully
+    steps:
+      - name: Check for integration token
+        id: check-token
+        run: |
+          if [ -z "${{ secrets.INTEGRATION_TEST_TOKEN }}" ]; then
+            echo "has_token=false" >> $GITHUB_OUTPUT
+            echo "⚠️ INTEGRATION_TEST_TOKEN not configured - skipping integration tests"
+            echo "To enable: Add a PAT with repo scope as INTEGRATION_TEST_TOKEN secret"
+          else
+            echo "has_token=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger examples integration test
+        if: steps.check-token.outputs.has_token == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INTEGRATION_TEST_TOKEN }}
+          repository: ${{ env.EXAMPLES_REPO }}
+          event-type: test-integration
+          client-payload: |
+            {
+              "ref": "${{ github.head_ref || github.ref_name }}",
+              "repo": "${{ github.repository }}",
+              "pr_number": "${{ github.event.pull_request.number }}",
+              "sha": "${{ github.event.pull_request.head.sha || github.sha }}"
+            }
+
+      - name: Log integration test trigger
+        if: steps.check-token.outputs.has_token == 'true'
+        run: |
+          echo "✅ Triggered integration tests in ${{ env.EXAMPLES_REPO }}"
+          echo ""
+          echo "Test configuration:"
+          echo "  Branch: ${{ github.head_ref || github.ref_name }}"
+          echo "  Repository: ${{ github.repository }}"
+          echo "  PR: #${{ github.event.pull_request.number }}"
+          echo "  SHA: ${{ github.event.pull_request.head.sha || github.sha }}"
+          echo ""
+          echo "View results: https://github.com/${{ env.EXAMPLES_REPO }}/actions"
+
+  # Alternative: Run integration tests directly in this workflow
+  # This doesn't require cross-repo dispatch but duplicates the test logic
+  direct-integration-test:
+    name: Direct Integration Test
+    runs-on: ubuntu-latest
+    # Only run if we don't have the dispatch token
+    # This provides a fallback for forks and repos without the secret
+
+    steps:
+      - name: Checkout rules_wasm_component (this PR)
+        uses: actions/checkout@v4
+        with:
+          path: rules_wasm_component
+
+      - name: Checkout examples repository
+        uses: actions/checkout@v4
+        with:
+          repository: pulseengine/wasm-component-examples
+          path: examples
+
+      - name: Setup integration test
+        working-directory: examples
+        run: |
+          # Override MODULE.bazel to use local rules checkout
+          cat >> MODULE.bazel << 'EOF'
+
+          # Integration test override - use PR branch
+          local_path_override(
+              module_name = "rules_wasm_component",
+              path = "../rules_wasm_component",
+          )
+          EOF
+
+          echo "=== Testing against PR branch ==="
+          cd ../rules_wasm_component && git log -1 --oneline
+          echo ""
+
+      - name: Install Bazelisk
+        run: |
+          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          chmod +x bazelisk-linux-amd64
+          sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+
+      - name: Build examples
+        working-directory: examples
+        run: bazel build //...
+
+      - name: Install Wasmtime
+        run: |
+          curl https://wasmtime.dev/install.sh -sSf | bash
+          echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
+
+      - name: Test Rust components
+        working-directory: examples
+        run: |
+          echo "=== Testing hello_rust ==="
+          WASM_FILE=$(bazel cquery --output=files //rust:hello_rust 2>/dev/null | head -1)
+          $HOME/.wasmtime/bin/wasmtime run "$WASM_FILE"
+
+          echo ""
+          echo "=== Testing calculator ==="
+          WASM_FILE=$(bazel cquery --output=files //rust:calculator 2>/dev/null | head -1)
+          OUTPUT=$($HOME/.wasmtime/bin/wasmtime run "$WASM_FILE" 8 + 8)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "8 + 8 = 16"
+
+      - name: Report result
+        run: |
+          echo "✅ Integration test with examples PASSED"
+          echo "Tested examples against this PR's changes"
