@@ -78,6 +78,8 @@ jobs:
 
       - name: Run checksum updates
         id: update
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Determine which tools to update
           TOOLS="${{ github.event.inputs.tools || 'all' }}"
@@ -93,18 +95,30 @@ jobs:
 
           echo "Running checksum updater with tools: $TOOLS"
 
+          # Use the binary directly to avoid bazel run stdout pollution
+          # (bazel run outputs INFO messages that would corrupt JSON output)
+          UPDATER_BIN="bazel-bin/tools/checksum_updater/checksum_updater_bin"
+
           # Run the updater and capture output
           # Capture stdout (JSON results) separately from stderr (logs/errors)
           if [ "$TOOLS" = "all" ]; then
-            bazel run //tools/checksum_updater:checksum_updater_bin -- update-all $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json 2>update_logs.txt || true
+            "$UPDATER_BIN" update-all $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json 2>update_logs.txt || true
           else
-            bazel run //tools/checksum_updater:checksum_updater_bin -- update --tools "$TOOLS" $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json 2>update_logs.txt || true
+            "$UPDATER_BIN" update --tools "$TOOLS" $FORCE_FLAG $DRY_RUN_FLAG --output-format json > update_results.json 2>update_logs.txt || true
           fi
 
           # Show logs for debugging
           echo "=== Update Tool Logs ==="
           cat update_logs.txt || true
           echo "=== End Logs ==="
+
+          # Validate JSON output before parsing
+          if ! jq empty update_results.json 2>/dev/null; then
+            echo "❌ Invalid JSON in update_results.json:"
+            head -20 update_results.json
+            echo "Creating empty results..."
+            echo '{"summary":{"tools_updated":0,"new_versions_found":0,"errors":1},"updates":[],"errors":[{"tool_name":"workflow","message":"Invalid JSON output from updater"}]}' > update_results.json
+          fi
 
           # Check if any updates were made
           UPDATES_COUNT=$(jq '.summary.tools_updated' update_results.json)
@@ -118,8 +132,8 @@ jobs:
           # Store results for later steps
           cp update_results.json ./update_results.json
 
-          # Generate summary for PR description
-          bazel run //tools/checksum_updater:checksum_updater_bin -- generate-summary update_results.json > ./update_summary.md 2>>/dev/null || true
+          # Generate summary for PR description (use binary directly)
+          "$UPDATER_BIN" generate-summary update_results.json > ./update_summary.md 2>/dev/null || true
 
       - name: Validate updated checksums
         if: steps.update.outputs.updates_count > 0
@@ -135,8 +149,9 @@ jobs:
             }
           done
 
-          # Test that registry.bzl loads correctly
-          bazel run //tools/checksum_updater:checksum_updater_bin -- validate --all
+          # Test that registry.bzl loads correctly (use binary directly)
+          UPDATER_BIN="bazel-bin/tools/checksum_updater/checksum_updater_bin"
+          "$UPDATER_BIN" validate --all
 
           echo "✅ All checksums validated successfully"
 
