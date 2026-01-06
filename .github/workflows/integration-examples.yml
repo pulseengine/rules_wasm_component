@@ -5,6 +5,16 @@ name: Integration Examples Test
 #
 # This is an optional check - it provides early warning but
 # won't block merges if the examples repo has its own issues.
+#
+# BREAKING CHANGE PROTOCOL:
+# When introducing breaking changes, create a branch in the examples repo
+# with the SAME NAME as your PR branch. The CI will automatically detect
+# and test against that matching branch.
+#
+# Example:
+#   Your PR branch: feature/new-api
+#   Create in examples: feature/new-api (with updated examples)
+#   CI tests: rules:feature/new-api against examples:feature/new-api
 
 on:
   pull_request:
@@ -97,10 +107,43 @@ jobs:
         with:
           path: rules_wasm_component
 
+      - name: Check for matching examples branch
+        id: examples-branch
+        run: |
+          RULES_BRANCH="${{ github.head_ref || github.ref_name }}"
+
+          echo "══════════════════════════════════════════════════════════"
+          echo "INTEGRATION TEST BRANCH RESOLUTION"
+          echo "══════════════════════════════════════════════════════════"
+          echo "Rules PR branch: $RULES_BRANCH"
+          echo "Checking examples repo for matching branch..."
+          echo ""
+
+          # Check if a matching branch exists in the examples repo
+          if git ls-remote --heads https://github.com/pulseengine/wasm-component-examples.git "$RULES_BRANCH" | grep -q "$RULES_BRANCH"; then
+            echo "✅ Found matching branch: $RULES_BRANCH"
+            echo "   Using examples branch: $RULES_BRANCH"
+            echo ""
+            echo "   This means the rules PR has breaking changes that require"
+            echo "   corresponding updates in the examples repo."
+            echo "branch=$RULES_BRANCH" >> $GITHUB_OUTPUT
+            echo "matched=true" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️  No matching branch found: $RULES_BRANCH"
+            echo "   Using examples branch: main"
+            echo ""
+            echo "   This is expected for non-breaking changes."
+            echo "branch=main" >> $GITHUB_OUTPUT
+            echo "matched=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "══════════════════════════════════════════════════════════"
+
       - name: Checkout examples repository
         uses: actions/checkout@v4
         with:
           repository: pulseengine/wasm-component-examples
+          ref: ${{ steps.examples-branch.outputs.branch }}
           path: examples
 
       - name: Setup integration test
@@ -150,6 +193,32 @@ jobs:
           echo "$OUTPUT" | grep -q "8 + 8 = 16"
 
       - name: Report result
+        if: success()
         run: |
-          echo "✅ Integration test with examples PASSED"
-          echo "Tested examples against this PR's changes"
+          echo "══════════════════════════════════════════════════════════"
+          echo "✅ INTEGRATION TEST PASSED"
+          echo "══════════════════════════════════════════════════════════"
+          echo "Rules:    ${{ github.repository }}@${{ github.head_ref || github.ref_name }}"
+          echo "Examples: ${{ steps.examples-branch.outputs.branch }}"
+          if [ "${{ steps.examples-branch.outputs.matched }}" == "true" ]; then
+            echo ""
+            echo "Note: Used matching examples branch for breaking changes."
+          fi
+          echo "══════════════════════════════════════════════════════════"
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "══════════════════════════════════════════════════════════"
+          echo "❌ INTEGRATION TEST FAILED"
+          echo "══════════════════════════════════════════════════════════"
+          echo "Rules:    ${{ github.repository }}@${{ github.head_ref || github.ref_name }}"
+          echo "Examples: ${{ steps.examples-branch.outputs.branch }}"
+          if [ "${{ steps.examples-branch.outputs.matched }}" == "false" ]; then
+            echo ""
+            echo "💡 TIP: If this is a breaking change, create a branch in"
+            echo "   pulseengine/wasm-component-examples with the same name:"
+            echo "   ${{ github.head_ref || github.ref_name }}"
+            echo "   Update the examples to work with the new API, then re-run."
+          fi
+          echo "══════════════════════════════════════════════════════════"
