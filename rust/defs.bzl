@@ -70,10 +70,6 @@ load(
     _rust_wasm_component_bindgen = "rust_wasm_component_bindgen",
 )
 load(
-    "//rust/private:rust_wasm_component_macro.bzl",
-    _rust_wasm_component_macro = "rust_wasm_component_macro",
-)
-load(
     "//rust/private:rust_wasm_component_test.bzl",
     _rust_wasm_component_test = "rust_wasm_component_test",
 )
@@ -88,6 +84,5 @@ rust_wasm_component_test = _rust_wasm_component_test
 rust_wasm_component_bindgen = _rust_wasm_component_bindgen
 rust_wasm_component_wizer = _rust_wasm_component_wizer
 rust_wasm_component_clippy = _rust_wasm_component_clippy
-rust_wasm_component_macro = _rust_wasm_component_macro
 rust_clippy_all = _rust_clippy_all
 rust_wasm_binary = _rust_wasm_binary
