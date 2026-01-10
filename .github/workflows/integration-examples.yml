@@ -149,19 +149,20 @@ jobs:
       - name: Setup integration test
         working-directory: examples
         run: |
-          # Override MODULE.bazel to use local rules checkout
-          cat >> MODULE.bazel << 'EOF'
+          # Replace git_override with local_path_override between markers
+          sed -i '/RULES_WASM_COMPONENT_OVERRIDE_START/,/RULES_WASM_COMPONENT_OVERRIDE_END/c\
+          # RULES_WASM_COMPONENT_OVERRIDE_START\
+          local_path_override(\
+              module_name = "rules_wasm_component",\
+              path = "../rules_wasm_component",\
+          )\
+          # RULES_WASM_COMPONENT_OVERRIDE_END' MODULE.bazel
 
-          # Integration test override - use PR branch
-          local_path_override(
-              module_name = "rules_wasm_component",
-              path = "../rules_wasm_component",
-          )
-          EOF
+          echo "=== MODULE.bazel override block ==="
+          sed -n '/OVERRIDE_START/,/OVERRIDE_END/p' MODULE.bazel
 
           echo "=== Testing against PR branch ==="
           cd ../rules_wasm_component && git log -1 --oneline
-          echo ""
 
       - name: Install Bazelisk
         run: |
