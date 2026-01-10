@@ -110,6 +110,7 @@ def _cpp_wasm_binary_impl(ctx):
 
     # Basic compiler flags for WASI Preview 2
     compile_args.add("--target=wasm32-wasip2")
+    compile_args.add("-mexec-model=command")  # CLI executable with main()
 
     # Resolve sysroot path
     if sysroot_files and sysroot_files.files:
@@ -237,6 +238,7 @@ def _cpp_wasm_binary_impl(ctx):
             "name": ctx.label.name,
             "language": ctx.attr.language,
             "target": "wasm32-wasip2",
+            "exec_model": "command",
             "wasi_sdk": True,
             "toolchain": "wasi-sdk",
             "cxx_std": ctx.attr.cxx_std if ctx.attr.cxx_std else None,
