@@ -14,11 +14,25 @@ bzl_library(
     visibility = ["//visibility:public"],
 )
 
+# Component checksum registry API
+bzl_library(
+    name = "component_registry",
+    srcs = ["component_registry.bzl"],
+    visibility = ["//visibility:public"],
+)
+
 # Export all tool checksum files for consumption by toolchains
 # Note: tools/*.json files are exported from //checksums/tools package
 filegroup(
     name = "all_checksums",
     srcs = ["//checksums/tools:all_json"],
+    visibility = ["//visibility:public"],
+)
+
+# Export all component checksum files for OCI components
+filegroup(
+    name = "all_component_checksums",
+    srcs = ["//checksums/components:all_json"],
     visibility = ["//visibility:public"],
 )
 

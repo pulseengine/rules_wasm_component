@@ -1,0 +1,72 @@
+# Air-gap and vendored component tests
+
+load("@rules_wasm_component//wkg:defs.bzl", "wasm_component_from_oci", "wkg_pull")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_validate")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Create a minimal valid WASM core module for testing
+write_file(
+    name = "stub_module_src",
+    out = "stub_module.wat",
+    content = [
+        "(module",
+        "  (func (export \"test\") (result i32)",
+        "    i32.const 42",
+        "  )",
+        ")",
+    ],
+)
+
+# Convert WAT to WASM core module
+genrule(
+    name = "stub_core_module",
+    srcs = [":stub_module_src"],
+    outs = ["stub_core.wasm"],
+    cmd = "$(location @wasmtime_toolchain//:wasmtime) compile --target wasm32-unknown-none $(location :stub_module_src) -o $@ 2>/dev/null || " +
+          "$(location @wasm_tools_toolchains//:wasm-tools) parse $(location :stub_module_src) -o $@",
+    tools = [
+        "@wasm_tools_toolchains//:wasm-tools",
+        "@wasmtime_toolchain//:wasmtime",
+    ],
+)
+
+# Wrap core module as a component
+genrule(
+    name = "stub_vendored_component",
+    srcs = [":stub_core.wasm"],
+    outs = ["stub_vendored.wasm"],
+    cmd = "$(location @wasm_tools_toolchains//:wasm-tools) component new $(location :stub_core.wasm) -o $@",
+    tools = ["@wasm_tools_toolchains//:wasm-tools"],
+)
+
+# Test 1: Vendored component via wasm_component_from_oci
+# This tests the vendored_component attribute with no network access
+wasm_component_from_oci(
+    name = "vendored_oci_component",
+    vendored_component = ":stub_vendored.wasm",
+)
+
+# Test 2: Vendored component via wkg_pull
+wkg_pull(
+    name = "vendored_wkg_component",
+    package_name = "test/stub-component",
+    vendored_component = ":stub_vendored.wasm",
+)
+
+# Build test to verify both vendored patterns work
+build_test(
+    name = "vendored_component_build_test",
+    targets = [
+        ":vendored_oci_component",
+        ":vendored_wkg_component",
+    ],
+)
+
+# Validate the vendored component
+wasm_validate(
+    name = "vendored_component_validation",
+    component = ":vendored_oci_component",
+)

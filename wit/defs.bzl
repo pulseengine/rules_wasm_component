@@ -72,6 +72,12 @@ load(
     "//wit/private:wit_deps_check.bzl",
     _wit_deps_check = "wit_deps_check",
 )
+load(
+    "//wit/private:wit_vendor.bzl",
+    _vendored_wit_library = "vendored_wit_library",
+    _wit_package = "wit_package",
+    _wit_vendor_lock = "wit_vendor_lock",
+)
 
 # Re-export public rules
 wit_library = _wit_library
@@ -81,3 +87,8 @@ wit_markdown = _wit_markdown
 wit_docs_collection = _wit_docs_collection
 wasi_wit_dependencies = _wasi_wit_dependencies
 wit_deps_check = _wit_deps_check
+
+# Air-gap/vendoring support
+wit_package = _wit_package
+vendored_wit_library = _vendored_wit_library
+wit_vendor_lock = _wit_vendor_lock
