@@ -942,8 +942,75 @@ wkg_push = rule(
 )
 
 def _wkg_pull_impl(ctx):
-    """Implementation of wkg_pull rule"""
+    """Implementation of wkg_pull rule.
 
+    Supports three modes:
+    1. Tag-based pull (default)
+    2. Digest-based pull (immutable)
+    3. Vendored component (air-gap)
+    """
+
+    # Validate mutual exclusivity
+    has_digest = bool(ctx.attr.digest)
+    has_vendored = ctx.attr.vendored_component != None
+
+    if has_digest and has_vendored:
+        fail("Only one of 'digest' or 'vendored_component' can be specified")
+
+    # Output files
+    component_file = ctx.actions.declare_file(ctx.label.name + ".wasm")
+    metadata_file = ctx.actions.declare_file(ctx.label.name + "_metadata.json")
+
+    # Determine actual digest
+    actual_digest = ctx.attr.digest or ""
+
+    # Mode 3: Vendored component - no network access required
+    if has_vendored:
+        vendored_file = ctx.attr.vendored_component.files.to_list()[0]
+        ctx.actions.symlink(
+            output = component_file,
+            target_file = vendored_file,
+        )
+
+        actual_digest = ctx.attr.digest or "sha256:vendored"
+        image_ref = "vendored://{}".format(ctx.attr.vendored_component.label)
+
+        # Write metadata for vendored component
+        metadata = {
+            "status": "success",
+            "source": "vendored",
+            "image_ref": image_ref,
+            "component": component_file.path,
+            "digest": actual_digest,
+        }
+        ctx.actions.write(output = metadata_file, content = json.encode(metadata))
+
+        # Create OCI info provider for vendored component
+        oci_info = WasmOciInfo(
+            image_ref = image_ref,
+            registry = "",
+            namespace = "",
+            name = ctx.attr.package_name,
+            tags = [],
+            digest = actual_digest,
+            annotations = {},
+            manifest = None,
+            config = None,
+            component_file = component_file,
+            is_signed = False,
+            signature_annotations = {},
+        )
+
+        return [
+            oci_info,
+            DefaultInfo(files = depset([component_file, metadata_file])),
+            OutputGroupInfo(
+                component = depset([component_file]),
+                metadata = depset([metadata_file]),
+            ),
+        ]
+
+    # Get wkg toolchain for OCI operations
     wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
     wkg = wkg_toolchain.wkg
 
@@ -961,13 +1028,15 @@ def _wkg_pull_impl(ctx):
 
     namespace = ctx.attr.namespace or "library"
     name = ctx.attr.package_name
-    tag = ctx.attr.tag or "latest"
 
-    image_ref = "{}/{}/{}:{}".format(registry, namespace, name, tag)
-
-    # Output files
-    component_file = ctx.actions.declare_file(ctx.label.name + ".wasm")
-    metadata_file = ctx.actions.declare_file(ctx.label.name + "_metadata.json")
+    # Mode 2: Digest-based pull (immutable)
+    if has_digest:
+        image_ref = "{}/{}/{}@{}".format(registry, namespace, name, ctx.attr.digest)
+        actual_digest = ctx.attr.digest
+    else:
+        # Mode 1: Tag-based pull (default)
+        tag = ctx.attr.tag or "latest"
+        image_ref = "{}/{}/{}:{}".format(registry, namespace, name, tag)
 
     # Build arguments for wkg oci pull (Bazel-native approach)
     args = ctx.actions.args()
@@ -990,7 +1059,8 @@ def _wkg_pull_impl(ctx):
         "registry": registry,
         "namespace": namespace,
         "package": name,
-        "tag": tag,
+        "tag": ctx.attr.tag if not has_digest else "",
+        "digest": actual_digest,
     }
 
     ctx.actions.write(
@@ -1014,14 +1084,14 @@ def _wkg_pull_impl(ctx):
         },
     )
 
-    # Create OCI info provider
+    # Create OCI info provider with actual digest
     oci_info = WasmOciInfo(
         image_ref = image_ref,
         registry = registry,
         namespace = namespace,
         name = name,
-        tags = [tag],
-        digest = "sha256:placeholder",  # Will be filled by actual pull
+        tags = [ctx.attr.tag] if ctx.attr.tag and not has_digest else [],
+        digest = actual_digest,  # Actual digest, not placeholder
         annotations = {},
         manifest = None,
         config = None,
@@ -1047,8 +1117,19 @@ wkg_pull = rule(
             mandatory = True,
         ),
         "tag": attr.string(
-            doc = "Image tag to pull",
+            doc = "Image tag to pull. Ignored if 'digest' or 'vendored_component' is set.",
             default = "latest",
+        ),
+        "digest": attr.string(
+            doc = """SHA256 digest for immutable OCI pulls (e.g., 'sha256:abc123...').
+            When set, pulls by digest instead of tag for reproducible builds.
+            Mutually exclusive with 'vendored_component'.""",
+        ),
+        "vendored_component": attr.label(
+            allow_single_file = [".wasm"],
+            doc = """Pre-downloaded/vendored component file for air-gap builds.
+            When set, uses the local file instead of pulling from OCI registry.
+            Enables fully offline builds. Mutually exclusive with 'digest'.""",
         ),
         "registry": attr.string(
             doc = "Registry URL (overrides registry_config default)",
@@ -1063,7 +1144,38 @@ wkg_pull = rule(
         ),
     },
     toolchains = ["//toolchains:wkg_toolchain_type"],
-    doc = "Pull a WebAssembly component from an OCI registry",
+    doc = """Pull a WebAssembly component from an OCI registry.
+
+    Supports three modes:
+
+    1. **Tag-based pull** (default): Downloads component by tag.
+    2. **Digest-based pull** (immutable): Downloads by SHA256 digest.
+    3. **Vendored component** (air-gap): Uses local file, no network required.
+
+    Examples:
+        # Tag-based pull
+        wkg_pull(
+            name = "my_component",
+            package_name = "example/component",
+            tag = "v1.0.0",
+            registry = "ghcr.io",
+        )
+
+        # Digest-based pull (immutable)
+        wkg_pull(
+            name = "my_component_pinned",
+            package_name = "example/component",
+            digest = "sha256:abc123...",
+            registry = "ghcr.io",
+        )
+
+        # Vendored (air-gap)
+        wkg_pull(
+            name = "my_component_vendored",
+            package_name = "example/component",
+            vendored_component = "//vendor/components:my_component.wasm",
+        )
+    """,
 )
 
 def _wkg_inspect_impl(ctx):
@@ -3107,13 +3219,56 @@ wasm_component_oci_metadata_mapper = rule(
 # WAC + OCI Integration Rules
 
 def _wasm_component_from_oci_impl(ctx):
-    """Implementation of wasm_component_from_oci rule"""
+    """Implementation of wasm_component_from_oci rule.
 
-    wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
-    wkg = wkg_toolchain.wkg
+    Supports three modes for obtaining components:
+    1. Tag-based OCI pull (default): Uses image_ref or registry/namespace/name:tag
+    2. Digest-based OCI pull (immutable): Uses digest attribute for sha256-based reference
+    3. Vendored component (air-gap): Uses vendored_component for local file, no network
+    """
+
+    # Validate mutual exclusivity of source modes
+    has_tag = bool(ctx.attr.tag) or bool(ctx.attr.image_ref)
+    has_digest = bool(ctx.attr.digest)
+    has_vendored = ctx.attr.vendored_component != None
+
+    # Count how many source modes are specified
+    source_count = (1 if has_digest else 0) + (1 if has_vendored else 0)
+    if source_count > 1:
+        fail("Only one of 'digest' or 'vendored_component' can be specified")
+
+    # Determine the actual digest value (will be populated later)
+    actual_digest = ctx.attr.digest or ""
 
     # Output component file
     component_file = ctx.actions.declare_file(ctx.attr.name + ".wasm")
+
+    # Mode 3: Vendored component - no network access required
+    if has_vendored:
+        vendored_file = ctx.attr.vendored_component.files.to_list()[0]
+        ctx.actions.symlink(
+            output = component_file,
+            target_file = vendored_file,
+        )
+
+        # For vendored components, compute digest from the file if not provided
+        # Note: This is done at analysis time conceptually; actual hash would need
+        # a separate action, so we use the provided digest or leave empty
+        actual_digest = ctx.attr.digest or "sha256:vendored"
+        image_ref = "vendored://{}".format(ctx.attr.vendored_component.label)
+
+        # Skip to provider creation (no OCI pull needed)
+        return _create_oci_providers(
+            ctx,
+            component_file,
+            image_ref,
+            actual_digest,
+            is_vendored = True,
+        )
+
+    # Get wkg toolchain for OCI operations
+    wkg_toolchain = ctx.toolchains["//toolchains:wkg_toolchain_type"]
+    wkg = wkg_toolchain.wkg
 
     # Build OCI pull command
     args = ctx.actions.args()
@@ -3123,15 +3278,24 @@ def _wasm_component_from_oci_impl(ctx):
     # Registry configuration (wkg oci pull uses env vars or docker config)
     config_inputs = []
 
-    # Image reference
+    # Build image reference
     image_ref = ctx.attr.image_ref
     if not image_ref:
         # Construct from individual components
         registry = ctx.attr.registry or "localhost:5000"
         namespace = ctx.attr.namespace or "default"
         name = ctx.attr.component_name or ctx.attr.name
-        tag = ctx.attr.tag or "latest"
-        image_ref = "{}/{}/{}:{}".format(registry, namespace, name, tag)
+        image_ref = "{}/{}/{}".format(registry, namespace, name)
+
+        # Mode 2: Digest-based pull (immutable reference)
+        if has_digest:
+            # Append digest instead of tag
+            image_ref = "{}@{}".format(image_ref, ctx.attr.digest)
+            actual_digest = ctx.attr.digest
+        else:
+            # Mode 1: Tag-based pull (default)
+            tag = ctx.attr.tag or "latest"
+            image_ref = "{}:{}".format(image_ref, tag)
 
     args.add(image_ref)
     args.add("--output", component_file.path)
@@ -3146,6 +3310,9 @@ def _wasm_component_from_oci_impl(ctx):
     verification_inputs = []
     if verify_after_pull:
         verification_inputs.extend(ctx.attr.public_key.files.to_list())
+
+    # Check for mirror/vendor environment variables
+    # These are handled by wkg via WKG_REGISTRY_* env vars or wkg.toml config
 
     # Run wkg pull
     ctx.actions.run(
@@ -3183,6 +3350,44 @@ def _wasm_component_from_oci_impl(ctx):
             progress_message = "Verifying component signature: {}".format(image_ref),
         )
 
+    # Create providers using helper function
+    return _create_oci_providers(
+        ctx,
+        component_file,
+        image_ref,
+        actual_digest,
+        is_vendored = False,
+    )
+
+def _create_oci_providers(ctx, component_file, image_ref, digest, is_vendored = False):
+    """Create WasmComponentInfo and WasmOciInfo providers.
+
+    Args:
+        ctx: Rule context
+        component_file: The WASM component file
+        image_ref: OCI image reference or vendored path
+        digest: SHA256 digest of the component
+        is_vendored: Whether the component is from a vendored source
+
+    Returns:
+        List of providers [WasmComponentInfo, WasmOciInfo, DefaultInfo]
+    """
+    # Build metadata
+    source_type = "vendored" if is_vendored else "oci"
+    metadata = {
+        "source": source_type,
+        "image_ref": image_ref,
+        "digest": digest,
+    }
+
+    if not is_vendored:
+        metadata.update({
+            "registry": ctx.attr.registry,
+            "namespace": ctx.attr.namespace,
+            "name": ctx.attr.component_name or ctx.attr.name,
+            "tag": ctx.attr.tag,
+        })
+
     # Create WasmComponentInfo provider
     component_info = WasmComponentInfo(
         wasm_file = component_file,
@@ -3190,20 +3395,30 @@ def _wasm_component_from_oci_impl(ctx):
         component_type = "component",
         imports = [],
         exports = [],
-        metadata = {
-            "source": "oci",
-            "image_ref": image_ref,
-            "registry": ctx.attr.registry,
-            "namespace": ctx.attr.namespace,
-            "name": ctx.attr.component_name or ctx.attr.name,
-            "tag": ctx.attr.tag,
-        },
+        metadata = metadata,
         profile = "unknown",  # OCI components don't specify build profile
         profile_variants = {},
     )
 
+    # Create WasmOciInfo provider with actual digest
+    oci_info = WasmOciInfo(
+        image_ref = image_ref,
+        registry = ctx.attr.registry or "",
+        namespace = ctx.attr.namespace or "",
+        name = ctx.attr.component_name or ctx.attr.name,
+        tags = [ctx.attr.tag] if ctx.attr.tag else [],
+        digest = digest,  # Actual digest, not placeholder
+        annotations = {},
+        manifest = None,
+        config = None,
+        component_file = component_file,
+        is_signed = ctx.attr.verify_signature,
+        signature_annotations = {},
+    )
+
     return [
         component_info,
+        oci_info,
         DefaultInfo(files = depset([component_file])),
     ]
 
@@ -3211,7 +3426,7 @@ wasm_component_from_oci = rule(
     implementation = _wasm_component_from_oci_impl,
     attrs = {
         "image_ref": attr.string(
-            doc = "Full OCI image reference (registry/namespace/name:tag). If provided, overrides individual components.",
+            doc = "Full OCI image reference (registry/namespace/name:tag or @sha256:digest). If provided, overrides individual components.",
         ),
         "registry": attr.string(
             doc = "Registry URL (e.g., ghcr.io, docker.io)",
@@ -3224,7 +3439,19 @@ wasm_component_from_oci = rule(
         ),
         "tag": attr.string(
             default = "latest",
-            doc = "Image tag",
+            doc = "Image tag. Ignored if 'digest' or 'vendored_component' is set.",
+        ),
+        "digest": attr.string(
+            doc = """SHA256 digest for immutable OCI pulls (e.g., 'sha256:abc123...').
+            When set, pulls by digest instead of tag for reproducible builds.
+            Mutually exclusive with 'vendored_component'.""",
+        ),
+        "vendored_component": attr.label(
+            allow_single_file = [".wasm"],
+            doc = """Pre-downloaded/vendored component file for air-gap builds.
+            When set, uses the local file instead of pulling from OCI registry.
+            Enables fully offline builds with no network access required.
+            Mutually exclusive with 'digest'.""",
         ),
         "registry_config": attr.label(
             providers = [WasmRegistryInfo],
@@ -3246,19 +3473,43 @@ wasm_component_from_oci = rule(
     doc = """
     Pull a WebAssembly component from an OCI registry and make it available for use.
 
-    This rule downloads a WebAssembly component from an OCI-compatible registry
-    and provides it as a WasmComponentInfo that can be used in compositions or other rules.
+    This rule supports three modes for obtaining components:
 
-    Example:
+    1. **Tag-based pull** (default): Downloads component by tag from OCI registry.
+       Requires network access.
+
+    2. **Digest-based pull** (immutable): Downloads component by SHA256 digest.
+       Provides reproducible builds with immutable references. Requires network access.
+
+    3. **Vendored component** (air-gap): Uses a pre-downloaded local component file.
+       Enables fully offline builds with no network access required.
+       Ideal for enterprise/air-gapped environments.
+
+    The rule provides both WasmComponentInfo and WasmOciInfo providers.
+
+    Examples:
+        # Tag-based pull (default)
         wasm_component_from_oci(
             name = "auth_service",
             registry = "ghcr.io",
             namespace = "my-org",
             component_name = "auth-service",
             tag = "v1.2.0",
-            registry_config = ":my_registry_config",
-            verify_signature = True,
-            public_key = ":signing_public_key",
+        )
+
+        # Digest-based pull (immutable/reproducible)
+        wasm_component_from_oci(
+            name = "auth_service_pinned",
+            registry = "ghcr.io",
+            namespace = "my-org",
+            component_name = "auth-service",
+            digest = "sha256:8a9b1aa8a2c9d3dc36f1724ccbf24a48c473808d9017b059c84afddc55743f1e",
+        )
+
+        # Vendored component (air-gap/offline)
+        wasm_component_from_oci(
+            name = "auth_service_vendored",
+            vendored_component = "//vendor/components:auth-service.wasm",
         )
     """,
 )

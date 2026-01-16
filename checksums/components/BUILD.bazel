@@ -1,0 +1,30 @@
+"""Component checksum registry for OCI components
+
+This directory contains checksum information for WASM components pulled from
+OCI registries. Use these checksums with the `digest` attribute in
+`wasm_component_from_oci` or `wkg_pull` for reproducible, verifiable builds.
+
+Adding a new component:
+1. Create <component-name>.json with version info and digest
+2. Add entry to registry.json
+3. Use: wkg oci pull <ref> --output /tmp/comp.wasm && shasum -a 256 /tmp/comp.wasm
+"""
+
+package(default_visibility = ["//visibility:public"])
+
+# Export all component checksum files
+filegroup(
+    name = "all_json",
+    srcs = glob(["*.json"]),
+)
+
+# Individual component checksum files
+filegroup(
+    name = "registry_index",
+    srcs = ["registry.json"],
+)
+
+filegroup(
+    name = "wasi_http_proxy_checksums",
+    srcs = ["wasi-http-proxy.json"],
+)

@@ -1,0 +1,27 @@
+{
+  "component_name": "wasi-http-proxy",
+  "description": "WASI HTTP proxy component for handling HTTP requests",
+  "oci_repository": "ghcr.io/bytecodealliance/wasi-http-proxy",
+  "homepage": "https://github.com/bytecodealliance/wasmtime",
+  "latest_version": "0.2.6",
+  "last_checked": "2026-01-16T00:00:00Z",
+  "versions": {
+    "0.2.6": {
+      "release_date": "2025-10-01",
+      "digest": "sha256:placeholder_add_real_digest_here",
+      "size_bytes": 0,
+      "wit_world": "wasi:http/proxy@0.2.6",
+      "wasi_version": "0.2.6",
+      "notes": "Compatible with wasmtime 39.0.0+"
+    }
+  },
+  "security": {
+    "signing": "Unsigned",
+    "provenance": "None"
+  },
+  "notes": [
+    "Example component entry - replace with actual digest",
+    "Run: wkg oci pull <ref> --output /tmp/comp.wasm && shasum -a 256 /tmp/comp.wasm",
+    "Format digest as sha256:<hash>"
+  ]
+}

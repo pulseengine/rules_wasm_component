@@ -1,0 +1,19 @@
+{
+  "description": "Component checksum registry for air-gap and reproducible builds",
+  "version": "1.0.0",
+  "last_updated": "2026-01-16T00:00:00Z",
+  "components": [
+    {
+      "name": "wasi-http-proxy",
+      "package_file": "wasi-http-proxy.json"
+    }
+  ],
+  "usage": {
+    "description": "Use these checksums with wasm_component_from_oci or wkg_pull rules",
+    "example": {
+      "rule": "wasm_component_from_oci",
+      "digest_field": "digest",
+      "format": "sha256:<hash>"
+    }
+  }
+}
