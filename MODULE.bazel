@@ -22,6 +22,15 @@ bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.14")
 bazel_dep(name = "rules_go", version = "0.59.0")
 
+# MoonBit language support for WebAssembly components
+# NOTE: Disabled until rules_moonbit toolchain download is fixed
+# The GitHub release URL pattern in moonbit/checksums/registry_v2.bzl needs updating
+# bazel_dep(name = "rules_moonbit", version = "0.1.0")
+# local_path_override(
+#     module_name = "rules_moonbit",
+#     path = "../rules_moonbit",
+# )
+
 # OCI image signing capabilities
 bazel_dep(name = "rules_oci", version = "2.2.6")
 
@@ -216,6 +225,16 @@ register_toolchains("@nodejs_toolchains//:all")
 
 # Register jco toolchain for JavaScript/TypeScript components
 register_toolchains("@jco_toolchain//:jco_toolchain")
+
+# Python WebAssembly components with componentize-py
+componentize_py = use_extension("//wasm:extensions.bzl", "componentize_py")
+componentize_py.register(
+    name = "componentize_py",
+    version = "canary",
+)
+use_repo(componentize_py, "componentize_py_toolchain")
+
+register_toolchains("@componentize_py_toolchain//:componentize_py_toolchain")
 
 # File Operations Component toolchain for universal file handling
 register_toolchains("//toolchains:file_ops_toolchain_target")

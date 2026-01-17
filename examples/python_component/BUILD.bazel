@@ -1,0 +1,36 @@
+"""Python WebAssembly Component Examples
+
+Demonstrates building Python code into WebAssembly using componentize-py.
+
+Two patterns are shown:
+
+1. python_wasm_component - Library component with custom WIT exports
+   Usage:
+       bazel build //examples/python_component:hello_python
+       # Requires a host to call the exported functions
+
+2. python_wasm_binary - CLI executable (like main())
+   Usage:
+       bazel build //examples/python_component:hello_cli
+       wasmtime run bazel-bin/examples/python_component/hello_cli.wasm
+"""
+
+load("//python:defs.bzl", "python_wasm_binary", "python_wasm_component")
+
+package(default_visibility = ["//visibility:public"])
+
+# Library component - exports custom functions defined in WIT
+# Python code implements: class WitWorld(wit_world.WitWorld)
+python_wasm_component(
+    name = "hello_python",
+    srcs = ["app.py"],
+    wit = "hello.wit",
+    world = "hello",
+)
+
+# CLI binary - exports wasi:cli/run for direct execution
+# Python code implements: class Run(exports.Run)
+python_wasm_binary(
+    name = "hello_cli",
+    srcs = ["cli_app.py"],
+)

@@ -1,5 +1,6 @@
 """Module extensions for WebAssembly toolchain configuration"""
 
+load("//toolchains:componentize_py_toolchain.bzl", "componentize_py_toolchain_repository")
 load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_repository")
 load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
 load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
@@ -551,6 +552,49 @@ wasi_wit = module_extension(
         "init": tag_class(
             attrs = {},
             doc = "Initialize WASI WIT interface definitions",
+        ),
+    },
+)
+
+def _componentize_py_extension_impl(module_ctx):
+    """Implementation of componentize-py module extension"""
+
+    registrations = {}
+
+    # Collect all componentize-py registrations
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+
+    # Create componentize-py repositories
+    for name, registration in registrations.items():
+        componentize_py_toolchain_repository(
+            name = name + "_toolchain",
+            version = registration.version,
+        )
+
+    # If no registrations, create default toolchain
+    if not registrations:
+        componentize_py_toolchain_repository(
+            name = "componentize_py_toolchain",
+            version = "canary",
+        )
+
+# Module extension for componentize-py (Python WebAssembly components)
+componentize_py = module_extension(
+    implementation = _componentize_py_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this componentize-py registration",
+                    default = "componentize_py",
+                ),
+                "version": attr.string(
+                    doc = "componentize-py version to use",
+                    default = "canary",
+                ),
+            },
         ),
     },
 )

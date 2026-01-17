@@ -72,6 +72,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for componentize-py (Python WebAssembly components)
+toolchain_type(
+    name = "componentize_py_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for tool versions (single source of truth)
 bzl_library(
     name = "tool_versions",
@@ -205,6 +211,17 @@ bzl_library(
     deps = [
         ":diagnostics",
         ":tool_cache",
+    ],
+)
+
+# Bzl library for componentize-py toolchain implementation
+bzl_library(
+    name = "componentize_py_toolchain",
+    srcs = ["componentize_py_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tool_registry",
+        "//checksums:registry",
     ],
 )
 
