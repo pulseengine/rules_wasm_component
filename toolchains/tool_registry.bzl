@@ -120,6 +120,11 @@ _URL_PATTERNS = {
         "base": "https://github.com/{repo}/releases/download/version_{version}",
         "filename": "binaryen-version_{version}-{suffix}",
     },
+    "componentize-py": {
+        # componentize-py releases use tag name directly (e.g., "canary"), no 'v' prefix
+        "base": "https://github.com/{repo}/releases/download/{version}",
+        "filename": "componentize-py-{version}-{suffix}",
+    },
 }
 
 def _build_download_url(tool_name, version, platform, tool_info, github_repo):
