@@ -1,0 +1,14 @@
+"""MoonBit WebAssembly Component Model rules"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    deps = [
+        "//moonbit/private:moonbit_wasm_component",
+        "//moonbit/private:moonbit_wasm_binary",
+    ],
+)

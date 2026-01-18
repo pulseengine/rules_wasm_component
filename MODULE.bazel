@@ -23,13 +23,11 @@ bazel_dep(name = "rules_cc", version = "0.2.14")
 bazel_dep(name = "rules_go", version = "0.59.0")
 
 # MoonBit language support for WebAssembly components
-# NOTE: Disabled until rules_moonbit toolchain download is fixed
-# The GitHub release URL pattern in moonbit/checksums/registry_v2.bzl needs updating
-# bazel_dep(name = "rules_moonbit", version = "0.1.0")
-# local_path_override(
-#     module_name = "rules_moonbit",
-#     path = "../rules_moonbit",
-# )
+bazel_dep(name = "rules_moonbit", version = "0.1.0")
+local_path_override(
+    module_name = "rules_moonbit",
+    path = "../rules_moonbit",
+)
 
 # OCI image signing capabilities
 bazel_dep(name = "rules_oci", version = "2.2.6")

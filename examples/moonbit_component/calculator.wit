@@ -1,0 +1,19 @@
+package example:calculator@1.0.0;
+
+/// A simple calculator world demonstrating MoonBit WebAssembly components.
+///
+/// This WIT interface defines arithmetic operations that can be implemented
+/// in MoonBit and exposed as a WebAssembly component.
+world calculator {
+  /// Add two 32-bit signed integers.
+  export add: func(a: s32, b: s32) -> s32;
+
+  /// Subtract b from a.
+  export subtract: func(a: s32, b: s32) -> s32;
+
+  /// Multiply two 32-bit signed integers.
+  export multiply: func(a: s32, b: s32) -> s32;
+
+  /// Divide a by b. Returns 0 if b is zero.
+  export divide: func(a: s32, b: s32) -> s32;
+}
