@@ -1,0 +1,63 @@
+"""MoonBit WebAssembly Component Examples
+
+Demonstrates building MoonBit code into WebAssembly components using the
+full wit-bindgen pipeline.
+
+Two patterns are shown:
+
+1. moonbit_wasm_component - Library component with custom WIT exports
+   Usage:
+       bazel build //examples/moonbit_component:calculator
+       wasm-tools component wit bazel-bin/examples/moonbit_component/calculator.wasm
+
+2. moonbit_wasm_binary - CLI executable (like main())
+   Usage:
+       bazel build //examples/moonbit_component:hello_cli
+       wasmtime run bazel-bin/examples/moonbit_component/hello_cli.wasm
+
+Prerequisites:
+    - rules_moonbit hermetic toolchain (downloads MoonBit compiler)
+    - wasm-tools and wit-bindgen toolchains
+"""
+
+load("@rules_moonbit//moonbit:defs.bzl", "moonbit_wasm")
+load("//moonbit:defs.bzl", "moonbit_wasm_binary", "moonbit_wasm_component")
+
+package(default_visibility = ["//visibility:public"])
+
+# =============================================================================
+# MoonBit WebAssembly Component (full wit-bindgen pipeline)
+# =============================================================================
+# This target runs the complete component pipeline:
+# 1. wit-bindgen moonbit - generates FFI bindings from WIT
+# 2. moon build - compiles MoonBit with bindings to WASM
+# 3. wasm-tools - creates final WebAssembly component
+
+moonbit_wasm_component(
+    name = "calculator",
+    srcs = ["calculator.mbt"],
+    wit = "calculator.wit",
+    world = "calculator",
+)
+
+# =============================================================================
+# CLI binary examples (BLOCKED: MoonBit uses spectest, not WASI for I/O)
+# =============================================================================
+# MoonBit's println uses spectest.print_char which is not WASI-compatible.
+# When MoonBit adds native WASI support, these can be enabled.
+# For now, use moonbit_wasm_component for library components.
+
+# Core WASM for CLI binary (blocked: uses spectest for I/O)
+moonbit_wasm(
+    name = "hello_core",
+    srcs = ["hello.mbt"],
+    is_main = True,
+    tags = ["manual"],  # BLOCKED: MoonBit println uses spectest, not WASI
+)
+
+# CLI binary component with wasi:cli/run export (blocked)
+moonbit_wasm_binary(
+    name = "hello_cli",
+    lib = ":hello_core",
+    tags = ["manual"],  # BLOCKED: MoonBit println uses spectest, not WASI
+)

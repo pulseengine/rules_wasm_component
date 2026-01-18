@@ -1,0 +1,23 @@
+"""MoonBit WebAssembly Component private implementation"""
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//moonbit:__subpackages__"])
+
+bzl_library(
+    name = "moonbit_wasm_component",
+    srcs = ["moonbit_wasm_component.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//providers:providers",
+    ],
+)
+
+bzl_library(
+    name = "moonbit_wasm_binary",
+    srcs = ["moonbit_wasm_binary.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//providers:providers",
+    ],
+)
