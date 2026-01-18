@@ -8,7 +8,7 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     deps = [
-        "//moonbit/private:moonbit_wasm_component",
         "//moonbit/private:moonbit_wasm_binary",
+        "//moonbit/private:moonbit_wasm_component",
     ],
 )
