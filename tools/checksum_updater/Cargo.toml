@@ -31,7 +31,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tempfile = "3.24"
 async-trait = "0.1"
-wit-bindgen = "0.50.0"  # WIT binding generation for macro usage (MUST match CLI version in wasm_toolchain.bzl)
+wit-bindgen = "0.51.0"  # WIT binding generation for macro usage (MUST match CLI version in wasm_toolchain.bzl)
 uuid = { version = "1.19", default-features = false }  # UUID generation for user service (deterministic, no getrandom dependency)
 bitflags = "2.6"  # Bitflags for WASI filesystem interfaces in generated bindings
 
