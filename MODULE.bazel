@@ -29,7 +29,7 @@ bazel_dep(name = "rules_moonbit", version = "0.1.0", dev_dependency = True)
 git_override(
     module_name = "rules_moonbit",
     remote = "https://github.com/pulseengine/rules_moonbit.git",
-    commit = "2cd11c3e7338b9a0f2b2edc20054ecd078e83e32",
+    commit = "2d73d5d81d13bcb6af454c0a9ba148b116ecff87",
 )
 
 # OCI image signing capabilities
