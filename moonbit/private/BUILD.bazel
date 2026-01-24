@@ -21,3 +21,12 @@ bzl_library(
         "//providers",
     ],
 )
+
+bzl_library(
+    name = "moonbit_wasm_cli",
+    srcs = ["moonbit_wasm_cli.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//providers",
+    ],
+)

@@ -23,9 +23,9 @@ bazel_dep(name = "rules_cc", version = "0.2.14")
 bazel_dep(name = "rules_go", version = "0.59.0")
 
 # MoonBit language support for WebAssembly components
-# dev_dependency because rules_moonbit is not yet in BCR - users who want
-# MoonBit support must add their own bazel_dep + git_override for rules_moonbit
-bazel_dep(name = "rules_moonbit", version = "0.1.0", dev_dependency = True)
+# Required for moonbit_wasm_cli and moonbit_wasm_binary rules
+# Note: rules_moonbit is not yet in BCR - uses git_override
+bazel_dep(name = "rules_moonbit", version = "0.1.0")
 git_override(
     module_name = "rules_moonbit",
     remote = "https://github.com/pulseengine/rules_moonbit.git",
@@ -34,6 +34,10 @@ git_override(
 
 # OCI image signing capabilities
 bazel_dep(name = "rules_oci", version = "2.2.6")
+
+# Override aspect_bazel_lib for Bazel 9.0 compatibility
+# rules_oci@2.2.6 depends on aspect_bazel_lib@2.7.2 which has toolchains visibility issues
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 
 # Hermetic toolchain management with pre-built binaries
 

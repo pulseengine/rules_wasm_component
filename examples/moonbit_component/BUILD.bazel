@@ -21,7 +21,7 @@ Prerequisites:
 """
 
 load("@rules_moonbit//moonbit:defs.bzl", "moonbit_wasm")
-load("//moonbit:defs.bzl", "moonbit_wasm_binary", "moonbit_wasm_component")
+load("//moonbit:defs.bzl", "moonbit_wasm_binary", "moonbit_wasm_cli", "moonbit_wasm_component")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -63,4 +63,16 @@ moonbit_wasm_binary(
     name = "hello_cli",
     lib = ":hello_core",
     tags = ["manual"],  # BLOCKED: MoonBit println uses spectest, not WASI
+)
+
+# =============================================================================
+# WASI CLI with Generated Bindings (NEW - solves spectest issue)
+# =============================================================================
+# This approach uses wit-bindgen moonbit to generate proper WASI bindings,
+# avoiding the spectest dependency entirely.
+
+moonbit_wasm_cli(
+    name = "hello_wasi",
+    srcs = ["hello_wasi.mbt"],
+    tags = ["manual"],  # MoonBit toolchain only on darwin_arm64, linux_amd64, windows_amd64
 )

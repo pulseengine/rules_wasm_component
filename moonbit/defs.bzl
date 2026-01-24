@@ -65,6 +65,10 @@ load(
     _moonbit_wasm_binary = "moonbit_wasm_binary",
 )
 load(
+    "//moonbit/private:moonbit_wasm_cli.bzl",
+    _moonbit_wasm_cli = "moonbit_wasm_cli",
+)
+load(
     "//moonbit/private:moonbit_wasm_component.bzl",
     _moonbit_wasm_component = "moonbit_wasm_component",
 )
@@ -72,3 +76,4 @@ load(
 # Re-export public rules
 moonbit_wasm_component = _moonbit_wasm_component
 moonbit_wasm_binary = _moonbit_wasm_binary
+moonbit_wasm_cli = _moonbit_wasm_cli
