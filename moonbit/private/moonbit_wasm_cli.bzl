@@ -88,6 +88,13 @@ OUTPUT="$(pwd)/{output}"
 USER_SRC="$(pwd)/{user_src}"
 ORIG_DIR="$(pwd)"
 
+# Set MOON_HOME to point to the toolchain's .moon directory
+# This is where the hermetic toolchain places the core library
+# MOON path is like /path/to/external/moonbit_toolchain/bin/moon
+# MOON_HOME should be /path/to/external/moonbit_toolchain/.moon
+TOOLCHAIN_ROOT=$(dirname $(dirname "$MOON"))
+export MOON_HOME="$TOOLCHAIN_ROOT/.moon"
+
 # Create temporary project directory
 PROJECT_DIR=$(mktemp -d)
 cleanup() {{ rm -rf "$PROJECT_DIR"; }}
