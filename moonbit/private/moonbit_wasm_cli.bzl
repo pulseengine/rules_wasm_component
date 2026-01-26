@@ -141,11 +141,12 @@ cp "$USER_SRC" gen/interface/wasi/cli/run/stub.mbt
 echo "Replaced stub with user source"
 
 # Step 4: Add imports to the run package's moon.pkg.json
-# The user code needs access to stdout and streams packages
+# The user code needs access to stdout, streams, and environment packages
 cat > gen/interface/wasi/cli/run/moon.pkg.json << 'PKGJSON'
 {{
   "import": [
     {{ "path": "{project_name}/interface/wasi/cli/stdout", "alias": "stdout" }},
+    {{ "path": "{project_name}/interface/wasi/cli/environment", "alias": "environment" }},
     {{ "path": "{project_name}/interface/wasi/io/streams", "alias": "streams" }}
   ]
 }}
