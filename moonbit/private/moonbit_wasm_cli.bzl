@@ -59,6 +59,7 @@ def _moonbit_wasm_cli_impl(ctx):
 
     moonbit_toolchain = ctx.toolchains["@rules_moonbit//moonbit:moonbit_toolchain_type"]
     moon = moonbit_toolchain.moonbit.moon_executable
+    moonbit_all_files = moonbit_toolchain.moonbit.all_files
 
     srcs = ctx.files.srcs
     if len(srcs) != 1:
@@ -94,6 +95,19 @@ ORIG_DIR="$(pwd)"
 # MOON_HOME should be /path/to/external/moonbit_toolchain/.moon
 TOOLCHAIN_ROOT=$(dirname $(dirname "$MOON"))
 export MOON_HOME="$TOOLCHAIN_ROOT/.moon"
+
+echo "=== Debug: MOON_HOME setup ==="
+echo "MOON=$MOON"
+echo "TOOLCHAIN_ROOT=$TOOLCHAIN_ROOT"
+echo "MOON_HOME=$MOON_HOME"
+echo "PWD=$(pwd)"
+echo "=== Checking MOON_HOME structure ==="
+ls -la "$MOON_HOME/" 2>/dev/null || echo "MOON_HOME does not exist"
+ls -la "$MOON_HOME/lib/" 2>/dev/null || echo "MOON_HOME/lib does not exist"
+ls -la "$MOON_HOME/lib/core/" 2>/dev/null | head -5 || echo "Core library NOT found at $MOON_HOME/lib/core/"
+echo "=== Checking relative to MOON path ==="
+ls -la "$(dirname $(dirname $MOON))/.moon/" 2>/dev/null || echo "No .moon relative to MOON"
+echo "=== End debug ==="
 
 # Create temporary project directory
 PROJECT_DIR=$(mktemp -d)
@@ -187,7 +201,7 @@ echo "Created CLI component: $OUTPUT"
 
     ctx.actions.run_shell(
         command = script,
-        inputs = [wit_bindgen, moon, wasm_tools, user_src] + cli_wit_files,
+        inputs = [wit_bindgen, moon, wasm_tools, user_src] + cli_wit_files + moonbit_all_files.to_list(),
         outputs = [component_wasm],
         mnemonic = "MoonbitWasmCli",
         progress_message = "Building MoonBit CLI component %s" % ctx.label,
