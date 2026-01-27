@@ -46,6 +46,7 @@ def _moonbit_wasm_component_impl(ctx):
 
     moonbit_toolchain = ctx.toolchains["@rules_moonbit//moonbit:moonbit_toolchain_type"]
     moon = moonbit_toolchain.moonbit.moon_executable
+    moonbit_all_files = moonbit_toolchain.moonbit.all_files
 
     wit_file = ctx.file.wit
     srcs = ctx.files.srcs
@@ -69,6 +70,12 @@ WASM_TOOLS="$(pwd)/{wasm_tools}"
 WIT_FILE="$(pwd)/{wit_file}"
 OUTPUT="$(pwd)/{output}"
 ORIG_DIR="$(pwd)"
+
+# Set MOON_HOME so moon build can find the core library
+# MOON path: /path/to/external/moonbit_toolchain/bin/moon
+# MOON_HOME: /path/to/external/moonbit_toolchain/.moon
+TOOLCHAIN_ROOT=$(dirname $(dirname "$MOON"))
+export MOON_HOME="$TOOLCHAIN_ROOT/.moon"
 
 # Create temporary project directory
 PROJECT_DIR=$(mktemp -d)
@@ -94,7 +101,7 @@ if [ -d "$STUB_DIR" ]; then
 fi
 
 # Step 3: Compile with MoonBit
-"$MOON" build --target wasm --release 2>&1 || {{
+"$MOON" build --target wasm 2>&1 || {{
     echo "MoonBit compilation failed" >&2
     exit 1
 }}
@@ -107,7 +114,9 @@ if [ -z "$CORE_WASM" ]; then
 fi
 
 # Step 4: Embed WIT metadata
+# Use --encoding utf16 for MoonBit string encoding
 "$WASM_TOOLS" component embed \\
+    --encoding utf16 \\
     --world {world} \\
     "$WIT_FILE" \\
     "$CORE_WASM" \\
@@ -135,7 +144,7 @@ echo "Created component: $OUTPUT"
 
     ctx.actions.run_shell(
         command = script,
-        inputs = [wit_file, wit_bindgen, moon, wasm_tools] + srcs,
+        inputs = [wit_file, wit_bindgen, moon, wasm_tools] + srcs + moonbit_all_files.to_list(),
         outputs = [component_wasm],
         mnemonic = "MoonbitWasmComponent",
         progress_message = "Building MoonBit WASM component %s" % ctx.label,
