@@ -1,5 +1,6 @@
 """Rust WASM component with WIT bindgen integration"""
 
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_rust//rust:defs.bzl", "rust_common", "rust_library")
 load("//wit:defs.bzl", "symmetric_wit_bindgen", "wit_bindgen")
 load("//toolchains:tool_versions.bzl", "get_tool_version")

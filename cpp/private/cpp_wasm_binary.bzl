@@ -29,6 +29,7 @@ Example usage:
     # Run with: wasmtime run bazel-bin/examples/hello.wasm
 """
 
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
