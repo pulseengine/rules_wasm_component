@@ -8,6 +8,7 @@ This module provides comprehensive testing for WASI SDK + clang integration:
 """
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_wasm_component//providers:providers.bzl", "WasmComponentInfo")
 
 def _cpp_component_analysis_test_impl(ctx):
