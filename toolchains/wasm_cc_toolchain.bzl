@@ -1,7 +1,7 @@
 """Minimal C++ toolchain for WASM builds"""
 
 load(
-    "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
+    "@rules_cc//cc:cc_toolchain_config_lib.bzl",
     "env_entry",
     "env_set",
     "feature",
@@ -9,6 +9,7 @@ load(
     "flag_set",
     "tool_path",
 )
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/toolchains:cc_toolchain_config_info.bzl", "CcToolchainConfigInfo")
 
 def _wasm_cc_toolchain_config_impl(ctx):
