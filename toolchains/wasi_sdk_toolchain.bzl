@@ -298,6 +298,7 @@ load(
     "flag_set",
     "tool_path",
 )
+load("@rules_cc//cc/toolchains:cc_toolchain_config_info.bzl", "CcToolchainConfigInfo")
 
 def _wasm_cc_toolchain_config_impl(ctx):
     """C++ toolchain config for WASM using WASI SDK"""
