@@ -549,6 +549,7 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
     tinygo_args = [
         "build",
         "-target=wasip2",
+        "-interp-timeout=" + ctx.attr.interp_timeout,  # Configurable timeout for Go 1.25+ FIPS crypto init
         "-o",
         wasm_module.path,
     ]
@@ -854,6 +855,10 @@ go_wasm_component = rule(
             default = False,
             doc = "Validate that the component exports match the WIT specification",
         ),
+        "interp_timeout": attr.string(
+            default = "10m",
+            doc = "TinyGo interpreter timeout for init() evaluation. Increase if crypto packages cause timeouts (Go 1.25+ FIPS 140 issue).",
+        ),
         "_wasi_adapter": attr.label(
             default = "//toolchains:wasi_snapshot_preview1.command.wasm",
             allow_single_file = [".wasm"],
@@ -875,6 +880,10 @@ This rule provides state-of-the-art Go support for WebAssembly Component Model:
 - WIT binding generation support
 - Zero shell script dependencies
 
+Note: Go 1.25+ introduced FIPS 140-3 crypto with complex init() code that may
+cause TinyGo interpreter timeouts. The default interp_timeout of 10m should
+handle most cases. Increase if needed for crypto-heavy components.
+
 Example:
     go_wasm_component(
         name = "http_downloader",
@@ -883,6 +892,7 @@ Example:
         wit = "//wit:http_interfaces",
         world = "http-client",
         optimization = "release",
+        interp_timeout = "15m",  # Increase for crypto-heavy components
     )
 """,
 )
