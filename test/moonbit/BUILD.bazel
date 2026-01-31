@@ -1,0 +1,84 @@
+"""MoonBit WebAssembly Component Tests
+
+Tests for MoonBit component integration, including:
+- Analysis tests for moonbit_wasm_component rule
+- Signed integer type tests (tracking upstream bug #1518)
+
+Note: MoonBit toolchain is only available on:
+- darwin_arm64 (Apple Silicon Mac)
+- linux_amd64 (x86_64 Linux)
+- windows_amd64 (x86_64 Windows)
+
+Tests are tagged 'manual' to skip on unsupported platforms (darwin_amd64/Intel Mac).
+"""
+
+load("//moonbit:defs.bzl", "moonbit_wasm_component")
+load(":moonbit_component_tests.bzl", "moonbit_component_analysis_test", "moonbit_signed_integers_test", "moonbit_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+# =============================================================================
+# Test Components
+# =============================================================================
+
+# Basic calculator component for analysis tests
+moonbit_wasm_component(
+    name = "calculator_test_component",
+    srcs = ["//examples/moonbit_component:calculator.mbt"],
+    wit = "//examples/moonbit_component:calculator.wit",
+    world = "calculator",
+    tags = ["manual"],  # MoonBit toolchain platform-limited
+)
+
+# Signed integers test component (tests upstream bug #1518)
+moonbit_wasm_component(
+    name = "signed_integers_component",
+    srcs = ["signed_integers.mbt"],
+    wit = "signed_integers.wit",
+    world = "signed-integers",
+    tags = ["manual"],  # MoonBit toolchain platform-limited
+)
+
+# =============================================================================
+# Analysis Tests
+# =============================================================================
+
+# Test that moonbit_wasm_component provides correct WasmComponentInfo
+moonbit_component_analysis_test(
+    name = "moonbit_component_analysis_test",
+    target_under_test = ":calculator_test_component",
+    tags = ["manual"],  # MoonBit toolchain platform-limited
+)
+
+# Test signed integer types (s8, s16) build correctly
+# Note: Runtime value corruption is tracked in upstream #1518
+moonbit_signed_integers_test(
+    name = "signed_integers_analysis_test",
+    target_under_test = ":signed_integers_component",
+    tags = ["manual"],  # MoonBit toolchain platform-limited
+)
+
+# =============================================================================
+# Test Suite
+# =============================================================================
+
+moonbit_test_suite(
+    name = "moonbit_tests",
+)
+
+# =============================================================================
+# Build Tests (for CI on supported platforms)
+# =============================================================================
+
+# Genrule to validate component structure with wasm-tools
+genrule(
+    name = "validate_signed_integers",
+    srcs = [":signed_integers_component"],
+    outs = ["signed_integers_valid.marker"],
+    cmd = """
+        $(location @rules_wasm_component//toolchains:wasm_tools) component wit $(location :signed_integers_component) > /dev/null && \
+        echo "MoonBit signed integers component validated" > $@
+    """,
+    tags = ["manual"],  # MoonBit toolchain platform-limited
+    tools = ["@rules_wasm_component//toolchains:wasm_tools"],
+)
