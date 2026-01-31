@@ -1,0 +1,28 @@
+package test:signed-integers@1.0.0;
+
+/// Test world for signed integer types.
+///
+/// This tests the wit-bindgen MoonBit s8/s16 lift corruption bug (upstream #1518).
+/// Values should round-trip correctly through component boundaries.
+world signed-integers {
+  /// Identity function for s8 - should return the same value.
+  /// Bug: wit-bindgen MoonBit corrupts s8 values during lift.
+  export identity-s8: func(value: s8) -> s8;
+
+  /// Identity function for s16 - should return the same value.
+  /// Bug: wit-bindgen MoonBit corrupts s16 values during lift.
+  export identity-s16: func(value: s16) -> s16;
+
+  /// Identity function for s32 - should work correctly (not affected by bug).
+  export identity-s32: func(value: s32) -> s32;
+
+  /// Test negative values - where corruption is most visible.
+  export negate-s8: func(value: s8) -> s8;
+  export negate-s16: func(value: s16) -> s16;
+
+  /// Test boundary values.
+  export min-s8: func() -> s8;
+  export max-s8: func() -> s8;
+  export min-s16: func() -> s16;
+  export max-s16: func() -> s16;
+}
