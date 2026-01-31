@@ -639,7 +639,7 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         "GOCACHE": temp_cache_dir.path,  # Use Bazel's temp directory
         "CGO_ENABLED": "0",
         "GO111MODULE": "on",
-        "GOPROXY": "direct",
+        "GOPROXY": "https://proxy.golang.org,direct",  # Use official proxy with checksum verification
         "GOFLAGS": "-mod=mod",  # Explicitly enable module mode, don't search for .git
         "HOME": temp_cache_dir.path,
         "TMPDIR": temp_cache_dir.path,
