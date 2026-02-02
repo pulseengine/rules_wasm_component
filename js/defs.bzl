@@ -23,6 +23,13 @@ Modern JavaScript/TypeScript support for WebAssembly Component Model using:
 - NPM dependency management integration
 - Component composition and binding generation
 
+Rules provided:
+- js_component: Build JavaScript/TypeScript into WebAssembly components
+- jco_transpile: Transpile components back to JavaScript bindings
+- jco_types: Generate TypeScript type definitions from components
+- jco_opt: Optimize components using Binaryen via jco
+- npm_install: Install NPM dependencies
+
 Example usage:
 
     js_component(
@@ -37,11 +44,30 @@ Example usage:
             "@types/node": "^18.0.0",
         },
     )
+
+    # Generate TypeScript types for consumers
+    jco_types(
+        name = "web_service_types",
+        component = ":web_service",
+    )
+
+    # Optimize for production
+    jco_opt(
+        name = "web_service_optimized",
+        component = ":web_service",
+        optimization = "s",
+    )
 """
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
+load("//js/private:jco_types.bzl", _jco_types = "jco_types")
+load("//js/private:jco_opt.bzl", _jco_opt = "jco_opt")
+
+# Re-export jco utility rules
+jco_types = _jco_types
+jco_opt = _jco_opt
 
 def _js_component_impl(ctx):
     """Implementation of js_component rule for JavaScript/TypeScript components.

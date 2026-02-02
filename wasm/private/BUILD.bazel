@@ -136,3 +136,12 @@ bzl_library(
     ],
     deps = ["//providers:providers"],
 )
+
+bzl_library(
+    name = "binaryen_optimize",
+    srcs = ["binaryen_optimize.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+)

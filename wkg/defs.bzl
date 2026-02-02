@@ -3753,6 +3753,11 @@ wac_compose_with_oci = rule(
             allow_files = True,
             doc = "Public key for signature verification",
         ),
+        "oci_publish_deps": attr.label_list(
+            doc = """Optional list of targets that must be built before OCI composition.
+            Use to specify wasm_component_publish targets that should run before
+            this rule attempts to pull components from the registry.""",
+        ),
     },
     toolchains = [
         "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
@@ -3774,6 +3779,11 @@ wac_compose_with_oci = rule(
                 "auth_service": "ghcr.io/my-org/auth:v1.0.0",
                 "data_service": "docker.io/company/data-api:latest",
             },
+            # Ensure components are published before pulling (for local dev/CI)
+            oci_publish_deps = [
+                ":publish_auth_service",
+                ":publish_data_service",
+            ],
             registry_config = ":production_registries",
             verify_signatures = True,
             public_key = ":verification_key",

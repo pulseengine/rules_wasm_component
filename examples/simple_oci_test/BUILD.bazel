@@ -173,5 +173,7 @@ export greeter as main;
     oci_components = {
         "greeter": "localhost:5001/test/simple/greeting:v1.0.0",
     },
+    # Ensure the greeting component is published before we try to pull it
+    oci_publish_deps = [":publish_greeting"],
     registry_config = ":local_registry",
 )

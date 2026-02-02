@@ -95,6 +95,10 @@ load(
     "//wasm/private:wasm_optimize.bzl",
     _wasm_optimize = "wasm_optimize",
 )
+load(
+    "//wasm/private:binaryen_optimize.bzl",
+    _binaryen_optimize = "binaryen_optimize",
+)
 
 # Re-export public rules
 wasm_validate = _wasm_validate
@@ -124,3 +128,4 @@ ssh_keygen = _ssh_keygen
 
 # WebAssembly optimization rules
 wasm_optimize = _wasm_optimize
+binaryen_optimize = _binaryen_optimize

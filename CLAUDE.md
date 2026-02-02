@@ -495,8 +495,22 @@ bazel_dep(name = "rules_rust", version = "0.66.0")  # Updated
 - ✅ TinyGo v0.39.0 with WASI Preview 2 support
 - ✅ Rust WebAssembly components
 - ✅ C++ components with WASI SDK
-- ✅ JavaScript/TypeScript components with ComponentizeJS
+- ✅ JavaScript/TypeScript components with ComponentizeJS (jco)
 - ✅ Wizer pre-initialization support
+- ❌ Javy is NOT supported (see decision below)
+
+### JavaScript Tooling Decision: jco vs Javy
+
+**Decision**: Use **jco/ComponentizeJS** exclusively. Do NOT add Javy support.
+
+**Rationale**:
+- jco provides full WebAssembly Component Model support; Javy does not
+- jco uses WASI 0.2 (current standard); Javy uses WASI 0.1 (legacy)
+- jco enables interoperability with other components (Rust, Go, C++); Javy cannot
+- jco supports TypeScript, NPM ecosystem, modern JS features
+- Size trade-off (~8MB vs 1-16KB) is acceptable for Component Model benefits
+
+**Javy is unsuitable** because rules_wasm_component is fundamentally about WebAssembly Components, and Javy only produces WASI modules without Component Model support.
 
 ### Performance Optimizations
 

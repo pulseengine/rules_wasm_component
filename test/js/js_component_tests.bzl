@@ -380,3 +380,95 @@ js_component_optimization_test = analysistest.make(
         ),
     },
 )
+
+# ============================================================================
+# jco_types Analysis Tests
+# ============================================================================
+
+def _jco_types_analysis_test_impl(ctx):
+    """Test that jco_types produces TypeScript type definitions."""
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+
+    # Check DefaultInfo provides output directory
+    default_info = target_under_test[DefaultInfo]
+    files = default_info.files.to_list()
+    asserts.true(
+        env,
+        len(files) > 0,
+        "jco_types should produce output files",
+    )
+
+    # Check that output is a directory ending with _types
+    output_dir = files[0]
+    asserts.true(
+        env,
+        output_dir.basename.endswith("_types"),
+        "jco_types output should be a directory ending with _types",
+    )
+
+    # Check OutputGroupInfo has types group
+    asserts.true(
+        env,
+        OutputGroupInfo in target_under_test,
+        "jco_types should provide OutputGroupInfo",
+    )
+
+    output_groups = target_under_test[OutputGroupInfo]
+    asserts.true(
+        env,
+        hasattr(output_groups, "types"),
+        "OutputGroupInfo should have 'types' group",
+    )
+
+    return analysistest.end(env)
+
+jco_types_test = analysistest.make(
+    _jco_types_analysis_test_impl,
+)
+
+# ============================================================================
+# jco_opt Analysis Tests
+# ============================================================================
+
+def _jco_opt_analysis_test_impl(ctx):
+    """Test that jco_opt produces optimized WASM output."""
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+
+    # Check DefaultInfo provides output file
+    default_info = target_under_test[DefaultInfo]
+    files = default_info.files.to_list()
+    asserts.true(
+        env,
+        len(files) > 0,
+        "jco_opt should produce output files",
+    )
+
+    # Check that output is a .wasm file
+    wasm_files = [f for f in files if f.basename.endswith(".wasm")]
+    asserts.true(
+        env,
+        len(wasm_files) > 0,
+        "jco_opt should produce a .wasm file",
+    )
+
+    # Check OutputGroupInfo has optimized group
+    asserts.true(
+        env,
+        OutputGroupInfo in target_under_test,
+        "jco_opt should provide OutputGroupInfo",
+    )
+
+    output_groups = target_under_test[OutputGroupInfo]
+    asserts.true(
+        env,
+        hasattr(output_groups, "optimized"),
+        "OutputGroupInfo should have 'optimized' group",
+    )
+
+    return analysistest.end(env)
+
+jco_opt_test = analysistest.make(
+    _jco_opt_analysis_test_impl,
+)

@@ -338,7 +338,7 @@ jco_toolchain_repository = repository_rule(
         ),
         "version": attr.string(
             doc = "jco version to use. Ignored if bundle is specified.",
-            default = "1.4.0",
+            default = "1.16.0",
         ),
         "node_version": attr.string(
             doc = "Node.js version to use for download strategy. Ignored if bundle is specified.",

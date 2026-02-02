@@ -17,7 +17,9 @@ Test Coverage:
 load("//test/integration:integration_tests.bzl", "component_validation_test")
 load(
     "//test/js:js_component_tests.bzl",
+    "jco_opt_test",
     "jco_transpile_test",
+    "jco_types_test",
     "js_component_analysis_test",
     "js_component_optimization_test",
     "js_component_validation_test",
@@ -43,6 +45,20 @@ js_component_analysis_test(
 jco_transpile_test(
     name = "test_hello_js_bindings_generation",
     target_under_test = "//examples/js_component:hello_js_bindings",
+)
+
+# JCO Types Tests
+
+jco_types_test(
+    name = "test_jco_types_generates_typescript",
+    target_under_test = "//examples/js_component:hello_js_types",
+)
+
+# JCO Optimization Tests
+
+jco_opt_test(
+    name = "test_jco_opt_produces_optimized_wasm",
+    target_under_test = "//examples/js_component:hello_js_optimized",
 )
 
 # NPM Install Tests
@@ -123,6 +139,12 @@ test_suite(
 
         # Transpile tests
         ":test_hello_js_bindings_generation",
+
+        # Types tests
+        ":test_jco_types_generates_typescript",
+
+        # JCO optimization tests
+        ":test_jco_opt_produces_optimized_wasm",
 
         # NPM tests
         ":test_npm_dependencies_installation",

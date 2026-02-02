@@ -78,6 +78,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for Binaryen (wasm-opt optimization)
+toolchain_type(
+    name = "binaryen_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for tool versions (single source of truth)
 bzl_library(
     name = "tool_versions",

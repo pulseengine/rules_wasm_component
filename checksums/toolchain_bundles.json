@@ -14,8 +14,9 @@
         "wasmtime": "39.0.1",
         "wasi-sdk": "29",
         "tinygo": "0.40.1",
-        "jco": "1.4.0",
-        "nodejs": "20.18.0"
+        "jco": "1.16.0",
+        "nodejs": "20.18.0",
+        "binaryen": "123"
       },
       "compatibility": {
         "component_model_version": "0x1000d",

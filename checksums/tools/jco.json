@@ -1,14 +1,26 @@
 {
   "tool_name": "jco",
   "github_repo": "bytecodealliance/jco",
-  "latest_version": "1.4.0",
-  "last_checked": "2025-08-17T10:30:00Z",
+  "latest_version": "1.16.0",
+  "last_checked": "2026-02-02T00:00:00Z",
   "note": "JCO is installed via hermetic Node.js + npm",
   "install_method": "download_nodejs_then_npm",
   "requires": ["nodejs"],
   "versions": {
+    "1.16.0": {
+      "release_date": "2026-02-01",
+      "platforms": {
+        "universal": {
+          "sha256": "",
+          "url_suffix": "",
+          "npm_package": "@bytecodealliance/jco",
+          "npm_version": "1.16.0",
+          "dependencies": ["@bytecodealliance/componentize-js"]
+        }
+      }
+    },
     "1.4.0": {
-      "release_date": "2024-11-25",
+      "release_date": "2024-07-29",
       "platforms": {
         "universal": {
           "sha256": "",

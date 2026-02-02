@@ -1,6 +1,7 @@
 """Basic example of building a WASM component"""
 
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen", "rust_wasm_component_test")
+load("@rules_wasm_component//wasm:defs.bzl", "binaryen_optimize")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -34,3 +35,18 @@ rust_wasm_component_test(
 #     name = "hello_component_clippy",
 #     target = ":hello_component",
 # )
+
+# Optimize the component with Binaryen wasm-opt
+binaryen_optimize(
+    name = "hello_component_optimized",
+    component = ":hello_component_release",
+    optimization = "s",  # Size optimization
+)
+
+# Size-optimized version with maximum shrinking
+binaryen_optimize(
+    name = "hello_component_minified",
+    component = ":hello_component_release",
+    optimization = "z",  # Maximum size optimization
+    shrink_level = True,  # Enable extra shrinking passes
+)

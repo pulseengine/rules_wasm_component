@@ -1,6 +1,6 @@
 """Example demonstrating JavaScript WebAssembly components with jco"""
 
-load("@rules_wasm_component//js:defs.bzl", "jco_transpile", "js_component", "npm_install")
+load("@rules_wasm_component//js:defs.bzl", "jco_opt", "jco_transpile", "jco_types", "js_component", "npm_install")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -57,4 +57,17 @@ js_component(
     entry_point = "simple.js",
     wit = "wit/simple.wit",
     world = "simple",
+)
+
+# Generate TypeScript types from component
+jco_types(
+    name = "hello_js_types",
+    component = ":hello_js_component",
+)
+
+# Optimize component for production
+jco_opt(
+    name = "hello_js_optimized",
+    component = ":hello_js_component",
+    optimization = "s",  # Size optimization
 )

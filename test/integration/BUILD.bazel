@@ -191,11 +191,28 @@ component_validation_test(
     expected_imports = ["wasi:"],  # Should preserve WASI imports
 )
 
+# Test 6: Binaryen optimization validation
+build_test(
+    name = "binaryen_optimize_build_test",
+    targets = [
+        "//examples/basic:hello_component_optimized",
+        "//examples/basic:hello_component_minified",
+    ],
+)
+
+component_validation_test(
+    name = "binaryen_optimized_component_validation",
+    component = "//examples/basic:hello_component_optimized",
+    expected_exports = ["greet"],
+)
+
 test_suite(
     name = "integration_tests",
     tests = [
         ":basic_component_build_test",
         ":basic_component_validation",
+        ":binaryen_optimize_build_test",
+        ":binaryen_optimized_component_validation",
         ":composition_build_test",
         ":consumer_component_validation",
         ":dependency_resolution_build_test",

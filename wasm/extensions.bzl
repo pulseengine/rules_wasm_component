@@ -1,5 +1,6 @@
 """Module extensions for WebAssembly toolchain configuration"""
 
+load("//toolchains:binaryen_toolchain.bzl", "binaryen_repository")
 load("//toolchains:componentize_py_toolchain.bzl", "componentize_py_toolchain_repository")
 load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_repository")
 load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
@@ -84,6 +85,12 @@ def _wasm_component_bundle_impl(module_ctx):
     # JCO for JavaScript components
     jco_toolchain_repository(
         name = "jco_toolchain",
+        bundle = bundle_name,
+    )
+
+    # Binaryen for wasm-opt optimization
+    binaryen_repository(
+        name = "binaryen_toolchain",
         bundle = bundle_name,
     )
 
