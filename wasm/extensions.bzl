@@ -605,3 +605,46 @@ componentize_py = module_extension(
         ),
     },
 )
+
+def _binaryen_extension_impl(module_ctx):
+    """Implementation of Binaryen module extension"""
+
+    registrations = {}
+
+    # Collect all binaryen registrations
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+
+    # Create binaryen repositories
+    for name, registration in registrations.items():
+        binaryen_repository(
+            name = name + "_toolchain",
+            version = registration.version,
+        )
+
+    # If no registrations, create default toolchain
+    if not registrations:
+        binaryen_repository(
+            name = "binaryen_toolchain",
+            version = "123",
+        )
+
+# Module extension for Binaryen (wasm-opt optimization)
+binaryen = module_extension(
+    implementation = _binaryen_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this Binaryen registration",
+                    default = "binaryen",
+                ),
+                "version": attr.string(
+                    doc = "Binaryen version to use",
+                    default = "123",
+                ),
+            },
+        ),
+    },
+)

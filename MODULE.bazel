@@ -242,6 +242,16 @@ use_repo(componentize_py, "componentize_py_toolchain")
 
 register_toolchains("@componentize_py_toolchain//:componentize_py_toolchain")
 
+# Binaryen (wasm-opt) toolchain for WebAssembly optimization
+binaryen = use_extension("//wasm:extensions.bzl", "binaryen")
+binaryen.register(
+    name = "binaryen",
+    version = "123",
+)
+use_repo(binaryen, "binaryen_toolchain")
+
+register_toolchains("@binaryen_toolchain//:binaryen_toolchain")
+
 # MoonBit hermetic toolchain for WebAssembly component builds (dev only)
 moonbit = use_extension("@rules_moonbit//moonbit:extensions.bzl", "moonbit_toolchain_extension", dev_dependency = True)
 use_repo(moonbit, "moonbit_toolchain")
