@@ -64,7 +64,7 @@ binaryen_optimize = rule(
     implementation = _binaryen_optimize_impl,
     attrs = {
         "component": attr.label(
-            doc = "The WebAssembly component or module to optimize",
+            doc = "The WebAssembly core module to optimize. NOTE: Binaryen does not yet support WASM components (only core modules). For component optimization, use jco_opt instead.",
             mandatory = True,
             allow_single_file = [".wasm"],
         ),
@@ -83,7 +83,11 @@ binaryen_optimize = rule(
         ),
     },
     toolchains = ["@rules_wasm_component//toolchains:binaryen_toolchain_type"],
-    doc = """Optimize a WebAssembly component using Binaryen wasm-opt.
+    doc = """Optimize a WebAssembly CORE MODULE using Binaryen wasm-opt.
+
+IMPORTANT: Binaryen does NOT support WASM Components yet (only core modules).
+For component optimization, use jco_opt instead.
+See: https://github.com/WebAssembly/binaryen/issues/6728
 
 Performs binary-level optimizations to reduce size and improve performance:
 - Dead code elimination
@@ -100,28 +104,19 @@ Optimization levels:
 - s: Optimize for size (-Os)
 - z: Optimize for minimal size (-Oz)
 
-This rule complements wasm_optimize (LOOM) which performs expression-level
-optimizations with formal verification. Both can be chained for maximum
-optimization.
-
-Example:
-    rust_wasm_component(
-        name = "my_component",
-        ...
-    )
-
-    # Binary-level optimization with Binaryen
+Example (core module only):
+    # Works with core modules from simple_module example
     binaryen_optimize(
-        name = "my_component_binaryen",
-        component = ":my_component",
+        name = "my_module_optimized",
+        component = ":my_core_module.wasm",
         optimization = "s",  # Size optimization
     )
 
-    # Chain with LOOM for additional optimization
-    wasm_optimize(
+For WASM components, use jco_opt instead:
+    jco_opt(
         name = "my_component_optimized",
-        component = ":my_component_binaryen",
-        verify = True,
+        component = ":my_component",
+        optimization = "s",
     )
 """,
 )

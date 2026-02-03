@@ -61,13 +61,18 @@ def _binaryen_repository_impl(repository_ctx):
     print("Setting up binaryen {} for platform {}".format(version, platform))
 
     # Download binaryen
-    tool_registry.download(
+    result = tool_registry.download(
         repository_ctx,
         "binaryen",
         version,
         platform,
         output_name = "wasm-opt",
     )
+
+    # Symlink the binary to root for BUILD file access
+    binary_path = result["binary_path"]
+    if binary_path != "wasm-opt":
+        repository_ctx.symlink(binary_path, "wasm-opt")
 
     # Create BUILD file
     repository_ctx.file("BUILD.bazel", '''"""Binaryen toolchain repository"""
