@@ -2,7 +2,7 @@
   "tool_name": "componentize-py",
   "github_repo": "bytecodealliance/componentize-py",
   "latest_version": "canary",
-  "last_checked": "2026-01-23T00:00:00Z",
+  "last_checked": "2026-02-03T00:00:00Z",
   "versions": {
     "canary": {
       "release_date": "2026-01-23",
@@ -20,7 +20,7 @@
           "url_suffix": "linux-aarch64.tar.gz"
         },
         "linux_amd64": {
-          "sha256": "cc06500c6c1b48003b045126e4e4ee44c8f2b987167d8d50c70917d452dd7b47",
+          "sha256": "cb8d804f32d109238aedb5be1fa6afa660efb28d3f8f55e7345fdd3c6ed7bbec",
           "url_suffix": "linux-amd64.tar.gz"
         },
         "windows_amd64": {
