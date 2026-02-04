@@ -141,7 +141,7 @@ wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
     strategy = "download",  # Download prebuilt binaries from GitHub releases
-    version = "1.243.0",
+    version = "1.244.0",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 

@@ -774,7 +774,7 @@
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
         "bzlTransitiveDigest": "FrOSQHvv4xePJ94wDxjx1gypmgejCfseAqTEcUAcxVw=",
-        "usagesDigest": "KWkd+vGnSZwHENp54S9PuET/UF2tHCjiaTbQDD1oJTU=",
+        "usagesDigest": "XNTBNCoyj6s3okyF8agUT6PMhSUgcjtD7Xu3qTDS5gk=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -783,7 +783,7 @@
             "repoRuleId": "@@//toolchains:wasm_toolchain.bzl%wasm_toolchain_repository",
             "attributes": {
               "strategy": "download",
-              "version": "1.243.0",
+              "version": "1.244.0",
               "git_commit": "main",
               "wasm_tools_commit": "",
               "wac_commit": "",
