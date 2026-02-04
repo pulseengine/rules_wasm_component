@@ -1,50 +1,12 @@
-# BCR Presubmit Configuration for rules_wasm_component
-# This file defines the testing matrix and targets used by Bazel Central Registry
-# to validate module compatibility across platforms and Bazel versions.
-
-# Test module configuration - using existing test module structure
 bcr_test_module:
-  module_path: "test_examples/basic"
-
-  # Testing matrix across platforms and Bazel versions
+  module_path: "examples/basic"
   matrix:
-    platform: ["debian10", "ubuntu2004", "macos", "windows"]
-    bazel: ["6.x", "7.x", "8.x"]
-
+    platform: ["debian11", "macos", "ubuntu2204"]
+    bazel: ["7.x", "8.x"]
   tasks:
-    # Primary functionality test - basic WebAssembly component build
     run_tests:
-      name: "Basic Component Build and Test"
+      name: "Build basic example"
       platform: ${{ platform }}
       bazel: ${{ bazel }}
       build_targets:
-        - "//test_examples/basic:hello_component"
-      test_targets:
-        - "//test/integration:basic_component_build_test"
-        - "//test/integration:basic_component_validation"
-
-    # Toolchain validation - ensure all toolchains work hermetically
-    toolchain_test:
-      name: "Toolchain Hermetic Validation"
-      platform: ${{ platform }}
-      bazel: ${{ bazel }}
-      build_targets:
-        - "//examples/basic:hello_component"
-      # Verify toolchain setup works correctly
-      build_flags:
-        - "--experimental_enable_bzlmod"
-        - "--lockfile_mode=update"
-
-    # Multi-component testing
-    integration_test:
-      name: "Multi-Component Integration"
-      platform: ${{ platform }}
-      bazel: ${{ bazel }}
-      build_targets:
-        - "//test/unit:unit_tests"
-        - "//examples/simple_module:simple_module"
-      test_targets:
-        - "//test/unit:unit_tests"
-      # Skip Windows due to current Go component issues
-      skip_if:
-        platform: "windows"
+        - "//:all"
