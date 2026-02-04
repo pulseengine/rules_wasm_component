@@ -36,6 +36,51 @@ bazel query '@rules_wasm_component//...' >/dev/null  # Verify rules are availabl
 
 ---
 
+### "No repository visible as '@crates'" (rust_wasm_component_bindgen)
+
+**Symptom**:
+
+```
+ERROR: no such package '@@[unknown repo 'crates' requested from @@]//':
+The repository '@@[unknown repo 'crates' requested from @@]' could not be resolved:
+No repository visible as '@crates' from main repository
+```
+
+**Cause**: When using `rust_wasm_component_bindgen` from an external workspace, the `@crates` repository that rules_wasm_component uses internally is not visible to your workspace due to bzlmod isolation.
+
+**Solution**: Provide your own bitflags crate via the `bitflags_dep` attribute:
+
+```python title="BUILD.bazel" {6}
+rust_wasm_component_bindgen(
+    name = "my_component",
+    srcs = ["src/lib.rs"],
+    wit = ":my_interfaces",
+    # Required for external consumers
+    bitflags_dep = "@crates//:bitflags",
+)
+```
+
+Make sure bitflags is in your Cargo.toml:
+
+```toml title="Cargo.toml"
+[dependencies]
+bitflags = "2"
+```
+
+And crate_universe is configured:
+
+```python title="MODULE.bazel"
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml"],
+)
+use_repo(crate, "crates")
+```
+
+---
+
 ### "No such file or directory: cargo"
 
 **Symptom**:
