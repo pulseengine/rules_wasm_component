@@ -423,6 +423,7 @@ def rust_wasm_component_bindgen(
         visibility = None,
         symmetric = False,
         invert_direction = False,
+        bitflags_dep = "@crates//:bitflags",
         **kwargs):
     """Builds a Rust WebAssembly component with automatic WIT binding generation.
 
@@ -440,6 +441,19 @@ def rust_wasm_component_bindgen(
         visibility: Target visibility
         symmetric: Enable symmetric mode for same source code to run natively and as WASM (requires cpetig's fork)
         invert_direction: Invert direction for symmetric interfaces (only used with symmetric=True)
+        bitflags_dep: Label for the bitflags crate dependency (required for WASI filesystem interfaces).
+            Defaults to "@crates//:bitflags" which works within rules_wasm_component.
+
+            **For external consumers**: You must provide this from your own crate_universe setup.
+            If you see an error like "no such package '@crates'", set this attribute:
+
+                bitflags_dep = "@your_crates//:bitflags"
+
+            To set up bitflags, add to your Cargo.toml:
+                [dependencies]
+                bitflags = "2"
+
+            And configure crate_universe in MODULE.bazel.
         **kwargs: Additional arguments passed to rust_wasm_component
     """
 
@@ -512,7 +526,7 @@ def rust_wasm_component_bindgen(
         srcs = [":" + wrapper_native_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        deps = ["@crates//:bitflags"],  # Required for WASI filesystem interfaces
+        deps = [bitflags_dep],  # Required for WASI filesystem interfaces
         visibility = visibility,  # Make native bindings publicly available
     )
 
@@ -523,7 +537,7 @@ def rust_wasm_component_bindgen(
         srcs = [":" + wrapper_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        deps = ["@crates//:bitflags"],  # Required for WASI filesystem interfaces
+        deps = [bitflags_dep],  # Required for WASI filesystem interfaces
         visibility = ["//visibility:private"],
     )
 

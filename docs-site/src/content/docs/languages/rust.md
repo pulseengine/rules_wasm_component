@@ -211,6 +211,39 @@ anyhow = "1.0"
 crate-type = ["cdylib"]
 ```
 
+### External Consumers: bitflags Dependency
+
+When using `rust_wasm_component_bindgen` from an **external workspace** (not within rules_wasm_component itself), you must provide your own `bitflags` crate dependency. The generated WIT bindings use bitflags for WASI filesystem interfaces.
+
+```python title="BUILD.bazel" {6}
+rust_wasm_component_bindgen(
+    name = "my_component",
+    srcs = ["src/lib.rs"],
+    wit = ":my_interfaces",
+    # Required for external consumers - provide your crate_universe's bitflags
+    bitflags_dep = "@crates//:bitflags",
+)
+```
+
+Add bitflags to your workspace's Cargo.toml:
+
+```toml title="Cargo.toml"
+[dependencies]
+bitflags = "2"
+```
+
+And ensure crate_universe is configured in MODULE.bazel:
+
+```python title="MODULE.bazel"
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml"],
+)
+use_repo(crate, "crates")
+```
+
 ## Advanced Patterns
 
 ### Error Handling with Results
