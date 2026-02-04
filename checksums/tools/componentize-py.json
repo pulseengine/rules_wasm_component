@@ -2,21 +2,21 @@
   "tool_name": "componentize-py",
   "github_repo": "bytecodealliance/componentize-py",
   "latest_version": "canary",
-  "last_checked": "2026-02-03T00:00:00Z",
+  "last_checked": "2026-02-04T00:00:00Z",
   "versions": {
     "canary": {
-      "release_date": "2026-01-23",
+      "release_date": "2026-02-04",
       "platforms": {
         "darwin_arm64": {
           "sha256": "70199ca03629df91ab9ce6c6355443dd9fa73326c1f95dde92be49fa2108a44c",
           "url_suffix": "macos-aarch64.tar.gz"
         },
         "darwin_amd64": {
-          "sha256": "940a1e905b32e8eee672e43488c320cf864eec9e173dc9b3f4d6065de872b1c4",
+          "sha256": "bf7c9b4224a4a99c9caf913448e976b8272e92f41b866430f27ab9fd33a277bd",
           "url_suffix": "macos-amd64.tar.gz"
         },
         "linux_arm64": {
-          "sha256": "78713230763f358bf783564a505a258036217d95c52554c47e4f3b0ac35ebd55",
+          "sha256": "ab657a63726cf39e70f88bb95441b36dc3af9ab89c979b006ec01c977e1d4ea7",
           "url_suffix": "linux-aarch64.tar.gz"
         },
         "linux_amd64": {
@@ -24,7 +24,7 @@
           "url_suffix": "linux-amd64.tar.gz"
         },
         "windows_amd64": {
-          "sha256": "ac0a99a280de55aa3fd87b316a9b3b323c88304101c1e5cc777b351fb78a0a4a",
+          "sha256": "ee3922e83aa41517cb5dad9b29906ae779890dd5cdec50fb66b58e6dcab596d1",
           "url_suffix": "windows-amd64.tar.gz"
         }
       }
