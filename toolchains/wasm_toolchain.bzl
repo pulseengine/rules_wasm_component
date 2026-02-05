@@ -1,6 +1,6 @@
 """WebAssembly toolchain definitions with enhanced tool management"""
 
-load("//checksums:registry.bzl", "get_tool_info", "validate_tool_compatibility")
+load("//checksums:registry.bzl", "get_latest_version", "get_tool_info", "validate_tool_compatibility")
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:tool_registry.bzl", "tool_registry")
 load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error", "log_diagnostic_info", "validate_system_tool")
@@ -98,17 +98,22 @@ def _wasm_toolchain_repository_impl(repository_ctx):
     platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
-    # Resolve version from bundle or use explicit version attribute
+    # Resolve version from bundle, explicit attribute, or latest from registry
     if bundle_name:
         version = get_version_for_tool(
             repository_ctx,
             "wasm-tools",
             bundle_name = bundle_name,
-            fallback_version = repository_ctx.attr.version,
+            fallback_version = repository_ctx.attr.version or get_latest_version(repository_ctx, "wasm-tools"),
         )
         log_bundle_usage(repository_ctx, "wasm-tools", version, bundle_name)
-    else:
+    elif repository_ctx.attr.version:
         version = repository_ctx.attr.version
+    else:
+        # Use latest version from checksums registry (single source of truth)
+        version = get_latest_version(repository_ctx, "wasm-tools")
+        if not version:
+            fail("Could not determine wasm-tools version. No version specified and latest_version not found in checksums.")
 
     # Log diagnostic information
     log_diagnostic_info(repository_ctx, "wasm-tools", platform, version, strategy)
@@ -694,8 +699,8 @@ wasm_toolchain_repository = repository_rule(
             values = ["download"],
         ),
         "version": attr.string(
-            doc = "Version to use (for download/build strategies). Ignored if bundle is specified.",
-            default = "1.235.0",
+            doc = "Version to use (for download/build strategies). If empty, uses latest from checksums registry. Ignored if bundle is specified.",
+            default = "",
         ),
         "git_commit": attr.string(
             doc = "Git commit/tag to build from (for build strategy) - fallback for all tools",

@@ -1,5 +1,6 @@
 """Wasmtime toolchain definitions for WebAssembly component runtime"""
 
+load("//checksums:registry.bzl", "get_latest_version")
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:tool_registry.bzl", "tool_registry")
 
@@ -32,17 +33,22 @@ def _wasmtime_repository_impl(repository_ctx):
     platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
-    # Resolve version from bundle if specified, otherwise use explicit version
+    # Resolve version from bundle, explicit attribute, or latest from registry
     if bundle_name:
         version = get_version_for_tool(
             repository_ctx,
             "wasmtime",
             bundle_name = bundle_name,
-            fallback_version = repository_ctx.attr.version,
+            fallback_version = repository_ctx.attr.version or get_latest_version(repository_ctx, "wasmtime"),
         )
         log_bundle_usage(repository_ctx, "wasmtime", version, bundle_name)
-    else:
+    elif repository_ctx.attr.version:
         version = repository_ctx.attr.version
+    else:
+        # Use latest version from checksums registry (single source of truth)
+        version = get_latest_version(repository_ctx, "wasmtime")
+        if not version:
+            fail("Could not determine wasmtime version. No version specified and latest_version not found in checksums.")
 
     print("Setting up wasmtime {} for platform {} using strategy {}".format(
         version,
@@ -89,8 +95,8 @@ wasmtime_repository = repository_rule(
             default = "download",
         ),
         "version": attr.string(
-            doc = "Wasmtime version to install. Ignored if bundle is specified.",
-            default = "39.0.1",  # Latest version with integrated wizer support
+            doc = "Wasmtime version to install. If empty, uses latest from checksums registry. Ignored if bundle is specified.",
+            default = "",
         ),
     },
     doc = "Repository rule for setting up Wasmtime WebAssembly runtime",

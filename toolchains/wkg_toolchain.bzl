@@ -1,5 +1,6 @@
 """WebAssembly Package Tools (wkg) toolchain definitions"""
 
+load("//checksums:registry.bzl", "get_latest_version")
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:tool_registry.bzl", "tool_registry")
 
@@ -30,17 +31,22 @@ def _wkg_toolchain_repository_impl(ctx):
     strategy = ctx.attr.strategy
     bundle_name = ctx.attr.bundle
 
-    # Resolve version from bundle if specified, otherwise use explicit version
+    # Resolve version from bundle, explicit attribute, or latest from registry
     if bundle_name:
         version = get_version_for_tool(
             ctx,
             "wkg",
             bundle_name = bundle_name,
-            fallback_version = ctx.attr.version,
+            fallback_version = ctx.attr.version or get_latest_version(ctx, "wkg"),
         )
         log_bundle_usage(ctx, "wkg", version, bundle_name)
-    else:
+    elif ctx.attr.version:
         version = ctx.attr.version
+    else:
+        # Use latest version from checksums registry (single source of truth)
+        version = get_latest_version(ctx, "wkg")
+        if not version:
+            fail("Could not determine wkg version. No version specified and latest_version not found in checksums.")
 
     if strategy == "download":
         # Use unified tool registry for download
@@ -142,8 +148,8 @@ wkg_toolchain_repository = repository_rule(
             values = ["download", "build", "source"],
         ),
         "version": attr.string(
-            doc = "Version to download/build. Ignored if bundle is specified.",
-            default = "0.11.0",
+            doc = "Version to download/build. If empty, uses latest from checksums registry. Ignored if bundle is specified.",
+            default = "",
         ),
         "url": attr.string(
             doc = "Custom base URL for downloads (optional)",

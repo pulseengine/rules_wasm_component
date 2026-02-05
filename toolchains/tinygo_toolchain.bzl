@@ -10,6 +10,7 @@ Architecture:
 - wasm-tools for component transformation
 """
 
+load("//checksums:registry.bzl", "get_latest_version")
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:tool_registry.bzl", "tool_registry")
 
@@ -117,17 +118,22 @@ def _tinygo_toolchain_repository_impl(repository_ctx):
     platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
-    # Resolve version from bundle if specified, otherwise use explicit version
+    # Resolve version from bundle, explicit attribute, or latest from registry
     if bundle_name:
         tinygo_version = get_version_for_tool(
             repository_ctx,
             "tinygo",
             bundle_name = bundle_name,
-            fallback_version = repository_ctx.attr.tinygo_version,
+            fallback_version = repository_ctx.attr.tinygo_version or get_latest_version(repository_ctx, "tinygo"),
         )
         log_bundle_usage(repository_ctx, "tinygo", tinygo_version, bundle_name)
-    else:
+    elif repository_ctx.attr.tinygo_version:
         tinygo_version = repository_ctx.attr.tinygo_version
+    else:
+        # Use latest version from checksums registry (single source of truth)
+        tinygo_version = get_latest_version(repository_ctx, "tinygo")
+        if not tinygo_version:
+            fail("Could not determine tinygo version. No version specified and latest_version not found in checksums.")
 
     print("Setting up TinyGo toolchain v{} for {}".format(tinygo_version, platform))
 
@@ -273,8 +279,8 @@ tinygo_toolchain_repository = repository_rule(
             default = "",
         ),
         "tinygo_version": attr.string(
-            doc = "TinyGo version to download and use. Ignored if bundle is specified.",
-            default = "0.40.1",  # Must match a version in checksums/tools/tinygo.json
+            doc = "TinyGo version to download and use. If empty, uses latest from checksums registry. Ignored if bundle is specified.",
+            default = "",
         ),
     },
     # Remove environ to prevent system PATH inheritance

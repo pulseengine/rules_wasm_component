@@ -1,5 +1,6 @@
 """jco (JavaScript Component Tools) toolchain definitions"""
 
+load("//checksums:registry.bzl", "get_latest_version")
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error")
 load("//toolchains:tool_registry.bzl", "tool_registry")
@@ -68,25 +69,34 @@ def _jco_toolchain_repository_impl(repository_ctx):
     platform = tool_registry.detect_platform(repository_ctx)
     bundle_name = repository_ctx.attr.bundle
 
-    # Resolve versions from bundle if specified, otherwise use explicit versions
+    # Resolve versions from bundle, explicit attributes, or latest from registry
     if bundle_name:
         jco_version = get_version_for_tool(
             repository_ctx,
             "jco",
             bundle_name = bundle_name,
-            fallback_version = repository_ctx.attr.version,
+            fallback_version = repository_ctx.attr.version or get_latest_version(repository_ctx, "jco"),
         )
         node_version = get_version_for_tool(
             repository_ctx,
             "nodejs",
             bundle_name = bundle_name,
-            fallback_version = repository_ctx.attr.node_version,
+            fallback_version = repository_ctx.attr.node_version or get_latest_version(repository_ctx, "nodejs"),
         )
         log_bundle_usage(repository_ctx, "jco", jco_version, bundle_name)
         log_bundle_usage(repository_ctx, "nodejs", node_version, bundle_name)
     else:
+        # Use explicit version or latest from registry
         jco_version = repository_ctx.attr.version
+        if not jco_version:
+            jco_version = get_latest_version(repository_ctx, "jco")
+            if not jco_version:
+                fail("Could not determine jco version. No version specified and latest_version not found in checksums.")
         node_version = repository_ctx.attr.node_version
+        if not node_version:
+            node_version = get_latest_version(repository_ctx, "nodejs")
+            if not node_version:
+                fail("Could not determine nodejs version. No version specified and latest_version not found in checksums.")
 
     # Always use download strategy with hermetic Node.js + jco
     _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_version)
@@ -337,12 +347,12 @@ jco_toolchain_repository = repository_rule(
             default = "",
         ),
         "version": attr.string(
-            doc = "jco version to use. Ignored if bundle is specified.",
-            default = "1.16.0",
+            doc = "jco version to use. If empty, uses latest from checksums registry. Ignored if bundle is specified.",
+            default = "",
         ),
         "node_version": attr.string(
-            doc = "Node.js version to use for download strategy. Ignored if bundle is specified.",
-            default = "18.19.0",
+            doc = "Node.js version to use for download strategy. If empty, uses latest from checksums registry. Ignored if bundle is specified.",
+            default = "",
         ),
     },
 )

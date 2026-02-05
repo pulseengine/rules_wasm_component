@@ -156,12 +156,12 @@ def _wasm_toolchain_extension_impl(module_ctx):
             wrpc_url = registration.wrpc_url,
         )
 
-    # If no registrations, create default system toolchain
+    # If no registrations, create default system toolchain (uses latest from checksums registry)
     if not registrations:
         wasm_toolchain_repository(
             name = "wasm_tools_toolchains",
             strategy = "download",
-            version = "1.235.0",
+            version = "",  # Empty = use latest from checksums registry
             git_commit = "main",
             wasm_tools_commit = "",
             wac_commit = "",
@@ -189,8 +189,8 @@ wasm_toolchain = module_extension(
                     values = ["download"],
                 ),
                 "version": attr.string(
-                    doc = "Version to use (for download/build strategies)",
-                    default = "1.235.0",
+                    doc = "Version to use (for download/build strategies). If empty, uses latest from checksums registry.",
+                    default = "",
                 ),
                 "git_commit": attr.string(
                     doc = "Git commit/tag to build from (for build strategy) - fallback for all tools",
@@ -303,12 +303,12 @@ def _wkg_extension_impl(module_ctx):
             git_commit = registration.git_commit,
         )
 
-    # If no registrations, create default system toolchain
+    # If no registrations, create default system toolchain (uses latest from checksums registry)
     if not registrations:
         wkg_toolchain_repository(
             name = "wkg_toolchain",
             strategy = "download",
-            version = "0.11.0",
+            version = "",  # Empty = use latest from checksums registry
         )
 
 # Module extension for wkg (WebAssembly Package Tools)
@@ -327,8 +327,8 @@ wkg = module_extension(
                     values = ["download"],
                 ),
                 "version": attr.string(
-                    doc = "Version to use (for download/build strategies)",
-                    default = "0.11.0",
+                    doc = "Version to use (for download/build strategies). If empty, uses latest from checksums registry.",
+                    default = "",
                 ),
                 "url": attr.string(
                     doc = "Custom base URL for downloads (optional)",
@@ -362,12 +362,12 @@ def _jco_extension_impl(module_ctx):
             node_version = getattr(registration, "node_version", "20.18.0"),
         )
 
-    # If no registrations, create default toolchain
+    # If no registrations, create default toolchain (uses latest from checksums registry)
     if not registrations:
         jco_toolchain_repository(
             name = "jco_toolchain",
-            version = "1.4.0",
-            node_version = "20.18.0",
+            version = "",  # Empty = use latest from checksums registry
+            node_version = "",  # Empty = use latest from checksums registry
         )
 
 # Module extension for jco (JavaScript Component Tools)
@@ -381,12 +381,12 @@ jco = module_extension(
                     default = "jco",
                 ),
                 "version": attr.string(
-                    doc = "jco version to use",
-                    default = "1.4.0",
+                    doc = "jco version to use. If empty, uses latest from checksums registry.",
+                    default = "",
                 ),
                 "node_version": attr.string(
-                    doc = "Node.js version for hermetic strategy",
-                    default = "20.18.0",
+                    doc = "Node.js version for hermetic strategy. If empty, uses latest from checksums registry.",
+                    default = "",
                 ),
             },
         ),
@@ -460,11 +460,11 @@ def _tinygo_extension_impl(module_ctx):
             tinygo_version = registration.tinygo_version,
         )
 
-    # If no registrations, create default TinyGo toolchain
+    # If no registrations, create default TinyGo toolchain (uses latest from checksums registry)
     if not registrations:
         tinygo_toolchain_repository(
             name = "tinygo_toolchain",
-            tinygo_version = "0.38.0",
+            tinygo_version = "",  # Empty = use latest from checksums registry
         )
 
 # Module extension for TinyGo WASI Preview 2 WebAssembly components
@@ -478,8 +478,8 @@ tinygo = module_extension(
                     default = "tinygo",
                 ),
                 "tinygo_version": attr.string(
-                    doc = "TinyGo version to download and use",
-                    default = "0.38.0",
+                    doc = "TinyGo version to download and use. If empty, uses latest from checksums registry.",
+                    default = "",
                 ),
             },
         ),
@@ -507,11 +507,11 @@ def _wasmtime_extension_impl(module_ctx):
             strategy = registration.strategy,
         )
 
-    # If no registrations, create default Wasmtime toolchain
+    # If no registrations, create default Wasmtime toolchain (uses latest from checksums registry)
     if not registrations:
         wasmtime_repository(
             name = "wasmtime_toolchain",
-            version = "35.0.0",
+            version = "",  # Empty = use latest from checksums registry
             strategy = "download",
         )
 
@@ -526,8 +526,8 @@ wasmtime = module_extension(
                     default = "wasmtime",
                 ),
                 "version": attr.string(
-                    doc = "Wasmtime version to install",
-                    default = "35.0.0",
+                    doc = "Wasmtime version to install. If empty, uses latest from checksums registry.",
+                    default = "",
                 ),
                 "strategy": attr.string(
                     doc = "Installation strategy: 'download' (download binary)",
