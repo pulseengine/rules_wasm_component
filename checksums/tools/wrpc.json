@@ -20,14 +20,23 @@
         "linux_amd64": {
           "sha256": "5669a01a64da8954b864df9ec934fd8ef318446f7d8f97263d27fbd5f30c07a8",
           "url_suffix": "wrpc-wasmtime-x86_64-unknown-linux-musl"
+        },
+        "linux_arm64": {
+          "sha256": "542810b5bd159b2d412fc6a0a32f17e53b9732fca8c9ea66f2bdef1d807cdc9f",
+          "url_suffix": "wrpc-wasmtime-aarch64-unknown-linux-musl"
+        },
+        "windows_amd64": {
+          "sha256": "bb28a2da97805be2cf3be146bdf68931e3dada7598be3d7750551a5824d2b4a5",
+          "url_suffix": "wrpc-wasmtime-x86_64-pc-windows-gnu.exe"
         }
-      },
-      "notes": "linux_arm64 and windows_amd64 checksums pending - use build from source for those platforms"
+      }
     }
   },
   "supported_platforms": [
     "darwin_amd64",
     "darwin_arm64",
-    "linux_amd64"
+    "linux_amd64",
+    "linux_arm64",
+    "windows_amd64"
   ]
 }
