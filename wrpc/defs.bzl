@@ -11,11 +11,14 @@ def _wrpc_bindgen_impl(ctx):
 
     Generates language bindings for wrpc from WIT interfaces.
     Uses ctx.actions.run() for direct tool invocation (Bazel best practice).
+
+    Note: This rule uses wit-bindgen-wrpc (the binding generator), not wrpc-wasmtime
+    (the RPC runtime). wrpc-wasmtime is used by wrpc_serve and wrpc_invoke rules.
     """
 
-    # Get the wasm toolchain (which includes wrpc)
+    # Get the wasm toolchain (which includes wit-bindgen-wrpc)
     wasm_toolchain = ctx.toolchains["//toolchains:wasm_tools_toolchain_type"]
-    wrpc = wasm_toolchain.wrpc
+    wit_bindgen_wrpc = wasm_toolchain.wit_bindgen_wrpc
 
     # Output files
     output_dir = ctx.actions.declare_directory(ctx.attr.name + "_bindings")
@@ -23,23 +26,20 @@ def _wrpc_bindgen_impl(ctx):
     # Input WIT file
     wit_file = ctx.file.wit
 
-    # Build command arguments
+    # Build command arguments for wit-bindgen-wrpc
     args = ctx.actions.args()
-    args.add("generate")
+    args.add(ctx.attr.language)  # wit-bindgen-wrpc <language> <options>
     args.add("--world", ctx.attr.world)
-    args.add("--wit", wit_file.path)
-    args.add("--output", output_dir.path)
+    args.add("--out-dir", output_dir.path)
+    args.add(wit_file.path)
 
-    if ctx.attr.language:
-        args.add("--language", ctx.attr.language)
-
-    # Run wrpc generate - uses ctx.actions.run() (Bazel best practice)
+    # Run wit-bindgen-wrpc - uses ctx.actions.run() (Bazel best practice)
     ctx.actions.run(
-        executable = wrpc,
+        executable = wit_bindgen_wrpc,
         arguments = [args],
         inputs = [wit_file],
         outputs = [output_dir],
-        mnemonic = "WrpcBindgen",
+        mnemonic = "WitBindgenWrpc",
         progress_message = "Generating wrpc bindings for {}".format(ctx.attr.name),
     )
 

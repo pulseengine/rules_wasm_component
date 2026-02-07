@@ -1,0 +1,33 @@
+{
+  "tool_name": "wrpc",
+  "github_repo": "bytecodealliance/wrpc",
+  "latest_version": "0.16.0",
+  "last_checked": "2026-02-07T00:00:00Z",
+  "description": "WebAssembly Component RPC runtime (wrpc-wasmtime)",
+  "binary_name": "wrpc-wasmtime",
+  "versions": {
+    "0.16.0": {
+      "release_date": "2025-11-18",
+      "platforms": {
+        "darwin_arm64": {
+          "sha256": "4bb3341c8b8ad5d96b87dd95ee1e7e091104d4f64ea83b690ad50a9639b834e1",
+          "url_suffix": "wrpc-wasmtime-aarch64-apple-darwin"
+        },
+        "darwin_amd64": {
+          "sha256": "9d198256eb72f6246fa424b1f3c384f9eac8476b7da59ac1ddb65323bb2ccb57",
+          "url_suffix": "wrpc-wasmtime-x86_64-apple-darwin"
+        },
+        "linux_amd64": {
+          "sha256": "5669a01a64da8954b864df9ec934fd8ef318446f7d8f97263d27fbd5f30c07a8",
+          "url_suffix": "wrpc-wasmtime-x86_64-unknown-linux-musl"
+        }
+      },
+      "notes": "linux_arm64 and windows_amd64 checksums pending - use build from source for those platforms"
+    }
+  },
+  "supported_platforms": [
+    "darwin_amd64",
+    "darwin_arm64",
+    "linux_amd64"
+  ]
+}
