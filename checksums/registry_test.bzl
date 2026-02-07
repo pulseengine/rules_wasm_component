@@ -17,8 +17,8 @@ def _test_get_tool_checksum(ctx):
     env = unittest.begin(ctx)
 
     # Test valid tool/version/platform
-    checksum = get_tool_checksum("wasm-tools", "1.235.0", "darwin_amd64")
-    asserts.equals(env, "154e9ea5f5477aa57466cfb10e44bc62ef537e32bf13d1c35ceb4fedd9921510", checksum)
+    checksum = get_tool_checksum("wasm-tools", "1.243.0", "darwin_amd64")
+    asserts.equals(env, "3d03bc02fed63998e0ee8d88eb86d90bdb8e32e7cadc77d2f9e792b9dff8433a", checksum)
 
     # Test wasmtime checksum (wizer functionality now included in wasmtime v39.0.0+)
     wasmtime_checksum = get_tool_checksum("wasmtime", "39.0.1", "linux_amd64")
@@ -33,7 +33,7 @@ def _test_get_tool_checksum(ctx):
     asserts.equals(env, None, invalid_version)
 
     # Test invalid platform
-    invalid_platform = get_tool_checksum("wasm-tools", "1.235.0", "invalid_platform")
+    invalid_platform = get_tool_checksum("wasm-tools", "1.243.0", "invalid_platform")
     asserts.equals(env, None, invalid_platform)
 
     return unittest.end(env)
@@ -43,9 +43,9 @@ def _test_get_tool_info(ctx):
     env = unittest.begin(ctx)
 
     # Test valid tool info
-    info = get_tool_info("wasm-tools", "1.235.0", "darwin_amd64")
+    info = get_tool_info("wasm-tools", "1.243.0", "darwin_amd64")
     asserts.true(env, info != None)
-    asserts.equals(env, "154e9ea5f5477aa57466cfb10e44bc62ef537e32bf13d1c35ceb4fedd9921510", info["sha256"])
+    asserts.equals(env, "3d03bc02fed63998e0ee8d88eb86d90bdb8e32e7cadc77d2f9e792b9dff8433a", info["sha256"])
     asserts.equals(env, "x86_64-macos.tar.gz", info["url_suffix"])
 
     # Test wasmtime info (wizer functionality now included in wasmtime v39.0.0+)
@@ -61,7 +61,7 @@ def _test_get_latest_version(ctx):
     env = unittest.begin(ctx)
 
     # Test known tools (core toolchain)
-    asserts.equals(env, "1.243.0", get_latest_version("wasm-tools"))
+    asserts.equals(env, "1.244.0", get_latest_version("wasm-tools"))
     asserts.equals(env, "0.49.0", get_latest_version("wit-bindgen"))
 
     # Test invalid tool
@@ -74,7 +74,7 @@ def _test_list_supported_platforms(ctx):
     env = unittest.begin(ctx)
 
     # Test wasm-tools platforms
-    platforms = list_supported_platforms("wasm-tools", "1.235.0")
+    platforms = list_supported_platforms("wasm-tools", "1.243.0")
     asserts.true(env, "darwin_amd64" in platforms)
     asserts.true(env, "linux_amd64" in platforms)
     asserts.true(env, "windows_amd64" in platforms)
@@ -107,13 +107,13 @@ def _test_validate_tool_exists(ctx):
     env = unittest.begin(ctx)
 
     # Test valid combinations
-    asserts.true(env, validate_tool_exists("wasm-tools", "1.235.0", "darwin_amd64"))
+    asserts.true(env, validate_tool_exists("wasm-tools", "1.243.0", "darwin_amd64"))
     asserts.true(env, validate_tool_exists("wasmtime", "39.0.1", "linux_amd64"))
 
     # Test invalid combinations
     asserts.false(env, validate_tool_exists("nonexistent-tool", "1.0.0", "linux_amd64"))
     asserts.false(env, validate_tool_exists("wasm-tools", "999.0.0", "linux_amd64"))
-    asserts.false(env, validate_tool_exists("wasm-tools", "1.235.0", "invalid_platform"))
+    asserts.false(env, validate_tool_exists("wasm-tools", "1.243.0", "invalid_platform"))
 
     return unittest.end(env)
 

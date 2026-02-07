@@ -58,6 +58,6 @@ filegroup(
 mock_wasm_toolchain_repository = repository_rule(
     implementation = _mock_wasm_toolchain_repository_impl,
     attrs = {
-        "version": attr.string(default = "1.235.0"),
+        "version": attr.string(default = "1.243.0"),
     },
 )

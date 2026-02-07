@@ -25,7 +25,7 @@ IMPORTANT: When updating versions here:
 # Tool versions - single source of truth
 TOOL_VERSIONS = {
     # Core WebAssembly toolchain
-    "wasm-tools": "1.243.0",  # Component model tools (validate, parse, compose, etc.)
+    "wasm-tools": "1.244.0",  # Component model tools (validate, parse, compose, etc.)
     "wasmtime": "39.0.1",     # WebAssembly runtime for testing/execution
 
     # WIT and binding generation
@@ -50,6 +50,13 @@ TOOL_VERSIONS = {
 # Key: wasm-tools version
 # Value: Dict of compatible tool versions
 TOOL_COMPATIBILITY_MATRIX = {
+    "1.244.0": {
+        "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
+        "wac": ["0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["37.0.2", "39.0.1"],
+    },
     "1.243.0": {
         "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
         "wac": ["0.8.0", "0.8.1"],

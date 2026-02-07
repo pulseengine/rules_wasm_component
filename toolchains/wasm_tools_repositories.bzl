@@ -34,7 +34,7 @@ def register_wasm_tool_repositories(bundle = None):
     git_repository(
         name = "wasm_tools_src",
         remote = "https://github.com/bytecodealliance/wasm-tools.git",
-        tag = "v1.235.0",
+        tag = "v1.244.0",
         build_file = "//toolchains:BUILD.wasm_tools",
     )
 

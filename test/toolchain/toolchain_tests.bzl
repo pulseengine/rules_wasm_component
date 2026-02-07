@@ -27,7 +27,7 @@ def _toolchain_url_test_impl(ctx):
     env = unittest.begin(ctx)
 
     # Test URL format expectations
-    version = "1.235.0"
+    version = "1.243.0"
     platform_suffix = "aarch64-macos"
 
     expected_wasm_tools_url = "https://github.com/bytecodealliance/wasm-tools/releases/download/v{}/wasm-tools-{}-{}.tar.gz".format(
@@ -40,11 +40,11 @@ def _toolchain_url_test_impl(ctx):
     # Verify the URL format matches what we expect
     asserts.equals(
         env,
-        "https://github.com/bytecodealliance/wasm-tools/releases/download/v1.235.0/wasm-tools-1.235.0-aarch64-macos.tar.gz",
+        "https://github.com/bytecodealliance/wasm-tools/releases/download/v1.243.0/wasm-tools-1.243.0-aarch64-macos.tar.gz",
         expected_wasm_tools_url,
     )
 
-    asserts.equals(env, "wasm-tools-1.235.0-aarch64-macos", expected_prefix)
+    asserts.equals(env, "wasm-tools-1.243.0-aarch64-macos", expected_prefix)
 
     unittest.end(env)
 
