@@ -1,0 +1,41 @@
+{
+  "tool_name": "wit-bindgen-wrpc",
+  "github_repo": "bytecodealliance/wrpc",
+  "latest_version": "0.16.0",
+  "last_checked": "2026-02-07T00:00:00Z",
+  "description": "WIT binding generator for WebAssembly Component RPC (wrpc)",
+  "versions": {
+    "0.16.0": {
+      "release_date": "2025-11-18",
+      "platforms": {
+        "darwin_arm64": {
+          "sha256": "d2ef54ca193ee3d16cd23c67adb42713dc8ba2c96968eff53b9bcc3051466a65",
+          "url_suffix": "wit-bindgen-wrpc-aarch64-apple-darwin"
+        },
+        "darwin_amd64": {
+          "sha256": "e60efb3198774996f250e0168fd555cd9c6e056f863dc3983f373df119d2cdc4",
+          "url_suffix": "wit-bindgen-wrpc-x86_64-apple-darwin"
+        },
+        "linux_amd64": {
+          "sha256": "ce66c70da2f612c91c5d42b4eff86773dd7d13821b4c6eccea4d1dd62c399326",
+          "url_suffix": "wit-bindgen-wrpc-x86_64-unknown-linux-musl"
+        },
+        "linux_arm64": {
+          "sha256": "b35772253ef4030ec8b420fde3145610e5de44350d89a0e5135c53248a4f1f9e",
+          "url_suffix": "wit-bindgen-wrpc-aarch64-unknown-linux-musl"
+        },
+        "windows_amd64": {
+          "sha256": "e08a74f717e77372cf1104e4da6c3aa301c9283ae13b984a55b67bd6ebf84a51",
+          "url_suffix": "wit-bindgen-wrpc-x86_64-pc-windows-gnu.exe"
+        }
+      }
+    }
+  },
+  "supported_platforms": [
+    "darwin_amd64",
+    "darwin_arm64",
+    "linux_amd64",
+    "linux_arm64",
+    "windows_amd64"
+  ]
+}

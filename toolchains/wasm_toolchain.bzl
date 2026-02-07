@@ -47,6 +47,7 @@ def _wasm_tools_toolchain_impl(ctx):
         wac = ctx.file.wac,
         wit_bindgen = ctx.file.wit_bindgen,
         wrpc = ctx.file.wrpc,
+        wit_bindgen_wrpc = ctx.file.wit_bindgen_wrpc,
         wasmsign2 = ctx.file.wasmsign2,
     )
 
@@ -77,7 +78,13 @@ wasm_tools_toolchain = rule(
             allow_single_file = True,
             executable = True,
             cfg = "exec",
-            doc = "wrpc binary",
+            doc = "wrpc-wasmtime runtime binary",
+        ),
+        "wit_bindgen_wrpc": attr.label(
+            allow_single_file = True,
+            executable = True,
+            cfg = "exec",
+            doc = "wit-bindgen-wrpc binding generator binary",
         ),
         "wasmsign2": attr.label(
             allow_single_file = True,
@@ -86,7 +93,7 @@ wasm_tools_toolchain = rule(
             doc = "wasmsign2 WebAssembly signing binary",
         ),
     },
-    doc = "Declares a WebAssembly toolchain with signing support",
+    doc = "Declares a WebAssembly toolchain with WRPC and signing support",
 )
 
 # Platform detection now uses tool_registry.detect_platform
@@ -329,12 +336,8 @@ echo "Basic WebAssembly component functionality is not affected"
 exit 0
 """, executable = True)
 
-    # Create placeholder wrpc binary for compatibility
-    repository_ctx.file("wrpc", """#!/bin/bash
-echo "wrpc disabled for production stability"
-echo "Use system wrpc or enable building from source"
-exit 1
-""", executable = True)
+    # Download wrpc tools from registry (Phase 2 WRPC modernization)
+    _download_wrpc_tools(repository_ctx, platform)
 
     print("Successfully set up all tools")
 
@@ -504,22 +507,43 @@ def _download_wit_bindgen(repository_ctx):
     # Use unified tool_registry for download
     tool_registry.download(repository_ctx, "wit-bindgen", wit_bindgen_version, platform)
 
-def _download_wrpc(repository_ctx):
-    """Download wrpc using modernized git_repository approach"""
+def _download_wrpc_tools(repository_ctx, platform):
+    """Download wrpc and wit-bindgen-wrpc from registry (Phase 2 WRPC modernization)"""
 
-    print("Using modernized wrpc from @wrpc_src git repository")
+    # Get versions from tool_versions.bzl
+    wrpc_version = get_tool_version("wrpc")
+    wit_bindgen_wrpc_version = get_tool_version("wit-bindgen-wrpc")
 
-    # Link to git_repository-based wrpc build instead of manual git clone + cargo build
-    if repository_ctx.path("../wrpc_src").exists:
-        repository_ctx.symlink("../wrpc_src/wrpc-wasmtime", "wrpc")
-        print("Linked wrpc from git repository")
+    # Check if wrpc is available for this platform
+    wrpc_info = get_tool_info(repository_ctx, "wrpc", wrpc_version, platform)
+    if wrpc_info:
+        print("Downloading wrpc {} for {}".format(wrpc_version, platform))
+        tool_registry.download(repository_ctx, "wrpc", wrpc_version, platform, output_name = "wrpc")
     else:
-        print("Warning: @wrpc_src git repository not available")
+        print("Warning: wrpc {} not available for platform {}".format(wrpc_version, platform))
         repository_ctx.file("wrpc", """#!/bin/bash
-echo "wrpc: modernized git repository build not available"
-echo "Ensure @wrpc_src is properly configured in MODULE.bazel"
+echo "wrpc: Not available for this platform"
+echo "Use system wrpc or build from source"
 exit 1
 """, executable = True)
+
+    # Check if wit-bindgen-wrpc is available for this platform
+    wit_bindgen_wrpc_info = get_tool_info(repository_ctx, "wit-bindgen-wrpc", wit_bindgen_wrpc_version, platform)
+    if wit_bindgen_wrpc_info:
+        print("Downloading wit-bindgen-wrpc {} for {}".format(wit_bindgen_wrpc_version, platform))
+        tool_registry.download(repository_ctx, "wit-bindgen-wrpc", wit_bindgen_wrpc_version, platform, output_name = "wit-bindgen-wrpc")
+    else:
+        print("Warning: wit-bindgen-wrpc {} not available for platform {}".format(wit_bindgen_wrpc_version, platform))
+        repository_ctx.file("wit-bindgen-wrpc", """#!/bin/bash
+echo "wit-bindgen-wrpc: Not available for this platform"
+echo "Use system wit-bindgen-wrpc or build from source"
+exit 1
+""", executable = True)
+
+def _download_wrpc(repository_ctx):
+    """Legacy wrpc download - redirects to new implementation"""
+    platform = tool_registry.detect_platform(repository_ctx)
+    _download_wrpc_tools(repository_ctx, platform)
 
 def _download_wasmsign2(repository_ctx):
     """Setup wasmsign2 placeholder - not available in prebuilt downloads"""
@@ -586,6 +610,12 @@ alias(
     visibility = ["//visibility:public"],
 )
 
+alias(
+    name = "wit_bindgen_wrpc_binary",
+    actual = "@wrpc_src//:wit_bindgen_wrpc_binary",
+    visibility = ["//visibility:public"],
+)
+
 # wasmsign2 not available in build strategy
 filegroup(
     name = "wasmsign2_binary",
@@ -600,6 +630,7 @@ wasm_tools_toolchain(
     wac = ":wac_binary",
     wit_bindgen = ":wit_bindgen_binary",
     wrpc = ":wrpc_binary",
+    wit_bindgen_wrpc = ":wit_bindgen_wrpc_binary",
     wasmsign2 = ":wasmsign2_binary",
 )
 
@@ -647,6 +678,12 @@ filegroup(
 )
 
 filegroup(
+    name = "wit_bindgen_wrpc_binary",
+    srcs = ["{wit_bindgen_wrpc_bin}"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "wasmsign2_binary",
     srcs = ["{wasmsign2_bin}"],
     visibility = ["//visibility:public"],
@@ -659,6 +696,7 @@ wasm_tools_toolchain(
     wac = ":wac_binary",
     wit_bindgen = ":wit_bindgen_binary",
     wrpc = ":wrpc_binary",
+    wit_bindgen_wrpc = ":wit_bindgen_wrpc_binary",
     wasmsign2 = ":wasmsign2_binary",
 )
 
@@ -680,6 +718,7 @@ toolchain(
             wac_bin = "wac{}".format(exe_suffix),
             wit_bindgen_bin = "wit-bindgen{}".format(exe_suffix),
             wrpc_bin = "wrpc{}".format(exe_suffix),
+            wit_bindgen_wrpc_bin = "wit-bindgen-wrpc{}".format(exe_suffix),
             wasmsign2_bin = "wasmsign2{}".format(exe_suffix),
         )
 

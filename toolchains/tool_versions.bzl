@@ -38,6 +38,10 @@ TOOL_VERSIONS = {
     # Signatures and security
     "wasmsign2": "0.2.6",     # WebAssembly signing tool
 
+    # WRPC (WebAssembly Component RPC)
+    "wrpc": "0.16.0",         # wrpc-wasmtime runtime for component RPC
+    "wit-bindgen-wrpc": "0.16.0",  # WIT binding generator for wrpc
+
     # Platform SDKs
     "wasi-sdk": "29",         # WASI SDK for C/C++ compilation
     "tinygo": "0.39.0",       # TinyGo compiler for Go→WASM
