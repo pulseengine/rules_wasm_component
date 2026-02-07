@@ -129,9 +129,6 @@ jobs:
           echo "new_versions_count=$NEW_VERSIONS_COUNT" >> $GITHUB_OUTPUT
           echo "errors_count=$ERRORS_COUNT" >> $GITHUB_OUTPUT
 
-          # Store results for later steps
-          cp update_results.json ./update_results.json
-
           # Generate summary for PR description (use binary directly)
           "$UPDATER_BIN" generate-summary update_results.json > ./update_summary.md 2>/dev/null || true
 
