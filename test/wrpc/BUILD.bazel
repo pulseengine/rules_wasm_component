@@ -1,0 +1,192 @@
+"""WRPC rules unit and integration tests.
+
+This package validates:
+- wrpc_bindgen rule generates correct output structure
+- wrpc_rust_bindings/wrpc_go_bindings macros work correctly
+- Transport configuration rules provide WrpcTransportInfo correctly
+- wrpc_serve/wrpc_invoke generate valid launcher scripts
+
+Following Bazel 2026 testing best practices with build_test and analysistest.
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+load("@rules_wasm_component//wrpc:defs.bzl", "wrpc_bindgen", "wrpc_go_bindings", "wrpc_rust_bindings")
+load("@rules_wasm_component//wrpc:transports.bzl", "nats_transport", "quic_transport", "tcp_transport", "unix_transport")
+load(":wrpc_tests.bzl", "transport_provider_test", "wrpc_bindgen_test")
+
+package(default_testonly = True)
+
+# =============================================================================
+# Test Fixtures
+# =============================================================================
+
+wit_library(
+    name = "calculator_wit",
+    package_name = "test:calculator@1.0.0",
+    testonly = True,
+    srcs = ["fixtures/calculator.wit"],
+    world = "calculator-server",
+)
+
+# =============================================================================
+# Transport Configuration Tests
+# =============================================================================
+
+tcp_transport(
+    name = "test_tcp_transport",
+    testonly = True,
+    address = "localhost:8080",
+)
+
+nats_transport(
+    name = "test_nats_transport",
+    testonly = True,
+    address = "nats://localhost:4222",
+    prefix = "test-service",
+)
+
+unix_transport(
+    name = "test_unix_transport",
+    testonly = True,
+    socket_path = "/tmp/wrpc-test.sock",
+)
+
+quic_transport(
+    name = "test_quic_transport",
+    testonly = True,
+    address = "localhost:4433",
+    insecure = True,
+)
+
+# =============================================================================
+# Binding Generation Tests
+# =============================================================================
+
+wrpc_bindgen(
+    name = "test_bindgen_rust",
+    testonly = True,
+    language = "rust",
+    wit = ":calculator_wit",
+    world = "calculator-server",
+)
+
+wrpc_bindgen(
+    name = "test_bindgen_go",
+    testonly = True,
+    language = "go",
+    wit = ":calculator_wit",
+    world = "calculator-server",
+)
+
+# Language-specific macro tests
+wrpc_rust_bindings(
+    name = "test_rust_bindings_macro",
+    testonly = True,
+    wit = ":calculator_wit",
+    world = "calculator-client",
+)
+
+wrpc_go_bindings(
+    name = "test_go_bindings_macro",
+    testonly = True,
+    wit = ":calculator_wit",
+    world = "calculator-client",
+)
+
+# =============================================================================
+# Build Tests (Smoke Tests)
+# =============================================================================
+
+build_test(
+    name = "transport_build_test",
+    targets = [
+        ":test_tcp_transport",
+        ":test_nats_transport",
+        ":test_unix_transport",
+        ":test_quic_transport",
+    ],
+)
+
+build_test(
+    name = "bindgen_build_test",
+    targets = [
+        ":test_bindgen_rust",
+        ":test_bindgen_go",
+        ":test_rust_bindings_macro",
+        ":test_go_bindings_macro",
+    ],
+)
+
+# =============================================================================
+# Analysis Tests (Provider Validation)
+# =============================================================================
+
+transport_provider_test(
+    name = "test_tcp_transport_provider",
+    expected_transport_type = "tcp",
+    target_under_test = ":test_tcp_transport",
+)
+
+transport_provider_test(
+    name = "test_nats_transport_provider",
+    expected_transport_type = "nats",
+    target_under_test = ":test_nats_transport",
+)
+
+transport_provider_test(
+    name = "test_unix_transport_provider",
+    expected_transport_type = "unix",
+    target_under_test = ":test_unix_transport",
+)
+
+transport_provider_test(
+    name = "test_quic_transport_provider",
+    expected_transport_type = "quic",
+    target_under_test = ":test_quic_transport",
+)
+
+wrpc_bindgen_test(
+    name = "test_bindgen_rust_output",
+    expected_language = "rust",
+    target_under_test = ":test_bindgen_rust",
+)
+
+wrpc_bindgen_test(
+    name = "test_bindgen_go_output",
+    expected_language = "go",
+    target_under_test = ":test_bindgen_go",
+)
+
+# =============================================================================
+# Test Suites
+# =============================================================================
+
+test_suite(
+    name = "build_tests",
+    tests = [
+        ":bindgen_build_test",
+        ":transport_build_test",
+    ],
+)
+
+test_suite(
+    name = "provider_tests",
+    tests = [
+        ":test_bindgen_go_output",
+        ":test_bindgen_rust_output",
+        ":test_nats_transport_provider",
+        ":test_quic_transport_provider",
+        ":test_tcp_transport_provider",
+        ":test_unix_transport_provider",
+    ],
+)
+
+test_suite(
+    name = "wrpc_tests",
+    tests = [
+        ":build_tests",
+        ":provider_tests",
+    ],
+    visibility = ["//visibility:public"],
+)

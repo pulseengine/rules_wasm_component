@@ -789,8 +789,13 @@ def _compile_tinygo_module(ctx, tinygo, go_binary, wasm_opt_binary, wasm_tools, 
         mnemonic = "TinyGoCompile",
         progress_message = "Compiling %s with TinyGo" % ctx.attr.name,
         use_default_shell_env = False,
+        # RBE Status: Currently requires local execution due to Go module resolution
+        # and TINYGOROOT environment management. Future work (Issue #18):
+        # - Pre-resolve Go modules to enable hermetic builds
+        # - Cache TINYGOROOT in toolchain provider
+        # - Replace with "no-network": "1" + "supports-path-mapping": "1"
         execution_requirements = {
-            "local": "1",  # TinyGo requires local execution
+            "local": "1",
         },
     )
 

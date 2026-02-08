@@ -1,0 +1,16 @@
+// Simple calculator interface for WRPC testing
+package test:calculator@1.0.0;
+
+interface operations {
+    add: func(a: s32, b: s32) -> s32;
+    subtract: func(a: s32, b: s32) -> s32;
+    multiply: func(a: s32, b: s32) -> s32;
+}
+
+world calculator-server {
+    export operations;
+}
+
+world calculator-client {
+    import operations;
+}

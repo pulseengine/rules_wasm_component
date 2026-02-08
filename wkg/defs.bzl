@@ -3535,6 +3535,12 @@ def _wac_compose_with_oci_impl(ctx):
         local_components[comp_name] = comp_info
         all_component_files.append(comp_info.wasm_file)
 
+    # Collect outputs from oci_publish_deps to enforce dependency ordering
+    # This ensures publish targets complete before OCI pull operations
+    publish_dep_files = []
+    for dep_target in ctx.attr.oci_publish_deps:
+        publish_dep_files.extend(dep_target[DefaultInfo].files.to_list())
+
     # Pull OCI components and collect them
     oci_components = {}
     oci_component_files = []
@@ -3566,10 +3572,12 @@ def _wac_compose_with_oci_impl(ctx):
             config_inputs.extend(ctx.attr.public_key.files.to_list())
 
         # Pull the OCI component
+        # Include publish_dep_files in inputs to enforce Bazel dependency ordering
+        # This ensures any oci_publish_deps targets complete before pull attempts
         ctx.actions.run(
             executable = wkg,
             arguments = [args],
-            inputs = config_inputs,
+            inputs = config_inputs + publish_dep_files,
             outputs = [oci_component_file],
             mnemonic = "WkgPullOCIForComposition",
             progress_message = "Pulling OCI component {} for composition".format(comp_name),
