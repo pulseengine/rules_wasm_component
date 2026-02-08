@@ -540,8 +540,12 @@ def _npm_install_impl(ctx):
         tools = [npm],
         mnemonic = "NPMInstall",
         progress_message = "Installing NPM dependencies for %s" % ctx.label,
+        # RBE Status: Requires local execution for NPM network access.
+        # This is intentional - npm install needs to fetch packages.
+        # Future work (Issue #18) could pre-download deps via repository rule
+        # to enable hermetic builds with "no-network": "1".
         execution_requirements = {
-            "local": "1",  # NPM install requires network access
+            "local": "1",
         },
     )
 
