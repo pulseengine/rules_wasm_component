@@ -180,3 +180,17 @@ WasmPrecompiledInfo = provider(
         "compatibility_hash": "Hash for compatibility checking",
     },
 )
+
+# Provider for WRPC transport configuration (Phase 3 WRPC modernization)
+WrpcTransportInfo = provider(
+    doc = "Configuration for WRPC transport mechanism",
+    fields = {
+        "transport_type": "Transport type: tcp, nats, unix, or quic",
+        "address": "Transport address (format depends on transport type)",
+        "cli_args": "List of CLI arguments for wrpc-wasmtime",
+        "extra_args": "Additional transport-specific CLI arguments",
+        "address_format": "Example of valid address format for this transport",
+        "config_file": "Optional transport-specific config file",
+        "metadata": "Dict for transport-specific metadata",
+    },
+)

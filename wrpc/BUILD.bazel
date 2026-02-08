@@ -10,6 +10,17 @@ bzl_library(
     srcs = ["defs.bzl"],
     visibility = ["//visibility:public"],
     deps = [
+        "//providers:providers",
         "//toolchains:wasm_toolchain",
+    ],
+)
+
+# Bzl library for transport configuration rules
+bzl_library(
+    name = "transports",
+    srcs = ["transports.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//providers:providers",
     ],
 )
