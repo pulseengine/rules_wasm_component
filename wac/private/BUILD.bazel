@@ -16,7 +16,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wac:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -26,7 +26,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wac:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -36,7 +36,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wac:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -47,7 +47,7 @@ bzl_library(
         "//wac:__pkg__",
     ],
     deps = [
-        "//providers:providers",
+        "//providers",
         "//wkg:defs",
     ],
 )

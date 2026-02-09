@@ -109,6 +109,7 @@ def _enterprise_source_test_impl(repository_ctx):
             platform,
         )
         test_results.append("  Expected vendor path: {}".format(expected_path))
+
         # Check if path exists
         vendor_path = repository_ctx.path(expected_path)
         if vendor_path.exists:

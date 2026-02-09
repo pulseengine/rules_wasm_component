@@ -239,7 +239,9 @@ def _python_wasm_binary_impl(ctx):
 
     for src in source_files:
         script_lines.append("cp \"$ORIGINAL_DIR/{}\" \"$WORK_DIR/{}\"".format(
-            src.path, src.basename))
+            src.path,
+            src.basename,
+        ))
 
     script_lines.extend([
         "",

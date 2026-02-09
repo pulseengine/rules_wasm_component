@@ -35,7 +35,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -45,7 +45,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -55,7 +55,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -65,7 +65,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -75,7 +75,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -85,7 +85,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -95,7 +95,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -105,7 +105,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -115,7 +115,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -134,7 +134,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(

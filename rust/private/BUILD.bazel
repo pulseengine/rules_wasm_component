@@ -46,7 +46,7 @@ bzl_library(
     deps = [
         ":transitions",
         "//common",
-        "//providers:providers",
+        "//providers",
         "//tools/bazel_helpers:wasm_tools_actions",
     ],
 )
@@ -61,7 +61,7 @@ bzl_library(
     deps = [
         ":rust_wasm_component",
         ":transitions",
-        "//providers:providers",
+        "//providers",
     ],
 )
 
@@ -72,7 +72,7 @@ bzl_library(
         "//docs:__pkg__",
         "//rust:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -95,7 +95,7 @@ bzl_library(
         "//docs:__pkg__",
         "//rust:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -120,7 +120,7 @@ bzl_library(
     ],
     deps = [
         ":rust_wasm_component",
-        "//providers:providers",
+        "//providers",
     ],
 )
 
@@ -134,10 +134,9 @@ bzl_library(
     deps = [
         ":transitions",
         "//common",
-        "//providers:providers",
+        "//providers",
     ],
 )
-
 
 bzl_library(
     name = "debug_windows",

@@ -3372,6 +3372,7 @@ def _create_oci_providers(ctx, component_file, image_ref, digest, is_vendored = 
     Returns:
         List of providers [WasmComponentInfo, WasmOciInfo, DefaultInfo]
     """
+
     # Build metadata
     source_type = "vendored" if is_vendored else "oci"
     metadata = {

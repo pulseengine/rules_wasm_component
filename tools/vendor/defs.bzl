@@ -105,6 +105,7 @@ def _generate_copy_operations(operations):
 
 def _estimate_size(vendored_items):
     """Estimate total size of vendored toolchains"""
+
     # Rough estimates per tool (in MB)
     tool_sizes = {
         "wasm-tools": 15,

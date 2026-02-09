@@ -24,11 +24,11 @@ wit_library(
 rust_wasm_component_bindgen(
     name = "alignment_component",
     srcs = ["src/lib.rs"],
-    wit = ":alignment_interfaces",
     profiles = [
         "debug",
         "release",
     ],
+    wit = ":alignment_interfaces",
 )
 
 # Test 1: Build validation - ensures component builds successfully

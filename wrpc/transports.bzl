@@ -35,12 +35,16 @@ def _validate_host_port(address, transport_name):
     """Validate host:port address format."""
     if ":" not in address:
         fail("{} address must include port (host:port), got: {}".format(
-            transport_name, address))
+            transport_name,
+            address,
+        ))
 
     parts = address.rsplit(":", 1)
     if len(parts) != 2:
         fail("{} address must be host:port, got: {}".format(
-            transport_name, address))
+            transport_name,
+            address,
+        ))
 
     host, port = parts
     if not port.isdigit():

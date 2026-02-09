@@ -5,6 +5,7 @@ load("//toolchains:symmetric_wit_bindgen_toolchain.bzl", "symmetric_wit_bindgen_
 
 def _wasm_tool_repositories_impl(module_ctx):
     """Implementation of wasm_tool_repositories extension"""
+
     # Check for bundle configuration from tags
     bundle_name = None
     for mod in module_ctx.modules:

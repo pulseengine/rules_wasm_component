@@ -25,18 +25,18 @@ package(default_visibility = ["//visibility:public"])
 moonbit_wasm_component(
     name = "calculator_test_component",
     srcs = ["//examples/moonbit_component:calculator.mbt"],
+    tags = ["manual"],  # MoonBit toolchain platform-limited
     wit = "//examples/moonbit_component:calculator.wit",
     world = "calculator",
-    tags = ["manual"],  # MoonBit toolchain platform-limited
 )
 
 # Signed integers test component (tests upstream bug #1518)
 moonbit_wasm_component(
     name = "signed_integers_component",
     srcs = ["signed_integers.mbt"],
+    tags = ["manual"],  # MoonBit toolchain platform-limited
     wit = "signed_integers.wit",
     world = "signed-integers",
-    tags = ["manual"],  # MoonBit toolchain platform-limited
 )
 
 # =============================================================================
@@ -46,16 +46,16 @@ moonbit_wasm_component(
 # Test that moonbit_wasm_component provides correct WasmComponentInfo
 moonbit_component_analysis_test(
     name = "moonbit_component_analysis_test",
-    target_under_test = ":calculator_test_component",
     tags = ["manual"],  # MoonBit toolchain platform-limited
+    target_under_test = ":calculator_test_component",
 )
 
 # Test signed integer types (s8, s16) build correctly
 # Note: Runtime value corruption is tracked in upstream #1518
 moonbit_signed_integers_test(
     name = "signed_integers_analysis_test",
-    target_under_test = ":signed_integers_component",
     tags = ["manual"],  # MoonBit toolchain platform-limited
+    target_under_test = ":signed_integers_component",
 )
 
 # =============================================================================

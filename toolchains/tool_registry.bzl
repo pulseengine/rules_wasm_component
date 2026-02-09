@@ -204,12 +204,13 @@ def _resolve_download_source(repository_ctx, tool_name, version, platform, defau
             path: Local file path (if type == "local")
             url: Download URL (if type == "url")
     """
+
     # Priority 1: Offline mode with default vendor path
     offline_mode = repository_ctx.os.environ.get("BAZEL_WASM_OFFLINE", "0") == "1"
     if offline_mode:
         # Try workspace-relative path first
         vendor_path = repository_ctx.path(
-            repository_ctx.workspace_root
+            repository_ctx.workspace_root,
         ).dirname.get_child("third_party").get_child("toolchains").get_child(tool_name).get_child(version).get_child(platform).get_child(filename)
         if vendor_path.exists:
             print("OFFLINE: Using vendored {} from {}".format(tool_name, vendor_path))
@@ -245,7 +246,9 @@ def _resolve_download_source(repository_ctx, tool_name, version, platform, defau
     # Priority 4: Strict offline mode - fail if offline but no vendor found
     if offline_mode:
         fail("BAZEL_WASM_OFFLINE=1 but {} version {} for {} not found in vendor directories".format(
-            tool_name, version, platform,
+            tool_name,
+            version,
+            platform,
         ))
 
     # Default: use original URL
@@ -309,7 +312,11 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
     tool_info = get_tool_info(repository_ctx, tool_name, version, platform)
     if not tool_info:
         fail("Tool '{}' version '{}' platform '{}' not found in registry. Check //checksums/tools/{}.json".format(
-            tool_name, version, platform, tool_name))
+            tool_name,
+            version,
+            platform,
+            tool_name,
+        ))
 
     # Get checksum
     checksum = get_tool_checksum(repository_ctx, tool_name, version, platform)
@@ -367,6 +374,7 @@ def _download_tool(repository_ctx, tool_name, version, platform = None, output_n
             else:
                 binary_path = binary_name
             repository_ctx.symlink(source.path, binary_path)
+
             # Make executable
             repository_ctx.execute(["chmod", "+x", binary_path])
             return {
@@ -451,6 +459,7 @@ def _calculate_strip_prefix(tool_name, version, tool_info):
     elif tool_name == "wasi-sdk":
         # WASI SDK archive contains versioned+platform directory: wasi-sdk-29.0-arm64-macos/
         url_suffix = tool_info.get("url_suffix", "")
+
         # Extract platform part from url_suffix (e.g., "arm64-macos.tar.gz" -> "arm64-macos")
         platform_part = url_suffix.replace(".tar.gz", "").replace(".zip", "")
         return "wasi-sdk-{}.0-{}".format(version, platform_part)
@@ -492,6 +501,7 @@ def _find_binary_after_extract(repository_ctx, tool_name, version, platform, too
         binary_path = prefix + tool_info["binary_path"].format(version)
         if repository_ctx.path(binary_path).exists:
             return binary_path
+
         # Fallback - try without version formatting
         return prefix + tool_info["binary_path"]
 

@@ -38,7 +38,8 @@ def wasm_tool_suite(name, platforms, tools):
                     rust_target = platform_info["rust_target"],
                     suffix = platform_info["suffix"],
                 )
-            # Note: wizer removed - now part of wasmtime v39.0.0+
+                # Note: wizer removed - now part of wasmtime v39.0.0+
+
             elif tool == "wac":
                 _build_wac(
                     name = target_name,

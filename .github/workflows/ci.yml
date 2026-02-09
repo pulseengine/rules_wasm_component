@@ -302,6 +302,60 @@ jobs:
           bazel build //examples/basic:hello_component
           wasm-tools validate bazel-bin/examples/basic/hello_component.wasm || true
 
+  test-windows:
+    name: Test on windows-latest
+    runs-on: windows-latest
+    needs: [lint]
+    # Windows CI is currently experimental - failures don't block merges
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Cache Bazel
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/_bazel
+            ~/AppData/Local/bazelisk
+          key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'WORKSPACE.bazel', '**/*.bzl') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+
+      - name: Install Bazelisk
+        run: |
+          # Download bazelisk for Windows
+          Invoke-WebRequest -Uri https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-windows-amd64.exe -OutFile bazelisk.exe
+          Move-Item bazelisk.exe C:\Windows\System32\bazel.exe -Force
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
+          components: clippy
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "18"
+
+      - name: Verify Bazel Installation
+        run: bazel version
+
+      - name: Build Core Targets
+        run: |
+          # Build core targets on Windows (subset of Linux/macOS)
+          # Start with basic examples that should work cross-platform
+          bazel build --keep_going -- `
+            //examples/basic:hello_component `
+            //rust/... `
+            //providers/...
+
+      - name: Run Unit Tests
+        run: bazel test --test_output=errors -- //test/unit:unit_tests
+
   bcr-docker-test:
     name: BCR Docker Environment Test
     runs-on: ubuntu-latest

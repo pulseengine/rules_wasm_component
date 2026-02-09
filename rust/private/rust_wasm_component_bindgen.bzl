@@ -78,8 +78,8 @@ def _generate_wrapper_impl(ctx):
             "Compatible versions: {}. " +
             "Update the embedded runtime in rust_wasm_component_bindgen.bzl or downgrade CLI version.".format(
                 cli_version,
-                ", ".join(COMPATIBLE_CLI_VERSIONS)
-            )
+                ", ".join(COMPATIBLE_CLI_VERSIONS),
+            ),
         )
 
     # Different wrapper content based on mode

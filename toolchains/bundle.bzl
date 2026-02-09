@@ -106,14 +106,18 @@ def validate_bundle(repository_ctx, bundle_name):
     if not bundle:
         available = get_all_bundle_names(repository_ctx)
         return (False, "Bundle '{}' not found. Available bundles: {}".format(
-            bundle_name, ", ".join(available) if available else "none"))
+            bundle_name,
+            ", ".join(available) if available else "none",
+        ))
 
     # Check required fields
     required_fields = ["tools", "compatibility"]
     for field in required_fields:
         if field not in bundle:
             return (False, "Bundle '{}' is missing required field: {}".format(
-                bundle_name, field))
+                bundle_name,
+                field,
+            ))
 
     # Check tools is non-empty
     if not bundle.get("tools"):
@@ -212,6 +216,7 @@ def get_version_for_tool(repository_ctx, tool_name, bundle_name = None, fallback
     Returns:
         Version string for the tool.
     """
+
     # If no bundle specified, try to use default
     effective_bundle = bundle_name if bundle_name else None
 
@@ -247,6 +252,7 @@ def log_bundle_usage(repository_ctx, tool_name, version, bundle_name = None):
         bundle_name: Bundle name (or None for default).
     """
     effective_bundle = bundle_name or get_default_bundle_name(repository_ctx)
+
     # buildifier: disable=print
     print("Bundle '{}': using {} version {}".format(effective_bundle, tool_name, version))
 

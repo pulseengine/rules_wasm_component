@@ -21,7 +21,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wit:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -32,7 +32,7 @@ bzl_library(
         "//wit:__pkg__",
     ],
     deps = [
-        "//providers:providers",
+        "//providers",
         "@bazel_skylib//lib:paths",
     ],
 )
@@ -44,7 +44,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wit:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(
@@ -54,7 +54,7 @@ bzl_library(
         "//docs:__pkg__",
         "//wit:__pkg__",
     ],
-    deps = ["//providers:providers"],
+    deps = ["//providers"],
 )
 
 bzl_library(

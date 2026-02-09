@@ -36,11 +36,11 @@ package(default_visibility = ["//visibility:public"])
 moonbit_wasm_component(
     name = "calculator",
     srcs = ["calculator.mbt"],
-    wit = "calculator.wit",
-    world = "calculator",
     # manual: MoonBit only provides binaries for darwin_arm64, linux_amd64, windows_amd64
     # Skip in CI smoke tests which run on darwin_amd64 (Intel Mac)
     tags = ["manual"],
+    wit = "calculator.wit",
+    world = "calculator",
 )
 
 # =============================================================================

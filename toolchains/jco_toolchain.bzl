@@ -205,8 +205,11 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
     for attempt in range(1, max_retries + 1):
         if attempt > 1:
             print("Retrying npm install (attempt {}/{}) after {}s delay...".format(
-                attempt, max_retries, retry_delay_seconds
+                attempt,
+                max_retries,
+                retry_delay_seconds,
             ))
+
             # Simple delay using execute with sleep
             repository_ctx.execute(["sleep", str(retry_delay_seconds)])
             retry_delay_seconds *= 2  # Exponential backoff
@@ -222,7 +225,8 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
             break
 
         print("npm install attempt {} failed (return code: {})".format(
-            attempt, npm_install_result.return_code
+            attempt,
+            npm_install_result.return_code,
         ))
         if attempt < max_retries:
             print("STDERR:", npm_install_result.stderr)
@@ -232,7 +236,8 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
         print("STDOUT:", npm_install_result.stdout)
         print("STDERR:", npm_install_result.stderr)
         fail("Failed to install jco dependencies after {} retries: {}".format(
-            max_retries, npm_install_result.stderr
+            max_retries,
+            npm_install_result.stderr,
         ))
 
     print("JCO installation completed successfully")

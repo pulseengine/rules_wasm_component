@@ -25,6 +25,7 @@ def register_wasm_tool_repositories(bundle = None):
         bundle: Optional name of a toolchain bundle from checksums/toolchain_bundles.json.
                 If provided, uses versions from the bundle. If None, uses default versions.
     """
+
     # Note: Bundle version resolution is currently informational.
     # Future work will wire bundle versions into the git_repository tags.
     # For now, versions are hardcoded below (matching stable-2025-12 bundle).

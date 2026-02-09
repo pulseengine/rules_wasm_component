@@ -123,7 +123,12 @@ fi
     -o embedded.wasm 2>&1
 
 # Step 5: Create final component
+SKIP_VALIDATION_FLAG=""
+if [ "{skip_validation}" = "True" ]; then
+    SKIP_VALIDATION_FLAG="--skip-validation"
+fi
 "$WASM_TOOLS" component new \\
+    $SKIP_VALIDATION_FLAG \\
     embedded.wasm \\
     -o "$OUTPUT" 2>&1
 
@@ -136,6 +141,7 @@ echo "Created component: $OUTPUT"
         output = component_wasm.path,
         project_name = project_name,
         world = ctx.attr.world,
+        skip_validation = str(ctx.attr.skip_validation),
         copy_sources = "\n    ".join([
             'cp "$ORIG_DIR/{}" "$STUB_DIR/stub.mbt"'.format(src.path)
             for src in srcs
@@ -198,6 +204,10 @@ moonbit_wasm_component = rule(
         ),
         "package_name": attr.string(
             doc = "WIT package name for generated bindings (default: component/{name})",
+        ),
+        "skip_validation": attr.bool(
+            default = False,
+            doc = "Skip component validation for faster dev builds. Use for development only.",
         ),
     },
     toolchains = [

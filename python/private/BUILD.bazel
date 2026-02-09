@@ -9,7 +9,7 @@ bzl_library(
     srcs = ["python_wasm_component.bzl"],
     visibility = ["//visibility:public"],
     deps = [
-        "//providers:providers",
+        "//providers",
         "//rust:transitions",
     ],
 )
@@ -19,6 +19,6 @@ bzl_library(
     srcs = ["python_wasm_binary.bzl"],
     visibility = ["//visibility:public"],
     deps = [
-        "//providers:providers",
+        "//providers",
     ],
 )

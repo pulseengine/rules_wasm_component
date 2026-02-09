@@ -26,28 +26,28 @@ IMPORTANT: When updating versions here:
 TOOL_VERSIONS = {
     # Core WebAssembly toolchain
     "wasm-tools": "1.244.0",  # Component model tools (validate, parse, compose, etc.)
-    "wasmtime": "39.0.1",     # WebAssembly runtime for testing/execution
+    "wasmtime": "39.0.1",  # WebAssembly runtime for testing/execution
 
     # WIT and binding generation
     "wit-bindgen": "0.49.0",  # WIT binding generator (MUST match Cargo.toml if used as crate)
-    "wac": "0.8.1",           # WebAssembly Composition tool
-    "wkg": "0.13.0",          # WebAssembly package manager
+    "wac": "0.8.1",  # WebAssembly Composition tool
+    "wkg": "0.13.0",  # WebAssembly package manager
 
     # Note: wizer removed - now part of wasmtime v39.0.0+, use `wasmtime wizer` subcommand
 
     # Signatures and security
-    "wasmsign2": "0.2.6",     # WebAssembly signing tool
+    "wasmsign2": "0.2.6",  # WebAssembly signing tool
 
     # WRPC (WebAssembly Component RPC)
-    "wrpc": "0.16.0",         # wrpc-wasmtime runtime for component RPC
+    "wrpc": "0.16.0",  # wrpc-wasmtime runtime for component RPC
     "wit-bindgen-wrpc": "0.16.0",  # WIT binding generator for wrpc
 
     # Platform SDKs
-    "wasi-sdk": "29",         # WASI SDK for C/C++ compilation
-    "tinygo": "0.39.0",       # TinyGo compiler for Go→WASM
+    "wasi-sdk": "29",  # WASI SDK for C/C++ compilation
+    "tinygo": "0.39.0",  # TinyGo compiler for Go→WASM
 
     # Node.js ecosystem
-    "nodejs": "20.18.0",      # Node.js runtime for jco toolchain
+    "nodejs": "20.18.0",  # Node.js runtime for jco toolchain
 }
 
 # Compatibility matrix - defines which versions work together
@@ -103,7 +103,7 @@ def get_tool_version(tool_name):
     if tool_name not in TOOL_VERSIONS:
         fail("Unknown tool: {}. Available tools: {}".format(
             tool_name,
-            ", ".join(TOOL_VERSIONS.keys())
+            ", ".join(TOOL_VERSIONS.keys()),
         ))
     return TOOL_VERSIONS[tool_name]
 
@@ -141,7 +141,7 @@ def validate_tool_versions(tools_config):
 
     if not compat_info:
         warnings.append(
-            "Warning: No compatibility information for wasm-tools {}".format(wasm_tools_version)
+            "Warning: No compatibility information for wasm-tools {}".format(wasm_tools_version),
         )
         return warnings
 
@@ -159,7 +159,7 @@ def validate_tool_versions(tools_config):
                         version,
                         wasm_tools_version,
                         ", ".join(compat_info[tool]),
-                    )
+                    ),
                 )
 
     return warnings
