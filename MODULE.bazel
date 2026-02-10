@@ -30,7 +30,7 @@ bazel_dep(name = "rules_go", version = "0.59.0")
 bazel_dep(name = "rules_moonbit", version = "0.1.0", dev_dependency = True)
 git_override(
     module_name = "rules_moonbit",
-    commit = "33e43e16899cf296e719487ef40dc36f65aad365",  # fix: update MoonBit checksums for latest version
+    commit = "49d7a7e",  # fix(checksums): update MoonBit latest checksums
     remote = "https://github.com/pulseengine/rules_moonbit.git",
 )
 
