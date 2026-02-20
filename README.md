@@ -1,6 +1,23 @@
-# Bazel Rules for WebAssembly Component Model
+<div align="center">
+
+# rules_wasm_component
+
+<sup>Bazel rules for WebAssembly Component Model</sup>
+
+&nbsp;
+
+![Bazel](https://img.shields.io/badge/Bazel-43A047?style=flat-square&logo=bazel&logoColor=white&labelColor=1a1b27)
+![WebAssembly](https://img.shields.io/badge/WebAssembly-654FF0?style=flat-square&logo=webassembly&logoColor=white&labelColor=1a1b27)
+![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square&labelColor=1a1b27)
+
+</div>
+
+&nbsp;
 
 Production-ready Bazel rules for building WebAssembly components across multiple languages with native WASI Preview 2 support.
+
+> [!NOTE]
+> Part of the PulseEngine toolchain. Used across all PulseEngine projects for hermetic component builds.
 
 ## Why Use This?
 
@@ -97,52 +114,40 @@ wac_compose(
 ### Developer Experience
 - **Hermetic Toolchains**: All tools downloaded automatically, no system dependencies
 - **Cross-Platform**: Native Windows/macOS/Linux support without WSL
-- **Bazel-First**: Zero shell scripts, pure Bazel actions for reproducible builds
 - **Comprehensive Examples**: 20+ working examples from basic to advanced patterns
 
 ## Toolchain Versions
 
-**See [MODULE.bazel](MODULE.bazel) for current versions** - the single source of truth.
+**See [MODULE.bazel](MODULE.bazel) for current versions** — the single source of truth.
 
-All toolchains are hermetically downloaded and version-pinned for reproducible builds. Key toolchains include:
-- **wasm-tools** - Component manipulation (new, validate, compose)
-- **TinyGo** - Go → WASM compilation with WASI Preview 2
-- **WASI SDK** - C/C++ → WASM compilation
-- **Wasmtime** - WASM runtime and AOT compilation
-- **Wizer** - Pre-initialization for faster startup
-- **wkg** - Package management
-- **jco** - JavaScript component compiler
+All toolchains are hermetically downloaded and version-pinned for reproducible builds.
 
 ## Documentation
 
-📚 **[Complete Rule Reference](docs/rules.md)** - All rules, attributes, and providers
+**[Complete Rule Reference](docs/rules.md)** — All rules, attributes, and providers
 
 **Guides:**
 - [Toolchain Configuration](docs/toolchain_configuration.md)
 - [Multi-Profile Builds](docs/multi_profile.md)
-- [Development Guidelines](CLAUDE.md) - Bazel-first principles
+- [Development Guidelines](CLAUDE.md)
 
 **Examples:**
-- [Basic Component](examples/basic/) - Getting started
-- [Multi-Language Composition](examples/multi_language_composition/) - WAC composition
-- [Wizer Pre-initialization](examples/wizer_example/) - Performance optimization
-- [OCI Publishing](examples/oci_publishing/) - Production deployment
-- [See all examples →](examples/)
+- [Basic Component](examples/basic/)
+- [Multi-Language Composition](examples/multi_language_composition/)
+- [Wizer Pre-initialization](examples/wizer_example/)
+- [OCI Publishing](examples/oci_publishing/)
+- [See all examples](examples/)
 
 ## Known Limitations
 
 ### Go WIT Components (Temporary)
-
-- **Issue**: WIT-enabled Go components currently fail due to upstream TinyGo limitations
-- **Tracking**: [GitHub Issue #82](https://github.com/pulseengine/rules_wasm_component/issues/82)
-- **Status**: Excluded from CI until [TinyGo PR #4934](https://github.com/tinygo-org/tinygo/pull/4934) lands
-- **Workaround**: Basic Go components (without WIT) work perfectly
+- WIT-enabled Go components currently fail due to upstream TinyGo limitations
+- Tracking: [Issue #82](https://github.com/pulseengine/rules_wasm_component/issues/82)
+- Basic Go components (without WIT) work perfectly
 
 ### C++ Exception Handling
-
-- **Design**: WASI disables C++ exceptions by default for size/performance
-- **Solution**: Components use error codes instead of exceptions ([Issue #83](https://github.com/pulseengine/rules_wasm_component/issues/83))
-- **Override**: Use `enable_exceptions = True` for components that require exceptions
+- WASI disables C++ exceptions by default for size/performance
+- Use `enable_exceptions = True` for components that require exceptions ([Issue #83](https://github.com/pulseengine/rules_wasm_component/issues/83))
 
 ## Contributing
 
@@ -150,4 +155,12 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
-Apache 2.0 - See [LICENSE](LICENSE) for details.
+Apache-2.0 &mdash; see [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+<sub>Part of <a href="https://github.com/pulseengine">PulseEngine</a> &mdash; formally verified WebAssembly toolchain for safety-critical systems</sub>
+
+</div>
