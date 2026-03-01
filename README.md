@@ -14,7 +14,7 @@
 
 &nbsp;
 
-Production-ready Bazel rules for building WebAssembly components across multiple languages with native WASI Preview 2 support.
+Production-ready Bazel rules for building WebAssembly components across multiple languages with native WASI 0.2 support.
 
 > [!NOTE]
 > Part of the PulseEngine toolchain. Used across all PulseEngine projects for hermetic component builds.
@@ -99,7 +99,7 @@ wac_compose(
 
 ### Language Support
 - **Rust** (1.90.0+): Multi-profile builds, Clippy integration, Wizer pre-initialization
-- **Go** (TinyGo 0.39.0): Native WASI Preview 2, hermetic Go module resolution
+- **Go** (TinyGo 0.39.0): Native WASI 0.2, hermetic Go module resolution
 - **C++** (WASI SDK 27): C++17/20/23, cross-package headers, LTO optimization
 - **JavaScript/TypeScript** (jco 1.4.0, Node.js 20.18.0): NPM dependencies, componentize-js
 
