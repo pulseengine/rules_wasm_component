@@ -8,7 +8,7 @@
       "release_date": "2026-03-02",
       "platforms": {
         "darwin_arm64": {
-          "sha256": "96ec4fc825c5e4ec00fc12aca6b4a1308e515230b79fd7cb70b0324f6d780356",
+          "sha256": "77ae263f3368bcb74b26cfc6991aaa675ba06235e66458f264946eba033e3093",
           "url_suffix": "macos-aarch64.tar.gz"
         },
         "darwin_amd64": {
