@@ -254,13 +254,13 @@ use_repo(binaryen, "binaryen_toolchain")
 register_toolchains("@binaryen_toolchain//:binaryen_toolchain")
 
 # MoonBit hermetic toolchain for WebAssembly component builds (dev only)
-moonbit = use_extension("@rules_moonbit//moonbit:extensions.bzl", "moonbit_toolchain_extension", dev_dependency = True)
-use_repo(moonbit, "moonbit_toolchain")
-
-register_toolchains(
-    "@moonbit_toolchain//:moonbit_toolchain",
-    dev_dependency = True,
-)
+# NOTE: Not eagerly loaded - MoonBit uses rolling /latest/ URLs that cause
+# checksum drift and build failures, same as componentize-py.
+# Users who need MoonBit components should add to their MODULE.bazel:
+#
+#   moonbit = use_extension("@rules_moonbit//moonbit:extensions.bzl", "moonbit_toolchain_extension")
+#   use_repo(moonbit, "moonbit_toolchain")
+#   register_toolchains("@moonbit_toolchain//:moonbit_toolchain")
 
 # File Operations Component toolchain for universal file handling
 register_toolchains("//toolchains:file_ops_toolchain_target")
