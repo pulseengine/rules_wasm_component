@@ -1,8 +1,8 @@
 {
   "tool_name": "wac",
   "github_repo": "bytecodealliance/wac",
-  "latest_version": "0.8.1",
-  "last_checked": "2026-01-01T13:28:49.001476Z",
+  "latest_version": "0.9.0",
+  "last_checked": "2026-03-15T07:27:42.381912Z",
   "versions": {
     "0.8.1": {
       "release_date": "2025-11-11",
@@ -11,6 +11,11 @@
           "sha256": "b3509dfc3bb9d1e598e7b2790ef6efe5b6c8b696f2ad0e997e9ae6dd20bb6f13",
           "url_suffix": "",
           "platform_name": "x86_64-pc-windows-gnu"
+        },
+        "linux_arm64": {
+          "sha256": "3b78ae7c732c1376d1c21b570d07152a07342e9c4f75bff1511cde5f6af01f12",
+          "url_suffix": "",
+          "platform_name": "aarch64-unknown-linux-musl"
         },
         "darwin_arm64": {
           "sha256": "f08496f49312abd68d9709c735a987d6a17d2295a1240020d217a9de8dcaaacd",
@@ -22,11 +27,6 @@
           "url_suffix": "",
           "platform_name": "x86_64-apple-darwin"
         },
-        "linux_arm64": {
-          "sha256": "3b78ae7c732c1376d1c21b570d07152a07342e9c4f75bff1511cde5f6af01f12",
-          "url_suffix": "",
-          "platform_name": "aarch64-unknown-linux-musl"
-        },
         "linux_amd64": {
           "sha256": "ce30f33c5bc40095cfb4e74ae5fb4ba515d4f4bef2d597831bc7afaaf0d55b6c",
           "url_suffix": "",
@@ -34,9 +34,29 @@
         }
       }
     },
+    "0.9.0": {
+      "release_date": "2026-02-03",
+      "platforms": {
+        "linux_arm64": {
+          "sha256": "ffac4a261ee089a813a7c0d4bf5e98f84b0d818cbf3a121d07085cfae8c0cecd",
+          "url_suffix": "",
+          "platform_name": "aarch64-unknown-linux-musl"
+        },
+        "windows_amd64": {
+          "sha256": "4db7948fa68eb1e54e2c9e5c7f4678a01711c16bf123eb19a9d729f73a2547d4",
+          "url_suffix": "",
+          "platform_name": "x86_64-pc-windows-gnu"
+        }
+      }
+    },
     "0.8.0": {
       "release_date": "2025-08-20",
       "platforms": {
+        "linux_amd64": {
+          "sha256": "9fee2d8603dc50403ebed580b47b8661b582ffde8a9174bf193b89ca00decf0f",
+          "url_suffix": "x86_64-unknown-linux-musl",
+          "platform_name": "x86_64-unknown-linux-musl"
+        },
         "windows_amd64": {
           "sha256": "7ee34ea41cd567b2578929acce3c609e28818d03f0414914a3939f066737d872",
           "url_suffix": "x86_64-pc-windows-gnu",
@@ -56,11 +76,6 @@
           "sha256": "cc58f94c611b3b7f27b16dd0a9a9fc63c91c662582ac7eaa9a14f2dac87b07f8",
           "url_suffix": "x86_64-apple-darwin",
           "platform_name": "x86_64-apple-darwin"
-        },
-        "linux_amd64": {
-          "sha256": "9fee2d8603dc50403ebed580b47b8661b582ffde8a9174bf193b89ca00decf0f",
-          "url_suffix": "x86_64-unknown-linux-musl",
-          "platform_name": "x86_64-unknown-linux-musl"
         }
       }
     }

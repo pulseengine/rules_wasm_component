@@ -1,9 +1,34 @@
 {
   "tool_name": "wasmtime",
   "github_repo": "bytecodealliance/wasmtime",
-  "latest_version": "41.0.1",
-  "last_checked": "2026-01-31T00:00:00.000000Z",
+  "latest_version": "42.0.1",
+  "last_checked": "2026-03-15T00:00:00.000000Z",
   "versions": {
+    "42.0.1": {
+      "release_date": "2026-02-25",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "13465d6c3f35b2872f9168df19b74af6140b4f1a3a11d8a397950777ecfae858",
+          "url_suffix": "x86_64-macos.tar.xz"
+        },
+        "darwin_arm64": {
+          "sha256": "69c56932453483f31cac7636f850bbd3bf884eaa7315b2c3b92857a2b0c6762e",
+          "url_suffix": "aarch64-macos.tar.xz"
+        },
+        "linux_amd64": {
+          "sha256": "dd5253f3cb521bb094f9951c3d2c45c746b31e5723b07ce56f162ec9bab44d59",
+          "url_suffix": "x86_64-linux.tar.xz"
+        },
+        "linux_arm64": {
+          "sha256": "fa9b7e09f49f75c17acf2c018a4286cdbeffb4c1f3ee9e72c48b6a42c1deceda",
+          "url_suffix": "aarch64-linux.tar.xz"
+        },
+        "windows_amd64": {
+          "sha256": "daa52754776eabdbbf82037d41a26f556ccd4fd5723dcab328b12c680894c072",
+          "url_suffix": "x86_64-windows.zip"
+        }
+      }
+    },
     "41.0.1": {
       "release_date": "2026-01-26",
       "platforms": {

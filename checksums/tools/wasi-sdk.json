@@ -1,9 +1,34 @@
 {
   "tool_name": "wasi-sdk",
   "github_repo": "WebAssembly/wasi-sdk",
-  "latest_version": "29",
-  "last_checked": "2025-11-18T00:00:00Z",
+  "latest_version": "32",
+  "last_checked": "2026-03-15T00:00:00Z",
   "versions": {
+    "32": {
+      "release_date": "2026-03-12",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "fa34cbdd4828537a877ced0b3b1a0a36fb3a27645d2518e480844af27cbc93b4",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "f46ad0b7382c1faf3787171790eb4e5e61e0021908f5b6c53bcdb07df346e299",
+          "url_suffix": "arm64-macos.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "854117f853dcdeef19b08a3d9d06fa4ac3c1cda1a05d0b65abbbe5df1868a82e",
+          "url_suffix": "x86_64-linux.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "3d348da5943c21f9745286c6c0f429f07dd98b2222f7c5fb38cab7070a2678b6",
+          "url_suffix": "arm64-linux.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "18d93534ea6ac58b79f5a55fe35a4d7329ad8b2647b4d6d9be58a8735ecd49e6",
+          "url_suffix": "x86_64-windows.tar.gz"
+        }
+      }
+    },
     "29": {
       "release_date": "2025-11-15",
       "platforms": {
@@ -26,56 +51,6 @@
         "windows_amd64": {
           "sha256": "6c19b820577486f00332ad8d04ac506da67b0892316b8d485371a58cbf216dee",
           "url_suffix": "x86_64-windows.tar.gz"
-        }
-      }
-    },
-    "27": {
-      "release_date": "2025-07-28",
-      "platforms": {
-        "darwin_amd64": {
-          "sha256": "163dfd47f989b1a682744c1ae1f0e09a83ff5c4bbac9dcd8546909ab54cda5a1",
-          "url_suffix": "macos.tar.gz"
-        },
-        "darwin_arm64": {
-          "sha256": "055c3dc2766772c38e71a05d353e35c322c7b2c6458a36a26a836f9808a550f8",
-          "url_suffix": "macos.tar.gz"
-        },
-        "linux_amd64": {
-          "sha256": "b7d4d944c88503e4f21d84af07ac293e3440b1b6210bfd7fe78e0afd92c23bc2",
-          "url_suffix": "linux.tar.gz"
-        },
-        "linux_arm64": {
-          "sha256": "4cf4c553c4640e63e780442146f87d83fdff5737f988c06a6e3b2f0228e37665",
-          "url_suffix": "linux.tar.gz"
-        },
-        "windows_amd64": {
-          "sha256": "4a576c13125c91996d8cc3b70b7ea0612c2044598d2795c9be100d15f874adf6",
-          "url_suffix": "x86_64-windows.tar.gz"
-        }
-      }
-    },
-    "26": {
-      "release_date": "2025-07-28",
-      "platforms": {
-        "darwin_amd64": {
-          "sha256": "9853b66701d017cb17e53beb2e540e522bdded772fd1661ce29a88eb8b333902",
-          "url_suffix": "macos.tar.gz"
-        },
-        "darwin_arm64": {
-          "sha256": "f6c76a183cf7fce9fc8af95b10f851a679f8ea6dae0354c5f84b52157a3398e1",
-          "url_suffix": "macos.tar.gz"
-        },
-        "linux_amd64": {
-          "sha256": "37cddd06e354b0354db40e42a011752b0d5b77075af4bc5a2e0999aab908484e",
-          "url_suffix": "linux.tar.gz"
-        },
-        "linux_arm64": {
-          "sha256": "7ba6e76f2b1bb7b85429ebe96a4d867923f14cbd77a55f31fca6e02b26fe0754",
-          "url_suffix": "linux.tar.gz"
-        },
-        "windows_amd64": {
-          "sha256": "PLACEHOLDER_NEEDS_REAL_CHECKSUM_64_CHARS_XXXXXXXXXXXXXXXX",
-          "url_suffix": "windows.tar.gz"
         }
       }
     }

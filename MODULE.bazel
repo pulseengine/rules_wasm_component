@@ -24,15 +24,19 @@ bazel_dep(name = "rules_cc", version = "0.2.14")
 bazel_dep(name = "rules_go", version = "0.59.0")
 
 # MoonBit language support for WebAssembly components
-# Dev dependency: rules_moonbit is not yet in BCR. Downstream users who want
-# MoonBit support must add their own bazel_dep + git_override for rules_moonbit.
-# The moonbit/ rules are available but only resolve when rules_moonbit is present.
-bazel_dep(name = "rules_moonbit", version = "0.1.0", dev_dependency = True)
-git_override(
-    module_name = "rules_moonbit",
-    commit = "436bd87",  # fix(checksums): update MoonBit latest checksums (2026-03-02)
-    remote = "https://github.com/pulseengine/rules_moonbit.git",
-)
+# NOTE: Disabled - rules_moonbit uses rolling /latest/ URLs that cause checksum
+# drift and build failures. No BUILD targets currently use MoonBit components.
+# Users who need MoonBit support should add to their MODULE.bazel:
+#
+#   bazel_dep(name = "rules_moonbit", version = "0.1.0")
+#   git_override(
+#       module_name = "rules_moonbit",
+#       commit = "436bd87",
+#       remote = "https://github.com/pulseengine/rules_moonbit.git",
+#   )
+#   moonbit = use_extension("@rules_moonbit//moonbit:extensions.bzl", "moonbit_toolchain_extension")
+#   use_repo(moonbit, "moonbit_toolchain")
+#   register_toolchains("@moonbit_toolchain//:moonbit_toolchain")
 
 # OCI image signing capabilities
 bazel_dep(name = "rules_oci", version = "2.2.6")
@@ -234,14 +238,14 @@ register_toolchains("@nodejs_toolchains//:all")
 register_toolchains("@jco_toolchain//:jco_toolchain")
 
 # Python WebAssembly components with componentize-py
-componentize_py = use_extension("//wasm:extensions.bzl", "componentize_py")
-componentize_py.register(
-    name = "componentize_py",
-    version = "canary",
-)
-use_repo(componentize_py, "componentize_py_toolchain")
-
-register_toolchains("@componentize_py_toolchain//:componentize_py_toolchain")
+# NOTE: Not eagerly loaded - componentize-py uses a rolling canary release
+# with no stable versions, causing checksum drift and build failures.
+# Users who need Python components should opt in via language_extensions.bzl:
+#
+#   python_wasm = use_extension("@rules_wasm_component//wasm:language_extensions.bzl", "python_wasm")
+#   python_wasm.configure()
+#   use_repo(python_wasm, "componentize_py_toolchain")
+#   register_toolchains("@componentize_py_toolchain//:componentize_py_toolchain")
 
 # Binaryen (wasm-opt) toolchain for WebAssembly optimization
 binaryen = use_extension("//wasm:extensions.bzl", "binaryen")
@@ -254,13 +258,13 @@ use_repo(binaryen, "binaryen_toolchain")
 register_toolchains("@binaryen_toolchain//:binaryen_toolchain")
 
 # MoonBit hermetic toolchain for WebAssembly component builds (dev only)
-moonbit = use_extension("@rules_moonbit//moonbit:extensions.bzl", "moonbit_toolchain_extension", dev_dependency = True)
-use_repo(moonbit, "moonbit_toolchain")
-
-register_toolchains(
-    "@moonbit_toolchain//:moonbit_toolchain",
-    dev_dependency = True,
-)
+# NOTE: Not eagerly loaded - MoonBit uses rolling /latest/ URLs that cause
+# checksum drift and build failures, same as componentize-py.
+# Users who need MoonBit components should add to their MODULE.bazel:
+#
+#   moonbit = use_extension("@rules_moonbit//moonbit:extensions.bzl", "moonbit_toolchain_extension")
+#   use_repo(moonbit, "moonbit_toolchain")
+#   register_toolchains("@moonbit_toolchain//:moonbit_toolchain")
 
 # File Operations Component toolchain for universal file handling
 register_toolchains("//toolchains:file_ops_toolchain_target")
