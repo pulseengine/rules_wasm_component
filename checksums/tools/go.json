@@ -1,9 +1,34 @@
 {
   "tool_name": "go",
   "download_base": "https://go.dev/dl",
-  "latest_version": "1.25.3",
-  "last_checked": "2026-01-02T00:00:00Z",
+  "latest_version": "1.26.1",
+  "last_checked": "2026-03-15T00:00:00Z",
   "versions": {
+    "1.26.1": {
+      "release_date": "2026-03-05",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "65773dab2f8cc4cd23d93ba6d0a805de150ca0b78378879292be0b903b8cdd08",
+          "url_suffix": "darwin-amd64.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "353df43a7811ce284c8938b5f3c7df40b7bfb6f56cb165b150bc40b5e2dd541f",
+          "url_suffix": "darwin-arm64.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "031f088e5d955bab8657ede27ad4e3bc5b7c1ba281f05f245bcc304f327c987a",
+          "url_suffix": "linux-amd64.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "a290581cfe4fe28ddd737dde3095f3dbeb7f2e4065cab4eae44dfc53b760c2f7",
+          "url_suffix": "linux-arm64.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "9b68112c913f45b7aebbf13c036721264bbba7e03a642f8f7490c561eebd1ecc",
+          "url_suffix": "windows-amd64.zip"
+        }
+      }
+    },
     "1.25.3": {
       "release_date": "2025-10-13",
       "platforms": {
