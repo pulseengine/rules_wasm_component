@@ -1,0 +1,345 @@
+artifacts:
+  # ── Step 1a: Losses ──────────────────────────────────────────────────────
+  - id: L-001
+    type: loss
+    title: Supply chain compromise
+    status: accepted
+    description: >
+      A malicious or corrupted toolchain binary is downloaded and executed
+      during the build, potentially injecting backdoors into WASM components.
+    fields:
+      stakeholders: [developers, end-users, platform-operators]
+
+  - id: L-002
+    type: loss
+    title: Non-reproducible builds
+    status: accepted
+    description: >
+      Builds produce different outputs for the same inputs, undermining
+      trust in the build system and breaking caching, CI, and auditing.
+    fields:
+      stakeholders: [developers, CI-operators, auditors]
+
+  - id: L-003
+    type: loss
+    title: Silent build breakage from upstream changes
+    status: accepted
+    description: >
+      Upstream toolchain releases or rolling updates silently break builds
+      for all users without warning or mitigation path.
+    fields:
+      stakeholders: [developers, CI-operators]
+
+  # ── Step 1b: Hazards ─────────────────────────────────────────────────────
+  - id: H-001
+    type: hazard
+    title: Toolchain binary downloaded without checksum verification
+    status: accepted
+    description: >
+      A tool binary is fetched from the internet without SHA256 verification,
+      allowing MITM or compromised mirrors to serve malicious binaries.
+    fields:
+      severity: critical
+    links:
+      - type: leads-to-loss
+        target: L-001
+
+  - id: H-002
+    type: hazard
+    title: Rolling release URL serves changed binary
+    status: accepted
+    description: >
+      A tool uses a rolling release URL (e.g., /canary/, /latest/) where the
+      binary at the URL changes without the version or tag changing, causing
+      checksum mismatches or silently different builds.
+    fields:
+      severity: critical
+    links:
+      - type: leads-to-loss
+        target: L-002
+      - type: leads-to-loss
+        target: L-003
+
+  - id: H-003
+    type: hazard
+    title: Eagerly loaded toolchain blocks all builds
+    status: accepted
+    description: >
+      A toolchain that no targets depend on is eagerly resolved during
+      loading phase, causing all builds to fail when that toolchain's
+      download or checksum verification fails.
+    fields:
+      severity: marginal
+    links:
+      - type: leads-to-loss
+        target: L-003
+
+  - id: H-004
+    type: hazard
+    title: Pinned version removed from checksum registry
+    status: accepted
+    description: >
+      A version still referenced as a default in tool_versions.bzl or
+      MODULE.bazel is removed from the checksum JSON, causing immediate
+      build failure for all users.
+    fields:
+      severity: critical
+    links:
+      - type: leads-to-loss
+        target: L-003
+
+  - id: H-005
+    type: hazard
+    title: P3 RC spec changes break existing components
+    status: draft
+    description: >
+      WASI P3 release candidates change async ABI or WIT interfaces between
+      RC snapshots, breaking previously-working P3 components without
+      clear migration path.
+    fields:
+      severity: marginal
+    links:
+      - type: leads-to-loss
+        target: L-003
+
+  # ── Step 1c: System Constraints ──────────────────────────────────────────
+  - id: SC-001
+    type: system-constraint
+    title: All downloads must have SHA256 verification
+    status: accepted
+    description: >
+      Every toolchain download MUST have a pre-computed SHA256 checksum
+      in checksums/tools/*.json that is verified before execution.
+    links:
+      - type: prevents
+        target: H-001
+
+  - id: SC-002
+    type: system-constraint
+    title: Rolling release tools must be lazy-loaded
+    status: accepted
+    description: >
+      Tools with rolling release URLs (componentize-py canary, MoonBit
+      /latest/) must NOT be eagerly loaded in MODULE.bazel. They must
+      be opt-in via language extensions.
+    links:
+      - type: prevents
+        target: H-002
+      - type: prevents
+        target: H-003
+
+  - id: SC-003
+    type: system-constraint
+    title: Checksum updates must preserve pinned versions
+    status: accepted
+    description: >
+      When updating checksum JSON files, versions referenced in
+      tool_versions.bzl, MODULE.bazel, or toolchain_bundles.json
+      must never be removed.
+    links:
+      - type: prevents
+        target: H-004
+
+  - id: SC-004
+    type: system-constraint
+    title: P3 WIT deps must track explicit RC snapshots
+    status: draft
+    description: >
+      WASI P3 WIT dependencies must reference a specific RC tag
+      (e.g., v0.3.0-rc-2026-03-15), never a branch or rolling ref.
+    links:
+      - type: prevents
+        target: H-005
+
+  # ── Step 2: Controllers ──────────────────────────────────────────────────
+  - id: CTRL-001
+    type: controller
+    title: Bazel repository rules (download phase)
+    status: accepted
+    description: >
+      Repository rules in toolchains/*.bzl that download and verify
+      toolchain binaries during the Bazel loading phase.
+    fields:
+      controller-type: automated
+
+  - id: CTRL-002
+    type: controller
+    title: Weekly checksum update CI job
+    status: accepted
+    description: >
+      The weekly-checksum-update.yml workflow that automatically detects
+      upstream releases, downloads binaries, computes checksums, and
+      creates update PRs.
+    fields:
+      controller-type: automated
+
+  - id: CTRL-003
+    type: controller
+    title: Developer (manual checksum update)
+    status: accepted
+    description: >
+      A developer manually updating checksum JSON files or tool versions,
+      either via the checksum_updater tool or by hand.
+    fields:
+      controller-type: human
+
+  # ── Step 3: Unsafe Control Actions ───────────────────────────────────────
+  - id: UCA-001
+    type: uca
+    title: Repository rule downloads without checking registry
+    status: accepted
+    description: >
+      secure_download.bzl downloads a tool without first verifying the
+      SHA256 exists in the JSON registry, allowing unverified binaries.
+    fields:
+      uca-type: not-providing
+      context: When a tool version/platform combination is not in the JSON registry
+    links:
+      - type: issued-by
+        target: CTRL-001
+      - type: leads-to-hazard
+        target: H-001
+
+  - id: UCA-002
+    type: uca
+    title: CI auto-merges checksum update that removes pinned version
+    status: accepted
+    description: >
+      The weekly CI job creates a PR that removes a version entry still
+      referenced as a default, and auto-merge merges it without review.
+    fields:
+      uca-type: providing
+      context: When auto-merge is enabled and removal happens during version bump
+    links:
+      - type: issued-by
+        target: CTRL-002
+      - type: leads-to-hazard
+        target: H-004
+
+  - id: UCA-003
+    type: uca
+    title: Developer adds rolling-release tool as eager dependency
+    status: accepted
+    description: >
+      A developer adds a new tool with rolling release URLs directly to
+      MODULE.bazel's use_extension + register_toolchains, making it
+      eagerly loaded for all users.
+    fields:
+      uca-type: providing
+      context: When adding a new language or tool that uses /latest/ or /canary/ URLs
+    links:
+      - type: issued-by
+        target: CTRL-003
+      - type: leads-to-hazard
+        target: H-002
+      - type: leads-to-hazard
+        target: H-003
+
+  # ── Step 3b: Controller Constraints ──────────────────────────────────────
+  - id: CC-001
+    type: controller-constraint
+    title: secure_download must fail on missing checksum
+    status: accepted
+    description: >
+      secure_download.bzl must call fail() if tool/version/platform is not
+      found in the JSON registry. Never fall back to unchecked download.
+    fields:
+      constraint: >
+        secure_download.bzl MUST call fail() when tool/version/platform is
+        not in the JSON registry. No fallback to unchecked download.
+    links:
+      - type: inverts-uca
+        target: UCA-001
+      - type: constrains-controller
+        target: CTRL-001
+      - type: prevents
+        target: H-001
+
+  - id: CC-002
+    type: controller-constraint
+    title: CI must skip auto-merge for major version bumps
+    status: accepted
+    description: >
+      The weekly-checksum-update.yml workflow must not auto-merge PRs that
+      contain major version changes or version removals.
+    fields:
+      constraint: >
+        weekly-checksum-update.yml MUST NOT auto-merge PRs with major version
+        changes or version removals. Require manual review.
+    links:
+      - type: inverts-uca
+        target: UCA-002
+      - type: constrains-controller
+        target: CTRL-002
+      - type: prevents
+        target: H-004
+
+  - id: CC-003
+    type: controller-constraint
+    title: CLAUDE.md must document rolling-release policy
+    status: accepted
+    description: >
+      CLAUDE.md and project guidelines must state that rolling-release tools
+      are never eagerly loaded. New tools must be reviewed for URL stability.
+    fields:
+      constraint: >
+        CLAUDE.md MUST document that rolling-release tools are never eagerly
+        loaded. New tools must be reviewed for URL stability before adding.
+    links:
+      - type: inverts-uca
+        target: UCA-003
+      - type: constrains-controller
+        target: CTRL-003
+      - type: prevents
+        target: H-002
+      - type: prevents
+        target: H-003
+
+  # ── Step 4: Loss Scenarios ───────────────────────────────────────────────
+  - id: LS-001
+    type: loss-scenario
+    title: componentize-py canary checksum drift
+    status: mitigated
+    description: >
+      componentize-py only publishes a rolling canary release. Every push
+      to main rebuilds all platform binaries and overwrites the release.
+      The linux_arm64 checksum drifted between checks, breaking CI builds.
+    fields:
+      scenario-type: inadequate-process-model
+    links:
+      - type: caused-by-uca
+        target: UCA-003
+      - type: leads-to-hazard
+        target: H-002
+
+  - id: LS-002
+    type: loss-scenario
+    title: MoonBit /latest/ URL checksum mismatch
+    status: mitigated
+    description: >
+      MoonBit toolchain downloads from /latest/ URLs that change on every
+      upstream release. The bazel_dep + git_override triggered rules_moonbit's
+      internal extension, eagerly downloading the toolchain on every build.
+    fields:
+      scenario-type: inadequate-process-model
+    links:
+      - type: caused-by-uca
+        target: UCA-003
+      - type: leads-to-hazard
+        target: H-003
+
+  - id: LS-003
+    type: loss-scenario
+    title: Wasmtime 39.0.1 removed during checksum update
+    status: mitigated
+    description: >
+      During a bulk checksum update, wasmtime 39.0.1 (the pinned default
+      in tool_versions.bzl) was removed from wasmtime.json. This broke
+      all CI builds immediately with "version not found in registry".
+    fields:
+      scenario-type: inadequate-process-model
+    links:
+      - type: caused-by-uca
+        target: UCA-002
+      - type: leads-to-hazard
+        target: H-004
