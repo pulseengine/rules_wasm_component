@@ -180,6 +180,7 @@ def _python_wasm_component_impl(ctx):
             "target": "wasm32-wasi",
             "componentize_py": True,
             "entry_point": entry_point_file.basename,
+            "wasi_version": ctx.attr.wasi_version,
         },
         profile = "release",
         profile_variants = {},
@@ -221,6 +222,11 @@ python_wasm_component = rule(
         "stub_wasi": attr.bool(
             default = False,
             doc = "Generate WASI stub implementations",
+        ),
+        "wasi_version": attr.string(
+            default = "p2",
+            values = ["p2", "p3"],
+            doc = "WASI version: p2 (stable) or p3 (experimental async)",
         ),
     },
     toolchains = [
