@@ -79,7 +79,7 @@ _DEFAULT_VERSIONS = {
     "tinygo": "0.40.1",
     "wasi_sdk": "29",
     "jco": "1.4.0",
-    "node": "20.18.0",
+    "node": "24.14.0",
     "componentize_py": "canary",
 }
 

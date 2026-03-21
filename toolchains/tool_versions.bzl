@@ -47,7 +47,7 @@ TOOL_VERSIONS = {
     "tinygo": "0.39.0",  # TinyGo compiler for Go→WASM
 
     # Node.js ecosystem
-    "nodejs": "20.18.0",  # Node.js runtime for jco toolchain
+    "nodejs": "24.14.0",  # Node.js runtime for jco toolchain (24.x required for Astro 6+)
 }
 
 # P3-capable tool versions — minimum versions that support WASI Preview 3 async
