@@ -321,7 +321,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            ~/_bazel
+            D:\_b
             ~/AppData/Local/bazelisk
           key: ${{ runner.os }}-bazel-${{ hashFiles('MODULE.bazel', 'WORKSPACE.bazel', '**/*.bzl') }}
           restore-keys: |
@@ -350,14 +350,16 @@ jobs:
       - name: Build Core Targets
         run: |
           # Build core targets on Windows (subset of Linux/macOS)
-          # Start with basic examples that should work cross-platform
-          bazel build --keep_going -- `
+          # Use short output_base to avoid Windows MAX_PATH (260 char) limit
+          # Full paths like C:\users\..._bazel_...\execroot\...\rules_rust++rust+...\librustc_std_workspace_alloc.rlib
+          # can exceed 260 chars and cause LNK1181 errors
+          bazel --output_base=D:\_b build --keep_going -- `
             //examples/basic:hello_component `
             //rust/... `
             //providers/...
 
       - name: Run Unit Tests
-        run: bazel test --test_output=errors -- //test/unit:unit_tests
+        run: bazel --output_base=D:\_b test --test_output=errors -- //test/unit:unit_tests
 
   bcr-docker-test:
     name: BCR Docker Environment Test
