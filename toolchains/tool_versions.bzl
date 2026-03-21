@@ -50,10 +50,37 @@ TOOL_VERSIONS = {
     "nodejs": "20.18.0",  # Node.js runtime for jco toolchain
 }
 
+# P3-capable tool versions — minimum versions that support WASI Preview 3 async
+P3_TOOL_VERSIONS = {
+    "wasm-tools": "1.245.1",
+    "wasmtime": "43.0.0",
+    "wit-bindgen": "0.54.0",
+    "wasi-sdk": "32",
+    "jco": "1.17.0",
+    "nodejs": "24.14.0",
+    "binaryen": "128",
+}
+
+# Languages that support P3 async
+P3_SUPPORTED_LANGUAGES = ["rust", "python", "javascript"]
+
+# Languages blocked from P3 with reasons
+P3_BLOCKED_LANGUAGES = {
+    "go": "TinyGo has no WASI P3 support (still P2-only as of v0.40.1)",
+    "cpp": "wasi-sdk has wasm32-wasip3 target but wit-bindgen C async is early stage",
+}
+
 # Compatibility matrix - defines which versions work together
 # Key: wasm-tools version
 # Value: Dict of compatible tool versions
 TOOL_COMPATIBILITY_MATRIX = {
+    "1.245.1": {
+        "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
+        "wac": ["0.9.0"],  # wac 0.9.0 does NOT support P3 async yet (issue #180)
+        "wkg": ["0.13.0", "0.15.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["41.0.1", "42.0.1", "43.0.0"],
+    },
     "1.244.0": {
         "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
         "wac": ["0.8.0", "0.8.1"],
@@ -180,3 +207,41 @@ def get_compatibility_matrix():
         Dict: Copy of TOOL_COMPATIBILITY_MATRIX
     """
     return dict(TOOL_COMPATIBILITY_MATRIX)
+
+def get_p3_tool_version(tool_name):
+    """Returns the minimum P3-capable version for the given tool.
+
+    Args:
+        tool_name: The name of the tool.
+
+    Returns:
+        The P3-minimum version string, or fails if not defined.
+    """
+    if tool_name not in P3_TOOL_VERSIONS:
+        fail("Tool '{}' does not have a P3-capable version defined. P3 tools: {}".format(
+            tool_name,
+            ", ".join(P3_TOOL_VERSIONS.keys()),
+        ))
+    return P3_TOOL_VERSIONS[tool_name]
+
+def is_p3_supported_language(language):
+    """Check if a language supports WASI P3.
+
+    Args:
+        language: Language name (e.g., "rust", "go", "python").
+
+    Returns:
+        True if the language has P3 support.
+    """
+    return language in P3_SUPPORTED_LANGUAGES
+
+def get_p3_block_reason(language):
+    """Get the reason a language is blocked from P3, or None.
+
+    Args:
+        language: Language name.
+
+    Returns:
+        String with block reason, or None if not blocked.
+    """
+    return P3_BLOCKED_LANGUAGES.get(language)

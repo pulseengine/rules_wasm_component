@@ -79,9 +79,70 @@
         "windows_amd64"
       ],
       "notes": "Includes WAC and WKG for component composition and registry operations"
+    },
+    "stable-2026-03": {
+      "description": "March 2026 stable release - latest tools, WASI Preview 2",
+      "status": "stable",
+      "release_date": "2026-03-21",
+      "tools": {
+        "wasm-tools": "1.245.1",
+        "wit-bindgen": "0.53.1",
+        "wac": "0.9.0",
+        "wkg": "0.13.0",
+        "wasmtime": "42.0.1",
+        "wasi-sdk": "32",
+        "tinygo": "0.40.1",
+        "jco": "1.17.0",
+        "nodejs": "24.14.0",
+        "binaryen": "128"
+      },
+      "compatibility": {
+        "component_model_version": "0x1000d",
+        "wasi_version": "preview2",
+        "wit_bindgen_abi": "0.53"
+      },
+      "tested_platforms": [
+        "darwin_arm64",
+        "darwin_amd64",
+        "linux_amd64",
+        "linux_arm64",
+        "windows_amd64"
+      ],
+      "notes": "Latest stable P2 bundle with all tool updates. Use experimental-p3 for async components."
+    },
+    "experimental-p3": {
+      "description": "Experimental WASI Preview 3 bundle - async components",
+      "status": "experimental",
+      "release_date": "2026-03-21",
+      "tools": {
+        "wasm-tools": "1.245.1",
+        "wit-bindgen": "0.54.0",
+        "wasmtime": "43.0.0",
+        "wasi-sdk": "32",
+        "jco": "1.17.0",
+        "nodejs": "24.14.0",
+        "binaryen": "128"
+      },
+      "compatibility": {
+        "component_model_version": "0x1000d",
+        "wasi_version": "preview3",
+        "wasi_rc": "0.3.0-rc-2026-03-15",
+        "wit_bindgen_abi": "0.54"
+      },
+      "tested_platforms": [
+        "darwin_arm64",
+        "darwin_amd64",
+        "linux_amd64",
+        "linux_arm64"
+      ],
+      "notes": "Experimental P3 bundle. No Go (TinyGo lacks P3). No composition (wac lacks P3 async keyword). Windows untested.",
+      "blocked_languages": {
+        "go": "TinyGo has no P3 support",
+        "composition": "wac does not support async keyword (upstream issue #180)"
+      }
     }
   },
-  "default_bundle": "stable-2025-12",
+  "default_bundle": "stable-2026-03",
   "version_constraints": {
     "description": "Known version compatibility constraints between tools",
     "constraints": [
@@ -89,6 +150,8 @@
         "tools": ["wasm-tools", "wit-bindgen"],
         "rule": "wit-bindgen output must be compatible with wasm-tools component model version",
         "validated_pairs": [
+          {"wasm-tools": "1.245.1", "wit-bindgen": "0.54.0"},
+          {"wasm-tools": "1.245.1", "wit-bindgen": "0.53.1"},
           {"wasm-tools": "1.244.0", "wit-bindgen": "0.49.0"},
           {"wasm-tools": "1.243.0", "wit-bindgen": "0.49.0"}
         ]
@@ -97,6 +160,8 @@
         "tools": ["wasmtime", "wasm-tools"],
         "rule": "wasmtime must support component model version produced by wasm-tools",
         "validated_pairs": [
+          {"wasmtime": "43.0.0", "wasm-tools": "1.245.1"},
+          {"wasmtime": "42.0.1", "wasm-tools": "1.245.1"},
           {"wasmtime": "39.0.1", "wasm-tools": "1.244.0"},
           {"wasmtime": "39.0.1", "wasm-tools": "1.243.0"}
         ]
