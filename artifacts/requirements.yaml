@@ -1,0 +1,23 @@
+artifacts:
+  - id: REQ-001
+    type: requirement
+    title: First requirement
+    status: draft
+    description: >
+      Describe what the system shall do.
+    tags: [core]
+    fields:
+      priority: must
+      category: functional
+
+  - id: FEAT-001
+    type: feature
+    title: Initial feature
+    status: draft
+    description: >
+      A user-visible capability delivered by the project.
+    fields:
+      phase: phase-1
+    links:
+      - type: satisfies
+        target: REQ-001

@@ -1,0 +1,10 @@
+project:
+  name: rules_wasm_component
+  version: "0.1.0"
+  schemas:
+    - common
+    - dev
+
+sources:
+  - path: artifacts
+    format: generic-yaml
