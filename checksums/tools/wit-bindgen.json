@@ -1,9 +1,34 @@
 {
   "tool_name": "wit-bindgen",
   "github_repo": "bytecodealliance/wit-bindgen",
-  "latest_version": "0.53.1",
-  "last_checked": "2026-03-15T07:26:39.395092Z",
+  "latest_version": "0.54.0",
+  "last_checked": "2026-03-21T00:00:00Z",
   "versions": {
+    "0.54.0": {
+      "release_date": "2026-03-16",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "243c1a46a0f4ea438551568c057f8d7a8995fa05c09fa582ea8aed6254ea4c28",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "5fa855483d3f81d86915d2a1fc82987d7b1eabc040a54d8f5b5f92b41c949380",
+          "url_suffix": "aarch64-macos.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "cbb6cc85f27c4fda892b2dbc39793228371180b02a9301953d42f4a74ed5e0ba",
+          "url_suffix": "x86_64-linux.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "b62a68fee5f68d15875988832cc26a61f0a3fdff32a3338c21caf8e61ad70808",
+          "url_suffix": "aarch64-linux.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+          "url_suffix": "x86_64-windows.tar.gz"
+        }
+      }
+    },
     "0.53.1": {
       "release_date": "2026-02-13",
       "platforms": {
