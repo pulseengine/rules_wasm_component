@@ -7,15 +7,16 @@ module(
 )
 
 # Dependencies for WebAssembly tooling
-bazel_dep(name = "rules_rust", version = "0.68.1")
+bazel_dep(name = "rules_rust", version = "0.69.0")
 
-# Override rules_rust with fork that fixes _symlink_sysroot_tree bug
-# This fix ensures wasm-component-ld is symlinked into the sysroot
-# See: https://github.com/bazelbuild/rules_rust/pull/3727
+# Override rules_rust with upstream main at PR #3727 merge point
+# Includes: 0.69.0 + .rmeta sysroot fix (#3860) + rustc_lib filegroup fix (#3727)
+# This fixes Windows LNK1181 errors with missing rlib files
+# TODO: Remove override once 0.70.0 is released with #3727 included
 git_override(
     module_name = "rules_rust",
-    commit = "c30cafc9cb6796205554fbfb62ea83a11f9db673",
-    remote = "https://github.com/avrabe/rules_rust.git",
+    commit = "6281d27f3ffdb826df90db25c1dc66a198345d64",
+    remote = "https://github.com/bazelbuild/rules_rust.git",
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
