@@ -1,0 +1,11 @@
+/// P2/P3 test interface
+package hello:interfaces@0.1.0;
+
+interface greeting {
+    /// Greet someone
+    greet: func(name: string) -> string;
+}
+
+world hello {
+    export greeting;
+}

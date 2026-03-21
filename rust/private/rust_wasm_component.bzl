@@ -114,6 +114,7 @@ def _rust_wasm_component_impl(ctx):
             "name": ctx.label.name,
             "language": "rust",
             "target": WASM_TARGET_TRIPLE,
+            "wasi_version": ctx.attr.wasi_version,
         },
         profile = "release",  # Default Rust profile
         profile_variants = {},
@@ -232,6 +233,11 @@ _rust_wasm_component_rule = rule(
             default = False,
             doc = "Validate that the component exports match the WIT specification",
         ),
+        "wasi_version": attr.string(
+            default = "p2",
+            values = ["p2", "p3"],
+            doc = "WASI version: p2 (stable) or p3 (experimental async)",
+        ),
     },
     toolchains = [
         "@rules_wasm_component//toolchains:wasm_tools_component_toolchain_type",
@@ -253,6 +259,7 @@ def rust_wasm_component(
         crate_root = None,
         edition = "2021",
         tags = [],
+        wasi_version = "p2",
         **kwargs):
     """Builds a Rust WebAssembly component with multi-profile support.
 
@@ -278,6 +285,9 @@ def rust_wasm_component(
         crate_root: Optional custom crate root file (defaults to src/lib.rs).
         edition: Rust edition to use (default: "2021").
         tags: Tags to apply to all generated targets (e.g., ["manual"]).
+        wasi_version: WASI version to target: "p2" (default, stable) or "p3" (experimental async).
+            P3 requires wasmtime 43+, wit-bindgen 0.54+, wasi-sdk 32+.
+            P3 uses async func, stream<T>, and future<T> Component Model types.
         **kwargs: Additional arguments forwarded to rust_shared_library.
     """
 
@@ -401,6 +411,7 @@ def rust_wasm_component(
             adapter = adapter,
             component_type = "component",
             validate_wit = validate_wit,
+            wasi_version = wasi_version,
             visibility = ["//visibility:private"],
             tags = tags,
         )

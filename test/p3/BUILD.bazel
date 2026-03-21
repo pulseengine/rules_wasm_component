@@ -1,0 +1,78 @@
+"""WASI Preview 3 integration tests.
+
+Validates that both P2 and P3 wasi_version attributes work correctly.
+P2 tests verify no regression, P3 tests verify the new attribute is accepted.
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# ============================================================================
+# Shared WIT interface
+# ============================================================================
+
+wit_library(
+    name = "hello_interfaces",
+    srcs = ["wit/hello.wit"],
+    package_name = "hello:interfaces",
+    world = "hello",
+)
+
+# ============================================================================
+# P2 build (baseline — must always work)
+# ============================================================================
+
+rust_wasm_component_bindgen(
+    name = "hello_p2",
+    srcs = ["src/lib.rs"],
+    profiles = ["release"],
+    wasi_version = "p2",
+    wit = ":hello_interfaces",
+)
+
+build_test(
+    name = "p2_build_test",
+    targets = [":hello_p2"],
+)
+
+# ============================================================================
+# P3 build (experimental — validates attribute is accepted)
+# ============================================================================
+
+rust_wasm_component_bindgen(
+    name = "hello_p3",
+    srcs = ["src_p3/lib.rs"],
+    profiles = ["release"],
+    wasi_version = "p3",
+    wit = ":hello_interfaces",
+)
+
+build_test(
+    name = "p3_build_test",
+    targets = [":hello_p3"],
+)
+
+# ============================================================================
+# Test suites
+# ============================================================================
+
+test_suite(
+    name = "p2",
+    tests = [":p2_build_test"],
+)
+
+test_suite(
+    name = "p3",
+    tests = [":p3_build_test"],
+)
+
+test_suite(
+    name = "all",
+    tests = [
+        ":p2_build_test",
+        ":p3_build_test",
+    ],
+)

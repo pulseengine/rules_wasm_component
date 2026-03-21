@@ -301,6 +301,7 @@ def _python_wasm_binary_impl(ctx):
             "componentize_py": True,
             "entry_point": entry_point_file.basename,
             "exec_model": "command",
+            "wasi_version": ctx.attr.wasi_version,
         },
         profile = "release",
         profile_variants = {},
@@ -325,6 +326,11 @@ python_wasm_binary = rule(
         ),
         "entry_point": attr.string(
             doc = "Main Python module file (auto-detected if not specified, prefers app.py)",
+        ),
+        "wasi_version": attr.string(
+            default = "p2",
+            values = ["p2", "p3"],
+            doc = "WASI version: p2 (stable) or p3 (experimental async)",
         ),
     },
     toolchains = [
