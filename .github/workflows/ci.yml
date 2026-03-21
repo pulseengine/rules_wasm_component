@@ -173,6 +173,9 @@ jobs:
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/wkg/unit:smoke //test/js:test_hello_js_component_provides_info //test/js:test_calc_js_component_provides_info //test/js:test_npm_dependencies_installation
 
+      - name: Run P2/P3 WASI Version Tests
+        run: bazel test --test_output=errors -- //test/p3:all
+
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
 
