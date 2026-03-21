@@ -4,6 +4,7 @@ project:
   schemas:
     - common
     - dev
+    - stpa
 
 sources:
   - path: artifacts
