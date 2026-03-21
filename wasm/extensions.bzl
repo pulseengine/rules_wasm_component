@@ -10,6 +10,7 @@ load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
 load("//toolchains:wasmtime_toolchain.bzl", "wasmtime_repository")
 load("//toolchains:wkg_toolchain.bzl", "wkg_toolchain_repository")
 load("//wit:defs.bzl", "wasi_wit_dependencies")
+load("//wit/private:wasi_p3_deps.bzl", "wasi_wit_p3_dependencies")
 
 # =============================================================================
 # UNIFIED BUNDLE CONFIGURATION
@@ -544,20 +545,29 @@ def _wasi_wit_extension_impl(module_ctx):
 
     # Load WASI WIT interface definitions for all modules that request them
     load_wasi = False
+    load_p3 = False
     for mod in module_ctx.modules:
-        if mod.tags.init:
+        for tag in mod.tags.init:
             load_wasi = True
-            break
+            if tag.include_p3:
+                load_p3 = True
 
     if load_wasi:
         wasi_wit_dependencies()
+    if load_p3:
+        wasi_wit_p3_dependencies()
 
 # Module extension for WASI WIT interface definitions
 wasi_wit = module_extension(
     implementation = _wasi_wit_extension_impl,
     tag_classes = {
         "init": tag_class(
-            attrs = {},
+            attrs = {
+                "include_p3": attr.bool(
+                    doc = "Also load WASI P3 (0.3.0-rc) WIT definitions for async components",
+                    default = False,
+                ),
+            },
             doc = "Initialize WASI WIT interface definitions",
         ),
     },
