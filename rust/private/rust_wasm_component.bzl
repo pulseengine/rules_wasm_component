@@ -2,6 +2,7 @@
 
 load("@rules_rust//rust:defs.bzl", "rust_shared_library")
 load("//common:common.bzl", "WASM_TARGET_TRIPLE")
+load("//common:wasm_component_utils.bzl", "VALIDATE_WIT_ATTR_KWARGS", "WASI_VERSION_ATTR_KWARGS", "create_component_info", "normalize_wit_info", "validate_component_action")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//tools/bazel_helpers:wasm_tools_actions.bzl", "check_is_component_action")
 load(":transitions.bzl", "wasm_transition")
@@ -91,113 +92,25 @@ def _rust_wasm_component_impl(ctx):
         # We can skip conversion by directly using the input
         component_wasm = wasm_module
 
-    # Extract metadata if wit was used
-    wit_info = None
-    imports = []
-    exports = []
+    # Extract WIT metadata
+    wit_info = normalize_wit_info(ctx, wit_attr = ctx.attr.wit)
 
-    if ctx.attr.wit:
-        wit_info = ctx.attr.wit[WitInfo]
-        # TODO: Parse WIT to extract imports/exports
-        # Future: Use wit-parser or wasm-tools to extract interface definitions
-        # imports = parse_wit_imports(wit_info.wit_files)
-        # exports = parse_wit_exports(wit_info.wit_files)
-
-    # Create provider
-    component_info = WasmComponentInfo(
+    # Create provider using shared factory
+    component_info = create_component_info(
+        ctx = ctx,
         wasm_file = component_wasm,
+        language = "rust",
+        target = WASM_TARGET_TRIPLE,
         wit_info = wit_info,
-        component_type = "component",
-        imports = imports,
-        exports = exports,
-        metadata = {
-            "name": ctx.label.name,
-            "language": "rust",
-            "target": WASM_TARGET_TRIPLE,
-            "wasi_version": ctx.attr.wasi_version,
-        },
-        profile = "release",  # Default Rust profile
-        profile_variants = {},
     )
 
-    # Optional WIT validation
-    validation_outputs = []
-    if ctx.attr.validate_wit and ctx.attr.wit:
-        wasm_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-        wasm_tools = wasm_toolchain.wasm_tools
-
-        validation_log = ctx.actions.declare_file(ctx.attr.name + "_wit_validation.log")
-        validation_outputs.append(validation_log)
-
-        # Get WIT file from the wit library target
+    # Optional WIT validation using shared utility
+    wit_file = None
+    if ctx.attr.wit:
         wit_files = ctx.attr.wit[WitInfo].wit_files
         wit_file = wit_files.to_list()[0] if wit_files else None
 
-        if wit_file:
-            # Validate component with proper wasm-tools validate command
-            ctx.actions.run_shell(
-                command = '''
-                # Validate component with component model features
-                "$1" validate --features component-model "$2" 2>&1
-                if [ $? -ne 0 ]; then
-                    echo "ERROR: Component validation failed for $2" > "$3"
-                    "$1" validate --features component-model "$2" >> "$3" 2>&1
-                    exit 1
-                fi
-
-                # Extract component WIT interface
-                "$1" component wit "$2" > "$3.component" 2>&1
-                if [ $? -ne 0 ]; then
-                    echo "ERROR: Failed to extract component WIT interface" >> "$3"
-                    cat "$3.component" >> "$3"
-                    exit 1
-                fi
-
-                # Create validation report with comparison
-                echo "=== COMPONENT VALIDATION PASSED ===" > "$3"
-                echo "Component is valid WebAssembly with component model" >> "$3"
-                echo "" >> "$3"
-                echo "=== COMPONENT WIT INTERFACE ===" >> "$3"
-                cat "$3.component" >> "$3"
-                echo "" >> "$3"
-                echo "=== EXPECTED WIT SPECIFICATION ===" >> "$3"
-                cat "$4" >> "$3"
-                echo "" >> "$3"
-                echo "WIT validation completed - manual comparison required" >> "$3"
-                echo "Future enhancement: automated interface compliance checking" >> "$3"
-                ''',
-                arguments = [wasm_tools.path, component_wasm.path, validation_log.path, wit_file.path],
-                inputs = [component_wasm, wit_file],
-                outputs = [validation_log],
-                tools = [wasm_tools],
-                mnemonic = "ValidateWasmComponent",
-                progress_message = "Validating WebAssembly component for %s" % ctx.label,
-            )
-        else:
-            # No WIT file available - just validate component
-            ctx.actions.run_shell(
-                command = '''
-                # Validate component with component model features
-                "$1" validate --features component-model "$2" 2>&1
-                if [ $? -ne 0 ]; then
-                    echo "ERROR: Component validation failed for $2" > "$3"
-                    "$1" validate --features component-model "$2" >> "$3" 2>&1
-                    exit 1
-                fi
-
-                echo "=== COMPONENT VALIDATION PASSED ===" > "$3"
-                echo "Component is valid WebAssembly with component model" >> "$3"
-                echo "" >> "$3"
-                echo "=== EXPORTED WIT INTERFACE ===" >> "$3"
-                "$1" component wit "$2" >> "$3" 2>&1 || echo "Failed to extract WIT interface" >> "$3"
-                ''',
-                arguments = [wasm_tools.path, component_wasm.path, validation_log.path],
-                inputs = [component_wasm],
-                outputs = [validation_log],
-                tools = [wasm_tools],
-                mnemonic = "ValidateWasmComponent",
-                progress_message = "Validating WebAssembly component for %s" % ctx.label,
-            )
+    validation_outputs = validate_component_action(ctx, component_wasm, wit_file)
 
     return [
         component_info,
@@ -229,15 +142,8 @@ _rust_wasm_component_rule = rule(
             default = "component",
             doc = "Output type (module or component)",
         ),
-        "validate_wit": attr.bool(
-            default = False,
-            doc = "Validate that the component exports match the WIT specification",
-        ),
-        "wasi_version": attr.string(
-            default = "p2",
-            values = ["p2", "p3"],
-            doc = "WASI version: p2 (stable) or p3 (experimental async)",
-        ),
+        "validate_wit": attr.bool(**VALIDATE_WIT_ATTR_KWARGS),
+        "wasi_version": attr.string(**WASI_VERSION_ATTR_KWARGS),
     },
     toolchains = [
         "@rules_wasm_component//toolchains:wasm_tools_component_toolchain_type",
