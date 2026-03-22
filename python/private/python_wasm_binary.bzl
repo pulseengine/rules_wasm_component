@@ -22,6 +22,7 @@ The Python code must implement the Run.run() pattern:
             print("Hello, world!")
 """
 
+load("//common:wasm_component_utils.bzl", "WASI_VERSION_ATTR_KWARGS", "create_component_info")
 load("//providers:providers.bzl", "WasmComponentInfo")
 
 def _python_wasm_binary_impl(ctx):
@@ -279,12 +280,12 @@ def _python_wasm_binary_impl(ctx):
     )
 
     # Create WasmComponentInfo provider
-    component_info = WasmComponentInfo(
+    component_info = create_component_info(
+        ctx = ctx,
         wasm_file = wasm_binary,
-        wit_info = struct(
-            wit_file = None,
-            package_name = "wasi:cli@0.2.0",
-        ),
+        language = "python",
+        target = "wasm32-wasi",
+        wit_info = struct(wit_file = None, package_name = "wasi:cli@0.2.0"),
         component_type = "command",
         imports = [
             "wasi:cli/environment@0.2.0",
@@ -294,17 +295,11 @@ def _python_wasm_binary_impl(ctx):
             "wasi:cli/stderr@0.2.0",
         ],
         exports = ["wasi:cli/run@0.2.0"],
-        metadata = {
-            "name": ctx.label.name,
-            "language": "python",
-            "target": "wasm32-wasi",
+        extra_metadata = {
             "componentize_py": True,
             "entry_point": entry_point_file.basename,
             "exec_model": "command",
-            "wasi_version": ctx.attr.wasi_version,
         },
-        profile = "release",
-        profile_variants = {},
     )
 
     return [
@@ -327,11 +322,7 @@ python_wasm_binary = rule(
         "entry_point": attr.string(
             doc = "Main Python module file (auto-detected if not specified, prefers app.py)",
         ),
-        "wasi_version": attr.string(
-            default = "p2",
-            values = ["p2", "p3"],
-            doc = "WASI version: p2 (stable) or p3 (experimental async)",
-        ),
+        "wasi_version": attr.string(**WASI_VERSION_ATTR_KWARGS),
     },
     toolchains = [
         "@rules_wasm_component//toolchains:componentize_py_toolchain_type",

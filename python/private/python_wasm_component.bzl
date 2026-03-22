@@ -14,6 +14,7 @@ Example usage:
     )
 """
 
+load("//common:wasm_component_utils.bzl", "WASI_VERSION_ATTR_KWARGS", "create_component_info")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 
@@ -164,26 +165,21 @@ def _python_wasm_component_impl(ctx):
         use_default_shell_env = True,
     )
 
-    # Create WasmComponentInfo provider
-    component_info = WasmComponentInfo(
+    # Create WasmComponentInfo provider using shared factory
+    component_info = create_component_info(
+        ctx = ctx,
         wasm_file = component_wasm,
+        language = "python",
+        target = "wasm32-wasi",
         wit_info = struct(
             wit_file = wit_file,
             package_name = ctx.attr.package_name or "component:{}@1.0.0".format(ctx.attr.name),
         ),
-        component_type = "component",
-        imports = [],  # componentize-py handles imports automatically
         exports = [ctx.attr.world] if ctx.attr.world else [],
-        metadata = {
-            "name": ctx.label.name,
-            "language": "python",
-            "target": "wasm32-wasi",
+        extra_metadata = {
             "componentize_py": True,
             "entry_point": entry_point_file.basename,
-            "wasi_version": ctx.attr.wasi_version,
         },
-        profile = "release",
-        profile_variants = {},
     )
 
     return [
@@ -223,11 +219,7 @@ python_wasm_component = rule(
             default = False,
             doc = "Generate WASI stub implementations",
         ),
-        "wasi_version": attr.string(
-            default = "p2",
-            values = ["p2", "p3"],
-            doc = "WASI version: p2 (stable) or p3 (experimental async)",
-        ),
+        "wasi_version": attr.string(**WASI_VERSION_ATTR_KWARGS),
     },
     toolchains = [
         "@rules_wasm_component//toolchains:componentize_py_toolchain_type",
