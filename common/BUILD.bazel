@@ -8,3 +8,9 @@ bzl_library(
     name = "common",
     srcs = ["common.bzl"],
 )
+
+bzl_library(
+    name = "wasm_component_utils",
+    srcs = ["wasm_component_utils.bzl"],
+    deps = ["//providers"],
+)

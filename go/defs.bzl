@@ -50,6 +50,7 @@ Example usage:
 """
 
 load("//go/private:go_wasm_component_test.bzl", _go_wasm_component_test = "go_wasm_component_test")
+load("//common:wasm_component_utils.bzl", "VALIDATE_WIT_ATTR_KWARGS", "WASI_VERSION_ATTR_KWARGS", "create_component_info", "normalize_wit_info", "validate_component_action")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_go_module_action")
@@ -232,43 +233,19 @@ def _go_wasm_component_impl(ctx):
     # Step 3: Convert module to component if needed
     _convert_to_component(ctx, wasm_tools, wasm_module, component_wasm)
 
-    # Create provider - following Rust implementation pattern
-    component_info = WasmComponentInfo(
+    # Create provider using shared factory
+    component_info = create_component_info(
+        ctx = ctx,
         wasm_file = component_wasm,
-        wit_info = ctx.attr.wit[WitInfo] if ctx.attr.wit else None,
-        component_type = "component",
-        imports = [],  # TODO: Parse from WIT
+        language = "go",
+        wit_info = normalize_wit_info(ctx, wit_attr = ctx.attr.wit),
         exports = [ctx.attr.world] if ctx.attr.world else [],
-        metadata = {
-            "name": ctx.label.name,
-            "language": "go",
-            "target": "wasm32-wasip2",
-            "tinygo_version": "0.38.0+",
-        },
         profile = ctx.attr.optimization,
-        profile_variants = {},
+        extra_metadata = {"tinygo_version": "0.38.0+"},
     )
 
-    # Optional WIT validation
-    validation_outputs = []
-    if ctx.attr.validate_wit and ctx.attr.wit:
-        wasm_tools_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-        wasm_tools = wasm_tools_toolchain.wasm_tools
-
-        validation_log = ctx.actions.declare_file(ctx.attr.name + "_wit_validation.log")
-        validation_outputs.append(validation_log)
-
-        # Run wasm-tools component wit to extract the component's interface
-        # and redirect output to validation log for verification
-        ctx.actions.run_shell(
-            command = "\"$1\" component wit \"$2\" > \"$3\" 2>&1 && echo 'WIT validation completed for component: $2' >> \"$3\"",
-            arguments = [wasm_tools.path, component_wasm.path, validation_log.path],
-            inputs = [component_wasm],
-            outputs = [validation_log],
-            tools = [wasm_tools],
-            mnemonic = "ValidateWitComponent",
-            progress_message = "Validating WIT interface for %s" % ctx.label,
-        )
+    # Optional WIT validation using shared utility
+    validation_outputs = validate_component_action(ctx, component_wasm)
 
     return [
         component_info,
@@ -856,10 +833,8 @@ go_wasm_component = rule(
             default = "release",
             values = ["debug", "release", "size"],
         ),
-        "validate_wit": attr.bool(
-            default = False,
-            doc = "Validate that the component exports match the WIT specification",
-        ),
+        "validate_wit": attr.bool(**VALIDATE_WIT_ATTR_KWARGS),
+        "wasi_version": attr.string(**WASI_VERSION_ATTR_KWARGS),
         "interp_timeout": attr.string(
             default = "10m",
             doc = "TinyGo interpreter timeout for init() evaluation. Increase if crypto packages cause timeouts (Go 1.25+ FIPS 140 issue).",

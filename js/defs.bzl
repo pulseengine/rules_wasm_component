@@ -60,6 +60,7 @@ Example usage:
 """
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
+load("//common:wasm_component_utils.bzl", "WASI_VERSION_ATTR_KWARGS", "create_component_info")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//js/private:jco_types.bzl", _jco_types = "jco_types")
@@ -230,24 +231,18 @@ def _js_component_impl(ctx):
         progress_message = "Building JavaScript component %s with jco" % ctx.label,
     )
 
-    # Create component info
-    component_info = WasmComponentInfo(
+    # Create component info using shared factory
+    component_info = create_component_info(
+        ctx = ctx,
         wasm_file = component_wasm,
+        language = "javascript",
+        target = "wasm32-wasi",
         wit_info = struct(
             wit_file = wit_file,
             package_name = ctx.attr.package_name or "{}:component@1.0.0".format(ctx.attr.name),
         ),
-        component_type = "component",
-        imports = [],  # TODO: Parse from WIT
         exports = [ctx.attr.world] if ctx.attr.world else [],
-        metadata = {
-            "name": ctx.label.name,
-            "language": "javascript",
-            "target": "wasm32-wasi",
-            "componentize_js": True,
-        },
-        profile = "release",  # ComponentizeJS always produces optimized output
-        profile_variants = {},
+        extra_metadata = {"componentize_js": True},
     )
 
     return [
@@ -305,6 +300,7 @@ js_component = rule(
             default = False,
             doc = "Enable compatibility mode for older JavaScript engines",
         ),
+        "wasi_version": attr.string(**WASI_VERSION_ATTR_KWARGS),
     },
     toolchains = [
         "@rules_wasm_component//toolchains:jco_toolchain_type",
