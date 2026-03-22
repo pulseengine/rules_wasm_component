@@ -70,7 +70,7 @@ Example usage:
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
-load("//common:wasm_component_utils.bzl", "WASI_VERSION_ATTR_KWARGS", "create_component_info")
+load("//common:wasm_component_utils.bzl", "VALIDATE_WIT_ATTR_KWARGS", "WASI_VERSION_ATTR_KWARGS", "create_component_info")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
