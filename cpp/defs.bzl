@@ -70,6 +70,7 @@ Example usage:
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("//common:wasm_component_utils.bzl", "WASI_VERSION_ATTR_KWARGS", "create_component_info")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
@@ -511,28 +512,24 @@ def _cpp_component_impl(ctx):
             progress_message = "Validating WebAssembly component for %s" % ctx.label,
         )
 
-    # Create component info
-    component_info = WasmComponentInfo(
+    # Create component info using shared factory
+    component_info = create_component_info(
+        ctx = ctx,
         wasm_file = component_wasm,
+        language = ctx.attr.language,
         wit_info = struct(
             wit_file = wit_file,
             package_name = ctx.attr.package_name or "{}:component@1.0.0".format(ctx.attr.name),
         ),
-        component_type = "component",
-        imports = [],  # TODO: Parse from WIT
         exports = [ctx.attr.world] if ctx.attr.world else [],
-        metadata = {
-            "name": ctx.label.name,
-            "language": ctx.attr.language,
-            "target": "wasm32-wasip2",
+        profile = ctx.attr.optimization if hasattr(ctx.attr, "optimization") else "release",
+        extra_metadata = {
             "exec_model": "reactor",
             "wasi_sdk": True,
             "toolchain": "wasi-sdk",
             "cxx_std": ctx.attr.cxx_std if ctx.attr.cxx_std else None,
             "optimization": ctx.attr.optimize,
         },
-        profile = ctx.attr.optimization if hasattr(ctx.attr, "optimization") else "release",
-        profile_variants = {},
     )
 
     return [
@@ -609,10 +606,8 @@ cpp_component = rule(
             default = [],
             doc = "Libraries to link. When nostdlib=True, only these libraries are linked. When nostdlib=False, these are added to standard libraries. Examples: ['m', 'dl'] or ['-lm', '-ldl']",
         ),
-        "validate_wit": attr.bool(
-            default = False,
-            doc = "Validate that the component exports match the WIT specification",
-        ),
+        "validate_wit": attr.bool(**VALIDATE_WIT_ATTR_KWARGS),
+        "wasi_version": attr.string(**WASI_VERSION_ATTR_KWARGS),
     },
     toolchains = [
         "@rules_wasm_component//toolchains:cpp_component_toolchain_type",
