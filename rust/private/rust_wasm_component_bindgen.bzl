@@ -457,6 +457,10 @@ def rust_wasm_component_bindgen(
         **kwargs: Additional arguments passed to rust_wasm_component
     """
 
+    # Determine P3 async settings from wasi_version
+    wasi_version = kwargs.get("wasi_version", "p2")
+    p3_async_interfaces = ["all"] if wasi_version == "p3" else []
+
     # Generate WIT bindings based on symmetric flag
     if symmetric:
         # Symmetric mode: Generate symmetric bindings for both native and WASM from same source
@@ -484,6 +488,7 @@ def rust_wasm_component_bindgen(
             wit = wit,
             language = "rust",
             generation_mode = "guest",
+            async_interfaces = p3_async_interfaces,
             visibility = ["//visibility:private"],
         )
 
@@ -493,6 +498,7 @@ def rust_wasm_component_bindgen(
             wit = wit,
             language = "rust",
             generation_mode = "native-guest",
+            async_interfaces = p3_async_interfaces,
             visibility = ["//visibility:private"],
         )
 
