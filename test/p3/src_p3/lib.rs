@@ -1,11 +1,17 @@
-// P3 test component — async interface
+// P3 test component — async on WASM, sync on host
 use hello_p3_bindings::exports::hello::interfaces::greeting::Guest;
 
 struct Component;
 
 impl Guest for Component {
+    #[cfg(target_arch = "wasm32")]
     async fn greet(name: String) -> String {
         format!("Hello, {}! (P3 async)", name)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn greet(name: String) -> String {
+        format!("Hello, {}! (P3 host)", name)
     }
 }
 
