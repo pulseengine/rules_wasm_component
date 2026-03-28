@@ -294,6 +294,13 @@ jobs:
             gh pr edit "$PR_NUMBER" --add-label "needs-review"
           fi
 
+          # Check for version removals in checksum JSON files (CC-002 STPA control)
+          # A removed line containing a version key indicates a version entry was deleted
+          if git diff HEAD~1 -- 'checksums/tools/*.json' | grep -qE '^\-[[:space:]]+"[0-9]+\.[0-9]+'; then
+            gh pr edit "$PR_NUMBER" --add-label "version-removal"
+            gh pr edit "$PR_NUMBER" --add-label "needs-review"
+          fi
+
           # Add tool-specific labels
           jq -r '.updates[].tool_name' update_results.json | while read tool; do
             gh pr edit "$PR_NUMBER" --add-label "tool:$tool"
@@ -309,7 +316,13 @@ jobs:
           # Check if this is a safe auto-merge candidate
           HAS_MAJOR_UPDATES=$(jq -e '.updates[] | select(.version_change == "major")' update_results.json && echo "true" || echo "false")
 
-          if [ "$HAS_MAJOR_UPDATES" = "false" ]; then
+          # Check for version removals (CC-002 STPA control: require manual review)
+          HAS_VERSION_REMOVALS="false"
+          if git diff HEAD~1 -- 'checksums/tools/*.json' | grep -qE '^\-[[:space:]]+"[0-9]+\.[0-9]+'; then
+            HAS_VERSION_REMOVALS="true"
+          fi
+
+          if [ "$HAS_MAJOR_UPDATES" = "false" ] && [ "$HAS_VERSION_REMOVALS" = "false" ]; then
             # Create a follow-up workflow to auto-merge after 24 hours
             cat > .github/workflows/temp-auto-merge-$PR_NUMBER.yml << EOF
           name: Auto-merge checksum PR $PR_NUMBER
@@ -352,7 +365,11 @@ jobs:
             # Add comment about auto-merge
             gh pr comment "$PR_NUMBER" --body "🤖 This PR is scheduled for auto-merge in 24 hours if all checks pass and no major version updates are detected."
           else
-            gh pr comment "$PR_NUMBER" --body "⚠️ This PR contains major version updates and requires manual review before merging."
+            if [ "$HAS_VERSION_REMOVALS" = "true" ]; then
+              gh pr comment "$PR_NUMBER" --body "⚠️ This PR removes existing version entries from checksum files and requires manual review before merging."
+            else
+              gh pr comment "$PR_NUMBER" --body "⚠️ This PR contains major version updates and requires manual review before merging."
+            fi
           fi
 
       - name: Report status
