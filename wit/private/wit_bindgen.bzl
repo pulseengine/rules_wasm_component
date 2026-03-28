@@ -132,13 +132,13 @@ def _wit_bindgen_impl(ctx):
     # For Rust, configure based on generation mode
     if ctx.attr.language == "rust":
         if ctx.attr.generation_mode == "native-guest":
-            # Native-guest mode: Use std runtime for native execution (no WebAssembly)
+            # Native-guest: use embedded runtime path for host compilation
+            # The host build doesn't need async support or WASM-specific exports
             cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
         else:
-            # Default guest mode - generate component implementation bindings
-            cmd_args.extend(["--runtime-path", "crate::wit_bindgen::rt"])
-
-            # Make the export macro public so it can be used from separate crates
+            # Guest (WASM): use wit-bindgen crate runtime for full support including async
+            cmd_args.extend(["--runtime-path", "wit_bindgen::rt"])
+            # Make the export macro public for use from separate crates
             cmd_args.append("--pub-export-macro")
 
     # Note: we'll run wit-bindgen from the deps directory to resolve packages

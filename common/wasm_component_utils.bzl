@@ -30,6 +30,40 @@ VALIDATE_WIT_ATTR_KWARGS = {
 }
 
 # =============================================================================
+# P3 Build Configuration
+# =============================================================================
+
+def get_p3_config(wasi_version):
+    """Get P3-specific build configuration flags.
+
+    Returns a struct with flags that language rules should apply when
+    wasi_version = "p3". When wasi_version = "p2", all flags are empty/default.
+
+    Args:
+        wasi_version: "p2" or "p3"
+
+    Returns:
+        struct with:
+            is_p3: bool
+            wit_bindgen_async_args: list of --async flags for wit-bindgen
+            wasmtime_flags: list of flags for wasmtime invocations
+            wasi_cli_world: the WASI CLI world version string
+    """
+    if wasi_version == "p3":
+        return struct(
+            is_p3 = True,
+            wit_bindgen_async_args = ["--async"],
+            wasmtime_flags = ["-Sp3", "-Wcomponent-model-async"],
+            wasi_cli_world = "wasi:cli/command@0.3.0",
+        )
+    return struct(
+        is_p3 = False,
+        wit_bindgen_async_args = [],
+        wasmtime_flags = [],
+        wasi_cli_world = "wasi:cli/command@0.2.0",
+    )
+
+# =============================================================================
 # WIT Info Normalization
 # =============================================================================
 

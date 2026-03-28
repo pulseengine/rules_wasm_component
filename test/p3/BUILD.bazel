@@ -39,7 +39,7 @@ build_test(
 )
 
 # ============================================================================
-# P3 build (experimental — validates attribute is accepted)
+# P3 build (experimental — async bindings via wit-bindgen crate runtime)
 # ============================================================================
 
 rust_wasm_component_bindgen(
