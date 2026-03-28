@@ -143,7 +143,7 @@ def _generate_wrapper_impl(ctx):
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-// Minimal wit_bindgen::rt runtime compatible with CLI-generated code
+// Minimal wit_bindgen::rt runtime for native-guest mode (host compilation)
 pub mod wit_bindgen {
     pub mod rt {
         use core::alloc::Layout;
@@ -545,8 +545,8 @@ def rust_wasm_component_bindgen(
         )
 
     # Create separate wrappers for guest and native-guest bindings
-    # Always use wit-bindgen crate runtime — eliminates hand-rolled stubs that
-    # need manual updates when wit-bindgen CLI version changes
+    # Guest (WASM): use wit-bindgen crate runtime for full async support
+    # Native-guest (host): keep embedded runtime to avoid linker issues on non-WASM targets
     wrapper_guest_target = name + "_wrapper_guest"
     wrapper_native_guest_target = name + "_wrapper_native_guest"
 
@@ -562,7 +562,7 @@ def rust_wasm_component_bindgen(
         name = wrapper_native_guest_target,
         bindgen = ":" + bindgen_native_guest_target,
         mode = "native-guest",
-        use_crate_runtime = True,
+        use_crate_runtime = False,  # Host build uses embedded runtime
         visibility = ["//visibility:private"],
     )
 
@@ -570,8 +570,10 @@ def rust_wasm_component_bindgen(
     bindings_lib = name + "_bindings"
     bindings_lib_host = bindings_lib + "_host"
 
-    # wit-bindgen crate provides the runtime (replaces hand-rolled stubs)
-    bindings_deps = [bitflags_dep, "@crates//:wit-bindgen"]
+    # WASM bindings: wit-bindgen crate for runtime + async_support
+    wasm_bindings_deps = [bitflags_dep, "@crates//:wit-bindgen"]
+    # Host bindings: embedded runtime only (no WASM-specific crate deps)
+    host_bindings_deps = [bitflags_dep]
 
     # Create the bindings library for native platform (host) using native-guest wrapper
     rust_library(
@@ -579,7 +581,7 @@ def rust_wasm_component_bindgen(
         srcs = [":" + wrapper_native_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        deps = bindings_deps,
+        deps = host_bindings_deps,
         visibility = visibility,
     )
 
@@ -590,7 +592,7 @@ def rust_wasm_component_bindgen(
         srcs = [":" + wrapper_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        deps = bindings_deps,
+        deps = wasm_bindings_deps,
         visibility = ["//visibility:private"],
     )
 
