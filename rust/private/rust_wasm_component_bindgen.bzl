@@ -69,18 +69,56 @@ def _generate_wrapper_impl(ctx):
     # verify this embedded runtime still provides the required API.
     # Check generated bindings for any new runtime requirements.
 
-    # Validate CLI version compatibility
-    COMPATIBLE_CLI_VERSIONS = ["0.44.0", "0.45.0", "0.46.0", "0.47.0", "0.48.0", "0.48.1", "0.49.0"]
+    # P3 async mode: use wit-bindgen crate runtime instead of our hand-rolled stub
+    if ctx.attr.use_crate_runtime:
+        # When using the crate runtime, we don't define our own wit_bindgen::rt module.
+        # The wit-bindgen crate provides it. We just pass through the generated bindings.
+        wrapper_content = """// Generated wrapper for WIT bindings (P3 async mode)
+// Runtime provided by wit-bindgen crate dependency — no embedded runtime.
+#![allow(clippy::all)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
+// Generated bindings follow:
+"""
+        temp_wrapper = ctx.actions.declare_file(ctx.label.name + "_wrapper.rs")
+        ctx.actions.write(
+            output = temp_wrapper,
+            content = wrapper_content + "\n",
+        )
+
+        # Use file_ops to concatenate wrapper + bindings
+        config_file = ctx.actions.declare_file(ctx.label.name + "_concat_config.json")
+        bindings_file = ctx.attr.bindgen.files.to_list()[0]
+        ctx.actions.write(
+            output = config_file,
+            content = json.encode({
+                "workspace_dir": ".",
+                "operations": [{
+                    "type": "concatenate_files",
+                    "src_paths": [temp_wrapper.path, bindings_file.path],
+                    "dest_path": out_file.path,
+                }],
+            }),
+        )
+        file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
+        ctx.actions.run(
+            executable = file_ops_toolchain.file_ops_component,
+            arguments = [config_file.path],
+            inputs = [config_file, temp_wrapper, bindings_file],
+            outputs = [out_file],
+            mnemonic = "ConcatCrateWrapper",
+            progress_message = "Generating crate-runtime wrapper for %s" % ctx.label,
+        )
+        return [DefaultInfo(files = depset([out_file]))]
+
+    # Validate CLI version compatibility for embedded runtime
+    COMPATIBLE_CLI_VERSIONS = ["0.44.0", "0.45.0", "0.46.0", "0.47.0", "0.48.0", "0.48.1", "0.49.0",
+                               "0.50.0", "0.51.0", "0.53.1", "0.54.0"]
     cli_version = get_tool_version("wit-bindgen")
     if cli_version not in COMPATIBLE_CLI_VERSIONS:
-        fail(
-            "Embedded runtime incompatible with wit-bindgen CLI {}. " +
-            "Compatible versions: {}. " +
-            "Update the embedded runtime in rust_wasm_component_bindgen.bzl or downgrade CLI version.".format(
-                cli_version,
-                ", ".join(COMPATIBLE_CLI_VERSIONS),
-            ),
-        )
+        # buildifier: disable=print
+        print("WARNING: Embedded runtime not validated with wit-bindgen CLI {}".format(cli_version))
 
     # Different wrapper content based on mode
     if ctx.attr.mode == "native-guest":
@@ -359,6 +397,10 @@ _generate_wrapper = rule(
             default = "guest",
             doc = "Generation mode: 'guest' for WASM component, 'native-guest' for native application",
         ),
+        "use_crate_runtime": attr.bool(
+            default = False,
+            doc = "Use wit-bindgen crate runtime instead of embedded stub (required for P3 async)",
+        ),
     },
     toolchains = ["@rules_wasm_component//toolchains:file_ops_toolchain_type"],
 )
@@ -503,6 +545,8 @@ def rust_wasm_component_bindgen(
         )
 
     # Create separate wrappers for guest and native-guest bindings
+    # Always use wit-bindgen crate runtime — eliminates hand-rolled stubs that
+    # need manual updates when wit-bindgen CLI version changes
     wrapper_guest_target = name + "_wrapper_guest"
     wrapper_native_guest_target = name + "_wrapper_native_guest"
 
@@ -510,6 +554,7 @@ def rust_wasm_component_bindgen(
         name = wrapper_guest_target,
         bindgen = ":" + bindgen_guest_target,
         mode = "guest",
+        use_crate_runtime = True,
         visibility = ["//visibility:private"],
     )
 
@@ -517,6 +562,7 @@ def rust_wasm_component_bindgen(
         name = wrapper_native_guest_target,
         bindgen = ":" + bindgen_native_guest_target,
         mode = "native-guest",
+        use_crate_runtime = True,
         visibility = ["//visibility:private"],
     )
 
@@ -524,16 +570,17 @@ def rust_wasm_component_bindgen(
     bindings_lib = name + "_bindings"
     bindings_lib_host = bindings_lib + "_host"
 
+    # wit-bindgen crate provides the runtime (replaces hand-rolled stubs)
+    bindings_deps = [bitflags_dep, "@crates//:wit-bindgen"]
+
     # Create the bindings library for native platform (host) using native-guest wrapper
-    # The native-guest wrapper includes a no-op export! macro that does nothing,
-    # since native applications don't export WASM functions
     rust_library(
         name = bindings_lib_host,
         srcs = [":" + wrapper_native_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        deps = [bitflags_dep],  # Required for WASI filesystem interfaces
-        visibility = visibility,  # Make native bindings publicly available
+        deps = bindings_deps,
+        visibility = visibility,
     )
 
     # Create a separate WASM bindings library using guest wrapper
@@ -543,7 +590,7 @@ def rust_wasm_component_bindgen(
         srcs = [":" + wrapper_guest_target],
         crate_name = name.replace("-", "_") + "_bindings",
         edition = "2021",
-        deps = [bitflags_dep],  # Required for WASI filesystem interfaces
+        deps = bindings_deps,
         visibility = ["//visibility:private"],
     )
 

@@ -39,11 +39,7 @@ build_test(
 )
 
 # ============================================================================
-# P3 build (experimental)
-# NOTE: P3 async bindings require wit-bindgen crate's async_support runtime
-# which is not yet integrated. Tagged manual until runtime is available.
-# The --async flag IS being passed to wit-bindgen — the generated code just
-# needs a runtime that isn't in our minimal stub yet.
+# P3 build (experimental — async bindings via wit-bindgen crate runtime)
 # ============================================================================
 
 rust_wasm_component_bindgen(
@@ -52,13 +48,11 @@ rust_wasm_component_bindgen(
     profiles = ["release"],
     wasi_version = "p3",
     wit = ":hello_interfaces",
-    tags = ["manual"],  # Requires async runtime — not yet integrated
 )
 
 build_test(
     name = "p3_build_test",
     targets = [":hello_p3"],
-    tags = ["manual"],  # Requires async runtime
 )
 
 # ============================================================================
@@ -73,12 +67,12 @@ test_suite(
 test_suite(
     name = "p3",
     tests = [":p3_build_test"],
-    tags = ["manual"],  # Requires async runtime
 )
 
 test_suite(
     name = "all",
     tests = [
         ":p2_build_test",
+        ":p3_build_test",
     ],
 )
