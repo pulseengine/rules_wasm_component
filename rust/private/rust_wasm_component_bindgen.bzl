@@ -535,12 +535,12 @@ def rust_wasm_component_bindgen(
         )
 
         # Native-guest mode bindings for native applications
+        # No async for native-guest — host runtime doesn't have async_support
         wit_bindgen(
             name = bindgen_native_guest_target,
             wit = wit,
             language = "rust",
             generation_mode = "native-guest",
-            async_interfaces = p3_async_interfaces,
             visibility = ["//visibility:private"],
         )
 
