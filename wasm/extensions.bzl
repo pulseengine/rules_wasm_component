@@ -637,7 +637,7 @@ def _binaryen_extension_impl(module_ctx):
     if not registrations:
         binaryen_repository(
             name = "binaryen_toolchain",
-            version = "123",
+            version = "129",
         )
 
 # Module extension for Binaryen (wasm-opt optimization)
@@ -652,7 +652,7 @@ binaryen = module_extension(
                 ),
                 "version": attr.string(
                     doc = "Binaryen version to use",
-                    default = "123",
+                    default = "129",
                 ),
             },
         ),
