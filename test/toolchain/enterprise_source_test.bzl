@@ -6,8 +6,8 @@ These tests verify that the enterprise environment variables work correctly:
 - BAZEL_WASM_OFFLINE: Require vendored files (strict offline mode)
 """
 
-load("//toolchains:tool_registry.bzl", "tool_registry")
 load("//checksums:registry.bzl", "get_tool_info")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 
 def _enterprise_source_test_impl(repository_ctx):
     """Test the enterprise source resolution logic.

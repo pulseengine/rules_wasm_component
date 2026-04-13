@@ -36,7 +36,12 @@ TOOL_VERSIONS = {
     # Note: wizer removed - now part of wasmtime v39.0.0+, use `wasmtime wizer` subcommand
 
     # Signatures and security
-    "wasmsign2": "0.2.6",  # WebAssembly signing tool
+    "wasmsign2": "0.2.6",  # WebAssembly signing tool (legacy)
+    "wsc": "0.7.0",  # WebAssembly Signature Component (signing, attestation, SLSA)
+
+    # PulseEngine pipeline tools
+    "loom": "0.3.0",  # WebAssembly optimizer with Z3 formal verification
+    "meld": "0.1.0",  # Static WebAssembly component fusion
 
     # WRPC (WebAssembly Component RPC)
     "wrpc": "0.16.0",  # wrpc-wasmtime runtime for component RPC
@@ -52,13 +57,13 @@ TOOL_VERSIONS = {
 
 # P3-capable tool versions — minimum versions that support WASI Preview 3 async
 P3_TOOL_VERSIONS = {
-    "wasm-tools": "1.245.1",
-    "wasmtime": "43.0.0",
-    "wit-bindgen": "0.54.0",
+    "wasm-tools": "1.246.2",  # async task.return fixes, stream/future intrinsic extensions
+    "wasmtime": "43.0.1",  # WASIp3 snapshot 0.3.0-rc-2026-03-15 + security fixes (12 CVEs)
+    "wit-bindgen": "0.55.0",  # futures::Stream adapter impl for Rust
     "wasi-sdk": "32",
-    "jco": "1.17.0",
+    "jco": "1.17.6",  # P3 stream/async stabilization (nested streams, re-entrancy fixes)
     "nodejs": "24.14.0",
-    "binaryen": "128",
+    "binaryen": "129",
 }
 
 # Languages that support P3 async

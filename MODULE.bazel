@@ -294,7 +294,7 @@ wasm_component_download(
     name = "wasmsign2_cli_wasm",
     filename = "wasmsign2.wasm",
     tool_name = "wsc",
-    version = "0.4.0",
+    version = "0.7.0",
 )
 
 # LOOM WebAssembly optimizer (version in //checksums/tools/loom.json)
@@ -302,7 +302,7 @@ wasm_component_download(
     name = "loom_wasm",
     filename = "loom.wasm",
     tool_name = "loom",
-    version = "0.1.0-rc1",
+    version = "0.3.0",
 )
 
 # WASM Tools Component toolchain for universal wasm-tools operations

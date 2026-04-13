@@ -174,6 +174,7 @@ def list_available_tools():
         "binaryen",
         "tinygo",
         "loom",
+        "meld",
         "wsc",
     ]
 

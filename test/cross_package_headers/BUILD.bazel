@@ -8,6 +8,8 @@ Test Structure:
 - consumer_component: Uses the foundation header via #include "foundation/types.h"
 """
 
+# Build test to verify cross-package header staging works for WebAssembly components
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_wasm_component//cpp:defs.bzl", "cc_component_library", "cpp_component")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
@@ -53,9 +55,6 @@ cpp_component(
     world = "consumer",  # Must match world name in WIT file
     deps = [":foundation_lib"],  # Cross-package dependency
 )
-
-# Build test to verify cross-package header staging works for WebAssembly components
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 build_test(
     name = "cross_package_header_build_test",

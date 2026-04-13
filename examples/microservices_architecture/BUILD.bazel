@@ -4,10 +4,10 @@ This version uses only local components, eliminating all external OCI registry
 dependencies for a truly self-contained, CI-friendly example.
 """
 
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//rust:defs.bzl", "rust_wasm_component_bindgen")
 load("//wit:defs.bzl", "wit_library")
 load("//wkg:defs.bzl", "wac_compose_with_oci")
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 package(default_visibility = ["//visibility:public"])
 

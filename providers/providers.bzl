@@ -167,6 +167,28 @@ WasmOciMetadataMappingInfo = provider(
     },
 )
 
+# Provider for Meld-fused component information
+MeldFusedInfo = provider(
+    doc = "Information about a Meld-fused WebAssembly core module",
+    fields = {
+        "fused_wasm": "The fused core WebAssembly module file",
+        "source_components": "Depset of source component .wasm files that were fused",
+        "memory_strategy": "Memory strategy used: 'multi' or 'shared'",
+        "component_count": "Number of components fused",
+    },
+)
+
+# Provider for Synth-compiled ELF information
+SynthCompiledInfo = provider(
+    doc = "Information about a Synth-compiled ARM ELF binary",
+    fields = {
+        "elf_file": "The compiled ARM ELF binary",
+        "source_wasm": "The source WebAssembly module that was compiled",
+        "target": "Target profile (e.g., 'cortex-m4f', 'riscv32imac')",
+        "backend": "Compilation backend used (arm, w2c2, awsm, wasker)",
+    },
+)
+
 # Provider for precompiled WASM information
 WasmPrecompiledInfo = provider(
     doc = "Information about precompiled WebAssembly modules",

@@ -49,8 +49,8 @@ Example usage:
     )
 """
 
-load("//go/private:go_wasm_component_test.bzl", _go_wasm_component_test = "go_wasm_component_test")
 load("//common:wasm_component_utils.bzl", "VALIDATE_WIT_ATTR_KWARGS", "WASI_VERSION_ATTR_KWARGS", "create_component_info", "normalize_wit_info", "validate_component_action")
+load("//go/private:go_wasm_component_test.bzl", _go_wasm_component_test = "go_wasm_component_test")
 load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 load("//rust:transitions.bzl", "wasm_transition")
 load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_go_module_action")

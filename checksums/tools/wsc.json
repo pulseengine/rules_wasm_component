@@ -1,24 +1,44 @@
 {
   "tool_name": "wsc",
-  "github_repo": "pulseengine/wsc",
-  "description": "WebAssembly Signature Component - signing and verification toolkit",
-  "latest_version": "0.4.0",
-  "supported_platforms": ["wasm"],
+  "github_repo": "pulseengine/sigil",
+  "description": "WebAssembly Signature Component - signing, verification, and attestation toolkit",
+  "latest_version": "0.7.0",
+  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64", "wasm"],
   "versions": {
+    "0.7.0": {
+      "release_date": "2026-03-28",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "ac429b11a4bf70cff96ad29f7c21466b3034fc91bcd2f385f6210bc5e2040e5e",
+          "url_suffix": "wsc-macos-x86_64"
+        },
+        "darwin_arm64": {
+          "sha256": "4d501220a3f1a0c5cd2ae95343b3b9f2be8b8a7109b61b4b75dde89d3e32f6d5",
+          "url_suffix": "wsc-macos-aarch64"
+        },
+        "linux_amd64": {
+          "sha256": "b670fb823563ac8b80e04fd0337813f9276e5c783239bb62afe74ed759b78897",
+          "url_suffix": "wsc-linux-x86_64"
+        },
+        "linux_arm64": {
+          "sha256": "ca48e798c3a73323ed10421b8672e8fcc411dc55389aa9e6c51b4bcd18e845bf",
+          "url_suffix": "wsc-linux-aarch64"
+        },
+        "windows_amd64": {
+          "sha256": "698a8b15388fedf34752ce3e283be47e64fd2afa65a424a42e711778060ac527",
+          "url_suffix": "wsc-windows-x86_64.exe"
+        },
+        "wasm": {
+          "sha256": "a57139921f87e91282f22f788155177eadf2085e21a7f2f8ceb8d9fac1c761ef",
+          "url_suffix": "wsc-cli.wasm"
+        }
+      }
+    },
     "0.4.0": {
       "release_date": "2025-01-04",
       "platforms": {
         "wasm": {
           "sha256": "44f15aa50787bf27f64623458b680ba0d49b3d56863737dad00909ba21fbe854",
-          "url_suffix": "wsc-cli.wasm"
-        }
-      }
-    },
-    "0.2.7-rc.1": {
-      "release_date": "2024-11-01",
-      "platforms": {
-        "wasm": {
-          "sha256": "cb3125ce35704fed117bee95d56ab34576c6c1c8b940234aba5dc9893c224fa7",
           "url_suffix": "wsc-cli.wasm"
         }
       }

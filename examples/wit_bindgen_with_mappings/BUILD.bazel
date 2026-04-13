@@ -1,5 +1,5 @@
-load("@rules_wasm_component//wit:defs.bzl", "wit_bindgen", "wit_library")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_wasm_component//wit:defs.bzl", "wit_bindgen", "wit_library")
 
 # Example WIT interface with custom interfaces for mapping demonstration
 wit_library(

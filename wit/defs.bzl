@@ -48,12 +48,20 @@ Example usage:
 """
 
 load(
+    "//wit/private:symmetric_wit_bindgen.bzl",
+    _symmetric_wit_bindgen = "symmetric_wit_bindgen",
+)
+load(
+    "//wit/private:wasi_deps.bzl",
+    _wasi_wit_dependencies = "wasi_wit_dependencies",
+)
+load(
     "//wit/private:wit_bindgen.bzl",
     _wit_bindgen = "wit_bindgen",
 )
 load(
-    "//wit/private:symmetric_wit_bindgen.bzl",
-    _symmetric_wit_bindgen = "symmetric_wit_bindgen",
+    "//wit/private:wit_deps_check.bzl",
+    _wit_deps_check = "wit_deps_check",
 )
 load(
     "//wit/private:wit_library.bzl",
@@ -63,14 +71,6 @@ load(
     "//wit/private:wit_markdown.bzl",
     _wit_docs_collection = "wit_docs_collection",
     _wit_markdown = "wit_markdown",
-)
-load(
-    "//wit/private:wasi_deps.bzl",
-    _wasi_wit_dependencies = "wasi_wit_dependencies",
-)
-load(
-    "//wit/private:wit_deps_check.bzl",
-    _wit_deps_check = "wit_deps_check",
 )
 load(
     "//wit/private:wit_vendor.bzl",

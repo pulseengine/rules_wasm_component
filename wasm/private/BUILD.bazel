@@ -145,3 +145,23 @@ bzl_library(
         "//wasm:__pkg__",
     ],
 )
+
+bzl_library(
+    name = "meld_fuse",
+    srcs = ["meld_fuse.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers"],
+)
+
+bzl_library(
+    name = "synth_compile",
+    srcs = ["synth_compile.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers"],
+)

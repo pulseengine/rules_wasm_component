@@ -138,6 +138,7 @@ def _wit_bindgen_impl(ctx):
         else:
             # Guest (WASM): use wit-bindgen crate runtime for full support including async
             cmd_args.extend(["--runtime-path", "wit_bindgen::rt"])
+
             # Make the export macro public for use from separate crates
             cmd_args.append("--pub-export-macro")
 
