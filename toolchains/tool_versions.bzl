@@ -25,13 +25,13 @@ IMPORTANT: When updating versions here:
 # Tool versions - single source of truth
 TOOL_VERSIONS = {
     # Core WebAssembly toolchain
-    "wasm-tools": "1.244.0",  # Component model tools (validate, parse, compose, etc.)
-    "wasmtime": "39.0.1",  # WebAssembly runtime for testing/execution
+    "wasm-tools": "1.246.2",  # Component model tools (validate, parse, compose, etc.)
+    "wasmtime": "43.0.1",  # WebAssembly runtime with P3 async + wizer (security patch)
 
     # WIT and binding generation
-    "wit-bindgen": "0.49.0",  # WIT binding generator (MUST match Cargo.toml if used as crate)
-    "wac": "0.8.1",  # WebAssembly Composition tool
-    "wkg": "0.13.0",  # WebAssembly package manager
+    "wit-bindgen": "0.55.0",  # WIT binding generator with futures::Stream adapter
+    "wac": "0.9.0",  # WebAssembly Composition tool
+    "wkg": "0.15.0",  # WebAssembly package manager
 
     # Note: wizer removed - now part of wasmtime v39.0.0+, use `wasmtime wizer` subcommand
 
@@ -52,7 +52,7 @@ TOOL_VERSIONS = {
     "tinygo": "0.39.0",  # TinyGo compiler for Go→WASM
 
     # Node.js ecosystem
-    "nodejs": "24.14.0",  # Node.js runtime for jco toolchain (24.x required for Astro 6+)
+    "nodejs": "24.14.1",  # Node.js runtime for jco toolchain (security patch)
 }
 
 # P3-capable tool versions — minimum versions that support WASI Preview 3 async
@@ -79,12 +79,19 @@ P3_BLOCKED_LANGUAGES = {
 # Key: wasm-tools version
 # Value: Dict of compatible tool versions
 TOOL_COMPATIBILITY_MATRIX = {
-    "1.245.1": {
-        "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
+    "1.246.2": {
+        "wit-bindgen": ["0.54.0", "0.55.0"],
         "wac": ["0.9.0"],  # wac 0.9.0 does NOT support P3 async yet (issue #180)
         "wkg": ["0.13.0", "0.15.0"],
         "wasmsign2": ["0.2.6"],
-        "wasmtime": ["41.0.1", "42.0.1", "43.0.0"],
+        "wasmtime": ["43.0.0", "43.0.1"],
+    },
+    "1.245.1": {
+        "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
+        "wac": ["0.9.0"],
+        "wkg": ["0.13.0", "0.15.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["41.0.1", "42.0.1", "43.0.0", "43.0.1"],
     },
     "1.244.0": {
         "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
