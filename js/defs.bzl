@@ -61,10 +61,10 @@ Example usage:
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("//common:wasm_component_utils.bzl", "WASI_VERSION_ATTR_KWARGS", "create_component_info")
+load("//js/private:jco_opt.bzl", _jco_opt = "jco_opt")
+load("//js/private:jco_types.bzl", _jco_types = "jco_types")
 load("//providers:providers.bzl", "WasmComponentInfo")
 load("//rust:transitions.bzl", "wasm_transition")
-load("//js/private:jco_types.bzl", _jco_types = "jco_types")
-load("//js/private:jco_opt.bzl", _jco_opt = "jco_opt")
 
 # Re-export jco utility rules
 jco_types = _jco_types

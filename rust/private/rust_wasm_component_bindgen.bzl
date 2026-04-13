@@ -2,8 +2,8 @@
 
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_rust//rust:defs.bzl", "rust_common", "rust_library")
-load("//wit:defs.bzl", "symmetric_wit_bindgen", "wit_bindgen")
 load("//toolchains:tool_versions.bzl", "get_tool_version")
+load("//wit:defs.bzl", "symmetric_wit_bindgen", "wit_bindgen")
 load(":rust_wasm_component.bzl", "rust_wasm_component")
 load(":transitions.bzl", "wasm_transition")
 
@@ -113,8 +113,19 @@ def _generate_wrapper_impl(ctx):
         return [DefaultInfo(files = depset([out_file]))]
 
     # Validate CLI version compatibility for embedded runtime
-    COMPATIBLE_CLI_VERSIONS = ["0.44.0", "0.45.0", "0.46.0", "0.47.0", "0.48.0", "0.48.1", "0.49.0",
-                               "0.50.0", "0.51.0", "0.53.1", "0.54.0"]
+    COMPATIBLE_CLI_VERSIONS = [
+        "0.44.0",
+        "0.45.0",
+        "0.46.0",
+        "0.47.0",
+        "0.48.0",
+        "0.48.1",
+        "0.49.0",
+        "0.50.0",
+        "0.51.0",
+        "0.53.1",
+        "0.54.0",
+    ]
     cli_version = get_tool_version("wit-bindgen")
     if cli_version not in COMPATIBLE_CLI_VERSIONS:
         # buildifier: disable=print
@@ -572,6 +583,7 @@ def rust_wasm_component_bindgen(
 
     # WASM bindings: wit-bindgen crate for runtime + async_support
     wasm_bindings_deps = [bitflags_dep, "@crates//:wit-bindgen"]
+
     # Host bindings: embedded runtime only (no WASM-specific crate deps)
     host_bindings_deps = [bitflags_dep]
 

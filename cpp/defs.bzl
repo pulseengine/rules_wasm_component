@@ -71,14 +71,14 @@ Example usage:
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("//common:wasm_component_utils.bzl", "VALIDATE_WIT_ATTR_KWARGS", "WASI_VERSION_ATTR_KWARGS", "create_component_info")
-load("//providers:providers.bzl", "WasmComponentInfo")
-load("//rust:transitions.bzl", "wasm_transition")
-load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
 load(
     "//cpp/private:cpp_wasm_binary.bzl",
     _c_wasm_binary = "c_wasm_binary",
     _cpp_wasm_binary = "cpp_wasm_binary",
 )
+load("//providers:providers.bzl", "WasmComponentInfo")
+load("//rust:transitions.bzl", "wasm_transition")
+load("//tools/bazel_helpers:file_ops_actions.bzl", "setup_cpp_workspace_action")
 
 def _cpp_component_impl(ctx):
     """Implementation of cpp_component rule for C/C++ WebAssembly components.

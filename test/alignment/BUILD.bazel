@@ -8,8 +8,8 @@ This test validates that the wit-bindgen-rt crate correctly handles:
 """
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 load(":alignment_test.bzl", "alignment_validation_test")
 
 # WIT interface with challenging alignment scenarios

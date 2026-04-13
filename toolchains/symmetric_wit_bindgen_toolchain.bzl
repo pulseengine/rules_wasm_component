@@ -1,7 +1,7 @@
 """Symmetric wit-bindgen toolchain for supporting both official and cpetig's fork"""
 
-load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool")
 load("//toolchains:diagnostics.bzl", "format_diagnostic_error")
+load("//toolchains:tool_cache.bzl", "cache_tool", "retrieve_cached_tool")
 load("//toolchains:tool_registry.bzl", "tool_registry")
 
 # Platform detection now uses tool_registry.detect_platform

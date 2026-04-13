@@ -25,18 +25,23 @@ IMPORTANT: When updating versions here:
 # Tool versions - single source of truth
 TOOL_VERSIONS = {
     # Core WebAssembly toolchain
-    "wasm-tools": "1.244.0",  # Component model tools (validate, parse, compose, etc.)
-    "wasmtime": "39.0.1",  # WebAssembly runtime for testing/execution
+    "wasm-tools": "1.246.2",  # Component model tools (validate, parse, compose, etc.)
+    "wasmtime": "43.0.1",  # WebAssembly runtime with P3 async + wizer (security patch)
 
     # WIT and binding generation
-    "wit-bindgen": "0.49.0",  # WIT binding generator (MUST match Cargo.toml if used as crate)
-    "wac": "0.8.1",  # WebAssembly Composition tool
-    "wkg": "0.13.0",  # WebAssembly package manager
+    "wit-bindgen": "0.55.0",  # WIT binding generator with futures::Stream adapter
+    "wac": "0.9.0",  # WebAssembly Composition tool
+    "wkg": "0.15.0",  # WebAssembly package manager
 
     # Note: wizer removed - now part of wasmtime v39.0.0+, use `wasmtime wizer` subcommand
 
     # Signatures and security
-    "wasmsign2": "0.2.6",  # WebAssembly signing tool
+    "wasmsign2": "0.2.6",  # WebAssembly signing tool (legacy)
+    "wsc": "0.7.0",  # WebAssembly Signature Component (signing, attestation, SLSA)
+
+    # PulseEngine pipeline tools
+    "loom": "0.3.0",  # WebAssembly optimizer with Z3 formal verification
+    "meld": "0.1.0",  # Static WebAssembly component fusion
 
     # WRPC (WebAssembly Component RPC)
     "wrpc": "0.16.0",  # wrpc-wasmtime runtime for component RPC
@@ -52,13 +57,13 @@ TOOL_VERSIONS = {
 
 # P3-capable tool versions — minimum versions that support WASI Preview 3 async
 P3_TOOL_VERSIONS = {
-    "wasm-tools": "1.245.1",
-    "wasmtime": "43.0.0",
-    "wit-bindgen": "0.54.0",
+    "wasm-tools": "1.246.2",  # async task.return fixes, stream/future intrinsic extensions
+    "wasmtime": "43.0.1",  # WASIp3 snapshot 0.3.0-rc-2026-03-15 + security fixes (12 CVEs)
+    "wit-bindgen": "0.55.0",  # futures::Stream adapter impl for Rust
     "wasi-sdk": "32",
-    "jco": "1.17.0",
+    "jco": "1.17.6",  # P3 stream/async stabilization (nested streams, re-entrancy fixes)
     "nodejs": "24.14.0",
-    "binaryen": "128",
+    "binaryen": "129",
 }
 
 # Languages that support P3 async
@@ -74,12 +79,19 @@ P3_BLOCKED_LANGUAGES = {
 # Key: wasm-tools version
 # Value: Dict of compatible tool versions
 TOOL_COMPATIBILITY_MATRIX = {
-    "1.245.1": {
-        "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
+    "1.246.2": {
+        "wit-bindgen": ["0.54.0", "0.55.0"],
         "wac": ["0.9.0"],  # wac 0.9.0 does NOT support P3 async yet (issue #180)
         "wkg": ["0.13.0", "0.15.0"],
         "wasmsign2": ["0.2.6"],
-        "wasmtime": ["41.0.1", "42.0.1", "43.0.0"],
+        "wasmtime": ["43.0.0", "43.0.1"],
+    },
+    "1.245.1": {
+        "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
+        "wac": ["0.9.0"],
+        "wkg": ["0.13.0", "0.15.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["41.0.1", "42.0.1", "43.0.0", "43.0.1"],
     },
     "1.244.0": {
         "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],

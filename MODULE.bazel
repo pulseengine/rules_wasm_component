@@ -157,7 +157,7 @@ wkg = use_extension("//wasm:extensions.bzl", "wkg")
 wkg.register(
     name = "wkg",
     strategy = "download",
-    version = "0.13.0",
+    version = "0.15.0",
 )
 use_repo(wkg, "wkg_toolchain")
 
@@ -197,7 +197,7 @@ wasmtime = use_extension("//wasm:extensions.bzl", "wasmtime")
 wasmtime.register(
     name = "wasmtime",
     strategy = "download",
-    version = "39.0.1",
+    version = "43.0.1",
 )
 use_repo(wasmtime, "wasmtime_toolchain")
 
@@ -251,7 +251,7 @@ register_toolchains("@jco_toolchain//:jco_toolchain")
 binaryen = use_extension("//wasm:extensions.bzl", "binaryen")
 binaryen.register(
     name = "binaryen",
-    version = "123",
+    version = "129",
 )
 use_repo(binaryen, "binaryen_toolchain")
 
@@ -294,7 +294,7 @@ wasm_component_download(
     name = "wasmsign2_cli_wasm",
     filename = "wasmsign2.wasm",
     tool_name = "wsc",
-    version = "0.4.0",
+    version = "0.7.0",
 )
 
 # LOOM WebAssembly optimizer (version in //checksums/tools/loom.json)
@@ -302,7 +302,7 @@ wasm_component_download(
     name = "loom_wasm",
     filename = "loom.wasm",
     tool_name = "loom",
-    version = "0.1.0-rc1",
+    version = "0.3.0",
 )
 
 # WASM Tools Component toolchain for universal wasm-tools operations

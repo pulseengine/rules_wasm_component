@@ -27,11 +27,13 @@ This module provides utilities for:
 - Component validation (wasm_validate)
 - Component creation (wasm_component_new)
 - Pre-initialization (wasm_component_wizer, wizer_chain)
-- Optimization (wasm_optimize)
+- Optimization (wasm_optimize, binaryen_optimize)
 - Cryptographic signing (wasm_keygen, wasm_sign, wasm_verify)
 - AOT compilation (wasm_precompile, wasm_precompile_multi)
 - Runtime execution (wasm_run, wasm_test)
 - AOT embedding (wasm_embed_aot, wasm_extract_aot)
+- Component fusion (meld_fuse)
+- ARM cross-compilation (synth_compile)
 
 Example usage:
 
@@ -48,6 +50,22 @@ Example usage:
     )
 """
 
+load(
+    "//wasm/private:binaryen_optimize.bzl",
+    _binaryen_optimize = "binaryen_optimize",
+)
+load(
+    "//wasm/private:meld_fuse.bzl",
+    _meld_fuse = "meld_fuse",
+)
+load(
+    "//wasm/private:ssh_keygen.bzl",
+    _ssh_keygen = "ssh_keygen",
+)
+load(
+    "//wasm/private:synth_compile.bzl",
+    _synth_compile = "synth_compile",
+)
 load(
     "//wasm/private:wasm_aot_aspect.bzl",
     _wasm_aot_aspect = "wasm_aot_aspect",
@@ -68,6 +86,10 @@ load(
     _wasm_extract_aot = "wasm_extract_aot",
 )
 load(
+    "//wasm/private:wasm_optimize.bzl",
+    _wasm_optimize = "wasm_optimize",
+)
+load(
     "//wasm/private:wasm_precompile.bzl",
     _wasm_precompile = "wasm_precompile",
     _wasm_precompile_multi = "wasm_precompile_multi",
@@ -86,18 +108,6 @@ load(
 load(
     "//wasm/private:wasm_validate.bzl",
     _wasm_validate = "wasm_validate",
-)
-load(
-    "//wasm/private:ssh_keygen.bzl",
-    _ssh_keygen = "ssh_keygen",
-)
-load(
-    "//wasm/private:wasm_optimize.bzl",
-    _wasm_optimize = "wasm_optimize",
-)
-load(
-    "//wasm/private:binaryen_optimize.bzl",
-    _binaryen_optimize = "binaryen_optimize",
 )
 
 # Re-export public rules
@@ -129,3 +139,7 @@ ssh_keygen = _ssh_keygen
 # WebAssembly optimization rules
 wasm_optimize = _wasm_optimize
 binaryen_optimize = _binaryen_optimize
+
+# PulseEngine pipeline rules
+meld_fuse = _meld_fuse
+synth_compile = _synth_compile

@@ -2,10 +2,10 @@
 
 load("//checksums:registry.bzl", "get_latest_version", "get_tool_info", "validate_tool_compatibility")
 load("//toolchains:bundle.bzl", "get_version_for_tool", "log_bundle_usage")
-load("//toolchains:tool_registry.bzl", "tool_registry")
 load("//toolchains:diagnostics.bzl", "create_retry_wrapper", "format_diagnostic_error", "log_diagnostic_info", "validate_system_tool")
 load("//toolchains:monitoring.bzl", "add_build_telemetry", "create_health_check")
 load("//toolchains:tool_cache.bzl", "cache_tool", "clean_expired_cache", "retrieve_cached_tool", "validate_tool_functionality")
+load("//toolchains:tool_registry.bzl", "tool_registry")
 load("//toolchains:tool_versions.bzl", "get_tool_version", "validate_tool_versions")
 
 def _get_rust_toolchain_info(repository_ctx):
