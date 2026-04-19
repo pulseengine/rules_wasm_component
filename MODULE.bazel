@@ -257,6 +257,16 @@ use_repo(binaryen, "binaryen_toolchain")
 
 register_toolchains("@binaryen_toolchain//:binaryen_toolchain")
 
+# Meld toolchain for static WebAssembly component fusion
+meld = use_extension("//wasm:extensions.bzl", "meld")
+meld.register(
+    name = "meld",
+    version = "0.1.0",
+)
+use_repo(meld, "meld_toolchain")
+
+register_toolchains("@meld_toolchain//:meld_toolchain")
+
 # MoonBit hermetic toolchain for WebAssembly component builds (dev only)
 # NOTE: Not eagerly loaded - MoonBit uses rolling /latest/ URLs that cause
 # checksum drift and build failures, same as componentize-py.

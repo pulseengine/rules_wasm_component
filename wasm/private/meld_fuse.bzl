@@ -36,8 +36,9 @@ def _meld_fuse_impl(ctx):
     """Implementation of meld_fuse rule."""
     output_wasm = ctx.actions.declare_file(ctx.attr.out or (ctx.label.name + ".wasm"))
 
-    # Get the meld binary
-    meld = ctx.executable._meld
+    # Resolve meld binary via toolchain
+    meld_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:meld_toolchain_type"]
+    meld = meld_toolchain.meld
 
     # Collect all component .wasm files
     component_files = []
@@ -76,6 +77,7 @@ def _meld_fuse_impl(ctx):
         arguments = [args],
         mnemonic = "MeldFuse",
         progress_message = "Fusing %d components into %s" % (len(component_files), output_wasm.short_path),
+        tools = [meld],
     )
 
     return [
@@ -127,12 +129,8 @@ meld_fuse = rule(
             doc = "Validate the fused output with wasmparser",
             default = False,
         ),
-        "_meld": attr.label(
-            doc = "The meld CLI binary",
-            executable = True,
-            cfg = "exec",
-        ),
     },
+    toolchains = ["@rules_wasm_component//toolchains:meld_toolchain_type"],
     doc = """Fuse multiple WebAssembly components into a single core module using Meld.
 
 Static fusion eliminates runtime linking by resolving all inter-component imports

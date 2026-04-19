@@ -4,6 +4,7 @@ load("//toolchains:binaryen_toolchain.bzl", "binaryen_repository")
 load("//toolchains:componentize_py_toolchain.bzl", "componentize_py_toolchain_repository")
 load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_repository")
 load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
+load("//toolchains:meld_toolchain.bzl", "meld_repository")
 load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
 load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
 load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
@@ -653,6 +654,45 @@ binaryen = module_extension(
                 "version": attr.string(
                     doc = "Binaryen version to use",
                     default = "129",
+                ),
+            },
+        ),
+    },
+)
+
+def _meld_extension_impl(module_ctx):
+    """Implementation of Meld module extension."""
+    registrations = {}
+
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+
+    for name, registration in registrations.items():
+        meld_repository(
+            name = name + "_toolchain",
+            version = registration.version,
+        )
+
+    if not registrations:
+        meld_repository(
+            name = "meld_toolchain",
+            version = "0.1.0",
+        )
+
+# Module extension for Meld (static component fusion)
+meld = module_extension(
+    implementation = _meld_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this Meld registration",
+                    default = "meld",
+                ),
+                "version": attr.string(
+                    doc = "Meld version to use",
+                    default = "0.1.0",
                 ),
             },
         ),

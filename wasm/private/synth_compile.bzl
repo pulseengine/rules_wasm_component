@@ -15,7 +15,7 @@ def _synth_compile_impl(ctx):
     output_elf = ctx.actions.declare_file(ctx.attr.out or (ctx.label.name + ".elf"))
 
     # Get the synth binary
-    synth = ctx.executable._synth
+    synth = ctx.executable.synth
 
     # Determine input file
     if ctx.attr.wasm_module:
@@ -161,10 +161,12 @@ cortex-m7dp, cortex-m55, cortex-r5, cortex-a53, riscv32imac""",
             doc = "Path to kiln-builtins .o/.a for linking (required when link=True with Meld output)",
             allow_single_file = [".o", ".a"],
         ),
-        "_synth": attr.label(
-            doc = "The synth CLI binary",
+        "synth": attr.label(
+            doc = """The synth CLI binary. Synth has no published releases yet; users must
+supply a locally built binary target (see pulseengine/synth for build instructions).""",
             executable = True,
             cfg = "exec",
+            mandatory = True,
         ),
     },
     doc = """Compile a WebAssembly module to an ARM Cortex-M ELF binary using Synth.
@@ -185,8 +187,9 @@ Memory layout (Cortex-M):
 - RAM at 0x20000000: linear memory (R11=base) + stack (grows down)
 - R10 = memory size, R11 = memory base, R9 = globals base
 
-Note: Synth does not yet have published releases. The _synth attribute must
-point to a locally-built synth binary. See pulseengine/synth for build instructions.
+Note: Synth does not yet have published releases. The `synth` attribute must
+point to a locally-built synth binary target. See pulseengine/synth for build
+instructions.
 
 Example:
     load("@rules_wasm_component//wasm:defs.bzl", "synth_compile")
@@ -198,6 +201,7 @@ Example:
         loom_compat = True,
         link = True,
         builtins = "@kiln//builtins:kiln_builtins",
+        synth = "@synth//:synth",
     )
 """,
 )

@@ -84,6 +84,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for Meld (static WebAssembly component fusion)
+toolchain_type(
+    name = "meld_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for tool versions (single source of truth)
 bzl_library(
     name = "tool_versions",
@@ -315,6 +321,14 @@ bzl_library(
     srcs = ["tool_registry.bzl"],
     visibility = ["//visibility:public"],
     deps = ["//checksums:registry"],
+)
+
+# Bzl library for Meld toolchain implementation
+bzl_library(
+    name = "meld_toolchain",
+    srcs = ["meld_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [":tool_registry"],
 )
 
 # Export .bzl files for testing
