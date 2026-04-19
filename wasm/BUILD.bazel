@@ -22,6 +22,7 @@ bzl_library(
         "//wasm/private:wasm_run",
         "//wasm/private:wasm_signing",
         "//wasm/private:wasm_validate",
+        "//wasm/private:wsc_attestation",
     ],
 )
 

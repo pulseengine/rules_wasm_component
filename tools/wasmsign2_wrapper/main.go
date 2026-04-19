@@ -18,14 +18,33 @@ func main() {
 		log.Fatal("Usage: wasmsign2_wrapper <command> [args...]")
 	}
 
-	// Check for --bazel-marker-file flag (internal use only)
+	// Internal-only Bazel coordination flags. These never reach wsc.
+	//   --bazel-marker-file=PATH       Write "Verification passed\n" on success.
+	//   --bazel-stage-source=PATH      Copy PATH to the --output-file location
+	//                                  before running wsc. Lets rules pass the
+	//                                  post-transformation WASM as a separate
+	//                                  input and have the wrapper stage it so
+	//                                  wsc can read-modify-write the output.
+	//   --bazel-capture-stdout=PATH    Write wsc's stdout to PATH instead of
+	//                                  inheriting this process's stdout. Used
+	//                                  by show-chain to produce a Bazel output
+	//                                  artifact.
 	var markerFile string
+	var stageSource string
+	var captureStdout string
 	filteredArgs := make([]string, 0, len(os.Args))
 	for i, arg := range os.Args {
-		if strings.HasPrefix(arg, "--bazel-marker-file=") {
+		switch {
+		case strings.HasPrefix(arg, "--bazel-marker-file="):
 			markerFile = strings.TrimPrefix(arg, "--bazel-marker-file=")
-		} else if i > 0 { // Skip program name
-			filteredArgs = append(filteredArgs, arg)
+		case strings.HasPrefix(arg, "--bazel-stage-source="):
+			stageSource = strings.TrimPrefix(arg, "--bazel-stage-source=")
+		case strings.HasPrefix(arg, "--bazel-capture-stdout="):
+			captureStdout = strings.TrimPrefix(arg, "--bazel-capture-stdout=")
+		default:
+			if i > 0 { // Skip program name
+				filteredArgs = append(filteredArgs, arg)
+			}
 		}
 	}
 
@@ -65,6 +84,22 @@ func main() {
 		log.Fatalf("Failed to resolve paths: %v", err)
 	}
 
+	// Stage the post-transformation WASM into the declared Bazel output before
+	// invoking wsc, which reads and rewrites --output-file in place.
+	if stageSource != "" {
+		outPath := findFlagValue(resolvedArgs, "--output-file", "-o")
+		if outPath == "" {
+			log.Fatal("--bazel-stage-source requires a resolvable --output-file or -o in the wsc command")
+		}
+		data, readErr := os.ReadFile(stageSource)
+		if readErr != nil {
+			log.Fatalf("Failed to read stage source %s: %v", stageSource, readErr)
+		}
+		if writeErr := os.WriteFile(outPath, data, 0644); writeErr != nil {
+			log.Fatalf("Failed to stage %s -> %s: %v", stageSource, outPath, writeErr)
+		}
+	}
+
 	// Build wasmtime command with directory mappings
 	wasmtimeArgs := []string{
 		"run",
@@ -84,9 +119,19 @@ func main() {
 
 	// Execute wasmtime
 	cmd := exec.Command(wasmtimeBinary, wasmtimeArgs...)
-	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
+
+	if captureStdout != "" {
+		outFile, createErr := os.Create(captureStdout)
+		if createErr != nil {
+			log.Fatalf("Failed to create stdout capture file %s: %v", captureStdout, createErr)
+		}
+		defer outFile.Close()
+		cmd.Stdout = outFile
+	} else {
+		cmd.Stdout = os.Stdout
+	}
 
 	if err := cmd.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -109,7 +154,9 @@ func resolvePathsInArgs(command string, args []string) ([]string, []string, erro
 	resolvedArgs := make([]string, 0, len(args))
 	dirs := make([]string, 0)
 
-	// Track which flags expect file paths
+	// Track which flags expect file paths.
+	// Covers sign/verify/keygen (legacy) plus attest/verify-chain/show-chain
+	// (wsc 0.7.0+ attestation commands).
 	pathFlags := map[string]bool{
 		"-i": true, "--input":       true,
 		"-o": true, "--output":      true,
@@ -118,6 +165,11 @@ func resolvePathsInArgs(command string, args []string) ([]string, []string, erro
 		"-S": true, "--signature":   true,
 		"--public-key-name":  true,
 		"--secret-key-name":  true,
+		"--input-file":       true,
+		"--output-file":      true,
+		"-p": true, "--policy": true,
+		"--trusted-tools": true,
+		"--audit-file":    true,
 	}
 
 	for i := 0; i < len(args); i++ {
@@ -149,7 +201,12 @@ func resolvePathsInArgs(command string, args []string) ([]string, []string, erro
 			strings.HasPrefix(arg, "--secret-key-name=") ||
 			strings.HasPrefix(arg, "-i=") || strings.HasPrefix(arg, "-o=") ||
 			strings.HasPrefix(arg, "-k=") || strings.HasPrefix(arg, "-K=") ||
-			strings.HasPrefix(arg, "-S=")) {
+			strings.HasPrefix(arg, "-S=") ||
+			strings.HasPrefix(arg, "--input-file=") ||
+			strings.HasPrefix(arg, "--output-file=") ||
+			strings.HasPrefix(arg, "-p=") || strings.HasPrefix(arg, "--policy=") ||
+			strings.HasPrefix(arg, "--trusted-tools=") ||
+			strings.HasPrefix(arg, "--audit-file=")) {
 			// Handle --flag=value format
 			parts := strings.SplitN(arg, "=", 2)
 			if len(parts) == 2 {
@@ -178,6 +235,28 @@ func resolvePathsInArgs(command string, args []string) ([]string, []string, erro
 	}
 
 	return resolvedArgs, dirs, nil
+}
+
+// findFlagValue returns the value of a long or short flag in the resolved
+// arg list, supporting both "--flag val" and "--flag=val" forms. Returns ""
+// if neither form is present.
+func findFlagValue(args []string, longFlag, shortFlag string) string {
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if a == longFlag || (shortFlag != "" && a == shortFlag) {
+			if i+1 < len(args) {
+				return args[i+1]
+			}
+			return ""
+		}
+		if strings.HasPrefix(a, longFlag+"=") {
+			return strings.TrimPrefix(a, longFlag+"=")
+		}
+		if shortFlag != "" && strings.HasPrefix(a, shortFlag+"=") {
+			return strings.TrimPrefix(a, shortFlag+"=")
+		}
+	}
+	return ""
 }
 
 // uniqueStrings returns unique strings from a slice

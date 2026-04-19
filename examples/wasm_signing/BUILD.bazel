@@ -7,7 +7,14 @@ signature verification.
 """
 
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
-load("@rules_wasm_component//wasm:defs.bzl", "wasm_keygen", "wasm_sign", "wasm_validate", "wasm_verify")
+load(
+    "@rules_wasm_component//wasm:defs.bzl",
+    "wasm_keygen",
+    "wasm_show_chain",
+    "wasm_sign",
+    "wasm_validate",
+    "wasm_verify",
+)
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -88,6 +95,21 @@ wasm_validate(
     component = ":signed_component_embedded",
     signing_keys = ":compact_keys",
     verify_signature = True,
+)
+
+# Step 9b: Extract the transformation chain from the signed component as JSON.
+# A freshly signed component has an empty chain ("No transformation
+# attestations found in module"); meaningful output appears only after
+# transformations like meld_fuse or wasm_optimize have run. This target proves
+# the wasm_show_chain rule wires end-to-end.
+#
+# wasm_verify_chain is the natural ship-gate but requires at least one
+# transformation attestation in the chain — demo it in a pipeline that includes
+# meld_fuse or wasm_optimize, not a pure-sign flow.
+wasm_show_chain(
+    name = "signed_component_chain_json",
+    as_json = True,
+    component = ":signed_component_embedded",
 )
 
 # Step 10: Demonstrate signing a raw WASM file
