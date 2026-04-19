@@ -34,6 +34,7 @@ This module provides utilities for:
 - AOT embedding (wasm_embed_aot, wasm_extract_aot)
 - Component fusion (meld_fuse)
 - ARM cross-compilation (synth_compile)
+- Sigil transformation attestation (wasm_attest, wasm_verify_chain, wasm_show_chain)
 
 Example usage:
 
@@ -106,6 +107,12 @@ load(
     _wasm_verify = "wasm_verify",
 )
 load(
+    "//wasm/private:wsc_attestation.bzl",
+    _wasm_attest = "wasm_attest",
+    _wasm_show_chain = "wasm_show_chain",
+    _wasm_verify_chain = "wasm_verify_chain",
+)
+load(
     "//wasm/private:wasm_validate.bzl",
     _wasm_validate = "wasm_validate",
 )
@@ -120,6 +127,11 @@ wizer_chain = _wizer_chain
 wasm_keygen = _wasm_keygen
 wasm_sign = _wasm_sign
 wasm_verify = _wasm_verify
+
+# Sigil transformation attestation rules (wsc 0.7.0+)
+wasm_attest = _wasm_attest
+wasm_verify_chain = _wasm_verify_chain
+wasm_show_chain = _wasm_show_chain
 
 # WebAssembly AOT compilation rules
 wasm_precompile = _wasm_precompile
