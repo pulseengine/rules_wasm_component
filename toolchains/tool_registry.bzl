@@ -137,6 +137,12 @@ _URL_PATTERNS = {
         "filename": "{suffix}",  # url_suffix IS the filename (e.g., "wit-bindgen-wrpc-aarch64-apple-darwin")
         "is_binary": True,
     },
+    "meld": {
+        # meld releases are standalone binaries (url_suffix IS the filename)
+        "base": "https://github.com/{repo}/releases/download/v{version}",
+        "filename": "{suffix}",  # e.g., "meld-aarch64-apple-darwin"
+        "is_binary": True,
+    },
 }
 
 def _build_download_url(tool_name, version, platform, tool_info, github_repo):

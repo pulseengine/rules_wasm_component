@@ -29,6 +29,7 @@ bzl_library(
     name = "extensions",
     srcs = ["extensions.bzl"],
     deps = [
+        "//toolchains:meld_toolchain",
         "//toolchains:wasm_toolchain",
     ],
 )
