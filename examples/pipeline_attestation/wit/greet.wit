@@ -1,0 +1,11 @@
+/// Minimal interface for the pipeline attestation example.
+package example:greet@0.1.0;
+
+interface greeter {
+    /// Return a short greeting for the given name.
+    greet: func(name: string) -> string;
+}
+
+world greet {
+    export greeter;
+}

@@ -19,12 +19,16 @@ def _wasm_optimize_impl(ctx):
     # Get LOOM WASM component
     loom_wasm = ctx.file._loom_wasm
 
-    # Build command arguments
+    # Build command arguments.
+    # Note: loom v0.3.0 does NOT accept the `--` separator between the wasm
+    # module path and the subcommand when run under `wasmtime run`.
+    # TODO: loom reads input paths via WASI and `--dir=.` does not resolve
+    # the bazel-out symlinks; a small wrapper (mirroring wasmsign2_wrapper)
+    # is needed to compute real paths and register them as WASI mounts.
     args = ctx.actions.args()
     args.add("run")
     args.add("--dir=.")
     args.add(loom_wasm)
-    args.add("--")
     args.add("optimize")
     args.add(input_wasm)
     args.add("-o", output_wasm)
