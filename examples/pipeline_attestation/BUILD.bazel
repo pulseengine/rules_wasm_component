@@ -1,0 +1,94 @@
+"""End-to-end PulseEngine attestation pipeline example.
+
+Demonstrates the full sign + attest + verify_chain + show_chain flow against a
+minimal Rust component. This is the minimum viable pipeline that produces a
+non-empty transformation chain today — meld_fuse requires multi-component
+setups and wasm_optimize (loom) has a pending WASI path-resolution issue
+(TODO in //wasm/private:wasm_optimize.bzl), so they are not wired in here.
+"""
+
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component_bindgen")
+load(
+    "@rules_wasm_component//wasm:defs.bzl",
+    "wasm_attest",
+    "wasm_keygen",
+    "wasm_show_chain",
+    "wasm_sign",
+    "wasm_verify_chain",
+)
+load("@rules_wasm_component//wit:defs.bzl", "wit_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# 1. WIT interface for a trivial greeter component.
+wit_library(
+    name = "greet_interfaces",
+    package_name = "example:greet",
+    srcs = ["wit/greet.wit"],
+    world = "greet",
+)
+
+# 2. Build the component from Rust.
+rust_wasm_component_bindgen(
+    name = "greeter_component",
+    srcs = ["src/lib.rs"],
+    profiles = ["release"],
+    validate_wit = False,
+    wit = ":greet_interfaces",
+)
+
+# 3. Generate signing keys (compact format for wasm_sign).
+wasm_keygen(
+    name = "example_keys",
+    public_key_name = "example.public",
+    secret_key_name = "example.secret",
+)
+
+# 4. Sign the component. Signing mutates the module (adds a signature section)
+#    but does not record a transformation attestation — that's what step 5
+#    exists for.
+wasm_sign(
+    name = "greeter_signed",
+    component = ":greeter_component",
+    keys = ":example_keys",
+)
+
+# 5. Record a transformation attestation covering the signing step. This
+#    writes a `wsc-attestation` custom section into the output describing the
+#    (greeter_component -> greeter_signed) transformation.
+wasm_attest(
+    name = "greeter_attested",
+    input_component = ":greeter_component",
+    output_component = ":greeter_signed",
+    tool_name = "wasmsign2",
+    tool_version = "0.2.6",
+    transformation_type = "custom",
+)
+
+# 6. Emit the attestation chain as JSON — useful as a CI artifact for
+#    compliance or debugging.
+wasm_show_chain(
+    name = "greeter_chain",
+    as_json = True,
+    component = ":greeter_attested",
+)
+
+# 7. Verify the chain. Because the module now carries a transformation
+#    attestation, wsc verify-chain runs the full policy pipeline (empty
+#    policy here => default rules only) and emits a success marker.
+wasm_verify_chain(
+    name = "greeter_chain_verified",
+    component = ":greeter_attested",
+)
+
+# Convenience aggregate for `bazel build //examples/pipeline_attestation:all_pipeline_outputs`.
+filegroup(
+    name = "all_pipeline_outputs",
+    srcs = [
+        ":greeter_attested",
+        ":greeter_chain",
+        ":greeter_chain_verified",
+        ":greeter_component",
+        ":greeter_signed",
+    ],
+)
