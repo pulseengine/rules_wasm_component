@@ -282,7 +282,7 @@
     },
     "//wasm:extensions.bzl%binaryen": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
         "usagesDigest": "c5GClIZ+xfHSKFn9WL/02Ag7wuihInOMqTGH5CxR/U8=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -306,7 +306,7 @@
     },
     "//wasm:extensions.bzl%cpp_component": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
         "usagesDigest": "6UgLH0voNNqp5nvGAZIPdkqBNHnYJns3D47wtyD/QX4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -331,8 +331,8 @@
     },
     "//wasm:extensions.bzl%jco": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
-        "usagesDigest": "EBF1KBwpfJ1aAg4N+iBxBkHr3C8kU856a5qUoN79d0s=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
+        "usagesDigest": "MRHYkIS73wv1wYllXhdZBYX6dRIp7VySTL4edmOH2/M=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -341,7 +341,7 @@
             "repoRuleId": "@@//toolchains:jco_toolchain.bzl%jco_toolchain_repository",
             "attributes": {
               "version": "1.4.0",
-              "node_version": "24.14.0"
+              "node_version": "24.14.1"
             }
           }
         },
@@ -356,7 +356,7 @@
     },
     "//wasm:extensions.bzl%meld": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
         "usagesDigest": "BnGoVHC5IiwLNc8XvxkOniYvo+CFiIGA27V/CaLd4Gw=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -380,7 +380,7 @@
     },
     "//wasm:extensions.bzl%tinygo": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
         "usagesDigest": "esnFdrH+qxI9awhZ/uW4dIkm843wWmTCzO4b1pdmifs=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -404,7 +404,7 @@
     },
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
         "usagesDigest": "juzRCJg8/dKfNzkycrcpYBYuXmaqqX3TTt8KL2C78kQ=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -778,7 +778,7 @@
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
         "usagesDigest": "XNTBNCoyj6s3okyF8agUT6PMhSUgcjtD7Xu3qTDS5gk=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -812,7 +812,7 @@
     },
     "//wasm:extensions.bzl%wasmtime": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
         "usagesDigest": "W3m1ohl2c96vXpGAao2C6XIl3CGB+kZYZN2+bagGv0M=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -837,7 +837,7 @@
     },
     "//wasm:extensions.bzl%wkg": {
       "general": {
-        "bzlTransitiveDigest": "iid0bFk+3Miw3H2/qWbZX0LtK9OPTZNsbyiOK5GHEFU=",
+        "bzlTransitiveDigest": "Mf6ahawtbXDwftSeRDvONGvSPgzWSnxGoyKNfpSZcz0=",
         "usagesDigest": "ks+Q/IL0nntNP6PabzUcF0ruF4X9hTKhbmck/ueoPTg=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
