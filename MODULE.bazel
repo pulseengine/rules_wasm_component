@@ -226,7 +226,7 @@ use_repo(node, "nodejs_toolchains")
 jco = use_extension("//wasm:extensions.bzl", "jco")
 jco.register(
     name = "jco",
-    node_version = "24.14.0",
+    node_version = "24.14.1",
     version = "1.4.0",
 )
 use_repo(jco, "jco_toolchain")

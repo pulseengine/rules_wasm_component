@@ -20,13 +20,13 @@
           "npm_path": "node-v{}-darwin-x64/bin/npm"
         },
         "linux_amd64": {
-          "sha256": "ace9fa104992ed0829642629c46ca7bd7fd6e76278cb96c958c4b387d29658ea",
+          "sha256": "84d38715d449447117d05c3e71acd78daa49d5b1bfa8aacf610303920c3322be",
           "url_suffix": "linux-x64.tar.xz",
           "binary_path": "node-v{}-linux-x64/bin/node",
           "npm_path": "node-v{}-linux-x64/bin/npm"
         },
         "linux_arm64": {
-          "sha256": "734ff04fa7f8ed2e8a78d40cacf5ac3fc4515dac2858757cbab313eb483ba8a2",
+          "sha256": "71e427e28b78846f201d4d5ecc30cb13d1508ca099ef3871889a1256c7d6f67e",
           "url_suffix": "linux-arm64.tar.xz",
           "binary_path": "node-v{}-linux-arm64/bin/node",
           "npm_path": "node-v{}-linux-arm64/bin/npm"

@@ -52,7 +52,7 @@ TOOL_VERSIONS = {
     "tinygo": "0.39.0",  # TinyGo compiler for Go→WASM
 
     # Node.js ecosystem
-    "nodejs": "24.14.0",  # Node.js runtime for jco toolchain (24.x required for Astro 6+)
+    "nodejs": "24.14.1",  # Node.js runtime for jco toolchain (24.x required for Astro 6+)
 }
 
 # P3-capable tool versions — minimum versions that support WASI Preview 3 async
@@ -62,7 +62,7 @@ P3_TOOL_VERSIONS = {
     "wit-bindgen": "0.55.0",  # futures::Stream adapter impl for Rust
     "wasi-sdk": "32",
     "jco": "1.17.6",  # P3 stream/async stabilization (nested streams, re-entrancy fixes)
-    "nodejs": "24.14.0",
+    "nodejs": "24.14.1",
     "binaryen": "129",
 }
 
