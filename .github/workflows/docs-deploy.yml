@@ -16,6 +16,7 @@ on:
 
 jobs:
   bazel-build-and-deploy:
+    # Stays on ubuntu-latest: Bazel not installed on smithy fleet.
     runs-on: ubuntu-latest
     # Only run on main branch to prevent accidental deployments
     if: github.ref == 'refs/heads/main'

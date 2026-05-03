@@ -26,6 +26,7 @@ env:
 jobs:
   bcr-hermetic-test:
     name: BCR Hermetic Build Test
+    # Stays on ubuntu-latest: docker run against vendor BCR image (gcr.io/bazel-public/ubuntu2204) untested on smithy podman shim.
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -130,6 +131,7 @@ jobs:
 
   bcr-toolchain-validation:
     name: BCR Toolchain Validation
+    # Stays on ubuntu-latest: docker run against vendor BCR image (gcr.io/bazel-public/ubuntu2204) untested on smithy podman shim.
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -184,6 +186,7 @@ jobs:
 
   bcr-multi-platform-test:
     name: BCR Multi-Platform Test
+    # Stays on ${{ matrix.os }}: matrix is multi-OS (Linux/macOS/Windows) + Bazel; smithy fleet is Linux-only without Bazel.
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     # Run on all PRs and main branch to catch Windows issues early
@@ -241,6 +244,7 @@ jobs:
 
   bcr-incompatible-flags-test:
     name: BCR Incompatible Flags Test
+    # Stays on ubuntu-latest: Bazel not installed on smithy fleet.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Only run on main branch and manual dispatch
@@ -287,6 +291,7 @@ jobs:
 
   bcr-metadata-validation:
     name: BCR Metadata Validation
+    # Stays on ubuntu-latest: bundled with the BCR test suite; keeping co-located with related Bazel jobs.
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -348,6 +353,7 @@ jobs:
 
   bcr-test-module-validation:
     name: BCR Test Module Validation
+    # Stays on ubuntu-latest: Bazel not installed on smithy fleet.
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -393,6 +399,7 @@ jobs:
 
   bcr-summary:
     name: BCR Test Summary
+    # Stays on ubuntu-latest: bundled summary job for the BCR test suite, keeping co-located.
     runs-on: ubuntu-latest
     needs: [bcr-hermetic-test, bcr-toolchain-validation]
     if: always()
