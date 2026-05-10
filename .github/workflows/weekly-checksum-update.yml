@@ -34,6 +34,7 @@ env:
 
 jobs:
   checksum-update:
+    # Stays on ubuntu-latest: Bazel + sudo apt-get install not supported on smithy fleet.
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -430,7 +431,7 @@ jobs:
   # Separate job for notification and cleanup
   notify:
     needs: checksum-update
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, light]
     if: always()
 
     steps:

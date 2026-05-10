@@ -12,6 +12,7 @@ on:
 jobs:
   smoke-tests:
     name: Smoke Tests
+    # Stays on ${{ matrix.os }}: Bazel matrix (Linux + macOS); smithy fleet is Linux-only without Bazel.
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -40,7 +41,7 @@ jobs:
 
   security-validation:
     name: Security Validation
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, light]
 
     steps:
       - uses: actions/checkout@v6
@@ -72,6 +73,7 @@ jobs:
 
   performance-benchmark:
     name: Performance Benchmark
+    # Stays on ubuntu-latest: Bazel not installed on smithy fleet.
     runs-on: ubuntu-latest
 
     steps:
@@ -114,6 +116,7 @@ jobs:
 
   compatibility-matrix:
     name: Compatibility Tests
+    # Stays on ${{ matrix.os }}: Bazel matrix (Linux + macOS); smithy fleet is Linux-only without Bazel.
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -132,7 +135,7 @@ jobs:
 
   production-readiness:
     name: Production Ready ✅
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, light]
     needs:
       [
         smoke-tests,

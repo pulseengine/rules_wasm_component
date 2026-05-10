@@ -19,7 +19,7 @@ permissions:
 jobs:
   create_release:
     name: Create Release
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, light]
     outputs:
       tag_name: ${{ steps.get_tag.outputs.tag_name }}
       release_archive: ${{ steps.create_archive.outputs.archive_name }}
