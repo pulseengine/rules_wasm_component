@@ -1,0 +1,125 @@
+# Design decisions and their driving requirements.
+# Managed by rivet (see rivet.yaml).
+artifacts:
+  - id: REQ-002
+    type: requirement
+    title: End-to-end certifiable WebAssembly pipeline
+    status: accepted
+    description: >
+      The project shall provide a build-and-verification pipeline that takes a
+      system from an AADL architecture model through to coverage-verified,
+      target-compiled WebAssembly artifacts, with each transformation
+      independently attestable.
+    tags: [pipeline, certification]
+
+  - id: REQ-003
+    type: requirement
+    title: Version-pinned, checksum-verified toolchains
+    status: accepted
+    description: >
+      All build toolchains shall be pinned to explicit upstream versions with
+      SHA256 checksums verified against the JSON registry, so an upstream
+      re-release of an existing version fails the build loudly rather than
+      silently changing build inputs.
+    tags: [toolchain, security]
+
+  - id: REQ-004
+    type: requirement
+    title: First-class integration of PulseEngine pipeline tools
+    status: accepted
+    description: >
+      PulseEngine pipeline tools (spar, loom, meld, sigil, witness, synth)
+      shall be integrated as first-class hermetic Bazel rules rather than
+      invoked as manual out-of-band steps.
+    tags: [toolchain, integration]
+
+  - id: DD-001
+    type: design-decision
+    title: Adopt the AADL-to-ELF certifiable WebAssembly pipeline
+    status: approved
+    description: >
+      Standardize the toolchain on a fixed staged pipeline: spar (AADL to WIT)
+      then build, then loom + wasm-opt optimization, then wac composition,
+      then sigil/wsc sign and attest, then meld fusion to a core module, then
+      witness MC/DC coverage and synth ELF compilation.
+    tags: [pipeline, certification]
+    fields:
+      rationale: >
+        A fixed, attestable stage order is what makes the output certifiable
+        (DO-178C / ISO 26262 lineage). meld's component-to-core-module fusion
+        is the bridge that lets witness and synth (both core-module-only)
+        operate on what started as a component; both consume the same
+        MeldFusedInfo provider. sigil/wsc attests every transform edge so the
+        chain is independently verifiable.
+      alternatives: >
+        Ad-hoc per-project tool invocation; checking generated WIT and ELF
+        into source; using only hand-authored WIT interfaces.
+      source-ref: docs/certification-pipeline.md
+      diagram: |
+        flowchart TD
+          AADL["AADL architecture model"] -->|"spar codegen --format wit"| WIT["WIT interfaces"]
+          WIT -->|"wit_library / wit_bindgen"| BIND["Language bindings"]
+          SRC["Component source"] --> BUILD["Build component"]
+          BIND --> BUILD
+          BUILD --> COMP["WASM component"]
+          COMP -->|"loom + wasm-opt"| OPT["Optimized component"]
+          OPT -->|"wac compose"| COMPOSE["Composed component"]
+          COMPOSE -->|"wsc / sigil sign+attest"| ATTEST["Attested component"]
+          ATTEST -->|"meld fusion"| MOD["WASM core module"]
+          MOD -->|"witness"| COV["MC/DC coverage evidence"]
+          MOD -->|"synth compile"| ELF["ARM Cortex-M ELF"]
+    links:
+      - type: satisfies
+        target: REQ-002
+
+  - id: DD-002
+    type: design-decision
+    title: May 2026 toolchain version baseline
+    status: approved
+    description: >
+      Bump wasm-tools 1.244.0 to 1.246.2, wasi-sdk 29 to 32, binaryen 123 to
+      129, nodejs 24.14.0 to 24.14.1, and file-ops-component 0.1.0-rc.3 to
+      0.2.0; re-verify and correct all five wasi-sdk-32 SHA256 checksums.
+    tags: [toolchain, security]
+    fields:
+      rationale: >
+        MODULE.bazel version pins had drifted behind the checksum registry's
+        verified versions; realigning them keeps the JSON registry as the
+        single source of truth. The wasi-sdk-32 checksum mismatch on all five
+        platforms was an upstream re-release of an existing version, caught
+        only because checksums are pinned - a live confirmation of REQ-003's
+        loud-failure property.
+      alternatives: >
+        Remain on the older versions; bump versions without re-verifying the
+        upstream checksums.
+      baseline: "2026-05"
+      source-ref: "commit 40a4d02"
+    links:
+      - type: satisfies
+        target: REQ-003
+
+  - id: DD-003
+    type: design-decision
+    title: Integrate spar and witness now; defer synth pending a release
+    status: approved
+    description: >
+      Add JSON-registry entries, toolchains, and Bazel rules for spar
+      (aadl_wit_library) and witness (wasm_module_coverage); keep loom, meld,
+      and sigil integrated with a consistency pass; defer synth until it
+      publishes a versioned release.
+    tags: [toolchain, integration]
+    fields:
+      rationale: >
+        spar (v0.9.3) and witness (v0.22.0) publish versioned per-platform
+        release binaries with SHA256SUMS, fitting JSON-registry download
+        Pattern 1. synth has no published releases, so integrating it now
+        would require rolling-URL sourcing - the exact anti-pattern that
+        disables MoonBit and componentize-py. witness operates on core
+        modules, which meld already produces.
+      alternatives: >
+        Integrate all four tools now (blocked by the absence of synth
+        releases); build every tool from source via git_repository.
+      source-ref: docs/certification-pipeline.md
+    links:
+      - type: satisfies
+        target: REQ-004
