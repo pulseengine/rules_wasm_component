@@ -26,7 +26,7 @@ All tools (Go SDK, Binaryen, TinyGo) are downloaded via tool_registry.download()
 
 # Version constants - centralized for easy updates
 _GO_VERSION = "1.25.3"
-_BINARYEN_VERSION = "123"
+_BINARYEN_VERSION = "129"
 
 def _setup_go_wit_bindgen(repository_ctx, go_binary):
     """Install wit-bindgen-go Go tool for WIT binding generation
