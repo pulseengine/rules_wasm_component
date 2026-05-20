@@ -1,0 +1,35 @@
+{
+  "tool_name": "witness",
+  "github_repo": "pulseengine/witness",
+  "description": "MC/DC-style branch coverage for WebAssembly core modules",
+  "latest_version": "0.22.0",
+  "last_checked": "2026-05-20T00:00:00Z",
+  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64"],
+  "versions": {
+    "0.22.0": {
+      "release_date": "2026-05-18",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "fa93f9f375c62f5bcf1a53e168a77654b4f2c29f0711c80c002bcba593f5ce95",
+          "url_suffix": "x86_64-apple-darwin.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "4f2f5202c8b749a7b0b7a940ccf74eaddc75f14012ea2065a88c1a61ac10bddf",
+          "url_suffix": "aarch64-apple-darwin.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "51d6bcbb05e82467d68b62d0e178f32ff06393f07ecb734c925efafebb79954f",
+          "url_suffix": "x86_64-unknown-linux-gnu.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "b61786fdda273b972a9e1e2b5ec3c1b44935eab1a9e4e7d5ada97c0b5029d055",
+          "url_suffix": "aarch64-unknown-linux-gnu.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "517d0d068c492f6a96685ead7e86478909096c40960bea9159812dc4c3741701",
+          "url_suffix": "x86_64-pc-windows-msvc.zip"
+        }
+      }
+    }
+  }
+}

@@ -270,6 +270,16 @@ use_repo(spar, "spar_toolchain")
 
 register_toolchains("@spar_toolchain//:spar_toolchain")
 
+# witness toolchain: MC/DC branch coverage for WASM core modules
+witness = use_extension("//wasm:extensions.bzl", "witness")
+witness.register(
+    name = "witness",
+    version = "0.22.0",
+)
+use_repo(witness, "witness_toolchain")
+
+register_toolchains("@witness_toolchain//:witness_toolchain")
+
 # MoonBit hermetic toolchain for WebAssembly component builds (dev only)
 # NOTE: Not eagerly loaded - MoonBit uses rolling /latest/ URLs that cause
 # checksum drift and build failures, same as componentize-py.

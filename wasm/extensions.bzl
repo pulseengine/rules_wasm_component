@@ -6,6 +6,7 @@ load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_reposi
 load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
 load("//toolchains:meld_toolchain.bzl", "meld_repository")
 load("//toolchains:spar_toolchain.bzl", "spar_repository")
+load("//toolchains:witness_toolchain.bzl", "witness_repository")
 load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
 load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
 load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
@@ -733,6 +734,45 @@ spar = module_extension(
                 "version": attr.string(
                     doc = "spar version to use",
                     default = "0.9.3",
+                ),
+            },
+        ),
+    },
+)
+
+def _witness_extension_impl(module_ctx):
+    """Implementation of the witness module extension."""
+    registrations = {}
+
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+
+    for name, registration in registrations.items():
+        witness_repository(
+            name = name + "_toolchain",
+            version = registration.version,
+        )
+
+    if not registrations:
+        witness_repository(
+            name = "witness_toolchain",
+            version = "0.22.0",
+        )
+
+# Module extension for witness (MC/DC branch coverage for WASM core modules)
+witness = module_extension(
+    implementation = _witness_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this witness registration",
+                    default = "witness",
+                ),
+                "version": attr.string(
+                    doc = "witness version to use",
+                    default = "0.22.0",
                 ),
             },
         ),

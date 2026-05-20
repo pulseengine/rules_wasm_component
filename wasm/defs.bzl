@@ -64,6 +64,10 @@ load(
     _aadl_wit_library = "aadl_wit_library",
 )
 load(
+    "//wasm/private:wasm_module_coverage.bzl",
+    _wasm_module_coverage = "wasm_module_coverage",
+)
+load(
     "//wasm/private:ssh_keygen.bzl",
     _ssh_keygen = "ssh_keygen",
 )
@@ -160,3 +164,4 @@ binaryen_optimize = _binaryen_optimize
 aadl_wit_library = _aadl_wit_library
 meld_fuse = _meld_fuse
 synth_compile = _synth_compile
+wasm_module_coverage = _wasm_module_coverage

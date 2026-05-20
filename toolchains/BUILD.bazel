@@ -96,6 +96,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for witness (MC/DC branch coverage for WASM core modules)
+toolchain_type(
+    name = "witness_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for tool versions (single source of truth)
 bzl_library(
     name = "tool_versions",

@@ -1,0 +1,36 @@
+"""Example: measure MC/DC branch coverage of a WASM core module with witness.
+
+witness instruments a core module, executes it via its embedded runtime, and
+emits an LCOV coverage report. This is the verification stage of the
+PulseEngine pipeline:
+
+  ... -> meld (fuse to core module) -> wasm_module_coverage -> coverage evidence
+
+witness operates on core modules, not components. Here the subject is a
+small pre-built core module (coverage_demo.wat -> coverage_demo.wasm); in a
+real pipeline the `module` would be a meld_fuse target.
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_module_coverage")
+
+package(default_visibility = ["//visibility:public"])
+
+# coverage_demo.wasm is a minimal core module (see coverage_demo.wat for the
+# source). Its no-argument export `run` exercises a branch.
+#
+# NOTE: this hand-written module carries no DWARF debug info, so the LCOV
+# report is structural only (no source-line records) — it proves the
+# instrument -> run -> lcov pipeline works. Meaningful MC/DC coverage needs a
+# subject built with debug info (e.g. a Rust core module with debug = true);
+# see docs/certification-pipeline.md.
+wasm_module_coverage(
+    name = "coverage_demo_coverage",
+    module = "coverage_demo.wasm",
+    invoke = ["run"],
+)
+
+build_test(
+    name = "witness_example_test",
+    targets = [":coverage_demo_coverage"],
+)
