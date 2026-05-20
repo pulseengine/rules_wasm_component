@@ -143,6 +143,11 @@ _URL_PATTERNS = {
         "filename": "{suffix}",  # e.g., "meld-aarch64-apple-darwin"
         "is_binary": True,
     },
+    "spar": {
+        # spar releases are tar.gz/zip archives: spar-v{version}-{triple}.{ext}
+        "base": "https://github.com/{repo}/releases/download/v{version}",
+        "filename": "spar-v{version}-{suffix}",
+    },
 }
 
 def _build_download_url(tool_name, version, platform, tool_info, github_repo):

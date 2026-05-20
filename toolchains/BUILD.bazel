@@ -90,6 +90,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for spar (AADL architecture model -> WIT generation)
+toolchain_type(
+    name = "spar_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for tool versions (single source of truth)
 bzl_library(
     name = "tool_versions",
