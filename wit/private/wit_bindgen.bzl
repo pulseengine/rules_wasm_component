@@ -75,7 +75,7 @@ def _wit_bindgen_impl(ctx):
     # Get wit-bindgen tool from appropriate toolchain
     if ctx.attr.language == "go":
         # Check if TinyGo toolchain is available
-        tinygo_toolchain = ctx.toolchains.get("@rules_wasm_component//toolchains:tinygo_toolchain_type")
+        tinygo_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:tinygo_toolchain_type"]
         if not tinygo_toolchain:
             fail("TinyGo toolchain not available. Go WIT binding generation requires TinyGo toolchain.")
         wit_bindgen = tinygo_toolchain.wit_bindgen_go

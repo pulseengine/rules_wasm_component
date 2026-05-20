@@ -179,7 +179,7 @@ def validate_component_action(ctx, wasm_file, wit_file = None):
     if not (hasattr(ctx.attr, "validate_wit") and ctx.attr.validate_wit):
         return []
 
-    wasm_toolchain = ctx.toolchains.get("@rules_wasm_component//toolchains:wasm_tools_toolchain_type")
+    wasm_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
     if not wasm_toolchain:
         return []
 
