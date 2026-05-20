@@ -99,7 +99,7 @@ binaryen_repository = repository_rule(
     implementation = _binaryen_repository_impl,
     attrs = {
         "version": attr.string(
-            default = "123",
+            default = "129",
             doc = "Binaryen version to download",
         ),
         "bundle": attr.string(

@@ -146,7 +146,7 @@ wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
     strategy = "download",  # Download prebuilt binaries from GitHub releases
-    version = "1.244.0",
+    version = "1.246.2",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
@@ -168,7 +168,7 @@ wasi_sdk = use_extension("//wasm:extensions.bzl", "wasi_sdk")
 wasi_sdk.register(
     name = "wasi",
     strategy = "download",
-    version = "29",
+    version = "32",
 )
 use_repo(wasi_sdk, "wasi_sdk")
 
@@ -208,7 +208,7 @@ cpp_component = use_extension("//wasm:extensions.bzl", "cpp_component")
 cpp_component.register(
     name = "cpp",
     strategy = "download",
-    wasi_sdk_version = "29",
+    wasi_sdk_version = "32",
 )
 use_repo(cpp_component, "cpp_toolchain")
 
@@ -219,7 +219,7 @@ bazel_dep(name = "rules_nodejs", version = "6.5.0")
 
 # Configure Node.js version and tools
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
-node.toolchain(node_version = "24.14.0")
+node.toolchain(node_version = "24.14.1")
 use_repo(node, "nodejs_toolchains")
 
 # JavaScript/TypeScript WebAssembly components with JCO
@@ -295,7 +295,7 @@ wasm_component_download(
     name = "file_ops_component_external",
     filename = "file_ops_component.wasm",
     tool_name = "file-ops-component",
-    version = "0.1.0-rc.3",
+    version = "0.2.0",
 )
 
 # WSC (WebAssembly Signature Component) for signing (version in //checksums/tools/wsc.json)
