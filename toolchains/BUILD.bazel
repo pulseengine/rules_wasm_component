@@ -102,6 +102,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for synth (WebAssembly-to-ARM ahead-of-time compiler)
+toolchain_type(
+    name = "synth_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Bzl library for tool versions (single source of truth)
 bzl_library(
     name = "tool_versions",

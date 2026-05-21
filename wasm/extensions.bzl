@@ -7,6 +7,7 @@ load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
 load("//toolchains:meld_toolchain.bzl", "meld_repository")
 load("//toolchains:spar_toolchain.bzl", "spar_repository")
 load("//toolchains:witness_toolchain.bzl", "witness_repository")
+load("//toolchains:synth_toolchain.bzl", "synth_repository")
 load("//toolchains:tinygo_toolchain.bzl", "tinygo_toolchain_repository")
 load("//toolchains:wasi_sdk_toolchain.bzl", "wasi_sdk_repository")
 load("//toolchains:wasm_toolchain.bzl", "wasm_toolchain_repository")
@@ -773,6 +774,45 @@ witness = module_extension(
                 "version": attr.string(
                     doc = "witness version to use",
                     default = "0.22.0",
+                ),
+            },
+        ),
+    },
+)
+
+def _synth_extension_impl(module_ctx):
+    """Implementation of the synth module extension."""
+    registrations = {}
+
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+
+    for name, registration in registrations.items():
+        synth_repository(
+            name = name + "_toolchain",
+            version = registration.version,
+        )
+
+    if not registrations:
+        synth_repository(
+            name = "synth_toolchain",
+            version = "0.3.1",
+        )
+
+# Module extension for synth (WebAssembly-to-ARM ahead-of-time compiler)
+synth = module_extension(
+    implementation = _synth_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this synth registration",
+                    default = "synth",
+                ),
+                "version": attr.string(
+                    doc = "synth version to use",
+                    default = "0.3.1",
                 ),
             },
         ),

@@ -1,0 +1,31 @@
+{
+  "tool_name": "synth",
+  "github_repo": "pulseengine/synth",
+  "description": "WebAssembly-to-ARM ahead-of-time compiler (WASM core module -> Cortex-M ELF)",
+  "latest_version": "0.3.1",
+  "last_checked": "2026-05-21T00:00:00Z",
+  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64"],
+  "versions": {
+    "0.3.1": {
+      "release_date": "2026-05-21",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "ae2b5b9767304b30e4e7416a4e63fe0581940f3ef193ff9879838ff2fd4419a9",
+          "url_suffix": "x86_64-apple-darwin.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "bc50fbd4e07585b10316d665a2b68e2c5ab2391e91f1bbec827de29a50ce5a6e",
+          "url_suffix": "aarch64-apple-darwin.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "521e05065f9058374e99e8dfd3d2fce29dd2bbe1a5e16d0e9b082c1a933a0af9",
+          "url_suffix": "x86_64-unknown-linux-gnu.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "938bf641daf4de8e9fa6aac9cf2b5d265f45db0570f81a5aa1b990469aa24515",
+          "url_suffix": "aarch64-unknown-linux-gnu.tar.gz"
+        }
+      }
+    }
+  }
+}

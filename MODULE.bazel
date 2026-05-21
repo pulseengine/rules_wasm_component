@@ -280,6 +280,16 @@ use_repo(witness, "witness_toolchain")
 
 register_toolchains("@witness_toolchain//:witness_toolchain")
 
+# synth toolchain: WebAssembly-to-ARM ahead-of-time compiler
+synth = use_extension("//wasm:extensions.bzl", "synth")
+synth.register(
+    name = "synth",
+    version = "0.3.1",
+)
+use_repo(synth, "synth_toolchain")
+
+register_toolchains("@synth_toolchain//:synth_toolchain")
+
 # MoonBit hermetic toolchain for WebAssembly component builds (dev only)
 # NOTE: Not eagerly loaded - MoonBit uses rolling /latest/ URLs that cause
 # checksum drift and build failures, same as componentize-py.
