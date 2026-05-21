@@ -22,7 +22,7 @@
     "deploy:test": "npm run build && echo 'Build successful - ready for deployment'"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.38.1",
+    "@astrojs/starlight": "^0.39.2",
     "astro": "^6.0.5",
     "astro-mermaid": "^2.0.1",
     "mermaid": "^11.9.0",
