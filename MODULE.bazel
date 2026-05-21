@@ -260,6 +260,26 @@ use_repo(meld, "meld_toolchain")
 
 register_toolchains("@meld_toolchain//:meld_toolchain")
 
+# spar toolchain: AADL architecture model -> WIT generation
+spar = use_extension("//wasm:extensions.bzl", "spar")
+spar.register(
+    name = "spar",
+    version = "0.9.3",
+)
+use_repo(spar, "spar_toolchain")
+
+register_toolchains("@spar_toolchain//:spar_toolchain")
+
+# witness toolchain: MC/DC branch coverage for WASM core modules
+witness = use_extension("//wasm:extensions.bzl", "witness")
+witness.register(
+    name = "witness",
+    version = "0.22.0",
+)
+use_repo(witness, "witness_toolchain")
+
+register_toolchains("@witness_toolchain//:witness_toolchain")
+
 # MoonBit hermetic toolchain for WebAssembly component builds (dev only)
 # NOTE: Not eagerly loaded - MoonBit uses rolling /latest/ URLs that cause
 # checksum drift and build failures, same as componentize-py.

@@ -1,0 +1,26 @@
+"""Example: generate WIT interfaces from an AADL architecture model with spar.
+
+spar instantiates the AADL system named by `root` and emits one `.wit` file
+per AADL `process` instance. This is the front of the PulseEngine pipeline:
+
+  AADL model -> spar -> WIT -> wit_library -> wit_bindgen -> component
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_wasm_component//wasm:defs.bzl", "aadl_wit_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# building_control.aadl is the canonical AADL "building control" model
+# (vendored from pulseengine/spar test data). Its system implementation
+# BuildingControlDemo.Impl contains one process, TempControlProcess.
+aadl_wit_library(
+    name = "building_control_wit",
+    srcs = ["building_control.aadl"],
+    root = "BuildingControl::BuildingControlDemo.Impl",
+)
+
+build_test(
+    name = "spar_example_test",
+    targets = [":building_control_wit"],
+)
