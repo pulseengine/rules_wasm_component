@@ -7,17 +7,10 @@ module(
 )
 
 # Dependencies for WebAssembly tooling
-bazel_dep(name = "rules_rust", version = "0.69.0")
-
-# Override rules_rust with upstream main at PR #3727 merge point
-# Includes: 0.69.0 + .rmeta sysroot fix (#3860) + rustc_lib filegroup fix (#3727)
-# This fixes Windows LNK1181 errors with missing rlib files
-# TODO: Remove override once 0.70.0 is released with #3727 included
-git_override(
-    module_name = "rules_rust",
-    commit = "6281d27f3ffdb826df90db25c1dc66a198345d64",
-    remote = "https://github.com/bazelbuild/rules_rust.git",
-)
+# rules_rust 0.70.0 includes the .rmeta sysroot fix (#3860) and the rustc_lib
+# filegroup fix (#3727) that fix Windows LNK1181 errors — these previously
+# required a git_override pinned to commit 6281d27 (now an ancestor of 0.70.0).
+bazel_dep(name = "rules_rust", version = "0.70.0")
 
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "platforms", version = "1.0.0")
