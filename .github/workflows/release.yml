@@ -107,7 +107,7 @@ jobs:
   publish_to_bcr:
     name: Publish to BCR
     needs: create_release
-    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v6
+    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v1.2.0
     with:
       tag_name: ${{ needs.create_release.outputs.tag_name }}
       registry_fork: pulseengine/bazel-central-registry
