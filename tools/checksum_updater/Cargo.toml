@@ -33,7 +33,7 @@ tempfile = "3.27"
 async-trait = "0.1"
 wit-bindgen = { version = "0.56.0", features = ["async"] }  # WIT binding generation; async feature for P3 support
 uuid = { version = "1.23", default-features = false }  # UUID generation for user service (deterministic, no getrandom dependency)
-bitflags = "2.6"  # Bitflags for WASI filesystem interfaces in generated bindings
+bitflags = "2.11"  # Bitflags for WASI filesystem interfaces in generated bindings
 
 [dev-dependencies]
 tokio-test = "0.4"
