@@ -1,0 +1,29 @@
+"""Example: compile a WASM core module to an ARM Cortex-M ELF with synth.
+
+synth is the final stage of the PulseEngine pipeline — it performs ahead-of-
+time compilation from WebAssembly to bare-metal ARM machine code:
+
+  ... -> meld (fuse to core module) -> synth_compile -> ARM Cortex-M ELF
+
+synth operates on core modules. Here the subject is a small pre-built core
+module (math.wat -> math.wasm); in a real pipeline the `wasm_module` would be
+a meld_fuse target. The synth binary comes from the registered toolchain
+(pulseengine/synth releases) — no locally-built binary needed.
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_wasm_component//wasm:defs.bzl", "synth_compile")
+
+package(default_visibility = ["//visibility:public"])
+
+# math.wasm exports two plain-integer functions (see math.wat for the source).
+synth_compile(
+    name = "math_firmware",
+    src = "math.wasm",
+    target = "cortex-m3",
+)
+
+build_test(
+    name = "synth_example_test",
+    targets = [":math_firmware"],
+)

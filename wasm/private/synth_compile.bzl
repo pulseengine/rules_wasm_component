@@ -14,8 +14,12 @@ def _synth_compile_impl(ctx):
     """Implementation of synth_compile rule."""
     output_elf = ctx.actions.declare_file(ctx.attr.out or (ctx.label.name + ".elf"))
 
-    # Get the synth binary
-    synth = ctx.executable.synth
+    # Resolve the synth binary: an explicit `synth` attr (escape hatch for a
+    # locally-built binary) takes precedence over the registered toolchain.
+    if ctx.executable.synth:
+        synth = ctx.executable.synth
+    else:
+        synth = ctx.toolchains["@rules_wasm_component//toolchains:synth_toolchain_type"].synth
 
     # Determine input file
     if ctx.attr.wasm_module:
@@ -88,6 +92,7 @@ def _synth_compile_impl(ctx):
         arguments = [args],
         mnemonic = "SynthCompile",
         progress_message = "Compiling WebAssembly to ARM ELF: %{label}",
+        tools = [synth],
     )
 
     return [
@@ -162,13 +167,13 @@ cortex-m7dp, cortex-m55, cortex-r5, cortex-a53, riscv32imac""",
             allow_single_file = [".o", ".a"],
         ),
         "synth": attr.label(
-            doc = """The synth CLI binary. Synth has no published releases yet; users must
-supply a locally built binary target (see pulseengine/synth for build instructions).""",
+            doc = "Optional explicit synth CLI binary, overriding the registered " +
+                  "synth toolchain. Leave unset to use the hermetic toolchain.",
             executable = True,
             cfg = "exec",
-            mandatory = True,
         ),
     },
+    toolchains = ["@rules_wasm_component//toolchains:synth_toolchain_type"],
     doc = """Compile a WebAssembly module to an ARM Cortex-M ELF binary using Synth.
 
 Synth performs ahead-of-time compilation from WebAssembly to bare-metal ARM
@@ -187,9 +192,9 @@ Memory layout (Cortex-M):
 - RAM at 0x20000000: linear memory (R11=base) + stack (grows down)
 - R10 = memory size, R11 = memory base, R9 = globals base
 
-Note: Synth does not yet have published releases. The `synth` attribute must
-point to a locally-built synth binary target. See pulseengine/synth for build
-instructions.
+The synth binary is provided by the registered synth toolchain (downloaded
+from pulseengine/synth releases). Set the optional `synth` attribute only to
+override it with a locally-built binary.
 
 Example:
     load("@rules_wasm_component//wasm:defs.bzl", "synth_compile")
@@ -201,7 +206,6 @@ Example:
         loom_compat = True,
         link = True,
         builtins = "@kiln//builtins:kiln_builtins",
-        synth = "@synth//:synth",
     )
 """,
 )

@@ -153,6 +153,11 @@ _URL_PATTERNS = {
         "base": "https://github.com/{repo}/releases/download/v{version}",
         "filename": "witness-v{version}-{suffix}",
     },
+    "synth": {
+        # synth releases are tar.gz archives: synth-v{version}-{triple}.tar.gz
+        "base": "https://github.com/{repo}/releases/download/v{version}",
+        "filename": "synth-v{version}-{suffix}",
+    },
 }
 
 def _build_download_url(tool_name, version, platform, tool_info, github_repo):
