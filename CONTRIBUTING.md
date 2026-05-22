@@ -9,6 +9,24 @@ We welcome contributions to the rules_wasm_component project! This document prov
 - **Bazel 7.0+** with bzlmod support
 - **Rust 1.75+** with WASM targets
 
+> The Nix flake below provides all of these pinned — see the next section.
+
+### Reproducible environment with Nix (recommended)
+
+A Nix flake pins the *host* environment Bazel runs inside — Bazel itself
+(via `.bazelversion`), a C/C++ compiler, git, python, and a host Rust
+toolchain. The WebAssembly toolchains are still fetched hermetically by
+Bazel; Nix only guarantees an identical environment around it.
+
+```bash
+nix develop          # enter the dev shell with everything pinned
+bazel build //...    # WASM toolchains download automatically
+```
+
+`flake.lock` pins the exact dependency revisions, so every developer, CI
+runner, and qualification environment gets an identical toolchain. The `Nix`
+CI workflow verifies that `bazel build` succeeds inside the dev shell.
+
 ### Installation
 
 ```bash

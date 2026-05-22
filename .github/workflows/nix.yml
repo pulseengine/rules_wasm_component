@@ -1,0 +1,40 @@
+# Validates the Nix dev environment: the flake evaluates, and Bazel actually
+# builds from inside `nix develop`. This guards against the flake silently
+# rotting when toolchain or module configuration changes.
+name: Nix
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - flake.nix
+      - flake.lock
+      - MODULE.bazel
+      - .bazelversion
+      - .github/workflows/nix.yml
+
+permissions:
+  contents: read
+
+jobs:
+  dev-shell:
+    name: Nix dev shell
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Evaluate the flake
+        run: nix flake check
+
+      # Builds a representative slice (Rust -> WASM component) entirely inside
+      # the dev shell. Proves Bazel runs under Nix and resolves its toolchains.
+      - name: Build inside the dev shell
+        run: nix develop --command bazel build //examples/basic/...
