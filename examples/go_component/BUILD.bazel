@@ -1,17 +1,24 @@
-"""Example demonstrating TinyGo WASI Preview 2 WebAssembly components
+"""Example: Go WebAssembly components with TinyGo and WASI Preview 2.
 
-This example shows state-of-the-art Go support for WebAssembly Component Model:
-- TinyGo v0.38.0 with native WASI Preview 2 support
+Demonstrates Go support for the WebAssembly Component Model:
+- TinyGo with native WASI Preview 2 support
 - go.bytecodealliance.org/cmd/wit-bindgen-go for WIT bindings
-- Full Component Model and WASI 0.2 interface support
+- Component Model and WASI 0.2 interfaces
+
+Component targets:
+- calculator_component        WIT-defined calculator component (release)
+- calculator_component_debug  same component, debug optimization
+- http_service_component      WIT-defined HTTP service component
+- simple_test                 basic multi-file WASI component (no WIT)
 """
 
 load("@rules_wasm_component//go:defs.bzl", "go_wasm_component")
-load("@rules_wasm_component//wit:defs.bzl", "wit_bindgen", "wit_library", "wit_markdown")
+load("@rules_wasm_component//wit:defs.bzl", "wit_library", "wit_markdown")
 
 package(default_visibility = ["//visibility:public"])
 
-# WIT library definitions for calculator interface
+# --- WIT interfaces ---
+
 wit_library(
     name = "calculator_wit",
     srcs = ["wit/calculator.wit"],
@@ -25,22 +32,6 @@ wit_library(
     ],
 )
 
-# Simple calculator WIT - reactor mode with TinyGo-required WASI imports
-# TinyGo runtime needs these even for empty main() reactor components
-wit_library(
-    name = "simple_calculator_wit",
-    srcs = ["wit/simple-calculator.wit"],
-    world = "calculator-world",
-    deps = [
-        "@wasi_cli_v020//:cli",
-        "@wasi_clocks_v020//:clocks",
-        "@wasi_filesystem_v020//:filesystem",
-        "@wasi_io_v020//:streams",
-        "@wasi_random_v020//:random",
-    ],
-)
-
-# WIT library definitions for HTTP service interface
 wit_library(
     name = "http_service_wit",
     srcs = ["wit/http-service.wit"],
@@ -54,19 +45,20 @@ wit_library(
     ],
 )
 
-# Generate markdown documentation for calculator interface
+# Generated markdown documentation for the WIT interfaces
 wit_markdown(
     name = "calculator_docs",
     wit = ":calculator_wit",
 )
 
-# Generate markdown documentation for HTTP service interface
 wit_markdown(
     name = "http_service_docs",
     wit = ":http_service_wit",
 )
 
-# Build calculator component using TinyGo with WIT bindings
+# --- Components ---
+
+# Calculator component built with TinyGo + WIT bindings.
 go_wasm_component(
     name = "calculator_component",
     srcs = [
@@ -82,53 +74,7 @@ go_wasm_component(
     world = "calculator-world",
 )
 
-# Calculator component using generated WIT bindings
-go_wasm_component(
-    name = "calculator_with_bindings",
-    srcs = ["calculator_with_bindings.go"],
-    go_mod = "go.mod",
-    go_sum = "go.sum",
-    optimization = "release",
-    wit = ":calculator_wit",
-    world = "calculator-world",
-)
-
-# Simplified calculator using generated bindings
-go_wasm_component(
-    name = "calculator_simple_binding",
-    srcs = ["calculator_simple_binding.go"],
-    go_mod = "go.mod",
-    go_sum = "go.sum",
-    optimization = "release",
-    wit = ":simple_calculator_wit",
-    world = "calculator-world",
-)
-
-# Calculator component with manual exports and TinyGo WIT integration
-go_wasm_component(
-    name = "calculator_manual",
-    srcs = ["calculator_manual.go"],
-    go_mod = "go.mod",
-    go_sum = "go.sum",
-    optimization = "release",
-    # Remove WIT temporarily to test basic build
-    # wit = ":simple_calculator_wit",
-    # world = "calculator-world",
-)
-
-# Build HTTP service component using TinyGo + WASI Preview 2
-go_wasm_component(
-    name = "http_service_component",
-    srcs = ["http_service_bindings.go"],
-    adapter = "//wasm/adapters:wasi_snapshot_preview1",
-    go_mod = "go.mod",
-    go_sum = "go.sum",
-    optimization = "release",
-    wit = ":http_service_wit",
-    world = "http-service-world",
-)
-
-# Debug version for development
+# Same component, debug optimization — used for debug-vs-release comparison tests.
 go_wasm_component(
     name = "calculator_component_debug",
     srcs = [
@@ -144,57 +90,28 @@ go_wasm_component(
     world = "calculator-world",
 )
 
-# Multi-file test demonstrating TinyGo compilation with multiple Go source files
+# HTTP service component built with TinyGo + WASI Preview 2.
+go_wasm_component(
+    name = "http_service_component",
+    srcs = ["http_service_bindings.go"],
+    adapter = "//wasm/adapters:wasi_snapshot_preview1",
+    go_mod = "go.mod",
+    go_sum = "go.sum",
+    optimization = "release",
+    wit = ":http_service_wit",
+    world = "http-service-world",
+)
+
+# Basic multi-file WASI component without WIT bindings — the simplest Go case.
 go_wasm_component(
     name = "simple_test",
     srcs = [
         "simple_wasi.go",
         "utils.go",
-    ],  # Include simple_wasi.go (no WIT deps) and utils.go
-    adapter = "//wasm/adapters:wasi_snapshot_preview1",
-    go_mod = "go.mod",
-    go_sum = "go.sum",
-    optimization = "debug",
-    world = "wasi:cli/command",
-)
-
-# Simple WASI component without WIT bindings
-# This demonstrates the basic use case: compile Go to WASI Preview 2
-go_wasm_component(
-    name = "simple_wasi",
-    srcs = ["simple_wasi.go"],
-    go_mod = "go.mod",
-    go_sum = "go.sum",
-    optimization = "release",
-    # No WIT or world specified - just basic WASI support
-)
-
-# Test multi-file Go component to verify the fix
-go_wasm_component(
-    name = "multi_file_test",
-    srcs = [
-        "calculator_basic.go",
-        "utils.go",
     ],
     adapter = "//wasm/adapters:wasi_snapshot_preview1",
     go_mod = "go.mod",
     go_sum = "go.sum",
     optimization = "debug",
     world = "wasi:cli/command",
-)
-
-# Pure reactor component - NO main() function, NO WASI imports
-# This demonstrates the proper way to build Go library components
-go_wasm_component(
-    name = "calculator_reactor",
-    srcs = [
-        "calculator.go",
-        "calculator_bindings.go",
-        "utils.go",
-    ],
-    go_mod = "go.mod",
-    go_sum = "go.sum",
-    optimization = "release",
-    wit = ":calculator_wit",
-    world = "calculator-world",
 )
