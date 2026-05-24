@@ -127,7 +127,7 @@ meld_repository = repository_rule(
     implementation = _meld_repository_impl,
     attrs = {
         "version": attr.string(
-            default = "0.1.0",
+            default = "0.10.0",
             doc = "Meld version to download",
         ),
     },

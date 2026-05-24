@@ -41,7 +41,7 @@ TOOL_VERSIONS = {
 
     # PulseEngine pipeline tools
     "loom": "0.3.0",  # WebAssembly optimizer with Z3 formal verification
-    "meld": "0.1.0",  # Static WebAssembly component fusion
+    "meld": "0.10.0",  # Static WebAssembly component fusion
 
     # WRPC (WebAssembly Component RPC)
     "wrpc": "0.16.0",  # wrpc-wasmtime runtime for component RPC

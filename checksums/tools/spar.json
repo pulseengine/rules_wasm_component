@@ -2,10 +2,35 @@
   "tool_name": "spar",
   "github_repo": "pulseengine/spar",
   "description": "AADL v2.3 architecture toolchain — generates WIT interfaces from AADL models",
-  "latest_version": "0.9.3",
-  "last_checked": "2026-05-20T00:00:00Z",
+  "latest_version": "0.10.0",
+  "last_checked": "2026-05-24T00:00:00Z",
   "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64"],
   "versions": {
+    "0.10.0": {
+      "release_date": "2026-05-20",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "02fd1b321ce80955fe1f831e14a052ff16982548c0b0ef7ea78317ac36672f78",
+          "url_suffix": "x86_64-apple-darwin.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "848aac54ac68295ebefd99f2361f772043e633cf6b5aa3fd29c38c1fbe225533",
+          "url_suffix": "aarch64-apple-darwin.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "1661885ae315f8f54467a163658749e069b47ff55ecfa532c091aaf7949f95a4",
+          "url_suffix": "x86_64-unknown-linux-gnu.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "5a1ed3abbb9ae829e589c0f35d4baa3921d15b010e1f61e6077e89742f595b6b",
+          "url_suffix": "aarch64-unknown-linux-gnu.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "ab205f669b0b8f2d2b5920a32eb6c19e8a042a99beeba83addaaef14818cd144",
+          "url_suffix": "x86_64-pc-windows-msvc.zip"
+        }
+      }
+    },
     "0.9.3": {
       "release_date": "2026-05-11",
       "platforms": {
