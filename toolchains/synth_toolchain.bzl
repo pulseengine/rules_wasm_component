@@ -121,7 +121,7 @@ synth_repository = repository_rule(
     implementation = _synth_repository_impl,
     attrs = {
         "version": attr.string(
-            default = "0.3.1",
+            default = "0.6.0",
             doc = "synth version to download",
         ),
     },

@@ -680,7 +680,7 @@ def _meld_extension_impl(module_ctx):
     if not registrations:
         meld_repository(
             name = "meld_toolchain",
-            version = "0.1.0",
+            version = "0.10.0",
         )
 
 # Module extension for Meld (static component fusion)
@@ -695,7 +695,7 @@ meld = module_extension(
                 ),
                 "version": attr.string(
                     doc = "Meld version to use",
-                    default = "0.1.0",
+                    default = "0.10.0",
                 ),
             },
         ),
@@ -719,7 +719,7 @@ def _spar_extension_impl(module_ctx):
     if not registrations:
         spar_repository(
             name = "spar_toolchain",
-            version = "0.9.3",
+            version = "0.10.0",
         )
 
 # Module extension for spar (AADL architecture model -> WIT generation)
@@ -734,7 +734,7 @@ spar = module_extension(
                 ),
                 "version": attr.string(
                     doc = "spar version to use",
-                    default = "0.9.3",
+                    default = "0.10.0",
                 ),
             },
         ),
@@ -797,7 +797,7 @@ def _synth_extension_impl(module_ctx):
     if not registrations:
         synth_repository(
             name = "synth_toolchain",
-            version = "0.3.1",
+            version = "0.6.0",
         )
 
 # Module extension for synth (WebAssembly-to-ARM ahead-of-time compiler)
@@ -812,7 +812,7 @@ synth = module_extension(
                 ),
                 "version": attr.string(
                     doc = "synth version to use",
-                    default = "0.3.1",
+                    default = "0.6.0",
                 ),
             },
         ),

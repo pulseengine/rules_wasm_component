@@ -123,7 +123,7 @@ spar_repository = repository_rule(
     implementation = _spar_repository_impl,
     attrs = {
         "version": attr.string(
-            default = "0.9.3",
+            default = "0.10.0",
             doc = "spar version to download",
         ),
     },
