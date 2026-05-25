@@ -22,4 +22,4 @@ wat = "1.246"
 
 # Component model support
 wit-parser = "0.246"
-wit-component = "0.243"
+wit-component = "0.250"
