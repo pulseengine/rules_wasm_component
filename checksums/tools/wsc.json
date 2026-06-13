@@ -3,11 +3,15 @@
   "github_repo": "pulseengine/sigil",
   "description": "WebAssembly Signature Component - signing, verification, and attestation toolkit",
   "latest_version": "0.9.0",
-  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64"],
+  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64", "wasm_component"],
   "versions": {
     "0.9.0": {
       "release_date": "2026-05-21",
       "platforms": {
+        "wasm_component": {
+          "sha256": "b40f70180a3c448b2f2fef21f42966c43a6cc11a7d5796db89de7abf969a1ba4",
+          "url_suffix": "wsc-component.wasm"
+        },
         "darwin_amd64": {
           "sha256": "390182be41aeda8165d40103ab10487ea84f9f52b6d3a336d8a59ead9c88da3b",
           "url_suffix": "wsc-macos-x86_64"
@@ -33,6 +37,10 @@
     "0.7.0": {
       "release_date": "2026-03-28",
       "platforms": {
+        "wasm_component": {
+          "sha256": "15efa8033741c4613165ae49b002847df9afcc27af876778884c79aaea4d45b2",
+          "url_suffix": "wsc-component.wasm"
+        },
         "darwin_amd64": {
           "sha256": "ac429b11a4bf70cff96ad29f7c21466b3034fc91bcd2f385f6210bc5e2040e5e",
           "url_suffix": "wsc-macos-x86_64"
