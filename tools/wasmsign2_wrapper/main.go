@@ -7,8 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/bazelbuild/rules_go/go/runfiles"
 )
 
 // Wrapper for wasmsign2 WASM component
@@ -19,6 +17,8 @@ func main() {
 	}
 
 	// Internal-only Bazel coordination flags. These never reach wsc.
+	//   --bazel-wasmtime=PATH          Path to the wasmtime binary to exec.
+	//   --bazel-wasm-component=PATH    Path to the wasmsign2 WASM component.
 	//   --bazel-marker-file=PATH       Write "Verification passed\n" on success.
 	//   --bazel-stage-source=PATH      Copy PATH to the --output-file location
 	//                                  before running wsc. Lets rules pass the
@@ -29,12 +29,25 @@ func main() {
 	//                                  inheriting this process's stdout. Used
 	//                                  by show-chain to produce a Bazel output
 	//                                  artifact.
+	//
+	// wasmtime and the wasm component are passed by the calling rule (and staged
+	// as action inputs) rather than located via runfiles: a hardcoded runfiles
+	// Rlocation embeds the canonical repo name, which differs when
+	// rules_wasm_component is consumed as a dependency (it gains a
+	// `rules_wasm_component+` prefix), breaking downstream signing (issue #501,
+	// same fix as #490/#497). wasmtime opens both files natively.
 	var markerFile string
 	var stageSource string
 	var captureStdout string
+	var wasmtimeBinary string
+	var wasmsign2Wasm string
 	filteredArgs := make([]string, 0, len(os.Args))
 	for i, arg := range os.Args {
 		switch {
+		case strings.HasPrefix(arg, "--bazel-wasmtime="):
+			wasmtimeBinary = strings.TrimPrefix(arg, "--bazel-wasmtime=")
+		case strings.HasPrefix(arg, "--bazel-wasm-component="):
+			wasmsign2Wasm = strings.TrimPrefix(arg, "--bazel-wasm-component=")
 		case strings.HasPrefix(arg, "--bazel-marker-file="):
 			markerFile = strings.TrimPrefix(arg, "--bazel-marker-file=")
 		case strings.HasPrefix(arg, "--bazel-stage-source="):
@@ -48,28 +61,15 @@ func main() {
 		}
 	}
 
-	// Initialize Bazel runfiles
-	r, err := runfiles.New()
-	if err != nil {
-		log.Fatalf("Failed to initialize runfiles: %v", err)
+	if wasmtimeBinary == "" {
+		log.Fatal("Missing required --bazel-wasmtime=PATH")
 	}
-
-	// Locate wasmtime binary
-	wasmtimeBinary, err := r.Rlocation("+wasmtime+wasmtime_toolchain/wasmtime")
-	if err != nil {
-		log.Fatalf("Failed to locate wasmtime: %v", err)
+	if wasmsign2Wasm == "" {
+		log.Fatal("Missing required --bazel-wasm-component=PATH")
 	}
-
 	if _, err := os.Stat(wasmtimeBinary); err != nil {
 		log.Fatalf("Wasmtime binary not found at %s: %v", wasmtimeBinary, err)
 	}
-
-	// Locate wasmsign2 WASM component
-	wasmsign2Wasm, err := r.Rlocation("+_repo_rules+wasmsign2_cli_wasm/file/wasmsign2.wasm")
-	if err != nil {
-		log.Fatalf("Failed to locate wasmsign2.wasm: %v", err)
-	}
-
 	if _, err := os.Stat(wasmsign2Wasm); err != nil {
 		log.Fatalf("wasmsign2.wasm not found at %s: %v", wasmsign2Wasm, err)
 	}

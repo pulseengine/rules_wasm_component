@@ -2,6 +2,34 @@
 
 load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmSignatureInfo")
 
+# wasmtime toolchain that runs the wasmsign2 component.
+_WASMTIME_TOOLCHAIN = "@rules_wasm_component//toolchains:wasmtime_toolchain_type"
+
+# The wasmsign2 WASM component, passed to the wrapper as an action input.
+_WASMSIGN2_WASM_ATTR = {
+    "_wasmsign2_wasm": attr.label(
+        default = "@wasmsign2_cli_wasm//file:file",
+        allow_single_file = True,
+        doc = "wasmsign2 WASM component, passed to the wrapper as an action input",
+    ),
+}
+
+def _add_wrapper_tools(ctx, args):
+    """Add the wasmtime binary and wasmsign2.wasm to a wrapper invocation.
+
+    They are passed as action inputs + `--bazel-*` arguments rather than located
+    via the wrapper's runfiles. A hardcoded runfiles Rlocation embeds the
+    canonical repo name, which differs when rules_wasm_component is consumed as a
+    dependency (it gains a `rules_wasm_component+` prefix), breaking downstream
+    signing — the same bug fixed for loom_wrapper in #490/#497 (issue #501).
+    Returns the extra action inputs to add.
+    """
+    wasmtime = ctx.toolchains[_WASMTIME_TOOLCHAIN].wasmtime
+    wasm = ctx.file._wasmsign2_wasm
+    args.add(wasmtime, format = "--bazel-wasmtime=%s")
+    args.add(wasm, format = "--bazel-wasm-component=%s")
+    return [wasmtime, wasm]
+
 def _wasm_keygen_impl(ctx):
     """Implementation of wasm_keygen rule"""
 
@@ -17,12 +45,14 @@ def _wasm_keygen_impl(ctx):
     args.add("keygen")
     args.add("--public-key", public_key)
     args.add("--secret-key", secret_key)
+    tool_inputs = _add_wrapper_tools(ctx, args)
 
     # Run key generation via Go wrapper
     # The wrapper handles symlink resolution and WASI directory mapping
     ctx.actions.run(
         executable = wasmsign2_wrapper,
         arguments = [args],
+        inputs = tool_inputs,
         outputs = [public_key, secret_key],
         mnemonic = "WasmKeyGen",
         progress_message = "Generating WASM signing keys %s" % ctx.label,
@@ -69,7 +99,8 @@ wasm_keygen = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | _WASMSIGN2_WASM_ATTR,
+    toolchains = [_WASMTIME_TOOLCHAIN],
     doc = """
     Generates a key pair for signing WebAssembly components in compact format.
 
@@ -150,6 +181,7 @@ def _wasm_sign_impl(ctx):
     inputs = [input_wasm, secret_key]
     if public_key:
         inputs.append(public_key)
+    inputs += _add_wrapper_tools(ctx, args)
 
     # Prepare outputs
     outputs = [signed_wasm]
@@ -238,7 +270,8 @@ wasm_sign = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | _WASMSIGN2_WASM_ATTR,
+    toolchains = [_WASMTIME_TOOLCHAIN],
     doc = """
     Signs a WebAssembly component with a cryptographic signature.
 
@@ -323,6 +356,7 @@ def _wasm_verify_impl(ctx):
         inputs.append(public_key)
     if signature_file:
         inputs.append(signature_file)
+    inputs += _add_wrapper_tools(ctx, args)
 
     # Run verification via Go wrapper (no shell scripts!)
     # The wrapper will create the marker file on success
@@ -394,7 +428,8 @@ wasm_verify = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | _WASMSIGN2_WASM_ATTR,
+    toolchains = [_WASMTIME_TOOLCHAIN],
     doc = """
     Verifies the cryptographic signature of a WebAssembly component.
 
