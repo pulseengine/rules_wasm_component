@@ -327,12 +327,60 @@ impl UpdateEngine {
                     .await?;
 
                 let version = if let Some(prefix) = &tool_config.tag_prefix {
-                    release.tag_name.trim_start_matches(prefix.as_str()).to_string()
+                    release
+                        .tag_name
+                        .trim_start_matches(prefix.as_str())
+                        .to_string()
                 } else {
                     release.tag_name.trim_start_matches('v').to_string()
                 };
 
                 Ok((release, version))
+            }
+            VersionFilter::AssetExists => {
+                // Universal-wasm tools: pick the newest release that actually
+                // ships the expected asset. Later releases may drop it (e.g.
+                // loom v1.x ships no loom.wasm), so plain "latest" would fail.
+                let asset_name = tool_config.universal_asset_name().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "AssetExists filter requires a UniversalWasm url_pattern for {}",
+                        tool_config.github_repo
+                    )
+                })?;
+
+                let releases = self
+                    .github_client
+                    .get_all_releases(&tool_config.github_repo)
+                    .await?;
+
+                // get_all_releases returns newest-first (GitHub API order).
+                for release in releases {
+                    if release.assets.iter().any(|a| a.name == asset_name) {
+                        let version = if let Some(prefix) = &tool_config.tag_prefix {
+                            release
+                                .tag_name
+                                .trim_start_matches(prefix.as_str())
+                                .to_string()
+                        } else {
+                            release.tag_name.trim_start_matches('v').to_string()
+                        };
+                        info!(
+                            "Selected {} {} (newest release shipping {})",
+                            tool_config.github_repo, version, asset_name
+                        );
+                        return Ok((release, version));
+                    }
+                    debug!(
+                        "Skipping {} {}: no asset {}",
+                        tool_config.github_repo, release.tag_name, asset_name
+                    );
+                }
+
+                Err(anyhow::anyhow!(
+                    "No release of {} ships asset {}",
+                    tool_config.github_repo,
+                    asset_name
+                ))
             }
             VersionFilter::LtsOnly => {
                 // Need to get all releases and filter
@@ -349,7 +397,10 @@ impl UpdateEngine {
                 // Find the first release that passes the LTS filter
                 for release in releases {
                     let version = if let Some(prefix) = &tool_config.tag_prefix {
-                        release.tag_name.trim_start_matches(prefix.as_str()).to_string()
+                        release
+                            .tag_name
+                            .trim_start_matches(prefix.as_str())
+                            .to_string()
                     } else {
                         release.tag_name.trim_start_matches('v').to_string()
                     };
