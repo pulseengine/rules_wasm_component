@@ -11,15 +11,13 @@ load("@rules_go//go:def.bzl", "go_binary")
 package(default_visibility = ["//visibility:public"])
 
 # Wrapper binary that executes loom.wasm with symlink/path resolution.
-# loom.wasm itself is supplied by the calling rule as the first argument
-# (wasmtime opens the module natively); only wasmtime is located via runfiles.
+# Both the wasmtime binary and loom.wasm are supplied by the calling rule as
+# arguments (and staged as action inputs); wasmtime opens both natively. They
+# are NOT resolved via runfiles, which would embed a canonical repo name that
+# breaks when rules_wasm_component is consumed as a dependency (issue #490).
 go_binary(
     name = "loom_wrapper",
     srcs = ["main.go"],
-    data = [
-        "@wasmtime_toolchain//:wasmtime",
-    ],
     pure = "on",  # Pure Go for cross-platform compatibility
     visibility = ["//visibility:public"],
-    deps = ["@rules_go//go/runfiles"],
 )

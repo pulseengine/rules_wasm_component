@@ -5,8 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-
-	"github.com/bazelbuild/rules_go/go/runfiles"
 )
 
 // loom_wrapper runs the loom.wasm optimizer component under wasmtime.
@@ -18,36 +16,30 @@ import (
 // refuses to follow such a symlink under a plain `--dir=.` preopen, so loom
 // reports "Input file not found" (issue #490). Resolving the symlink on the
 // host and preopening the resolved directory gives loom a real directory to
-// read from. This mirrors tools/wasmsign2_wrapper, which solves the identical
-// problem for the wasmsign2 component.
+// read from.
 //
 // Usage:
 //
-//	loom_wrapper <loom.wasm> <command> [args...]
+//	loom_wrapper <wasmtime> <loom.wasm> <command> [args...]
 //
-// e.g. loom_wrapper bazel-out/.../loom.wasm optimize <input.wasm> -o <output.wasm> [flags]
+// e.g. loom_wrapper .../wasmtime .../loom.wasm optimize <input.wasm> -o <output.wasm> [flags]
 //
-// The loom.wasm module path is passed by the Bazel rule (wasmtime opens the
-// module natively, so it needs no WASI mount); only wasmtime itself is located
-// via the wrapper's runfiles.
+// Both the wasmtime binary and the loom.wasm module path are passed by the
+// Bazel rule (and staged as action inputs). They are deliberately NOT located
+// via the wrapper's runfiles: a hardcoded runfiles Rlocation embeds the
+// canonical repo name, which differs when rules_wasm_component is the root
+// module vs a dependency (the latter gains a `rules_wasm_component+` prefix),
+// breaking downstream consumers (issue #490 follow-up). wasmtime opens both
+// files natively, so neither needs a WASI mount.
 func main() {
-	if len(os.Args) < 3 {
-		log.Fatal("Usage: loom_wrapper <loom.wasm> <command> [args...]")
+	if len(os.Args) < 4 {
+		log.Fatal("Usage: loom_wrapper <wasmtime> <loom.wasm> <command> [args...]")
 	}
 
-	loomWasm := os.Args[1]
-	loomArgs := os.Args[2:]
+	wasmtimeBinary := os.Args[1]
+	loomWasm := os.Args[2]
+	loomArgs := os.Args[3:]
 
-	// Initialize Bazel runfiles to locate wasmtime.
-	r, err := runfiles.New()
-	if err != nil {
-		log.Fatalf("Failed to initialize runfiles: %v", err)
-	}
-
-	wasmtimeBinary, err := r.Rlocation("+wasmtime+wasmtime_toolchain/wasmtime")
-	if err != nil {
-		log.Fatalf("Failed to locate wasmtime: %v", err)
-	}
 	if _, err := os.Stat(wasmtimeBinary); err != nil {
 		log.Fatalf("Wasmtime binary not found at %s: %v", wasmtimeBinary, err)
 	}
