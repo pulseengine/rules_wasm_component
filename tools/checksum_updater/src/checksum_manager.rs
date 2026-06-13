@@ -18,10 +18,19 @@ pub struct ToolInfo {
     pub tool_name: String,
     pub github_repo: String,
     pub latest_version: String,
+    // Hand-authored registry files (e.g. the PulseEngine universal-wasm tools)
+    // predate the updater and omit `last_checked`; default it rather than
+    // failing the whole parse so those tools can be auto-managed.
+    #[serde(default = "default_last_checked")]
     pub last_checked: DateTime<Utc>,
     pub versions: HashMap<String, VersionInfo>,
     #[serde(default)]
     pub supported_platforms: Vec<String>,
+}
+
+/// Default `last_checked` (UNIX epoch) for registry files that omit it.
+fn default_last_checked() -> DateTime<Utc> {
+    DateTime::from_timestamp(0, 0).expect("epoch is a valid timestamp")
 }
 
 /// Version-specific information

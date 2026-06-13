@@ -31,6 +31,15 @@ pub enum VersionFilter {
     Any,
     /// Only accept LTS versions (for Node.js: even major versions like 20, 22, 24)
     LtsOnly,
+    /// Accept the newest release that actually ships the expected asset.
+    ///
+    /// Used for universal-wasm tools whose later releases may stop shipping the
+    /// consumable artifact (e.g. loom: v0.3.0 ships `loom.wasm` but v1.x ship
+    /// only compliance reports). Without this the updater would pick the latest
+    /// tag and fail to download. The asset name comes from the tool's
+    /// `UrlPattern::UniversalWasm`. Resolved in the update engine (it needs each
+    /// release's asset list), not via `accepts()`.
+    AssetExists,
 }
 
 /// URL pattern for downloading tool releases
@@ -49,6 +58,12 @@ pub enum UrlPattern {
         pattern: String,
         platform_mapping: HashMap<String, String>,
     },
+    /// Universal (platform-independent) WASM component published as a single
+    /// release asset, e.g. `loom.wasm`. URL is
+    /// `https://github.com/{repo}/releases/download/v{version}/{asset_name}`.
+    /// The single platform key (e.g. "wasm" or "wasm_component") is stored in
+    /// `platforms`; the asset name is the same across platforms.
+    UniversalWasm { asset_name: String },
 }
 
 impl Default for ToolConfig {
@@ -210,7 +225,8 @@ impl ToolConfig {
                     "windows_amd64".to_string(),
                 ],
                 url_pattern: UrlPattern::Custom {
-                    pattern: "https://nodejs.org/dist/v{version}/node-v{version}-{platform}.tar.gz".to_string(),
+                    pattern: "https://nodejs.org/dist/v{version}/node-v{version}-{platform}.tar.gz"
+                        .to_string(),
                     platform_mapping: {
                         let mut map = HashMap::new();
                         map.insert("darwin_amd64".to_string(), "darwin-x64".to_string());
@@ -287,9 +303,42 @@ impl ToolConfig {
             },
         );
 
-        // Note: wasmsign2-cli, jco, and file-ops-component are in the JSON registry but use
-        // a fallback mechanism rather than GitHub API updates. They're handled by the
-        // checksum manager's fallback checksums, not the update engine.
+        // PulseEngine universal-wasm components. These publish a single
+        // platform-independent .wasm asset per release. The AssetExists filter
+        // picks the newest release that actually ships the asset — important for
+        // loom, whose v1.x releases ship only compliance reports (no loom.wasm),
+        // so the updater correctly stays at v0.3.0 instead of failing on v1.x.
+        tools.insert(
+            "loom".to_string(),
+            ToolConfigEntry {
+                github_repo: "pulseengine/loom".to_string(),
+                platforms: vec!["wasm".to_string()],
+                url_pattern: UrlPattern::UniversalWasm {
+                    asset_name: "loom.wasm".to_string(),
+                },
+                tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::AssetExists,
+            },
+        );
+
+        tools.insert(
+            "file-ops-component".to_string(),
+            ToolConfigEntry {
+                github_repo: "pulseengine/bazel-file-ops-component".to_string(),
+                platforms: vec!["wasm_component".to_string()],
+                url_pattern: UrlPattern::UniversalWasm {
+                    asset_name: "file_ops_component.wasm".to_string(),
+                },
+                tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::AssetExists,
+            },
+        );
+
+        // Note: wsc (github_repo pulseengine/sigil) is dual-natured — per-OS CLI
+        // binaries plus a wasm CLI module (wsc-cli.wasm, capped at v0.7.0; later
+        // releases drop it). It needs separate handling and is left out here
+        // (tracked in #498). wasmsign2-cli has no GitHub releases (tag/CI only).
+        // jco uses the npm ecosystem, not GitHub release assets.
 
         Self { tools }
     }
@@ -338,7 +387,9 @@ impl VersionFilter {
     /// Check if a version passes the filter
     pub fn accepts(&self, version: &str) -> bool {
         match self {
-            VersionFilter::Any => true,
+            // AssetExists is resolved in the update engine against each release's
+            // asset list; by version string alone it accepts everything.
+            VersionFilter::Any | VersionFilter::AssetExists => true,
             VersionFilter::LtsOnly => {
                 // For Node.js, even major versions are LTS (20, 22, 24, etc.)
                 // Odd major versions are "Current" (21, 23, 25, etc.)
@@ -398,6 +449,18 @@ impl ToolConfigEntry {
 
                 Ok(url)
             }
+            UrlPattern::UniversalWasm { asset_name } => Ok(format!(
+                "https://github.com/{}/releases/download/v{}/{}",
+                self.github_repo, version, asset_name
+            )),
+        }
+    }
+
+    /// Asset name for a universal-wasm tool, if this is one.
+    pub fn universal_asset_name(&self) -> Option<&str> {
+        match &self.url_pattern {
+            UrlPattern::UniversalWasm { asset_name } => Some(asset_name),
+            _ => None,
         }
     }
 
@@ -442,6 +505,7 @@ impl ToolConfigEntry {
                     Ok(format!("{}.tar.gz", platform_name))
                 }
             }
+            UrlPattern::UniversalWasm { asset_name } => Ok(asset_name.clone()),
             _ => Err(anyhow::anyhow!("Tool does not use URL suffixes")),
         }
     }
@@ -516,6 +580,47 @@ mod tests {
 
         let platform_name = wac_config.get_platform_name("linux_amd64").unwrap();
         assert_eq!(platform_name, "x86_64-unknown-linux-musl");
+    }
+
+    #[test]
+    fn test_universal_wasm_loom() {
+        let config = ToolConfig::new();
+        let loom = config.get_tool_config("loom");
+
+        assert_eq!(loom.github_repo, "pulseengine/loom");
+        assert_eq!(loom.platforms, vec!["wasm".to_string()]);
+        assert!(matches!(loom.version_filter, VersionFilter::AssetExists));
+        assert_eq!(loom.universal_asset_name(), Some("loom.wasm"));
+
+        let url = loom.generate_download_url("0.3.0", "wasm").unwrap();
+        assert_eq!(
+            url,
+            "https://github.com/pulseengine/loom/releases/download/v0.3.0/loom.wasm"
+        );
+        assert_eq!(loom.get_url_suffix("wasm").unwrap(), "loom.wasm");
+        assert!(!loom.has_platform_names());
+    }
+
+    #[test]
+    fn test_universal_wasm_file_ops() {
+        let config = ToolConfig::new();
+        let fo = config.get_tool_config("file-ops-component");
+        assert_eq!(fo.github_repo, "pulseengine/bazel-file-ops-component");
+        assert_eq!(fo.universal_asset_name(), Some("file_ops_component.wasm"));
+        let url = fo.generate_download_url("0.2.0", "wasm_component").unwrap();
+        assert_eq!(
+            url,
+            "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.2.0/file_ops_component.wasm"
+        );
+    }
+
+    #[test]
+    fn test_non_universal_has_no_asset_name() {
+        let config = ToolConfig::new();
+        assert_eq!(
+            config.get_tool_config("wasm-tools").universal_asset_name(),
+            None
+        );
     }
 
     #[test]
