@@ -12,22 +12,23 @@ def _wasm_optimize_impl(ctx):
     input_wasm = ctx.file.component
     output_wasm = ctx.actions.declare_file(ctx.label.name + ".wasm")
 
-    # Get wasmtime toolchain for running loom.wasm
-    wasmtime_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasmtime_toolchain_type"]
-    wasmtime = wasmtime_toolchain.wasmtime
-
-    # Get LOOM WASM component
+    # Get LOOM WASM component and the wrapper that runs it under wasmtime.
     loom_wasm = ctx.file._loom_wasm
+    loom_wrapper = ctx.executable._loom_wrapper
 
-    # Build command arguments.
+    # Build command arguments for loom_wrapper, which prepends `wasmtime run`
+    # and the resolved `--dir` preopens (issue #490).
+    #
+    # loom reads input paths via WASI, and a fetched/adopted input is staged
+    # as a symlink whose target escapes a plain `--dir=.` preopen, so wasmtime
+    # refuses to follow it. The wrapper resolves the symlink on the host and
+    # preopens the real directory. It also keeps loom.wasm out of the WASI
+    # mount set (wasmtime opens the module natively), so loom.wasm is passed
+    # as the first argument.
+    #
     # Note: loom v0.3.0 does NOT accept the `--` separator between the wasm
     # module path and the subcommand when run under `wasmtime run`.
-    # TODO: loom reads input paths via WASI and `--dir=.` does not resolve
-    # the bazel-out symlinks; a small wrapper (mirroring wasmsign2_wrapper)
-    # is needed to compute real paths and register them as WASI mounts.
     args = ctx.actions.args()
-    args.add("run")
-    args.add("--dir=.")
     args.add(loom_wasm)
     args.add("optimize")
     args.add(input_wasm)
@@ -54,7 +55,7 @@ def _wasm_optimize_impl(ctx):
     ctx.actions.run(
         inputs = [input_wasm, loom_wasm],
         outputs = [output_wasm],
-        executable = wasmtime,
+        executable = loom_wrapper,
         arguments = [args],
         mnemonic = "LoomOptimize",
         progress_message = "Optimizing WebAssembly component with LOOM: %{label}",
@@ -120,8 +121,13 @@ advanced, branches, dce, merge-blocks, vacuum, simplify-locals""",
             default = "@loom_wasm//file:file",
             allow_single_file = True,
         ),
+        "_loom_wrapper": attr.label(
+            doc = "Wrapper that runs loom.wasm under wasmtime with symlink-resolved WASI mounts",
+            default = "//tools/loom_wrapper",
+            executable = True,
+            cfg = "exec",
+        ),
     },
-    toolchains = ["@rules_wasm_component//toolchains:wasmtime_toolchain_type"],
     doc = """Optimize a WebAssembly component using LOOM.
 
 LOOM performs expression-level optimizations including:
