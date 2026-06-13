@@ -1,0 +1,23 @@
+"""Cross-platform wrapper for the LOOM WASM optimizer component.
+
+This wrapper executes the pre-built loom.wasm component via wasmtime,
+resolving symlinks to real paths and preopening the resolved directories so
+LOOM can read fetched/adopted component inputs that Bazel stages as symlinks
+(issue #490). Mirrors //tools/wasmsign2_wrapper.
+"""
+
+load("@rules_go//go:def.bzl", "go_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Wrapper binary that executes loom.wasm with symlink/path resolution.
+# Both the wasmtime binary and loom.wasm are supplied by the calling rule as
+# arguments (and staged as action inputs); wasmtime opens both natively. They
+# are NOT resolved via runfiles, which would embed a canonical repo name that
+# breaks when rules_wasm_component is consumed as a dependency (issue #490).
+go_binary(
+    name = "loom_wrapper",
+    srcs = ["main.go"],
+    pure = "on",  # Pure Go for cross-platform compatibility
+    visibility = ["//visibility:public"],
+)
