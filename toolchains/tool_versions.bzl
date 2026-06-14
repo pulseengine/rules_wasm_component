@@ -26,10 +26,10 @@ IMPORTANT: When updating versions here:
 TOOL_VERSIONS = {
     # Core WebAssembly toolchain
     "wasm-tools": "1.246.2",  # Component model tools (validate, parse, compose, etc.)
-    "wasmtime": "43.0.1",  # WebAssembly runtime with P3 async + wizer (security patch)
+    "wasmtime": "45.0.1",  # WebAssembly runtime — runs WASI 0.3.0 stable (ratified 2026-06-11)
 
     # WIT and binding generation
-    "wit-bindgen": "0.55.0",  # WIT binding generator with futures::Stream adapter
+    "wit-bindgen": "0.58.0",  # WIT binding generator (stable WASI 0.3.0 async codegen)
     "wac": "0.9.0",  # WebAssembly Composition tool
     "wkg": "0.15.0",  # WebAssembly package manager
 
@@ -58,8 +58,8 @@ TOOL_VERSIONS = {
 # P3-capable tool versions — minimum versions that support WASI Preview 3 async
 P3_TOOL_VERSIONS = {
     "wasm-tools": "1.246.2",  # async task.return fixes, stream/future intrinsic extensions
-    "wasmtime": "43.0.1",  # WASIp3 snapshot 0.3.0-rc-2026-03-15 + security fixes (12 CVEs)
-    "wit-bindgen": "0.55.0",  # futures::Stream adapter impl for Rust
+    "wasmtime": "45.0.1",  # runs WASI 0.3.0 stable (ratified 2026-06-11)
+    "wit-bindgen": "0.58.0",  # stable WASI 0.3.0 async codegen
     "wasi-sdk": "32",
     "jco": "1.17.6",  # P3 stream/async stabilization (nested streams, re-entrancy fixes)
     "nodejs": "24.14.1",
@@ -80,11 +80,11 @@ P3_BLOCKED_LANGUAGES = {
 # Value: Dict of compatible tool versions
 TOOL_COMPATIBILITY_MATRIX = {
     "1.246.2": {
-        "wit-bindgen": ["0.54.0", "0.55.0"],
+        "wit-bindgen": ["0.54.0", "0.55.0", "0.58.0"],
         "wac": ["0.9.0"],  # wac 0.9.0 does NOT support P3 async yet (issue #180)
         "wkg": ["0.13.0", "0.15.0"],
         "wasmsign2": ["0.2.6"],
-        "wasmtime": ["43.0.0", "43.0.1"],
+        "wasmtime": ["43.0.0", "43.0.1", "45.0.1"],
     },
     "1.245.1": {
         "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
