@@ -1,5 +1,5 @@
 {
   "integrity": "",
   "strip_prefix": "rules_wasm_component-{VERSION}",
-  "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz"
+  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/rules_wasm_component-{TAG}.tar.gz"
 }
