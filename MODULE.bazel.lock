@@ -284,7 +284,7 @@
     },
     "//wasm:extensions.bzl%binaryen": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "c5GClIZ+xfHSKFn9WL/02Ag7wuihInOMqTGH5CxR/U8=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -308,7 +308,7 @@
     },
     "//wasm:extensions.bzl%cpp_component": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "ZtIrdMAeTaET/8t3kmG14kQp8U4FKMqhGB1+JS825Do=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -333,7 +333,7 @@
     },
     "//wasm:extensions.bzl%jco": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "MRHYkIS73wv1wYllXhdZBYX6dRIp7VySTL4edmOH2/M=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -358,7 +358,7 @@
     },
     "//wasm:extensions.bzl%meld": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "Nc45Hq7pjpIzzA1UXlHsAEAgQHpg1jE3/IUlCJYcFgU=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -382,7 +382,7 @@
     },
     "//wasm:extensions.bzl%spar": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "HteVAnfZ8Jv2xAL/oX+kiaSB6HLWRIt9g2CRFKUEz9k=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -406,7 +406,7 @@
     },
     "//wasm:extensions.bzl%synth": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "XTIJ1SQ/Se7btOFYHYJX2DjviC7xWk2ugwNS0Q3Icho=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -430,7 +430,7 @@
     },
     "//wasm:extensions.bzl%tinygo": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "esnFdrH+qxI9awhZ/uW4dIkm843wWmTCzO4b1pdmifs=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -454,7 +454,7 @@
     },
     "//wasm:extensions.bzl%wasi_sdk": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "4CDKvALAslODuYVBSBBBKgDbmaqWRdwJJ4yfDrzWeYg=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -480,8 +480,8 @@
     },
     "//wasm:extensions.bzl%wasi_wit": {
       "general": {
-        "bzlTransitiveDigest": "UFfBprXhjOyZGqtzTTHy4xJvtnfZ5+TqD5dis4Qyw/0=",
-        "usagesDigest": "aprKQAVHUGZU3Qda4GY+rceEATrn/fard2WlVtmwyIU=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
+        "usagesDigest": "U6eB5Q0aHsInAdQhE4dKR56iYo3JPt3BqU0oMH5hOfk=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -815,6 +815,17 @@
               "strip_prefix": "wasi-nn-0.2.0-rc-2024-10-28",
               "build_file_content": "\nload(\"@rules_wasm_component//wit:defs.bzl\", \"wit_library\")\n\nwit_library(\n    name = \"nn\",\n    srcs = glob([\"wit/*.wit\"]),\n    package_name = \"wasi:nn@0.2.0-rc-2024-10-28\",\n    interfaces = [\"tensor\", \"graph\", \"inference\", \"errors\"],\n    visibility = [\"//visibility:public\"],\n)\n"
             }
+          },
+          "wasi_p3": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "attributes": {
+              "urls": [
+                "https://github.com/WebAssembly/WASI/archive/refs/tags/v0.3.0.tar.gz"
+              ],
+              "sha256": "619928e4754a14db106ae42318daa5c7e29b842ab884662d6d86d8d1ac9a76fd",
+              "strip_prefix": "WASI-0.3.0",
+              "build_file_content": "\nload(\"@rules_wasm_component//wit:defs.bzl\", \"wit_library\")\n\n# WASI CLI P3 â run is async, stdio uses stream<u8>\nwit_library(\n    name = \"cli\",\n    srcs = glob([\"proposals/cli/wit/*.wit\"]),\n    package_name = \"wasi:cli@0.3.0\",\n    deps = [\":clocks\", \":filesystem\", \":sockets\", \":random\"],\n    visibility = [\"//visibility:public\"],\n)\n\n# WASI HTTP P3 â handle/send are async, bodies are stream<u8>\nwit_library(\n    name = \"http\",\n    srcs = glob([\"proposals/http/wit/*.wit\"]),\n    package_name = \"wasi:http@0.3.0\",\n    deps = [\":cli\", \":clocks\"],\n    visibility = [\"//visibility:public\"],\n)\n\n# WASI Clocks P3 â wait-until/wait-for are async (replaces subscribe+pollable)\nwit_library(\n    name = \"clocks\",\n    srcs = glob([\"proposals/clocks/wit/*.wit\"]),\n    package_name = \"wasi:clocks@0.3.0\",\n    visibility = [\"//visibility:public\"],\n)\n\n# WASI Filesystem P3 â all ops async, read/write use stream<u8>+future\nwit_library(\n    name = \"filesystem\",\n    srcs = glob([\"proposals/filesystem/wit/*.wit\"]),\n    package_name = \"wasi:filesystem@0.3.0\",\n    deps = [\":clocks\"],\n    visibility = [\"//visibility:public\"],\n)\n\n# WASI Sockets P3 â TCP connect/send/receive async with stream<u8>\nwit_library(\n    name = \"sockets\",\n    srcs = glob([\"proposals/sockets/wit/*.wit\"]),\n    package_name = \"wasi:sockets@0.3.0\",\n    deps = [\":clocks\"],\n    visibility = [\"//visibility:public\"],\n)\n\n# WASI Random P3 â minimal changes from P2\nwit_library(\n    name = \"random\",\n    srcs = glob([\"proposals/random/wit/*.wit\"]),\n    package_name = \"wasi:random@0.3.0\",\n    visibility = [\"//visibility:public\"],\n)\n"
+            }
           }
         },
         "recordedRepoMappingEntries": [
@@ -828,7 +839,7 @@
     },
     "//wasm:extensions.bzl%wasm_toolchain": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "Keg+j4249N8787+5NDDpsnW8S0P3hp9HSaC26H2SeJg=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -862,7 +873,7 @@
     },
     "//wasm:extensions.bzl%wasmtime": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "W3m1ohl2c96vXpGAao2C6XIl3CGB+kZYZN2+bagGv0M=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -887,7 +898,7 @@
     },
     "//wasm:extensions.bzl%witness": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "vz4JVaRGcdcwU0XOHYN0kb54nuI69CDjEu/MXFK6r/g=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -911,7 +922,7 @@
     },
     "//wasm:extensions.bzl%wkg": {
       "general": {
-        "bzlTransitiveDigest": "ZUOnFoKoiyj/ZGS4bF11GxWRosVDPsXBQ/5i1O8V4j0=",
+        "bzlTransitiveDigest": "rHvHyqfz3j6JIu4iS6SbROZYG3QnnTJ5BUbCHJ7Frp0=",
         "usagesDigest": "ks+Q/IL0nntNP6PabzUcF0ruF4X9hTKhbmck/ueoPTg=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

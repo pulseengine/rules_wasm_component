@@ -56,6 +56,25 @@ build_test(
 )
 
 # ============================================================================
+# WASI 0.3 interface WIT (stable v0.3.0) — covers wasi_p3_deps.bzl
+# ============================================================================
+
+# Builds the per-proposal WASI 0.3.0 wit_library targets so the stable-tag
+# retarget (proposals/<name>/wit/) stays green. Requires the wasi_wit
+# extension with include_p3 = True (set in MODULE.bazel).
+build_test(
+    name = "wasi_p3_wit_build_test",
+    targets = [
+        "@wasi_p3//:cli",
+        "@wasi_p3//:clocks",
+        "@wasi_p3//:filesystem",
+        "@wasi_p3//:http",
+        "@wasi_p3//:random",
+        "@wasi_p3//:sockets",
+    ],
+)
+
+# ============================================================================
 # Test suites
 # ============================================================================
 
@@ -66,7 +85,10 @@ test_suite(
 
 test_suite(
     name = "p3",
-    tests = [":p3_build_test"],
+    tests = [
+        ":p3_build_test",
+        ":wasi_p3_wit_build_test",
+    ],
 )
 
 test_suite(
@@ -74,5 +96,6 @@ test_suite(
     tests = [
         ":p2_build_test",
         ":p3_build_test",
+        ":wasi_p3_wit_build_test",
     ],
 )
