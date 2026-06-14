@@ -1,20 +1,12 @@
 {
   "tool_name": "wasmtime",
   "github_repo": "bytecodealliance/wasmtime",
-  "latest_version": "43.0.1",
-  "last_checked": "2026-04-13T00:00:00Z",
+  "latest_version": "45.0.1",
+  "last_checked": "2026-06-14T14:27:19.309194Z",
   "versions": {
     "43.0.1": {
       "release_date": "2026-04-09",
       "platforms": {
-        "darwin_arm64": {
-          "sha256": "c93751ee2f0ecd34c0e799c6261b06c6efeb3c35f2bdb884569ba37931144980",
-          "url_suffix": "aarch64-macos.tar.xz"
-        },
-        "darwin_amd64": {
-          "sha256": "c6ac5b23b52cb78ea7759ce9bd33985c515f2b620b9385021e32e4f51cdc0aa7",
-          "url_suffix": "x86_64-macos.tar.xz"
-        },
         "linux_amd64": {
           "sha256": "9f3cf977fc29e2ccab2d198435265b066dce3d608fc6692d700ed1b9b74c35a1",
           "url_suffix": "x86_64-linux.tar.xz"
@@ -23,15 +15,52 @@
           "sha256": "dbf36d4e9108df377ddfb88f2d8db4e07efce9726b68da53ae78ed5579293923",
           "url_suffix": "aarch64-linux.tar.xz"
         },
+        "darwin_amd64": {
+          "sha256": "c6ac5b23b52cb78ea7759ce9bd33985c515f2b620b9385021e32e4f51cdc0aa7",
+          "url_suffix": "x86_64-macos.tar.xz"
+        },
+        "darwin_arm64": {
+          "sha256": "c93751ee2f0ecd34c0e799c6261b06c6efeb3c35f2bdb884569ba37931144980",
+          "url_suffix": "aarch64-macos.tar.xz"
+        },
         "windows_amd64": {
           "sha256": "cb627546a9f0f2f24f3d68fce34b40f13d6b1abe4b70f3afde0038ad9fe4e6ea",
           "url_suffix": "x86_64-windows.zip"
         }
       }
     },
+    "45.0.1": {
+      "release_date": "2026-06-05",
+      "platforms": {
+        "windows_amd64": {
+          "sha256": "d2732f264d8d414ab1ed1f508465711723e4a8fd211fec611428acfbc6ccfa6e",
+          "url_suffix": "x86_64-windows.zip"
+        },
+        "linux_arm64": {
+          "sha256": "82450beadb52036e7f04a4e68783fb4ac131921922a5ebf924865b9480c6ddd8",
+          "url_suffix": "aarch64-linux.tar.xz"
+        },
+        "darwin_arm64": {
+          "sha256": "77eca420f70b5de25e8542bddc5b9328fd35f5f0e868939e1543ea1848f28b4a",
+          "url_suffix": "aarch64-macos.tar.xz"
+        },
+        "linux_amd64": {
+          "sha256": "98c697660f052bffe5e56a8f60d1bfc6b113e25c47b58722e65dee6987e68f37",
+          "url_suffix": "x86_64-linux.tar.xz"
+        },
+        "darwin_amd64": {
+          "sha256": "2bfebcdbfa1d52a726b98a2044a2286a9034478183d2cbe0be32d0ece55e119e",
+          "url_suffix": "x86_64-macos.tar.xz"
+        }
+      }
+    },
     "39.0.1": {
       "release_date": "2025-11-24",
       "platforms": {
+        "windows_amd64": {
+          "sha256": "bccf64b4227d178c0d13f2856be68876eae3f2f657f3a85d46f076a5e1976198",
+          "url_suffix": "x86_64-windows.zip"
+        },
         "darwin_arm64": {
           "sha256": "3878fc98ab1fec191476ddec5d195e6d018d7fbe5376e54d2c23aedf38aa1bd2",
           "url_suffix": "aarch64-macos.tar.xz"
@@ -47,12 +76,15 @@
         "linux_arm64": {
           "sha256": "bff5ebd3e6781620f40e5586f1aa221f7da98128dacf0142bfb4b25d12242274",
           "url_suffix": "aarch64-linux.tar.xz"
-        },
-        "windows_amd64": {
-          "sha256": "bccf64b4227d178c0d13f2856be68876eae3f2f657f3a85d46f076a5e1976198",
-          "url_suffix": "x86_64-windows.zip"
         }
       }
     }
-  }
+  },
+  "supported_platforms": [
+    "darwin_amd64",
+    "darwin_arm64",
+    "linux_amd64",
+    "linux_arm64",
+    "windows_amd64"
+  ]
 }
