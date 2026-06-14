@@ -11,7 +11,11 @@ use tracing::{debug, info};
 #[derive(Debug, Deserialize)]
 pub struct GitHubRelease {
     pub tag_name: String,
-    pub name: String,
+    // Release title; GitHub returns `null` for auto-generated releases
+    // (e.g. wasmtime), so it must be optional or deserialization fails — this
+    // was the real reason wasmtime couldn't be fetched ("GitHub API issue").
+    #[serde(default)]
+    pub name: Option<String>,
     pub published_at: DateTime<Utc>,
     pub assets: Vec<GitHubAsset>,
 }
