@@ -95,6 +95,10 @@ load(
     _wasm_extract_aot = "wasm_extract_aot",
 )
 load(
+    "//wasm/private:wasm_component_import.bzl",
+    _wasm_component_import = "wasm_component_import",
+)
+load(
     "//wasm/private:wasm_optimize.bzl",
     _wasm_optimize = "wasm_optimize",
 )
@@ -157,6 +161,7 @@ wasm_extract_aot = _wasm_extract_aot
 ssh_keygen = _ssh_keygen
 
 # WebAssembly optimization rules
+wasm_component_import = _wasm_component_import
 wasm_optimize = _wasm_optimize
 binaryen_optimize = _binaryen_optimize
 

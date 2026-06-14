@@ -140,6 +140,16 @@ bzl_library(
 )
 
 bzl_library(
+    name = "wasm_component_import",
+    srcs = ["wasm_component_import.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+    deps = ["//providers"],
+)
+
+bzl_library(
     name = "wasm_optimize",
     srcs = ["wasm_optimize.bzl"],
     visibility = [
