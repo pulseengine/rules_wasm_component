@@ -69,13 +69,25 @@ bzl_library(
 )
 
 bzl_library(
+    name = "wasmsign2_tools",
+    srcs = ["wasmsign2_tools.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wasm:__pkg__",
+    ],
+)
+
+bzl_library(
     name = "wasm_signing",
     srcs = ["wasm_signing.bzl"],
     visibility = [
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers"],
+    deps = [
+        ":wasmsign2_tools",
+        "//providers",
+    ],
 )
 
 bzl_library(
@@ -173,5 +185,8 @@ bzl_library(
         "//docs:__pkg__",
         "//wasm:__pkg__",
     ],
-    deps = ["//providers"],
+    deps = [
+        ":wasmsign2_tools",
+        "//providers",
+    ],
 )

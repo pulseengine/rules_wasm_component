@@ -1,6 +1,12 @@
 """WebAssembly signing rules using wasmsign2"""
 
 load("//providers:providers.bzl", "WasmComponentInfo", "WasmKeyInfo", "WasmSignatureInfo")
+load(
+    ":wasmsign2_tools.bzl",
+    "WASMSIGN2_WASM_ATTR",
+    "WASMTIME_TOOLCHAIN",
+    "add_wrapper_tools",
+)
 
 def _wasm_keygen_impl(ctx):
     """Implementation of wasm_keygen rule"""
@@ -17,12 +23,14 @@ def _wasm_keygen_impl(ctx):
     args.add("keygen")
     args.add("--public-key", public_key)
     args.add("--secret-key", secret_key)
+    tool_inputs = add_wrapper_tools(ctx, args)
 
     # Run key generation via Go wrapper
     # The wrapper handles symlink resolution and WASI directory mapping
     ctx.actions.run(
         executable = wasmsign2_wrapper,
         arguments = [args],
+        inputs = tool_inputs,
         outputs = [public_key, secret_key],
         mnemonic = "WasmKeyGen",
         progress_message = "Generating WASM signing keys %s" % ctx.label,
@@ -69,7 +77,8 @@ wasm_keygen = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | WASMSIGN2_WASM_ATTR,
+    toolchains = [WASMTIME_TOOLCHAIN],
     doc = """
     Generates a key pair for signing WebAssembly components in compact format.
 
@@ -150,6 +159,7 @@ def _wasm_sign_impl(ctx):
     inputs = [input_wasm, secret_key]
     if public_key:
         inputs.append(public_key)
+    inputs += add_wrapper_tools(ctx, args)
 
     # Prepare outputs
     outputs = [signed_wasm]
@@ -238,7 +248,8 @@ wasm_sign = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | WASMSIGN2_WASM_ATTR,
+    toolchains = [WASMTIME_TOOLCHAIN],
     doc = """
     Signs a WebAssembly component with a cryptographic signature.
 
@@ -323,6 +334,7 @@ def _wasm_verify_impl(ctx):
         inputs.append(public_key)
     if signature_file:
         inputs.append(signature_file)
+    inputs += add_wrapper_tools(ctx, args)
 
     # Run verification via Go wrapper (no shell scripts!)
     # The wrapper will create the marker file on success
@@ -394,7 +406,8 @@ wasm_verify = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | WASMSIGN2_WASM_ATTR,
+    toolchains = [WASMTIME_TOOLCHAIN],
     doc = """
     Verifies the cryptographic signature of a WebAssembly component.
 

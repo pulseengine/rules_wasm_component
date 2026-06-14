@@ -18,6 +18,12 @@ useful for CI diagnostics.
 """
 
 load("//providers:providers.bzl", "WasmComponentInfo")
+load(
+    ":wasmsign2_tools.bzl",
+    "WASMSIGN2_WASM_ATTR",
+    "WASMTIME_TOOLCHAIN",
+    "add_wrapper_tools",
+)
 
 _TRANSFORMATION_TYPES = [
     "optimization",
@@ -69,11 +75,12 @@ def _wasm_attest_impl(ctx):
     args.add("--tool-name", ctx.attr.tool_name)
     args.add("--tool-version", ctx.attr.tool_version)
     args.add("--type", ctx.attr.transformation_type)
+    tool_inputs = add_wrapper_tools(ctx, args)
 
     ctx.actions.run(
         executable = wrapper,
         arguments = [args],
-        inputs = [input_wasm, output_input],
+        inputs = [input_wasm, output_input] + tool_inputs,
         outputs = [attested_wasm],
         mnemonic = "WasmAttest",
         progress_message = "Recording transformation attestation %s on %s" % (
@@ -141,7 +148,8 @@ wasm_attest = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | WASMSIGN2_WASM_ATTR,
+    toolchains = [WASMTIME_TOOLCHAIN],
     doc = """Record a transformation attestation on a WebAssembly module.
 
 Use this when you run a transformation outside of the built-in pipeline rules
@@ -197,6 +205,7 @@ def _wasm_verify_chain_impl(ctx):
         args.add("--report-only")
 
     args.add("--bazel-marker-file=" + marker.path)
+    inputs += add_wrapper_tools(ctx, args)
 
     ctx.actions.run(
         executable = wrapper,
@@ -254,7 +263,8 @@ wasm_verify_chain = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | WASMSIGN2_WASM_ATTR,
+    toolchains = [WASMTIME_TOOLCHAIN],
     doc = """Verify a WebAssembly module's transformation attestation chain.
 
 Emits a marker file on success; the build fails if verification fails (unless
@@ -306,11 +316,12 @@ def _wasm_show_chain_impl(ctx):
     args.add("--input-file", input_wasm)
     if ctx.attr.as_json:
         args.add("--json")
+    tool_inputs = add_wrapper_tools(ctx, args)
 
     ctx.actions.run(
         executable = wrapper,
         arguments = [args],
-        inputs = [input_wasm],
+        inputs = [input_wasm] + tool_inputs,
         outputs = [out],
         mnemonic = "WasmShowChain",
         progress_message = "Extracting attestation chain from %s" % input_wasm.short_path,
@@ -339,7 +350,8 @@ wasm_show_chain = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
+    } | WASMSIGN2_WASM_ATTR,
+    toolchains = [WASMTIME_TOOLCHAIN],
     doc = """Extract a WebAssembly module's transformation attestation chain to a file.
 
 Produces a JSON (default) or text rendering of the transformation chain stored
