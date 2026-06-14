@@ -94,11 +94,12 @@ register_toolchains("@go_toolchains//:all")
 
 # WASI WIT interface definitions
 wasi_wit_ext = use_extension("//wasm:extensions.bzl", "wasi_wit")
-wasi_wit_ext.init()
+wasi_wit_ext.init(include_p3 = True)
 use_repo(
     wasi_wit_ext,
     # WASI 0.2.3 (default)
     "wasi_cli",
+    "wasi_p3",
     "wasi_clocks",
     "wasi_filesystem",
     "wasi_http",
