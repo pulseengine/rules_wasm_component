@@ -64,6 +64,21 @@ pub enum UrlPattern {
     /// The single platform key (e.g. "wasm" or "wasm_component") is stored in
     /// `platforms`; the asset name is the same across platforms.
     UniversalWasm { asset_name: String },
+    /// Per-platform asset where the suffix (including extension) is given
+    /// verbatim per platform. Required for tools with *mixed* extensions across
+    /// platforms (e.g. `.tar.xz`/`.tar.gz` on unix but `.zip` on Windows) — the
+    /// other variants assume one extension for all platforms, which silently
+    /// drops the odd-one-out (wit-bindgen 0.58 Windows became .zip; wasmtime,
+    /// tinygo Windows have the same shape).
+    ///
+    /// `pattern` is the full URL with `{version}` and `{asset}` placeholders;
+    /// `platform_mapping` maps each platform to its `{asset}` value, which is
+    /// the complete suffix *including* the file extension and is stored verbatim
+    /// as the registry `url_suffix`.
+    PerPlatformAsset {
+        pattern: String,
+        platform_mapping: HashMap<String, String>,
+    },
 }
 
 impl Default for ToolConfig {
@@ -105,7 +120,9 @@ impl ToolConfig {
             },
         );
 
-        // wit-bindgen configuration
+        // wit-bindgen configuration.
+        // PerPlatformAsset because Windows switched to .zip in 0.58 while unix
+        // stays .tar.gz — a single-extension pattern silently drops Windows.
         tools.insert(
             "wit-bindgen".to_string(),
             ToolConfigEntry {
@@ -117,14 +134,15 @@ impl ToolConfig {
                     "linux_arm64".to_string(),
                     "windows_amd64".to_string(),
                 ],
-                url_pattern: UrlPattern::StandardTarball {
+                url_pattern: UrlPattern::PerPlatformAsset {
+                    pattern: "https://github.com/bytecodealliance/wit-bindgen/releases/download/v{version}/wit-bindgen-{version}-{asset}".to_string(),
                     platform_mapping: {
                         let mut map = HashMap::new();
-                        map.insert("darwin_amd64".to_string(), "x86_64-macos".to_string());
-                        map.insert("darwin_arm64".to_string(), "aarch64-macos".to_string());
-                        map.insert("linux_amd64".to_string(), "x86_64-linux".to_string());
-                        map.insert("linux_arm64".to_string(), "aarch64-linux".to_string());
-                        map.insert("windows_amd64".to_string(), "x86_64-windows".to_string());
+                        map.insert("darwin_amd64".to_string(), "x86_64-macos.tar.gz".to_string());
+                        map.insert("darwin_arm64".to_string(), "aarch64-macos.tar.gz".to_string());
+                        map.insert("linux_amd64".to_string(), "x86_64-linux.tar.gz".to_string());
+                        map.insert("linux_arm64".to_string(), "aarch64-linux.tar.gz".to_string());
+                        map.insert("windows_amd64".to_string(), "x86_64-windows.zip".to_string());
                         map
                     },
                 },
@@ -176,9 +194,37 @@ impl ToolConfig {
             },
         );
 
-        // Note: wasmtime is in the JSON registry with valid checksums but
-        // has issues with GitHub API calls in the update engine, so we use
-        // the fallback checksum mechanism instead of auto-updates
+        // wasmtime configuration.
+        // PerPlatformAsset: assets are wasmtime-v{version}-{platform}, with
+        // .tar.xz on unix and .zip on Windows. (Previously excluded over a
+        // "GitHub API" note that was really this mixed-extension mismatch.)
+        tools.insert(
+            "wasmtime".to_string(),
+            ToolConfigEntry {
+                github_repo: "bytecodealliance/wasmtime".to_string(),
+                platforms: vec![
+                    "darwin_amd64".to_string(),
+                    "darwin_arm64".to_string(),
+                    "linux_amd64".to_string(),
+                    "linux_arm64".to_string(),
+                    "windows_amd64".to_string(),
+                ],
+                url_pattern: UrlPattern::PerPlatformAsset {
+                    pattern: "https://github.com/bytecodealliance/wasmtime/releases/download/v{version}/wasmtime-v{version}-{asset}".to_string(),
+                    platform_mapping: {
+                        let mut map = HashMap::new();
+                        map.insert("darwin_amd64".to_string(), "x86_64-macos.tar.xz".to_string());
+                        map.insert("darwin_arm64".to_string(), "aarch64-macos.tar.xz".to_string());
+                        map.insert("linux_amd64".to_string(), "x86_64-linux.tar.xz".to_string());
+                        map.insert("linux_arm64".to_string(), "aarch64-linux.tar.xz".to_string());
+                        map.insert("windows_amd64".to_string(), "x86_64-windows.zip".to_string());
+                        map
+                    },
+                },
+                tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::Any,
+            },
+        );
 
         // wasi-sdk configuration
         tools.insert(
@@ -453,6 +499,17 @@ impl ToolConfigEntry {
                 "https://github.com/{}/releases/download/v{}/{}",
                 self.github_repo, version, asset_name
             )),
+            UrlPattern::PerPlatformAsset {
+                pattern,
+                platform_mapping,
+            } => {
+                let asset = platform_mapping
+                    .get(platform)
+                    .with_context(|| format!("Unsupported platform: {}", platform))?;
+                Ok(pattern
+                    .replace("{version}", version)
+                    .replace("{asset}", asset))
+            }
         }
     }
 
@@ -506,6 +563,12 @@ impl ToolConfigEntry {
                 }
             }
             UrlPattern::UniversalWasm { asset_name } => Ok(asset_name.clone()),
+            UrlPattern::PerPlatformAsset {
+                platform_mapping, ..
+            } => platform_mapping
+                .get(platform)
+                .cloned()
+                .with_context(|| format!("Platform {} not found", platform)),
             _ => Err(anyhow::anyhow!("Tool does not use URL suffixes")),
         }
     }
@@ -580,6 +643,54 @@ mod tests {
 
         let platform_name = wac_config.get_platform_name("linux_amd64").unwrap();
         assert_eq!(platform_name, "x86_64-unknown-linux-musl");
+    }
+
+    #[test]
+    fn test_per_platform_asset_wit_bindgen_windows_zip() {
+        let config = ToolConfig::new();
+        let wb = config.get_tool_config("wit-bindgen");
+        // Windows must be .zip (the bug: StandardTarball forced .tar.gz -> 404).
+        assert_eq!(
+            wb.generate_download_url("0.58.0", "windows_amd64").unwrap(),
+            "https://github.com/bytecodealliance/wit-bindgen/releases/download/v0.58.0/wit-bindgen-0.58.0-x86_64-windows.zip"
+        );
+        assert_eq!(
+            wb.get_url_suffix("windows_amd64").unwrap(),
+            "x86_64-windows.zip"
+        );
+        // Unix stays .tar.gz.
+        assert_eq!(
+            wb.generate_download_url("0.58.0", "linux_amd64").unwrap(),
+            "https://github.com/bytecodealliance/wit-bindgen/releases/download/v0.58.0/wit-bindgen-0.58.0-x86_64-linux.tar.gz"
+        );
+        assert_eq!(
+            wb.get_url_suffix("linux_amd64").unwrap(),
+            "x86_64-linux.tar.gz"
+        );
+        assert!(!wb.has_platform_names());
+    }
+
+    #[test]
+    fn test_per_platform_asset_wasmtime_mixed_ext() {
+        let config = ToolConfig::new();
+        let wt = config.get_tool_config("wasmtime");
+        assert_eq!(wt.github_repo, "bytecodealliance/wasmtime");
+        assert_eq!(
+            wt.generate_download_url("45.0.1", "linux_amd64").unwrap(),
+            "https://github.com/bytecodealliance/wasmtime/releases/download/v45.0.1/wasmtime-v45.0.1-x86_64-linux.tar.xz"
+        );
+        assert_eq!(
+            wt.get_url_suffix("linux_amd64").unwrap(),
+            "x86_64-linux.tar.xz"
+        );
+        assert_eq!(
+            wt.generate_download_url("45.0.1", "windows_amd64").unwrap(),
+            "https://github.com/bytecodealliance/wasmtime/releases/download/v45.0.1/wasmtime-v45.0.1-x86_64-windows.zip"
+        );
+        assert_eq!(
+            wt.get_url_suffix("windows_amd64").unwrap(),
+            "x86_64-windows.zip"
+        );
     }
 
     #[test]
