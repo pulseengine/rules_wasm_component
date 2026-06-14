@@ -1,0 +1,33 @@
+"""Example: adopt a prebuilt .wasm component, then validate it.
+
+`wasm_component_import` brings an already-built component (fetched release
+asset, vendored artifact, or — here — another target's output) into the build
+graph as a `WasmComponentInfo`, so the downstream rules can consume it without
+rebuilding from source. See rules_wasm_component#489.
+
+To keep the example hermetic (no binary committed to the repo), `wasm` points
+at an existing built component (`//examples/basic:hello_component`) as a
+stand-in for a prebuilt artifact. In a real pipeline `wasm` would point at an
+`http_file`-fetched release asset (e.g. a flight-control component).
+"""
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_component_import", "wasm_validate")
+
+wasm_component_import(
+    name = "adopted_component",
+    wasm = "//examples/basic:hello_component",
+)
+
+wasm_validate(
+    name = "adopted_validate",
+    component = ":adopted_component",
+)
+
+build_test(
+    name = "component_import_test",
+    targets = [
+        ":adopted_component",
+        ":adopted_validate",
+    ],
+)
