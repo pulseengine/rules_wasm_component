@@ -2,9 +2,31 @@
   "tool_name": "loom",
   "github_repo": "pulseengine/loom",
   "description": "WebAssembly optimizer with formal verification support",
-  "latest_version": "0.3.0",
+  "latest_version": "1.1.14",
   "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "windows_amd64", "wasm"],
   "versions": {
+    "1.1.14": {
+      "release_date": "2026-06-15",
+      "_note": "Native per-OS binaries (tarballs, extracted by the loom toolchain). v1.x dropped the loom.wasm component; consumed via toolchains/loom_toolchain.bzl, not @loom_wasm. Checksums from the signed SHA256SUMS.txt.",
+      "platforms": {
+        "darwin_arm64": {
+          "sha256": "d8011653ca8f9bc8009ec241fa74fd880557728e0285d218feb17594f4237d02",
+          "url_suffix": "loom-v1.1.14-aarch64-apple-darwin.tar.gz"
+        },
+        "darwin_amd64": {
+          "sha256": "e8b4e488e30161ef5dcfe50e64191929996af9d4433805fd1d9dbc3d2b8f5b37",
+          "url_suffix": "loom-v1.1.14-x86_64-apple-darwin.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "a43280bb561d2e902c07daf4ec34c56095cceb6bfee62da4da6ab9d39f2fbd84",
+          "url_suffix": "loom-v1.1.14-x86_64-unknown-linux-gnu.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "bfbfd0995d31a085e582e724fef22d851fbfa34076852eb332bd2b87a558fb5f",
+          "url_suffix": "loom-v1.1.14-x86_64-pc-windows-msvc.zip"
+        }
+      }
+    },
     "0.3.0": {
       "release_date": "2026-01-12",
       "platforms": {
