@@ -90,6 +90,12 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Toolchain type for Loom (WebAssembly component optimization)
+toolchain_type(
+    name = "loom_toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Toolchain type for spar (AADL architecture model -> WIT generation)
 toolchain_type(
     name = "spar_toolchain_type",
@@ -345,6 +351,14 @@ bzl_library(
 bzl_library(
     name = "meld_toolchain",
     srcs = ["meld_toolchain.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [":tool_registry"],
+)
+
+# Bzl library for Loom toolchain implementation
+bzl_library(
+    name = "loom_toolchain",
+    srcs = ["loom_toolchain.bzl"],
     visibility = ["//visibility:public"],
     deps = [":tool_registry"],
 )

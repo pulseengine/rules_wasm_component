@@ -261,6 +261,18 @@ use_repo(meld, "meld_toolchain")
 
 register_toolchains("@meld_toolchain//:meld_toolchain")
 
+# Loom toolchain for WebAssembly component optimization (native binary, v1.x).
+# Registered here; wasm_optimize is rewired to consume it in a follow-up (the
+# @loom_wasm 0.3.0 component path below stays until then).
+loom = use_extension("//wasm:extensions.bzl", "loom")
+loom.register(
+    name = "loom",
+    version = "1.1.14",
+)
+use_repo(loom, "loom_toolchain")
+
+register_toolchains("@loom_toolchain//:loom_toolchain")
+
 # spar toolchain: AADL architecture model -> WIT generation
 spar = use_extension("//wasm:extensions.bzl", "spar")
 spar.register(

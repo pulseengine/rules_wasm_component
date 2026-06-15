@@ -356,6 +356,30 @@
         ]
       }
     },
+    "//wasm:extensions.bzl%loom": {
+      "general": {
+        "bzlTransitiveDigest": "0qEi+vG8SVFzA/pNsQsrTAkpTnn15fiVjSNm5DZLt+U=",
+        "usagesDigest": "DFU/sKFAEZQ+zav+qZj4HmWRMKHuW16wFNoirPl+iLQ=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "loom_toolchain": {
+            "repoRuleId": "@@//toolchains:loom_toolchain.bzl%loom_repository",
+            "attributes": {
+              "version": "1.1.14"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "//wasm:extensions.bzl%meld": {
       "general": {
         "bzlTransitiveDigest": "MPtqvx8t7gZJVOuxHU4eGcG9yk/A4QiX6cXUSrRp1fM=",

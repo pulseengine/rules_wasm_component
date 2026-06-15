@@ -143,6 +143,11 @@ _URL_PATTERNS = {
         "filename": "{suffix}",  # e.g., "meld-aarch64-apple-darwin"
         "is_binary": True,
     },
+    "loom": {
+        # loom v1.x releases are tarballs (extracted; url_suffix IS the filename)
+        "base": "https://github.com/{repo}/releases/download/v{version}",
+        "filename": "{suffix}",  # e.g., "loom-v1.1.14-aarch64-apple-darwin.tar.gz"
+    },
     "spar": {
         # spar releases are tar.gz/zip archives: spar-v{version}-{triple}.{ext}
         "base": "https://github.com/{repo}/releases/download/v{version}",
