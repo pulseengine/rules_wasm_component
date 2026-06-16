@@ -5,6 +5,7 @@ load("//toolchains:componentize_py_toolchain.bzl", "componentize_py_toolchain_re
 load("//toolchains:cpp_component_toolchain.bzl", "cpp_component_toolchain_repository")
 load("//toolchains:jco_toolchain.bzl", "jco_toolchain_repository")
 load("//toolchains:meld_toolchain.bzl", "meld_repository")
+load("//toolchains:loom_toolchain.bzl", "loom_repository")
 load("//toolchains:spar_toolchain.bzl", "spar_repository")
 load("//toolchains:witness_toolchain.bzl", "witness_repository")
 load("//toolchains:synth_toolchain.bzl", "synth_repository")
@@ -696,6 +697,45 @@ meld = module_extension(
                 "version": attr.string(
                     doc = "Meld version to use",
                     default = "0.10.0",
+                ),
+            },
+        ),
+    },
+)
+
+def _loom_extension_impl(module_ctx):
+    """Implementation of Loom module extension."""
+    registrations = {}
+
+    for mod in module_ctx.modules:
+        for registration in mod.tags.register:
+            registrations[registration.name] = registration
+
+    for name, registration in registrations.items():
+        loom_repository(
+            name = name + "_toolchain",
+            version = registration.version,
+        )
+
+    if not registrations:
+        loom_repository(
+            name = "loom_toolchain",
+            version = "1.1.14",
+        )
+
+# Module extension for Loom (WebAssembly component optimization)
+loom = module_extension(
+    implementation = _loom_extension_impl,
+    tag_classes = {
+        "register": tag_class(
+            attrs = {
+                "name": attr.string(
+                    doc = "Name for this Loom registration",
+                    default = "loom",
+                ),
+                "version": attr.string(
+                    doc = "Loom version to use",
+                    default = "1.1.14",
                 ),
             },
         ),

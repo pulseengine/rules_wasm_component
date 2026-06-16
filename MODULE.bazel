@@ -261,6 +261,18 @@ use_repo(meld, "meld_toolchain")
 
 register_toolchains("@meld_toolchain//:meld_toolchain")
 
+# Loom toolchain for WebAssembly component optimization (native binary, v1.x).
+# wasm_optimize consumes this (loom_toolchain_type); the old @loom_wasm 0.3.0
+# component path was removed (#512).
+loom = use_extension("//wasm:extensions.bzl", "loom")
+loom.register(
+    name = "loom",
+    version = "1.1.14",
+)
+use_repo(loom, "loom_toolchain")
+
+register_toolchains("@loom_toolchain//:loom_toolchain")
+
 # spar toolchain: AADL architecture model -> WIT generation
 spar = use_extension("//wasm:extensions.bzl", "spar")
 spar.register(
@@ -331,13 +343,9 @@ wasm_component_download(
     version = "0.7.0",
 )
 
-# LOOM WebAssembly optimizer (version in //checksums/tools/loom.json)
-wasm_component_download(
-    name = "loom_wasm",
-    filename = "loom.wasm",
-    tool_name = "loom",
-    version = "0.3.0",
-)
+# LOOM: consumed via the native loom toolchain (@loom_toolchain, above).
+# The old @loom_wasm 0.3.0 component download was removed — loom v1.x is
+# native-only and wasm_optimize now runs the native binary directly (#512).
 
 # WASM Tools Component toolchain for universal wasm-tools operations
 register_toolchains("//toolchains:wasm_tools_component_toolchain_local")

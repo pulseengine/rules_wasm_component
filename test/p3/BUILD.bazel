@@ -6,6 +6,7 @@ P2 tests verify no regression, P3 tests verify the new attribute is accepted.
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_component", "rust_wasm_component_bindgen")
+load("@rules_wasm_component//wasm:defs.bzl", "wasm_optimize")
 load("@rules_wasm_component//wit:defs.bzl", "wit_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -36,6 +37,20 @@ rust_wasm_component_bindgen(
 build_test(
     name = "p2_build_test",
     targets = [":hello_p2"],
+)
+
+# ============================================================================
+# Native loom optimize (covers wasm_optimize on the native loom toolchain, #512)
+# ============================================================================
+
+wasm_optimize(
+    name = "hello_p2_optimized",
+    component = ":hello_p2",
+)
+
+build_test(
+    name = "loom_optimize_build_test",
+    targets = [":hello_p2_optimized"],
 )
 
 # ============================================================================
