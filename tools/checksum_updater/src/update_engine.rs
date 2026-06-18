@@ -501,7 +501,7 @@ impl UpdateEngine {
         } else {
             PlatformInfo {
                 sha256: checksum,
-                url_suffix: tool_config.get_url_suffix(platform)?,
+                url_suffix: tool_config.get_url_suffix(version, platform)?,
                 platform_name: None,
                 extra: HashMap::new(),
             }

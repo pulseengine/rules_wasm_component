@@ -34,11 +34,15 @@ pub enum VersionFilter {
     /// Accept the newest release that actually ships the expected asset.
     ///
     /// Used for universal-wasm tools whose later releases may stop shipping the
-    /// consumable artifact (e.g. loom: v0.3.0 ships `loom.wasm` but v1.x ship
-    /// only compliance reports). Without this the updater would pick the latest
-    /// tag and fail to download. The asset name comes from the tool's
+    /// consumable `.wasm` artifact, so plain "latest" would pick a tag with no
+    /// downloadable asset. The asset name comes from the tool's
     /// `UrlPattern::UniversalWasm`. Resolved in the update engine (it needs each
     /// release's asset list), not via `accepts()`.
+    ///
+    /// (loom used this while it shipped `loom.wasm` through v0.3.0; from v1.x it
+    /// ships per-platform native binaries and moved to
+    /// `PerPlatformVersionedAsset` + `Any`. file-ops-component is the current
+    /// user.)
     AssetExists,
 }
 
@@ -77,6 +81,22 @@ pub enum UrlPattern {
     /// as the registry `url_suffix`.
     PerPlatformAsset {
         pattern: String,
+        platform_mapping: HashMap<String, String>,
+    },
+    /// Per-platform asset whose stored `url_suffix` is the COMPLETE filename
+    /// *including the version*, e.g. loom's `loom-v1.1.14-aarch64-apple-darwin.tar.gz`.
+    /// Required when the toolchain reads `url_suffix` as the whole filename
+    /// (`filename: "{suffix}"` in tool_registry.bzl, as loom/wkg/wrpc do) rather
+    /// than appending a fragment to a version-templated pattern. `PerPlatformAsset`
+    /// can't express this because its stored suffix is static (no `{version}`),
+    /// so the next release would write a stale, wrong filename.
+    ///
+    /// `filename_pattern` is the asset filename with `{version}` and `{platform}`
+    /// placeholders; `platform_mapping` maps each platform to its `{platform}`
+    /// value (including the file extension). The full resolved filename is both
+    /// the download asset and the verbatim registry `url_suffix`.
+    PerPlatformVersionedAsset {
+        filename_pattern: String,
         platform_mapping: HashMap<String, String>,
     },
 }
@@ -349,21 +369,36 @@ impl ToolConfig {
             },
         );
 
-        // PulseEngine universal-wasm components. These publish a single
-        // platform-independent .wasm asset per release. The AssetExists filter
-        // picks the newest release that actually ships the asset — important for
-        // loom, whose v1.x releases ship only compliance reports (no loom.wasm),
-        // so the updater correctly stays at v0.3.0 instead of failing on v1.x.
+        // loom, the optimizer. v0.3.0 was the last release shipping the
+        // universal `loom.wasm`; from v1.x loom ships per-platform native
+        // tarballs (`loom-v{version}-{triple}.tar.gz`, `.zip` on Windows) and the
+        // toolchain (tool_registry.bzl loom: `filename: "{suffix}"`) reads the
+        // full versioned filename as the registry `url_suffix`. That needs
+        // PerPlatformVersionedAsset — UniversalWasm/AssetExists kept the updater
+        // stuck at v0.3.0 (#514 migrated the registry + toolchain to native).
         tools.insert(
             "loom".to_string(),
             ToolConfigEntry {
                 github_repo: "pulseengine/loom".to_string(),
-                platforms: vec!["wasm".to_string()],
-                url_pattern: UrlPattern::UniversalWasm {
-                    asset_name: "loom.wasm".to_string(),
+                platforms: vec![
+                    "darwin_amd64".to_string(),
+                    "darwin_arm64".to_string(),
+                    "linux_amd64".to_string(),
+                    "windows_amd64".to_string(),
+                ],
+                url_pattern: UrlPattern::PerPlatformVersionedAsset {
+                    filename_pattern: "loom-v{version}-{platform}".to_string(),
+                    platform_mapping: {
+                        let mut map = HashMap::new();
+                        map.insert("darwin_amd64".to_string(), "x86_64-apple-darwin.tar.gz".to_string());
+                        map.insert("darwin_arm64".to_string(), "aarch64-apple-darwin.tar.gz".to_string());
+                        map.insert("linux_amd64".to_string(), "x86_64-unknown-linux-gnu.tar.gz".to_string());
+                        map.insert("windows_amd64".to_string(), "x86_64-pc-windows-msvc.zip".to_string());
+                        map
+                    },
                 },
                 tag_prefix: Some("v".to_string()),
-                version_filter: VersionFilter::AssetExists,
+                version_filter: VersionFilter::Any,
             },
         );
 
@@ -543,6 +578,35 @@ impl ToolConfigEntry {
                     .replace("{version}", version)
                     .replace("{asset}", asset))
             }
+            UrlPattern::PerPlatformVersionedAsset { .. } => {
+                let filename = self.versioned_filename(version, platform)?;
+                Ok(format!(
+                    "https://github.com/{}/releases/download/v{}/{}",
+                    self.github_repo, version, filename
+                ))
+            }
+        }
+    }
+
+    /// Resolve the full per-platform filename for a `PerPlatformVersionedAsset`
+    /// tool. This is both the download asset name and the verbatim registry
+    /// `url_suffix`, so the two can never drift.
+    fn versioned_filename(&self, version: &str, platform: &str) -> Result<String> {
+        match &self.url_pattern {
+            UrlPattern::PerPlatformVersionedAsset {
+                filename_pattern,
+                platform_mapping,
+            } => {
+                let platform_value = platform_mapping
+                    .get(platform)
+                    .with_context(|| format!("Unsupported platform: {}", platform))?;
+                Ok(filename_pattern
+                    .replace("{version}", version)
+                    .replace("{platform}", platform_value))
+            }
+            _ => Err(anyhow::anyhow!(
+                "versioned_filename called on non-versioned pattern"
+            )),
         }
     }
 
@@ -570,8 +634,9 @@ impl ToolConfigEntry {
         }
     }
 
-    /// Get URL suffix for JSON storage
-    pub fn get_url_suffix(&self, platform: &str) -> Result<String> {
+    /// Get URL suffix for JSON storage. `version` is only consulted by patterns
+    /// whose stored suffix embeds the version (PerPlatformVersionedAsset).
+    pub fn get_url_suffix(&self, version: &str, platform: &str) -> Result<String> {
         match &self.url_pattern {
             UrlPattern::StandardTarball { platform_mapping } => {
                 let platform_name = platform_mapping
@@ -602,6 +667,9 @@ impl ToolConfigEntry {
                 .get(platform)
                 .cloned()
                 .with_context(|| format!("Platform {} not found", platform)),
+            UrlPattern::PerPlatformVersionedAsset { .. } => {
+                self.versioned_filename(version, platform)
+            }
             _ => Err(anyhow::anyhow!("Tool does not use URL suffixes")),
         }
     }
@@ -665,7 +733,9 @@ mod tests {
         let config = ToolConfig::new();
         let wasm_tools_config = config.get_tool_config("wasm-tools");
 
-        let suffix = wasm_tools_config.get_url_suffix("linux_amd64").unwrap();
+        let suffix = wasm_tools_config
+            .get_url_suffix("1.240.0", "linux_amd64")
+            .unwrap();
         assert_eq!(suffix, "x86_64-linux.tar.gz");
     }
 
@@ -688,7 +758,7 @@ mod tests {
             "https://github.com/bytecodealliance/wit-bindgen/releases/download/v0.58.0/wit-bindgen-0.58.0-x86_64-windows.zip"
         );
         assert_eq!(
-            wb.get_url_suffix("windows_amd64").unwrap(),
+            wb.get_url_suffix("0.58.0", "windows_amd64").unwrap(),
             "x86_64-windows.zip"
         );
         // Unix stays .tar.gz.
@@ -697,7 +767,7 @@ mod tests {
             "https://github.com/bytecodealliance/wit-bindgen/releases/download/v0.58.0/wit-bindgen-0.58.0-x86_64-linux.tar.gz"
         );
         assert_eq!(
-            wb.get_url_suffix("linux_amd64").unwrap(),
+            wb.get_url_suffix("0.58.0", "linux_amd64").unwrap(),
             "x86_64-linux.tar.gz"
         );
         assert!(!wb.has_platform_names());
@@ -713,7 +783,7 @@ mod tests {
             "https://github.com/bytecodealliance/wasmtime/releases/download/v45.0.1/wasmtime-v45.0.1-x86_64-linux.tar.xz"
         );
         assert_eq!(
-            wt.get_url_suffix("linux_amd64").unwrap(),
+            wt.get_url_suffix("45.0.1", "linux_amd64").unwrap(),
             "x86_64-linux.tar.xz"
         );
         assert_eq!(
@@ -721,28 +791,40 @@ mod tests {
             "https://github.com/bytecodealliance/wasmtime/releases/download/v45.0.1/wasmtime-v45.0.1-x86_64-windows.zip"
         );
         assert_eq!(
-            wt.get_url_suffix("windows_amd64").unwrap(),
+            wt.get_url_suffix("45.0.1", "windows_amd64").unwrap(),
             "x86_64-windows.zip"
         );
     }
 
     #[test]
-    fn test_universal_wasm_loom() {
+    fn test_per_platform_versioned_asset_loom_native() {
         let config = ToolConfig::new();
         let loom = config.get_tool_config("loom");
 
         assert_eq!(loom.github_repo, "pulseengine/loom");
-        assert_eq!(loom.platforms, vec!["wasm".to_string()]);
-        assert!(matches!(loom.version_filter, VersionFilter::AssetExists));
-        assert_eq!(loom.universal_asset_name(), Some("loom.wasm"));
-
-        let url = loom.generate_download_url("0.3.0", "wasm").unwrap();
-        assert_eq!(
-            url,
-            "https://github.com/pulseengine/loom/releases/download/v0.3.0/loom.wasm"
-        );
-        assert_eq!(loom.get_url_suffix("wasm").unwrap(), "loom.wasm");
+        assert!(matches!(loom.version_filter, VersionFilter::Any));
         assert!(!loom.has_platform_names());
+
+        // The stored url_suffix must be the FULL versioned filename the toolchain
+        // reads verbatim, and must match the hand-authored #513 registry block
+        // exactly — else the loom toolchain download breaks on the next release.
+        assert_eq!(
+            loom.generate_download_url("1.1.14", "darwin_arm64").unwrap(),
+            "https://github.com/pulseengine/loom/releases/download/v1.1.14/loom-v1.1.14-aarch64-apple-darwin.tar.gz"
+        );
+        assert_eq!(
+            loom.get_url_suffix("1.1.14", "darwin_arm64").unwrap(),
+            "loom-v1.1.14-aarch64-apple-darwin.tar.gz"
+        );
+        assert_eq!(
+            loom.get_url_suffix("1.1.14", "linux_amd64").unwrap(),
+            "loom-v1.1.14-x86_64-unknown-linux-gnu.tar.gz"
+        );
+        // Windows is .zip (mixed extension).
+        assert_eq!(
+            loom.get_url_suffix("1.1.14", "windows_amd64").unwrap(),
+            "loom-v1.1.14-x86_64-pc-windows-msvc.zip"
+        );
     }
 
     #[test]
