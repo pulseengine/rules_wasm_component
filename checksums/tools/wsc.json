@@ -1,31 +1,56 @@
 {
   "tool_name": "wsc",
-  "github_repo": "pulseengine/sigil",
   "description": "WebAssembly Signature Component - signing, verification, and attestation toolkit",
-  "latest_version": "0.9.0",
-  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64", "wasm_component"],
+  "github_repo": "pulseengine/sigil",
+  "latest_version": "0.9.2",
+  "last_checked": "2026-06-17T21:26:48.808208Z",
   "versions": {
     "0.9.0": {
       "release_date": "2026-05-21",
       "platforms": {
-        "darwin_amd64": {
-          "sha256": "390182be41aeda8165d40103ab10487ea84f9f52b6d3a336d8a59ead9c88da3b",
-          "url_suffix": "wsc-macos-x86_64"
+        "windows_amd64": {
+          "sha256": "eed9d52f027007b55ee6db756c31b02e232a89ab95c53229dc7f733c809cb33c",
+          "url_suffix": "wsc-windows-x86_64.exe"
         },
         "darwin_arm64": {
           "sha256": "c7e4fddceed68512400d3f4bdc9a3741a5d7221d9afb0a9e1b8302755764ffd8",
           "url_suffix": "wsc-macos-aarch64"
         },
-        "linux_amd64": {
-          "sha256": "9054b4b066e2b0a954110851a43266ff0e9ef12b4e1ecc03c333943fd52cecb6",
-          "url_suffix": "wsc-linux-x86_64"
-        },
         "linux_arm64": {
           "sha256": "e927eb4ea14a55909b84bc4714a7273fbedb83a95e05cd1eb41c0e582d8f45ea",
           "url_suffix": "wsc-linux-aarch64"
         },
+        "darwin_amd64": {
+          "sha256": "390182be41aeda8165d40103ab10487ea84f9f52b6d3a336d8a59ead9c88da3b",
+          "url_suffix": "wsc-macos-x86_64"
+        },
+        "linux_amd64": {
+          "sha256": "9054b4b066e2b0a954110851a43266ff0e9ef12b4e1ecc03c333943fd52cecb6",
+          "url_suffix": "wsc-linux-x86_64"
+        }
+      }
+    },
+    "0.9.2": {
+      "release_date": "2026-05-30",
+      "platforms": {
+        "linux_amd64": {
+          "sha256": "07aa2a40293756a4dcf22d394a711aa812395a159412c15743385481734ed33f",
+          "url_suffix": "wsc-linux-x86_64"
+        },
+        "darwin_arm64": {
+          "sha256": "7a7e94c1ac5210ece6f6b9bdb72a770ce786a0fd0c975ac9897243c01424f3d2",
+          "url_suffix": "wsc-macos-aarch64"
+        },
+        "darwin_amd64": {
+          "sha256": "4731cd64b641301184988cdf5d69645dc59057df4a3610e7dec6f258897fb57e",
+          "url_suffix": "wsc-macos-x86_64"
+        },
+        "linux_arm64": {
+          "sha256": "3588bd52f3707e721bdfe9d7f3f76772be36e589d24e819a8d547c8953f2dcf0",
+          "url_suffix": "wsc-linux-aarch64"
+        },
         "windows_amd64": {
-          "sha256": "eed9d52f027007b55ee6db756c31b02e232a89ab95c53229dc7f733c809cb33c",
+          "sha256": "e220c40a8b8e65452216544802b446d3bf056e8bf935d4ccef0f6ae82272fd49",
           "url_suffix": "wsc-windows-x86_64.exe"
         }
       }
@@ -33,13 +58,21 @@
     "0.7.0": {
       "release_date": "2026-03-28",
       "platforms": {
-        "wasm_component": {
-          "sha256": "a57139921f87e91282f22f788155177eadf2085e21a7f2f8ceb8d9fac1c761ef",
-          "url_suffix": "wsc-cli.wasm"
+        "linux_arm64": {
+          "sha256": "ca48e798c3a73323ed10421b8672e8fcc411dc55389aa9e6c51b4bcd18e845bf",
+          "url_suffix": "wsc-linux-aarch64"
+        },
+        "windows_amd64": {
+          "sha256": "698a8b15388fedf34752ce3e283be47e64fd2afa65a424a42e711778060ac527",
+          "url_suffix": "wsc-windows-x86_64.exe"
         },
         "darwin_amd64": {
           "sha256": "ac429b11a4bf70cff96ad29f7c21466b3034fc91bcd2f385f6210bc5e2040e5e",
           "url_suffix": "wsc-macos-x86_64"
+        },
+        "wasm_component": {
+          "sha256": "a57139921f87e91282f22f788155177eadf2085e21a7f2f8ceb8d9fac1c761ef",
+          "url_suffix": "wsc-cli.wasm"
         },
         "darwin_arm64": {
           "sha256": "4d501220a3f1a0c5cd2ae95343b3b9f2be8b8a7109b61b4b75dde89d3e32f6d5",
@@ -48,16 +81,16 @@
         "linux_amd64": {
           "sha256": "b670fb823563ac8b80e04fd0337813f9276e5c783239bb62afe74ed759b78897",
           "url_suffix": "wsc-linux-x86_64"
-        },
-        "linux_arm64": {
-          "sha256": "ca48e798c3a73323ed10421b8672e8fcc411dc55389aa9e6c51b4bcd18e845bf",
-          "url_suffix": "wsc-linux-aarch64"
-        },
-        "windows_amd64": {
-          "sha256": "698a8b15388fedf34752ce3e283be47e64fd2afa65a424a42e711778060ac527",
-          "url_suffix": "wsc-windows-x86_64.exe"
         }
       }
     }
-  }
+  },
+  "supported_platforms": [
+    "darwin_amd64",
+    "darwin_arm64",
+    "linux_amd64",
+    "linux_arm64",
+    "wasm_component",
+    "windows_amd64"
+  ]
 }

@@ -380,11 +380,44 @@ impl ToolConfig {
             },
         );
 
-        // Note: wsc (github_repo pulseengine/sigil) is dual-natured — per-OS CLI
-        // binaries plus a wasm CLI module (wsc-cli.wasm, capped at v0.7.0; later
-        // releases drop it). It needs separate handling and is left out here
-        // (tracked in #498). wasmsign2-cli has no GitHub releases (tag/CI only).
-        // jco uses the npm ecosystem, not GitHub release assets.
+        // wsc (github_repo pulseengine/sigil), the signing tool. Early releases
+        // were dual-natured (per-OS CLI binaries plus a wasm CLI module
+        // wsc-cli.wasm), but wsc-cli.wasm was capped at v0.7.0 and later releases
+        // drop it — from v0.9.x the registry uses only per-OS native binaries, so
+        // PerPlatformAsset (version-less asset names, mixed extension: bare unix
+        // binaries vs `.exe` on Windows) describes it cleanly. Closes the #498
+        // tail. NOTE: bumping wsc advances the signing toolchain — surface any
+        // wsc version change for signing-path review before shipping.
+        tools.insert(
+            "wsc".to_string(),
+            ToolConfigEntry {
+                github_repo: "pulseengine/sigil".to_string(),
+                platforms: vec![
+                    "darwin_amd64".to_string(),
+                    "darwin_arm64".to_string(),
+                    "linux_amd64".to_string(),
+                    "linux_arm64".to_string(),
+                    "windows_amd64".to_string(),
+                ],
+                url_pattern: UrlPattern::PerPlatformAsset {
+                    pattern: "https://github.com/pulseengine/sigil/releases/download/v{version}/{asset}".to_string(),
+                    platform_mapping: {
+                        let mut map = HashMap::new();
+                        map.insert("darwin_amd64".to_string(), "wsc-macos-x86_64".to_string());
+                        map.insert("darwin_arm64".to_string(), "wsc-macos-aarch64".to_string());
+                        map.insert("linux_amd64".to_string(), "wsc-linux-x86_64".to_string());
+                        map.insert("linux_arm64".to_string(), "wsc-linux-aarch64".to_string());
+                        map.insert("windows_amd64".to_string(), "wsc-windows-x86_64.exe".to_string());
+                        map
+                    },
+                },
+                tag_prefix: Some("v".to_string()),
+                version_filter: VersionFilter::Any,
+            },
+        );
+
+        // wasmsign2-cli has no GitHub releases (tag/CI only). jco uses the npm
+        // ecosystem, not GitHub release assets.
 
         Self { tools }
     }
