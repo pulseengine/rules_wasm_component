@@ -328,6 +328,57 @@ my_rule = rule(
 - [ ] Update documentation
 - [ ] Announce release
 
+## Updating Tool Versions
+
+Tool binaries (wasm-tools, wit-bindgen, wac, wasmtime, wasi-sdk, nodejs, tinygo,
+wkg, and the PulseEngine tools loom / wsc / file-ops-component) are pinned by
+SHA256 in `checksums/tools/*.json`. The Bazel toolchains resolve each tool's
+version and download URL from that JSON registry — there is **no separate
+version pin in `MODULE.bazel`** for registry-managed tools, so the registry's
+`latest_version` field *is* the pin.
+
+Do **not** hand-edit checksums. Use the `checksum_updater`, which downloads each
+platform asset, computes and verifies the SHA256, and writes the registry block:
+
+```bash
+cd tools/checksum_updater
+cargo build --release
+BIN=./target/release/checksum_updater
+
+# See what would change for every tool, without writing (recommended first step)
+$BIN update-all --dry-run
+
+# Update one or more specific tools
+$BIN update --tools wsc,wit-bindgen --dry-run   # preview
+$BIN update --tools wsc                         # apply
+
+# Re-download and verify the SHAs already recorded (no version change)
+$BIN validate --all
+
+# Higher GitHub rate limits
+GITHUB_TOKEN=$(gh auth token) $BIN update-all --dry-run
+```
+
+Each tool is registered in `tools/checksum_updater/src/tool_config.rs` with a
+`UrlPattern` matching its release-asset layout:
+
+- **`StandardTarball` / `SingleBinary`** — per-OS archives or bare binaries with
+  a single extension across platforms.
+- **`PerPlatformAsset`** — per-OS assets with *mixed* extensions (e.g. bare unix
+  binaries vs `.exe`/`.zip` on Windows). Used by wasmtime, wit-bindgen, and wsc.
+- **`UniversalWasm`** — a single platform-independent `.wasm` asset (loom ≤0.3.0,
+  file-ops-component). Pair with `VersionFilter::AssetExists` when newer releases
+  stop shipping the expected asset, so the updater holds at the last good version
+  instead of failing.
+
+To add a tool, add an entry to `ToolConfig::new()` (the default-config fallback
+guesses `bytecodealliance/<tool>`, which is rarely right for PulseEngine tools).
+
+> **Signing-path tools.** wsc (`pulseengine/sigil`) is the signing toolchain.
+> Bumping it changes how components are signed — run a signing build/test and get
+> a maintainer review **before merging** a wsc version bump, even though the
+> updater can produce the registry change mechanically.
+
 ## Getting Help
 
 ### Communication Channels
