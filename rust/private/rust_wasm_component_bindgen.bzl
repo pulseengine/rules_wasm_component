@@ -477,6 +477,7 @@ def rust_wasm_component_bindgen(
         symmetric = False,
         invert_direction = False,
         bitflags_dep = "@crates//:bitflags",
+        async_interfaces = None,
         **kwargs):
     """Builds a Rust WebAssembly component with automatic WIT binding generation.
 
@@ -507,12 +508,38 @@ def rust_wasm_component_bindgen(
                 bitflags = "2"
 
             And configure crate_universe in MODULE.bazel.
+        async_interfaces: Optional wit-bindgen `--async` filters for the guest
+            (WASM) bindings, overriding the default. By default p3 lifts every
+            export async (`["all"]`) and p2 is fully sync (`[]`). Under the p3
+            default a plain-sync WIT function still becomes an async-lift export,
+            which a call-return consumer cannot invoke (#526). Override to mix
+            sync and async exports. Each entry is a wit-bindgen `--async` value;
+            **filter names must include the package version**, e.g.
+            `pkg:iface/i@0.1.0#fn`:
+
+                []                                        # no --async: each export
+                                                          #   follows its WIT signature
+                                                          #   (async-typed -> async,
+                                                          #   sync -> sync). Solves #526
+                                                          #   when the WIT already
+                                                          #   distinguishes them.
+                ["-all"]                                  # force every export sync
+                ["-export:pkg:iface/i@0.1.0#fn"]          # `fn` sync, others WIT-default
+                ["pkg:iface/i@0.1.0#stream-fn"]           # `stream-fn` async, others default
+
+            Note: wit-bindgen (0.54) rejects combining the `all` blanket with a
+            per-export `-export:` exclude ("unused async option") — use the
+            WIT-default (`[]`) or allowlist forms above instead. Only affects the
+            guest bindings; native-guest bindings are always sync (the host
+            runtime has no async_support).
         **kwargs: Additional arguments passed to rust_wasm_component
     """
 
-    # Determine P3 async settings from wasi_version
+    # Determine P3 async settings from wasi_version, unless the caller supplied
+    # an explicit override. Default: p3 lifts all exports async, p2 is sync.
     wasi_version = kwargs.get("wasi_version", "p2")
-    p3_async_interfaces = ["all"] if wasi_version == "p3" else []
+    if async_interfaces == None:
+        async_interfaces = ["all"] if wasi_version == "p3" else []
 
     # Generate WIT bindings based on symmetric flag
     if symmetric:
@@ -541,7 +568,7 @@ def rust_wasm_component_bindgen(
             wit = wit,
             language = "rust",
             generation_mode = "guest",
-            async_interfaces = p3_async_interfaces,
+            async_interfaces = async_interfaces,
             visibility = ["//visibility:private"],
         )
 

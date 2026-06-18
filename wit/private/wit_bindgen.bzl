@@ -22,10 +22,15 @@ def _build_derive_args(additional_derives):
     return args
 
 def _build_async_args(async_interfaces):
-    """Build --async arguments for async interface configuration"""
+    """Build --async arguments for async interface configuration.
+
+    Uses the `--async=VALUE` form rather than `--async VALUE` so that filter
+    values beginning with `-` (e.g. `-all`, `-export:pkg:iface/i#fn`, which force
+    a method sync) are not misparsed by clap as separate flags.
+    """
     args = []
     for async_interface in async_interfaces:
-        args.extend(["--async", async_interface])
+        args.append("--async=" + async_interface)
     return args
 
 def _to_snake_case(name):

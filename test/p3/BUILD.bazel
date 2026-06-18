@@ -70,6 +70,27 @@ build_test(
     targets = [":hello_p3"],
 )
 
+# Per-function async override (#526): a plain-sync WIT export kept sync under p3
+# while the component is still p3. Without the override this fails to compile
+# ("method should be `async` ... but it is synchronous"); the override forces a
+# call-return lift so a sync consumer can invoke it.
+rust_wasm_component_bindgen(
+    name = "hello_p3_sync",
+    srcs = ["src_p3_sync/lib.rs"],
+    # Force the `greet` export sync (call-return) even though the component is
+    # p3. The filter name requires the package version. Other exports (none
+    # here) would follow their WIT default.
+    async_interfaces = ["-export:hello:interfaces/greeting@0.1.0#greet"],
+    profiles = ["release"],
+    wasi_version = "p3",
+    wit = ":hello_interfaces",
+)
+
+build_test(
+    name = "p3_sync_export_build_test",
+    targets = [":hello_p3_sync"],
+)
+
 # ============================================================================
 # WASI 0.3 interface WIT (stable v0.3.0) — covers wasi_p3_deps.bzl
 # ============================================================================
@@ -102,6 +123,7 @@ test_suite(
     name = "p3",
     tests = [
         ":p3_build_test",
+        ":p3_sync_export_build_test",
         ":wasi_p3_wit_build_test",
     ],
 )
@@ -111,6 +133,7 @@ test_suite(
     tests = [
         ":p2_build_test",
         ":p3_build_test",
+        ":p3_sync_export_build_test",
         ":wasi_p3_wit_build_test",
     ],
 )
