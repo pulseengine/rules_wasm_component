@@ -1,33 +1,57 @@
 {
   "tool_name": "spar",
-  "github_repo": "pulseengine/spar",
   "description": "AADL v2.3 architecture toolchain — generates WIT interfaces from AADL models",
-  "latest_version": "0.10.0",
-  "last_checked": "2026-05-24T00:00:00Z",
-  "supported_platforms": ["darwin_amd64", "darwin_arm64", "linux_amd64", "linux_arm64", "windows_amd64"],
+  "github_repo": "pulseengine/spar",
+  "latest_version": "0.22.0",
+  "last_checked": "2026-07-02T05:45:27.380073Z",
   "versions": {
+    "0.22.0": {
+      "release_date": "2026-06-30",
+      "platforms": {
+        "darwin_amd64": {
+          "sha256": "3cb3c72cd1de090b9897d799d24f4bc0585b07a9ae2079dfbae0f555214d05dd",
+          "url_suffix": "x86_64-apple-darwin.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "2f07326c604b230c8fc5b8cdb4cb9bebbf7c12b6ec14a66236a33409971fe92a",
+          "url_suffix": "aarch64-unknown-linux-gnu.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "2348d971a346b637ee639a2255ad88d74545bd74acc8cb1591e0289bf4d8105d",
+          "url_suffix": "x86_64-pc-windows-msvc.zip"
+        },
+        "linux_amd64": {
+          "sha256": "e8c9cad0fb27ed0ae1168af52210221c0412178cec86d18e37ff2e6f7b77a61a",
+          "url_suffix": "x86_64-unknown-linux-gnu.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "279116508507026db215c4b638b7e4357c1009b4b05ccfbe993dbf64c276a3dc",
+          "url_suffix": "aarch64-apple-darwin.tar.gz"
+        }
+      }
+    },
     "0.10.0": {
       "release_date": "2026-05-20",
       "platforms": {
-        "darwin_amd64": {
-          "sha256": "02fd1b321ce80955fe1f831e14a052ff16982548c0b0ef7ea78317ac36672f78",
-          "url_suffix": "x86_64-apple-darwin.tar.gz"
-        },
         "darwin_arm64": {
           "sha256": "848aac54ac68295ebefd99f2361f772043e633cf6b5aa3fd29c38c1fbe225533",
           "url_suffix": "aarch64-apple-darwin.tar.gz"
+        },
+        "darwin_amd64": {
+          "sha256": "02fd1b321ce80955fe1f831e14a052ff16982548c0b0ef7ea78317ac36672f78",
+          "url_suffix": "x86_64-apple-darwin.tar.gz"
         },
         "linux_amd64": {
           "sha256": "1661885ae315f8f54467a163658749e069b47ff55ecfa532c091aaf7949f95a4",
           "url_suffix": "x86_64-unknown-linux-gnu.tar.gz"
         },
-        "linux_arm64": {
-          "sha256": "5a1ed3abbb9ae829e589c0f35d4baa3921d15b010e1f61e6077e89742f595b6b",
-          "url_suffix": "aarch64-unknown-linux-gnu.tar.gz"
-        },
         "windows_amd64": {
           "sha256": "ab205f669b0b8f2d2b5920a32eb6c19e8a042a99beeba83addaaef14818cd144",
           "url_suffix": "x86_64-pc-windows-msvc.zip"
+        },
+        "linux_arm64": {
+          "sha256": "5a1ed3abbb9ae829e589c0f35d4baa3921d15b010e1f61e6077e89742f595b6b",
+          "url_suffix": "aarch64-unknown-linux-gnu.tar.gz"
         }
       }
     },
@@ -37,6 +61,10 @@
         "darwin_amd64": {
           "sha256": "8fae9cd2e049ded4f5a3ab6320459549983655ae19dad7509d787bdccbb3fbfb",
           "url_suffix": "x86_64-apple-darwin.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "3cc2ba69b5d8a616aedc9a36c24ffa4ac91e04506db95b7961c1d4b1fefc2b83",
+          "url_suffix": "x86_64-pc-windows-msvc.zip"
         },
         "darwin_arm64": {
           "sha256": "cddd41e1397b336cbedf6aa8502fdbad3cda0cf06fe0f8068a5892846874bb87",
@@ -49,12 +77,15 @@
         "linux_arm64": {
           "sha256": "bf012f4644df19c6742d461d7d0d83611476f4a557ef53d55c8b5e129e9eac79",
           "url_suffix": "aarch64-unknown-linux-gnu.tar.gz"
-        },
-        "windows_amd64": {
-          "sha256": "3cc2ba69b5d8a616aedc9a36c24ffa4ac91e04506db95b7961c1d4b1fefc2b83",
-          "url_suffix": "x86_64-pc-windows-msvc.zip"
         }
       }
     }
-  }
+  },
+  "supported_platforms": [
+    "darwin_amd64",
+    "darwin_arm64",
+    "linux_amd64",
+    "linux_arm64",
+    "windows_amd64"
+  ]
 }
