@@ -125,7 +125,7 @@ jobs:
           components: clippy
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "18"
 
@@ -229,7 +229,7 @@ jobs:
           components: clippy
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "18"
 
@@ -339,7 +339,7 @@ jobs:
           components: clippy
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "18"
 
