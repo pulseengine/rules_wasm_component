@@ -161,6 +161,6 @@ Apache-2.0 &mdash; see [LICENSE](LICENSE).
 
 <div align="center">
 
-<sub>Part of <a href="https://github.com/pulseengine">PulseEngine</a> &mdash; formally verified WebAssembly toolchain for safety-critical systems</sub>
+<sub>Part of the <a href="https://github.com/pulseengine">PulseEngine</a> toolchain.</sub>
 
 </div>
