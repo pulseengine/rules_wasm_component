@@ -451,6 +451,49 @@ impl ToolConfig {
             },
         );
 
+        // PulseEngine verification/synthesis toolchains, all per-OS native
+        // archives named `<tool>-v{version}-{triple}.{ext}` (mixed extension:
+        // .tar.gz on unix, .zip on Windows where a Windows build exists), so all
+        // fit PerPlatformAsset with the stored url_suffix being the triple. They
+        // were previously unmanaged and drifted far behind upstream (#539).
+        for (tool, repo, has_windows) in [
+            ("spar", "pulseengine/spar", true),
+            ("synth", "pulseengine/synth", false),
+            ("witness", "pulseengine/witness", true),
+        ] {
+            let mut platform_mapping = HashMap::new();
+            platform_mapping.insert("darwin_amd64".to_string(), "x86_64-apple-darwin.tar.gz".to_string());
+            platform_mapping.insert("darwin_arm64".to_string(), "aarch64-apple-darwin.tar.gz".to_string());
+            platform_mapping.insert("linux_amd64".to_string(), "x86_64-unknown-linux-gnu.tar.gz".to_string());
+            platform_mapping.insert("linux_arm64".to_string(), "aarch64-unknown-linux-gnu.tar.gz".to_string());
+            let mut platforms = vec![
+                "darwin_amd64".to_string(),
+                "darwin_arm64".to_string(),
+                "linux_amd64".to_string(),
+                "linux_arm64".to_string(),
+            ];
+            if has_windows {
+                platform_mapping.insert("windows_amd64".to_string(), "x86_64-pc-windows-msvc.zip".to_string());
+                platforms.push("windows_amd64".to_string());
+            }
+            tools.insert(
+                tool.to_string(),
+                ToolConfigEntry {
+                    github_repo: repo.to_string(),
+                    platforms: platforms,
+                    url_pattern: UrlPattern::PerPlatformAsset {
+                        pattern: format!(
+                            "https://github.com/{}/releases/download/v{{version}}/{}-v{{version}}-{{asset}}",
+                            repo, tool,
+                        ),
+                        platform_mapping: platform_mapping,
+                    },
+                    tag_prefix: Some("v".to_string()),
+                    version_filter: VersionFilter::Any,
+                },
+            );
+        }
+
         // binaryen: was previously unregistered, silently falling through to
         // create_default_config()'s guess of `bytecodealliance/binaryen` (wrong
         // repo — real repo is WebAssembly/binaryen), causing every update
@@ -531,6 +574,12 @@ impl ToolConfig {
         // that's a MODULE.bazel-level decision). A proper versioned release
         // (v0.25.0 as of this writing) now exists upstream; whether to switch
         // off canary is a separate call, tracked as a follow-up, not done here.
+
+        // meld is deliberately NOT wired in here yet: between the pinned v0.10.0
+        // (standalone binaries `meld-{triple}`) and current v0.37.0 it migrated
+        // to versioned tarballs (`meld-v{version}-{triple}.tar.gz`). Adopting it
+        // needs a toolchain-side migration (extraction + versioned filename, like
+        // loom's #514), not just an updater entry. Tracked as a follow-up.
 
         // wasmsign2-cli has no GitHub releases (tag/CI only). jco uses the npm
         // ecosystem, not GitHub release assets.
