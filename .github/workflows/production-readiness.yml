@@ -19,7 +19,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.19.0
@@ -44,7 +44,7 @@ jobs:
     runs-on: [self-hosted, linux, x64, light]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Check for placeholder checksums
         run: |
@@ -77,7 +77,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.19.0
@@ -123,7 +123,7 @@ jobs:
         os: [ubuntu-22.04, macos-15-intel]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.19.0

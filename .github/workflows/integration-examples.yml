@@ -104,7 +104,7 @@ jobs:
 
     steps:
       - name: Checkout rules_wasm_component (this PR)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: rules_wasm_component
 
@@ -141,7 +141,7 @@ jobs:
           echo "══════════════════════════════════════════════════════════"
 
       - name: Checkout examples repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: pulseengine/wasm-component-examples
           ref: ${{ steps.examples-branch.outputs.branch }}
