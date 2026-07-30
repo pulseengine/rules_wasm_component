@@ -180,6 +180,13 @@ updates:
       - "dependencies"
       - "documentation"
       - "automated"
+    ignore:
+      # typescript is capped by @astrojs/check, whose peer range is
+      # `^5.0.0 || ^6.0.0` (latest 0.9.9 — no TS 7 support yet). Major bumps
+      # here repeatedly break the docs-site build (ERESOLVE). Hold at 6.x until
+      # @astrojs/check ships TS 7 support, then lift this ignore.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
     directory: "/examples/js_component"
