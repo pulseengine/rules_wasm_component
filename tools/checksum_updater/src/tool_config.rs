@@ -451,6 +451,87 @@ impl ToolConfig {
             },
         );
 
+        // binaryen: was previously unregistered, silently falling through to
+        // create_default_config()'s guess of `bytecodealliance/binaryen` (wrong
+        // repo — real repo is WebAssembly/binaryen), causing every update
+        // attempt to fail with "Failed to get release for binaryen". Tag and
+        // asset names both use `version_{version}` (bare numeric version, no
+        // `v` prefix), matching toolchains/tool_registry.bzl's binaryen entry.
+        tools.insert(
+            "binaryen".to_string(),
+            ToolConfigEntry {
+                github_repo: "WebAssembly/binaryen".to_string(),
+                platforms: vec![
+                    "darwin_amd64".to_string(),
+                    "darwin_arm64".to_string(),
+                    "linux_amd64".to_string(),
+                    "linux_arm64".to_string(),
+                    "windows_amd64".to_string(),
+                ],
+                url_pattern: UrlPattern::PerPlatformAsset {
+                    pattern: "https://github.com/WebAssembly/binaryen/releases/download/version_{version}/binaryen-version_{version}-{asset}".to_string(),
+                    platform_mapping: {
+                        let mut map = HashMap::new();
+                        map.insert("darwin_amd64".to_string(), "x86_64-macos.tar.gz".to_string());
+                        map.insert("darwin_arm64".to_string(), "arm64-macos.tar.gz".to_string());
+                        map.insert("linux_amd64".to_string(), "x86_64-linux.tar.gz".to_string());
+                        map.insert("linux_arm64".to_string(), "aarch64-linux.tar.gz".to_string());
+                        map.insert("windows_amd64".to_string(), "x86_64-windows.tar.gz".to_string());
+                        map
+                    },
+                },
+                tag_prefix: Some("version_".to_string()),
+                version_filter: VersionFilter::Any,
+            },
+        );
+
+        // wrpc + wit-bindgen-wrpc: were also previously unregistered, falling
+        // through to create_default_config()'s wrong repo guess
+        // (bytecodealliance/wrpc-wasmtime, bytecodealliance/wit-bindgen-wrpc —
+        // both actually live in the bytecodealliance/wrpc monorepo), causing
+        // "Failed to get release" on every update attempt. Static per-platform
+        // binary names (no version embedded — matches the toolchain's
+        // `filename: "{suffix}"` / is_binary=True), same PerPlatformAsset shape
+        // as wsc. Both dropped glibc-linux in favor of musl-only and ship no
+        // native Windows MSVC (gnu .exe only) as of v0.16+ — matches the
+        // existing hand-authored registry, confirmed still current at v0.17.0.
+        for (tool, asset_prefix) in [("wrpc", "wrpc-wasmtime"), ("wit-bindgen-wrpc", "wit-bindgen-wrpc")] {
+            tools.insert(
+                tool.to_string(),
+                ToolConfigEntry {
+                    github_repo: "bytecodealliance/wrpc".to_string(),
+                    platforms: vec![
+                        "darwin_amd64".to_string(),
+                        "darwin_arm64".to_string(),
+                        "linux_amd64".to_string(),
+                        "linux_arm64".to_string(),
+                        "windows_amd64".to_string(),
+                    ],
+                    url_pattern: UrlPattern::PerPlatformAsset {
+                        pattern: "https://github.com/bytecodealliance/wrpc/releases/download/v{version}/{asset}".to_string(),
+                        platform_mapping: {
+                            let mut map = HashMap::new();
+                            map.insert("darwin_amd64".to_string(), format!("{}-x86_64-apple-darwin", asset_prefix));
+                            map.insert("darwin_arm64".to_string(), format!("{}-aarch64-apple-darwin", asset_prefix));
+                            map.insert("linux_amd64".to_string(), format!("{}-x86_64-unknown-linux-musl", asset_prefix));
+                            map.insert("linux_arm64".to_string(), format!("{}-aarch64-unknown-linux-musl", asset_prefix));
+                            map.insert("windows_amd64".to_string(), format!("{}-x86_64-pc-windows-gnu.exe", asset_prefix));
+                            map
+                        },
+                    },
+                    tag_prefix: Some("v".to_string()),
+                    version_filter: VersionFilter::Any,
+                },
+            );
+        }
+
+        // componentize-py is deliberately left unmanaged here: it's pinned to
+        // the rolling `canary` tag (not the checksum_updater's business to
+        // silently move a rolling-release consumer onto a numbered release —
+        // that's a MODULE.bazel-level decision). A proper versioned release
+        // (v0.25.0 as of this writing) now exists upstream; whether to switch
+        // off canary is a separate call, tracked as a follow-up, not done here.
+
         // wasmsign2-cli has no GitHub releases (tag/CI only). jco uses the npm
         // ecosystem, not GitHub release assets.
 
@@ -858,5 +939,46 @@ mod tests {
         assert!(unknown_config
             .platforms
             .contains(&"linux_amd64".to_string()));
+    }
+
+    #[test]
+    fn test_binaryen_was_unregistered_now_correct_repo() {
+        let config = ToolConfig::new();
+        let binaryen = config.get_tool_config("binaryen");
+
+        // Previously fell through to the wrong default-config guess
+        // (bytecodealliance/binaryen); real repo is WebAssembly/binaryen.
+        assert_eq!(binaryen.github_repo, "WebAssembly/binaryen");
+        assert_eq!(
+            binaryen.generate_download_url("131", "linux_amd64").unwrap(),
+            "https://github.com/WebAssembly/binaryen/releases/download/version_131/binaryen-version_131-x86_64-linux.tar.gz"
+        );
+        assert_eq!(
+            binaryen.get_url_suffix("131", "windows_amd64").unwrap(),
+            "x86_64-windows.tar.gz"
+        );
+    }
+
+    #[test]
+    fn test_wrpc_and_wit_bindgen_wrpc_were_unregistered_now_correct_repo() {
+        let config = ToolConfig::new();
+
+        // Both previously fell through to wrong default-config guesses
+        // (bytecodealliance/wrpc-wasmtime, bytecodealliance/wit-bindgen-wrpc);
+        // both actually live in the bytecodealliance/wrpc monorepo and ship
+        // static per-platform binaries (musl-only Linux, gnu-only Windows).
+        let wrpc = config.get_tool_config("wrpc");
+        assert_eq!(wrpc.github_repo, "bytecodealliance/wrpc");
+        assert_eq!(
+            wrpc.generate_download_url("0.17.0", "linux_amd64").unwrap(),
+            "https://github.com/bytecodealliance/wrpc/releases/download/v0.17.0/wrpc-wasmtime-x86_64-unknown-linux-musl"
+        );
+
+        let wbw = config.get_tool_config("wit-bindgen-wrpc");
+        assert_eq!(wbw.github_repo, "bytecodealliance/wrpc");
+        assert_eq!(
+            wbw.generate_download_url("0.17.0", "windows_amd64").unwrap(),
+            "https://github.com/bytecodealliance/wrpc/releases/download/v0.17.0/wit-bindgen-wrpc-x86_64-pc-windows-gnu.exe"
+        );
     }
 }
