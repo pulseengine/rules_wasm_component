@@ -103,7 +103,7 @@ jobs:
           submodules: false
 
       - name: Cache Bazel
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/bazel
@@ -207,7 +207,7 @@ jobs:
           submodules: false
 
       - name: Cache Bazel
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/bazel
@@ -317,7 +317,7 @@ jobs:
           submodules: false
 
       - name: Cache Bazel
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             D:\_b
