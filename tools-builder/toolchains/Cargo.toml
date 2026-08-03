@@ -21,5 +21,5 @@ wasm-encoder = "0.254"
 wat = "1.251"
 
 # Component model support
-wit-parser = "0.254"
+wit-parser = "0.255"
 wit-component = "0.254"
