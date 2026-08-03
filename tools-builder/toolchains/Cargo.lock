@@ -401,7 +401,7 @@ dependencies = [
  "clap",
  "env_logger",
  "log",
- "wasm-encoder 0.254.0",
+ "wasm-encoder 0.255.0",
  "wasmparser 0.254.0",
  "wat",
  "wit-component",
