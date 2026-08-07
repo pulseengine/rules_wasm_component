@@ -1,0 +1,14 @@
+"""The varve module extension — Bazel consumes varve (EXPERIMENTAL)."""
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "varve.bzl",
+    "varve_checksums.json",
+])
+
+filegroup(
+    name = "all_files",
+    srcs = glob(["**"]),
+    visibility = ["//visibility:public"],
+)
