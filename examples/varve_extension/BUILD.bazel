@@ -1,0 +1,13 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "varve.toml",
+    "rolling.pub",
+])
+
+# The layer's tools, resolved and signature-verified by varve, consumable
+# as ordinary Bazel targets:
+alias(
+    name = "synth",
+    actual = "@varve_tools//:synth",
+)

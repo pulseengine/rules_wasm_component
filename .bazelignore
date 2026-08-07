@@ -1,0 +1,2 @@
+# Standalone example modules (own MODULE.bazel, built independently):
+examples/varve_extension
