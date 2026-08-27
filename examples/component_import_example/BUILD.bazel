@@ -13,6 +13,7 @@ stand-in for a prebuilt artifact. In a real pipeline `wasm` would point at an
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_wasm_component//wasm:defs.bzl", "wasm_component_import", "wasm_validate")
+load("@rules_wasm_component//wit:defs.bzl", "wit_bindgen", "wit_from_component")
 
 wasm_component_import(
     name = "adopted_component",
@@ -24,10 +25,41 @@ wasm_validate(
     component = ":adopted_component",
 )
 
+# rules_wasm_component#626: recover WIT from the adopted component's binary
+# instead of requiring an out-of-band copy, then feed it back into a second
+# import so wit_info is populated rather than None, and into wit_bindgen to
+# prove the extraction is genuinely usable for binding generation (not just
+# well-typed).
+wit_from_component(
+    name = "adopted_component_wit",
+    component = ":adopted_component",
+)
+
+wasm_component_import(
+    name = "adopted_component_typed",
+    wasm = "//examples/basic:hello_component",
+    wit = ":adopted_component_wit",
+)
+
+wit_bindgen(
+    name = "adopted_component_bindings",
+    # The extraction inlines the full transitive closure (the component's own
+    # exports plus every WASI interface it imports), unlike a hand-written
+    # wit_library whose source WIT rarely names wasi:io/* directly — so
+    # wit-bindgen needs generate_all to synthesize types for those imports
+    # instead of expecting an external --with mapping for each one.
+    generate_all = True,
+    language = "rust",
+    wit = ":adopted_component_wit",
+)
+
 build_test(
     name = "component_import_test",
     targets = [
         ":adopted_component",
         ":adopted_validate",
+        ":adopted_component_wit",
+        ":adopted_component_typed",
+        ":adopted_component_bindings",
     ],
 )
