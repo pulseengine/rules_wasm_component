@@ -1,8 +1,8 @@
 {
   "tool_name": "wasm-tools",
   "github_repo": "bytecodealliance/wasm-tools",
-  "latest_version": "1.246.2",
-  "last_checked": "2026-04-13T00:00:00Z",
+  "latest_version": "1.254.0",
+  "last_checked": "2026-07-30T03:58:21.444591Z",
   "versions": {
     "1.246.2": {
       "release_date": "2026-04-03",
@@ -10,10 +10,6 @@
         "darwin_arm64": {
           "sha256": "0ff7b4594d6ef643df282f8672ee2af6cec85d006bb83fa9d69c805b8cc6eabf",
           "url_suffix": "aarch64-macos.tar.gz"
-        },
-        "darwin_amd64": {
-          "sha256": "fd89fb34457e7d2f7e221f3971b023674fa1ca5ac650b9685320a3324082ddb6",
-          "url_suffix": "x86_64-macos.tar.gz"
         },
         "linux_amd64": {
           "sha256": "f0df9428792225322e9b4344ca581f03b1740d509d6bdad33d14a810009be9ec",
@@ -23,34 +19,59 @@
           "sha256": "cd28f8086297b491d857a5a8118d0de3b910f785d0b465defb4ca4d3826937dc",
           "url_suffix": "aarch64-linux.tar.gz"
         },
+        "darwin_amd64": {
+          "sha256": "fd89fb34457e7d2f7e221f3971b023674fa1ca5ac650b9685320a3324082ddb6",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
         "windows_amd64": {
           "sha256": "1be1934e9a630ff95ab869eba85bba30d652b61b0e6bfb88aac76d0ee3892035",
           "url_suffix": "x86_64-windows.zip"
         }
       }
     },
+    "1.254.0": {
+      "release_date": "2026-07-20",
+      "platforms": {
+        "linux_arm64": {
+          "sha256": "5aca4093aa11d840c1c960eaaf6a6f6936c2b4ee2575847c88a3b9d971e39e06",
+          "url_suffix": "aarch64-linux.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "d0efb16c9c859137b7ab3e99151c299cd47caee106ed4594561002f7a04945bd",
+          "url_suffix": "x86_64-linux.tar.gz"
+        },
+        "darwin_amd64": {
+          "sha256": "85cb62e378febd3a0941b4776cb0d7b862b1c9edae3b74e53aac3b02f6e91242",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "66538c0bb527c68b12824cb6997834e121b4026b83432d77a0278e5f3ee4117a",
+          "url_suffix": "aarch64-macos.tar.gz"
+        }
+      }
+    },
     "1.244.0": {
       "release_date": "2026-01-06",
       "platforms": {
-        "darwin_arm64": {
-          "sha256": "9926b364fb7b8b42806cfdcf652ff6f7609d9317d5b05646559967a615eb677b",
-          "url_suffix": "aarch64-macos.tar.gz"
-        },
-        "darwin_amd64": {
-          "sha256": "5727c2b88956447088b1f62fceea19491749e5bc2d5920bb08b9608633965b7d",
-          "url_suffix": "x86_64-macos.tar.gz"
-        },
-        "linux_amd64": {
-          "sha256": "c3bf279c10e8ca37262773c829efd45423b5efeeb93ba1dc17baf25d9479074c",
-          "url_suffix": "x86_64-linux.tar.gz"
+        "windows_amd64": {
+          "sha256": "15a160e4ea993672d331b585d439794628a7c2bc751ec0f6fdad1e972cd179c6",
+          "url_suffix": "x86_64-windows.zip"
         },
         "linux_arm64": {
           "sha256": "3c1ed0cc86186b98f45aad0dd406cbd10e4356686fa4ed81e63463e55bcb9052",
           "url_suffix": "aarch64-linux.tar.gz"
         },
-        "windows_amd64": {
-          "sha256": "15a160e4ea993672d331b585d439794628a7c2bc751ec0f6fdad1e972cd179c6",
-          "url_suffix": "x86_64-windows.zip"
+        "linux_amd64": {
+          "sha256": "c3bf279c10e8ca37262773c829efd45423b5efeeb93ba1dc17baf25d9479074c",
+          "url_suffix": "x86_64-linux.tar.gz"
+        },
+        "darwin_amd64": {
+          "sha256": "5727c2b88956447088b1f62fceea19491749e5bc2d5920bb08b9608633965b7d",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "darwin_arm64": {
+          "sha256": "9926b364fb7b8b42806cfdcf652ff6f7609d9317d5b05646559967a615eb677b",
+          "url_suffix": "aarch64-macos.tar.gz"
         }
       }
     }
