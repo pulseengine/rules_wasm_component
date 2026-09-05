@@ -1,6 +1,9 @@
 """Live example: Bazel consumes varve — one pin, terminal and build."""
 
-module(name = "varve_extension_example", version = "0.0.0")
+module(
+    name = "varve_extension_example",
+    version = "0.0.0",
+)
 
 bazel_dep(name = "rules_wasm_component", version = "1.0.0")
 local_path_override(
@@ -11,11 +14,15 @@ local_path_override(
 varve = use_extension("@rules_wasm_component//varve:varve.bzl", "varve")
 varve.configure(
     pin = "//:varve.toml",
-    trust_root = "//:rolling.pub",
     tools = [
+        "loom",
+        "meld",
         "rivet",
+        "spar",
         "synth",
+        "witness",
         "wsc",
     ],
+    trust_root = "//:rolling.pub",
 )
 use_repo(varve, "varve_tools")

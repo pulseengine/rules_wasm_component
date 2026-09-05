@@ -6,8 +6,22 @@ exports_files([
 ])
 
 # The layer's tools, resolved and signature-verified by varve, consumable
-# as ordinary Bazel targets:
-alias(
-    name = "synth",
-    actual = "@varve_tools//:synth",
-)
+# as ordinary Bazel targets. All six PulseEngine tools this repo's own
+# checksum_updater currently hand-manages (checksums/tools/{loom,meld,spar,
+# synth,witness,wsc}.json) are in this layer too — see rules_wasm_component
+# issue about reducing that duplication once varve is trusted for it.
+[
+    alias(
+        name = tool,
+        actual = "@varve_tools//:" + tool,
+    )
+    for tool in [
+        "loom",
+        "meld",
+        "rivet",
+        "spar",
+        "synth",
+        "witness",
+        "wsc",
+    ]
+]

@@ -259,8 +259,8 @@
   "moduleExtensions": {
     "@@rules_wasm_component+//varve:varve.bzl%varve": {
       "general": {
-        "bzlTransitiveDigest": "atwKwuOqwQW6p9Q4sVF3w0QBrEnqD+px/q3JL56TPcA=",
-        "usagesDigest": "BF0L/RZgdksFA/5yBw1arAXcrtdOlSNKyJ6G+qu2tVI=",
+        "bzlTransitiveDigest": "aCJ/wBLdOxzdkLLe2SWy4Ymd6OIhQJV4NJCf9OgDw4s=",
+        "usagesDigest": "LoaHp7/W+5rPJ2dW6pYrReq6PQVhUrgVRTipNzt3WCo=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "varve_tools": {
@@ -270,8 +270,12 @@
               "trust_root": "@@//:rolling.pub",
               "registry": "oci://ghcr.io/pulseengine/varve/layers",
               "tools": [
+                "loom",
+                "meld",
                 "rivet",
+                "spar",
                 "synth",
+                "witness",
                 "wsc"
               ]
             }
