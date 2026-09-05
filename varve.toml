@@ -1,0 +1,15 @@
+# This is THE pin: what the loom/meld/spar/synth/witness toolchains resolve
+# to (see //varve/toolchains:BUILD.bazel), and — for a developer using varve's
+# own shims outside Bazel — what their terminal resolves to too. One file,
+# both worlds.
+#
+# To move to a newer layer: check what's actually published first
+# (`crane ls ghcr.io/pulseengine/varve/layers` or the GHCR package page),
+# bump `layer` below, and send it through review like any other change —
+# varve deliberately has no auto-update. Bumping this alone is the override;
+# nothing else needs to change.
+manifest-version = 1
+
+[toolchain]
+channel = "rolling"
+layer   = "2026.09.1"
