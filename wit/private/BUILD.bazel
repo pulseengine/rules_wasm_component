@@ -74,3 +74,13 @@ bzl_library(
         "//wit:__pkg__",
     ],
 )
+
+bzl_library(
+    name = "wit_from_component",
+    srcs = ["wit_from_component.bzl"],
+    visibility = [
+        "//docs:__pkg__",
+        "//wit:__pkg__",
+    ],
+    deps = ["//providers"],
+)
