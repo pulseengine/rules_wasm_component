@@ -1,0 +1,92 @@
+# Copyright 2026 Ralf Anton Beier. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+"""Registers loom/meld/spar/synth/witness toolchains sourced from
+@varve_tools (the varve module extension) instead of this repo's own
+per-tool GitHub-release download (toolchains/{loom,meld,spar,synth,
+witness}_toolchain.bzl's repository rules, backed by checksums/tools/*.json).
+
+Each `<tool>_toolchain` rule (loaded from its existing definition — this file
+adds no new rule types) is generic: it takes a `<tool>` file-label attr and
+wraps it in the existing ToolchainInfo. The only thing that changes is where
+that file comes from: `@varve_tools//:<tool>`, resolved and
+signature-verified by varve against the trust root in //:rolling.pub, rather
+than a checksum_updater-tracked, trust-on-first-use GitHub release asset.
+
+`wsc` (the signing toolchain) and `rivet` are deliberately NOT here: wsc sits
+on the signing path and needs its own explicit review before its trust source
+changes; rivet has no existing rules_wasm_component toolchain to replace.
+"""
+
+load("@rules_wasm_component//toolchains:loom_toolchain.bzl", "loom_toolchain")
+load("@rules_wasm_component//toolchains:meld_toolchain.bzl", "meld_toolchain")
+load("@rules_wasm_component//toolchains:spar_toolchain.bzl", "spar_toolchain")
+load("@rules_wasm_component//toolchains:synth_toolchain.bzl", "synth_toolchain")
+load("@rules_wasm_component//toolchains:witness_toolchain.bzl", "witness_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+loom_toolchain(
+    name = "loom_toolchain_impl",
+    loom = "@varve_tools//:loom",
+)
+
+toolchain(
+    name = "loom_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":loom_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:loom_toolchain_type",
+)
+
+meld_toolchain(
+    name = "meld_toolchain_impl",
+    meld = "@varve_tools//:meld",
+)
+
+toolchain(
+    name = "meld_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":meld_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:meld_toolchain_type",
+)
+
+spar_toolchain(
+    name = "spar_toolchain_impl",
+    spar = "@varve_tools//:spar",
+)
+
+toolchain(
+    name = "spar_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":spar_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:spar_toolchain_type",
+)
+
+synth_toolchain(
+    name = "synth_toolchain_impl",
+    synth = "@varve_tools//:synth",
+)
+
+toolchain(
+    name = "synth_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":synth_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:synth_toolchain_type",
+)
+
+witness_toolchain(
+    name = "witness_toolchain_impl",
+    witness = "@varve_tools//:witness",
+)
+
+toolchain(
+    name = "witness_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":witness_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:witness_toolchain_type",
+)
