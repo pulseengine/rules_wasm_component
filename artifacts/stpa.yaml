@@ -315,11 +315,8 @@ artifacts:
   - id: LS-002
     type: loss-scenario
     title: MoonBit /latest/ URL checksum mismatch
-    status: mitigated
-    description: >
-      MoonBit toolchain downloads from /latest/ URLs that change on every
-      upstream release. The bazel_dep + git_override triggered rules_moonbit's
-      internal extension, eagerly downloading the toolchain on every build.
+    status: deprecated
+    description: "MoonBit toolchain downloaded from /latest/ URLs that changed on every upstream release. The bazel_dep + git_override triggered rules_moonbit's internal extension, eagerly downloading the toolchain on every build. Resolved by full removal, not just non-eager loading: MoonBit language support (//moonbit, examples/moonbit_component, test/moonbit) was removed from rules_wasm_component entirely — pulseengine/rules_moonbit is archived and unmaintained, so the scenario this describes can no longer occur."
     fields:
       scenario-type: inadequate-process-model
     links:
