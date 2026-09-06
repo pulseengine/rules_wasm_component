@@ -42,11 +42,14 @@ jobs:
       # to the release before it goes live (required for immutable releases).
       draft: true
       tag_name: ${{ inputs.tag || github.ref_name }}
-      # release_ruleset defaults to `bazel test //...`, which fails to LOAD this
-      # repo's optional/lazy-dep example packages (e.g. examples/moonbit_component
-      # needs @rules_moonbit, deliberately not eagerly fetched). Build the core
-      # rule packages only — a pre-release sanity check; the full suite already
-      # ran in main CI on the tagged commit.
+      # release_ruleset defaults to `bazel test //...`. This was narrowed to an
+      # explicit package list because examples/moonbit_component unconditionally
+      # loaded @rules_moonbit (a non-eagerly-fetched dep), which failed `//...`
+      # at LOAD time — MoonBit support has since been removed entirely, and
+      # `bazel query //...` now loads clean, but restoring `bazel test //...`
+      # here is its own decision (this workflow is a pre-release sanity check;
+      # the full suite already ran in main CI on the tagged commit) — not
+      # bundled into that removal.
       bazel_test_command: "bazel build //wasm/... //wit/... //rust/... //go/... //cpp/... //js/... //providers/..."
 
   publish:
