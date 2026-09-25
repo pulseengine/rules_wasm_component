@@ -134,12 +134,13 @@ use_repo(
     "wasi_nn_v0_2_0_rc_2024_08_19",
 )
 
-# WebAssembly toolchains. wasm-tools/wac/wit-bindgen-wrpc no longer come
-# from here (see varve.configure(name = "varve_wasm_tools") below) — this
-# extension is kept only for wit-bindgen (plain), wrpc (plain), and
-# wasmsign2, which the pulseengine-wasm realm doesn't carry. Its own
-# bundled wasm_tools_toolchain is deliberately NOT registered; the mixed
-# toolchain in //varve/toolchains:BUILD.bazel is registered instead.
+# WebAssembly toolchains. On linux/macos, wasm-tools/wac/wit-bindgen-wrpc
+# come from varve instead (see varve.configure(name = "varve_wasm_tools")
+# below) — this extension supplies wit-bindgen (plain), wrpc (plain), and
+# wasmsign2 always (not in the pulseengine-wasm realm), plus the FULL
+# old-download wasm_tools/wac/wit-bindgen-wrpc as the Windows fallback
+# (varve ships no Windows binary). Its own bundled wasm_tools_toolchain is
+# registered below, after the varve-backed ones, as that fallback.
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
@@ -147,6 +148,17 @@ wasm_toolchain.register(
     version = "1.246.2",
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
+
+# WebAssembly Package Tools (wkg) toolchain — Windows fallback only (see
+# above); linux/macos get wkg from varve (varve.configure(name =
+# "varve_wasm_tools") below).
+wkg = use_extension("//wasm:extensions.bzl", "wkg")
+wkg.register(
+    name = "wkg",
+    strategy = "download",
+    version = "0.15.0",
+)
+use_repo(wkg, "wkg_toolchain")
 
 # WASI SDK toolchain
 wasi_sdk = use_extension("//wasm:extensions.bzl", "wasi_sdk")
@@ -300,9 +312,18 @@ varve.configure(
 )
 use_repo(varve, "varve_wasm_tools")
 
+# Order matters: toolchain resolution picks the first *matching*
+# registration for the current exec platform. The linux/macos varve-backed
+# toolchains must come before the unconstrained (exec_compatible_with = [])
+# old-download fallbacks, or the fallback would win everywhere and the
+# varve switch would be a no-op.
 register_toolchains(
-    "//varve/toolchains:wasm_tools_toolchain",
-    "//varve/toolchains:wkg_toolchain",
+    "//varve/toolchains:wasm_tools_toolchain_linux",
+    "//varve/toolchains:wasm_tools_toolchain_macos",
+    "@wasm_tools_toolchains//:wasm_tools_toolchain",  # Windows fallback
+    "//varve/toolchains:wkg_toolchain_linux",
+    "//varve/toolchains:wkg_toolchain_macos",
+    "@wkg_toolchain//:wkg_toolchain_def",  # Windows fallback
 )
 
 # MoonBit hermetic toolchain for WebAssembly component builds (dev only)

@@ -865,6 +865,34 @@
         ]
       }
     },
+    "//wasm:extensions.bzl%wkg": {
+      "general": {
+        "bzlTransitiveDigest": "1OwpB98AHogU9lcUVPlKU8kpffq3ZrKpJTTpOUAkTN4=",
+        "usagesDigest": "ks+Q/IL0nntNP6PabzUcF0ruF4X9hTKhbmck/ueoPTg=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "wkg_toolchain": {
+            "repoRuleId": "@@//toolchains:wkg_toolchain.bzl%wkg_toolchain_repository",
+            "attributes": {
+              "strategy": "download",
+              "version": "0.15.0",
+              "url": "",
+              "git_url": "",
+              "git_commit": ""
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "@@pybind11_bazel+//:internal_configure.bzl%internal_configure_extension": {
       "general": {
         "bzlTransitiveDigest": "yA4GkX1zdUTOXU4qKsh/YkjZKHAWkG8Fd7adNeGwiRc=",
