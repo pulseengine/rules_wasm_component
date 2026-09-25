@@ -287,14 +287,24 @@ register_toolchains(
     "//varve/toolchains:witness_toolchain",
 )
 
-# wasm-tools/wac/wkg/wit-bindgen-wrpc, sourced from varve's pulseengine-wasm
+# wasm-tools/wkg/wit-bindgen-wrpc, sourced from varve's pulseengine-wasm
 # realm (ghcr.io/pulseengine/wasm-layers) instead of checksums/tools/*.json.
 # A DIFFERENT realm than the one above: pulseengine-wasm carries
 # bytecodealliance-origin tools, signed by a separate PulseEngine key
 # (//:wasm-rolling.pub), not the pulseengine realm's key. See
-# //:varve-wasm.toml's header for the proof-of-origin caveat — three of
-# these four tools carry no upstream provenance, unlike loom/meld/spar/
-# synth/witness above.
+# //:varve-wasm.toml's header for the proof-of-origin caveat — the two
+# tools here besides wasm-tools carry no upstream provenance, unlike
+# loom/meld/spar/synth/witness above.
+#
+# wac is DELIBERATELY NOT in this list, even though it's in the realm:
+# toolchains/tool_versions.bzl pins wac at 0.9.0 specifically because
+# "wac 0.9.0 does NOT support P3 async yet (issue #180)" — the realm's only
+# published layer carries wac 0.11.0, which rejects the WASI P3 dual-compile
+# composition (examples/rust_p3/p3_cli, actively developed) with "the async
+# canonical option requires an async function type". Caught by this PR's own
+# CI (Direct Integration Test), not assumed. wac stays on the old download
+# path (still pinned at 0.9.0) until either P3 composition is updated for
+# newer wac or the realm publishes a compatible version.
 #
 # wit-bindgen (plain), wasmtime, wasi-sdk, binaryen, and wrpc (non-wrpc-
 # bindgen) are NOT in this realm and stay on their existing paths.
@@ -303,7 +313,6 @@ varve.configure(
     pin = "//:varve-wasm.toml",
     registry = "oci://ghcr.io/pulseengine/wasm-layers",
     tools = [
-        "wac",
         "wasm-tools",
         "wit-bindgen-wrpc",
         "wkg",

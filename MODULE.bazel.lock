@@ -285,7 +285,7 @@
     "//varve:varve.bzl%varve": {
       "general": {
         "bzlTransitiveDigest": "LsRhGbYxnaB9mFftVJW6pexsrUI8Ivsgewg1Tp911Qw=",
-        "usagesDigest": "3Kqkm7LXbLVl6e5/D9DZ31hpIttTt+mfhnRyJMi9MoA=",
+        "usagesDigest": "HAtsz8qu0uWF6OFWRgav0T5aRIclzv0a63c1Pk804bY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -312,7 +312,6 @@
               "trust_root": "@@//:wasm-rolling.pub",
               "registry": "oci://ghcr.io/pulseengine/wasm-layers",
               "tools": [
-                "wac",
                 "wasm-tools",
                 "wit-bindgen-wrpc",
                 "wkg"
