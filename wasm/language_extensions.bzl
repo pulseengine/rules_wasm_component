@@ -42,18 +42,12 @@ Usage in MODULE.bazel:
     use_repo(python_wasm, "componentize_py_toolchain")
     register_toolchains("@componentize_py_toolchain//:componentize_py_toolchain")
 
-    # Add MoonBit support (requires rules_moonbit):
-    # MoonBit compiler is provided by rules_moonbit, wasm-tools by rust_wasm.
-    # No additional repositories needed - just use the rules!
-    # See //moonbit:defs.bzl for moonbit_wasm_component and moonbit_wasm_binary.
-
 Download sizes (approximate):
 - rust_wasm: ~50MB (wasm-tools, wasmtime, wkg)
 - go_wasm: +500MB (TinyGo with LLVM)
 - cpp_wasm: +300MB (WASI SDK with Clang)
 - js_wasm: +100MB (Node.js, JCO)
 - python_wasm: +25MB (componentize-py)
-- moonbit_wasm: ~0MB (uses rules_moonbit, needs rust_wasm for wasm-tools)
 """
 
 load("//toolchains:componentize_py_toolchain.bzl", "componentize_py_toolchain_repository")
@@ -398,82 +392,6 @@ Example:
     python_wasm.configure()
     use_repo(python_wasm, "componentize_py_toolchain")
     register_toolchains("@componentize_py_toolchain//:componentize_py_toolchain")
-""",
-)
-
-# =============================================================================
-# MOONBIT WASM EXTENSION
-# =============================================================================
-# Provides: Documentation and API consistency for MoonBit support
-# Download size: ~0MB (MoonBit compiler from rules_moonbit, wasm-tools from rust_wasm)
-# Required for: MoonBit WebAssembly components
-#
-# Unlike other languages, MoonBit's toolchain comes from rules_moonbit (external dep).
-# This extension exists for API consistency and documentation.
-
-def _moonbit_wasm_impl(module_ctx):
-    """Implementation of MoonBit WebAssembly extension.
-
-    MoonBit is unique among the supported languages:
-    - The MoonBit compiler is provided by rules_moonbit (external dependency)
-    - Component wrapping uses wasm-tools from rust_wasm extension
-
-    This extension doesn't register new repositories - it exists for:
-    1. API consistency with other language extensions
-    2. Clear documentation of MoonBit requirements
-    3. Future extensibility if MoonBit-specific tooling is added
-    """
-
-    # MoonBit toolchain comes from rules_moonbit (bazel_dep)
-    # wasm-tools comes from rust_wasm extension
-    # Nothing additional to register here
-    pass
-
-moonbit_wasm = module_extension(
-    implementation = _moonbit_wasm_impl,
-    tag_classes = {
-        "configure": tag_class(
-            attrs = {},
-        ),
-    },
-    doc = """MoonBit WebAssembly component support.
-
-MoonBit is a WASM-native language with 25x faster compilation than Rust.
-Unlike other languages, the MoonBit compiler comes from rules_moonbit.
-
-Requirements:
-- bazel_dep(name = "rules_moonbit") in MODULE.bazel
-- rust_wasm extension for wasm-tools (or any extension providing wasm_tools_toolchain)
-
-Download size: ~0MB additional (MoonBit toolchain from rules_moonbit)
-
-Rules provided (in //moonbit:defs.bzl):
-- moonbit_wasm_component: Library component with custom WIT exports
-- moonbit_wasm_binary: CLI executable targeting wasi:cli/command
-
-Example MODULE.bazel:
-    bazel_dep(name = "rules_moonbit", version = "0.1.0")
-
-    rust_wasm = use_extension("@rules_wasm_component//wasm:language_extensions.bzl", "rust_wasm")
-    rust_wasm.configure()
-    use_repo(rust_wasm, "wasm_tools_toolchains")
-    register_toolchains("@wasm_tools_toolchains//:wasm_tools_toolchain")
-
-Example BUILD.bazel:
-    load("@rules_moonbit//moonbit:defs.bzl", "moonbit_wasm")
-    load("@rules_wasm_component//moonbit:defs.bzl", "moonbit_wasm_component")
-
-    moonbit_wasm(
-        name = "calculator_core",
-        srcs = ["calculator.mbt"],
-    )
-
-    moonbit_wasm_component(
-        name = "calculator",
-        lib = ":calculator_core",
-        wit = "calculator.wit",
-        world = "calculator",
-    )
 """,
 )
 
