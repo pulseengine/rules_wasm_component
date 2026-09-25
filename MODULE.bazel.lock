@@ -282,6 +282,33 @@
         ]
       }
     },
+    "//varve:varve.bzl%varve": {
+      "general": {
+        "bzlTransitiveDigest": "LsRhGbYxnaB9mFftVJW6pexsrUI8Ivsgewg1Tp911Qw=",
+        "usagesDigest": "UaffLPpzaAHWjTzX2XNG6uZPoR2Nfhn90NDHuhYeFEw=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "varve_tools": {
+            "repoRuleId": "@@//varve:varve.bzl%varve_tools_repository",
+            "attributes": {
+              "pin": "@@//:varve.toml",
+              "trust_root": "@@//:rolling.pub",
+              "registry": "oci://ghcr.io/pulseengine/layers",
+              "tools": [
+                "loom",
+                "meld",
+                "spar",
+                "synth",
+                "witness"
+              ]
+            }
+          }
+        },
+        "recordedRepoMappingEntries": []
+      }
+    },
     "//wasm:extensions.bzl%binaryen": {
       "general": {
         "bzlTransitiveDigest": "0qEi+vG8SVFzA/pNsQsrTAkpTnn15fiVjSNm5DZLt+U=",
@@ -344,102 +371,6 @@
             "attributes": {
               "version": "1.4.0",
               "node_version": "24.14.1"
-            }
-          }
-        },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
-      }
-    },
-    "//wasm:extensions.bzl%loom": {
-      "general": {
-        "bzlTransitiveDigest": "0qEi+vG8SVFzA/pNsQsrTAkpTnn15fiVjSNm5DZLt+U=",
-        "usagesDigest": "DFU/sKFAEZQ+zav+qZj4HmWRMKHuW16wFNoirPl+iLQ=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "loom_toolchain": {
-            "repoRuleId": "@@//toolchains:loom_toolchain.bzl%loom_repository",
-            "attributes": {
-              "version": "1.1.14"
-            }
-          }
-        },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
-      }
-    },
-    "//wasm:extensions.bzl%meld": {
-      "general": {
-        "bzlTransitiveDigest": "0qEi+vG8SVFzA/pNsQsrTAkpTnn15fiVjSNm5DZLt+U=",
-        "usagesDigest": "Nc45Hq7pjpIzzA1UXlHsAEAgQHpg1jE3/IUlCJYcFgU=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "meld_toolchain": {
-            "repoRuleId": "@@//toolchains:meld_toolchain.bzl%meld_repository",
-            "attributes": {
-              "version": "0.10.0"
-            }
-          }
-        },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
-      }
-    },
-    "//wasm:extensions.bzl%spar": {
-      "general": {
-        "bzlTransitiveDigest": "0qEi+vG8SVFzA/pNsQsrTAkpTnn15fiVjSNm5DZLt+U=",
-        "usagesDigest": "HteVAnfZ8Jv2xAL/oX+kiaSB6HLWRIt9g2CRFKUEz9k=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "spar_toolchain": {
-            "repoRuleId": "@@//toolchains:spar_toolchain.bzl%spar_repository",
-            "attributes": {
-              "version": "0.10.0"
-            }
-          }
-        },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
-      }
-    },
-    "//wasm:extensions.bzl%synth": {
-      "general": {
-        "bzlTransitiveDigest": "0qEi+vG8SVFzA/pNsQsrTAkpTnn15fiVjSNm5DZLt+U=",
-        "usagesDigest": "XTIJ1SQ/Se7btOFYHYJX2DjviC7xWk2ugwNS0Q3Icho=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "synth_toolchain": {
-            "repoRuleId": "@@//toolchains:synth_toolchain.bzl%synth_repository",
-            "attributes": {
-              "version": "0.6.0"
             }
           }
         },
@@ -908,30 +839,6 @@
             "attributes": {
               "version": "45.0.1",
               "strategy": "download"
-            }
-          }
-        },
-        "recordedRepoMappingEntries": [
-          [
-            "",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
-      }
-    },
-    "//wasm:extensions.bzl%witness": {
-      "general": {
-        "bzlTransitiveDigest": "0qEi+vG8SVFzA/pNsQsrTAkpTnn15fiVjSNm5DZLt+U=",
-        "usagesDigest": "vz4JVaRGcdcwU0XOHYN0kb54nuI69CDjEu/MXFK6r/g=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "witness_toolchain": {
-            "repoRuleId": "@@//toolchains:witness_toolchain.bzl%witness_repository",
-            "attributes": {
-              "version": "0.22.0"
             }
           }
         },

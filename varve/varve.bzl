@@ -145,7 +145,7 @@ varve_tools_repository = repository_rule(
             doc = "Hex-encoded ed25519 root public key file (e.g. trust-roots/rolling.pub).",
         ),
         "registry": attr.string(
-            default = "oci://ghcr.io/pulseengine/varve/layers",
+            default = "oci://ghcr.io/pulseengine/layers",
             doc = "Layer source. Availability only — acceptance is varve's signature chain.",
         ),
         "tools": attr.string_list(
@@ -160,7 +160,7 @@ varve_tools_repository = repository_rule(
 _configure = tag_class(attrs = {
     "pin": attr.label(mandatory = True),
     "trust_root": attr.label(mandatory = True),
-    "registry": attr.string(default = "oci://ghcr.io/pulseengine/varve/layers"),
+    "registry": attr.string(default = "oci://ghcr.io/pulseengine/layers"),
     "tools": attr.string_list(mandatory = True),
     "name": attr.string(default = "varve_tools"),
 })
