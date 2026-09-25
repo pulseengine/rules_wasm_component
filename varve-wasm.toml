@@ -1,6 +1,11 @@
-# THE pin for the pulseengine-wasm realm: wasm-tools, wac, wkg, and
-# wit-bindgen-wrpc, sourced from ghcr.io/pulseengine/wasm-layers and
-# verified against //:wasm-rolling.pub.
+# THE pin for the pulseengine-wasm realm (ghcr.io/pulseengine/wasm-layers,
+# verified against //:wasm-rolling.pub). The layer itself carries four
+# tools — wasm-tools, wac, wkg, wit-bindgen-wrpc — but //varve/toolchains:
+# BUILD.bazel only actually consumes three of them (wasm-tools, wkg,
+# wit-bindgen-wrpc): wac stays on the old download path, pinned at a
+# version older than what this layer carries, for P3 async compatibility
+# (see that file's docstring). Bumping `layer` below still matters for the
+# three tools that ARE consumed from here.
 #
 # Unlike the pulseengine realm (//:varve.toml), three of this realm's four
 # tools carry NO proof of origin (see varve-realms.toml upstream: those
