@@ -187,6 +187,14 @@ updates:
       # @astrojs/check ships TS 7 support, then lift this ignore.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # mermaid is capped by astro-mermaid, whose peer range is
+      # `^10.0.0 || ^11.0.0` (latest 2.1.0 — no mermaid 12 support yet;
+      # verified via `npm view astro-mermaid@latest peerDependencies`). A
+      # major bump broke the docs-site build (ERESOLVE) exactly like
+      # typescript above (#654 -> reverted). Hold at 11.x until astro-mermaid
+      # ships mermaid 12 support, then lift this ignore.
+      - dependency-name: "mermaid"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
     directory: "/examples/js_component"
