@@ -1,0 +1,188 @@
+# Copyright 2026 Ralf Anton Beier. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+"""Registers loom/meld/spar/synth/witness/wasm-tools/wkg/wit-bindgen-wrpc
+toolchains sourced from varve (the varve module extension) instead of this
+repo's own per-tool GitHub-release download, backed by checksums/tools/*.json.
+
+Each `<tool>_toolchain` rule (loaded from its existing definition — this file
+adds no new rule types) is generic: it takes file-label attrs and wraps them
+in the existing ToolchainInfo. The only thing that changes is where those
+files come from: `@varve_tools//:<tool>` or `@varve_wasm_tools//:<tool>`,
+resolved and signature-verified by varve against the trust root in
+//:rolling.pub or //:wasm-rolling.pub, rather than a checksum_updater-tracked,
+trust-on-first-use GitHub release asset.
+
+Two DIFFERENT varve realms are in play here, not one:
+- `@varve_tools` (pulseengine realm): loom/meld/spar/synth/witness — all
+  build-provenance-backed, PulseEngine's own tools.
+- `@varve_wasm_tools` (pulseengine-wasm realm): wasm-tools/wkg/
+  wit-bindgen-wrpc — bytecodealliance-origin, signed by a separate
+  PulseEngine key. Only wasm-tools of these three carries upstream proof of
+  origin; wkg/wit-bindgen-wrpc do not (see //:varve-wasm.toml). Read
+  `varve inspect` on the pinned layer before treating this the same as the
+  pulseengine realm's guarantees.
+
+wac is in the pulseengine-wasm realm too but DELIBERATELY NOT sourced from
+it here: the realm's only published layer carries wac 0.11.0, but
+toolchains/tool_versions.bzl pins wac at 0.9.0 specifically because it
+"does NOT support P3 async yet (issue #180)" — 0.11.0 rejects the WASI P3
+dual-compile composition outright ("the async canonical option requires an
+async function type"), caught by this repo's own CI. wac stays on
+`@wasm_tools_toolchains//:wac_binary` (the existing pinned download) until
+either P3 composition is updated for newer wac or the realm publishes a
+compatible version.
+
+wit_bindgen (plain), wrpc (plain), and wasmsign2 are likewise NOT in the
+pulseengine-wasm realm and come from the existing `@wasm_tools_toolchains`
+repo (//wasm:extensions.bzl's wasm_toolchain extension) — that repo now
+supplies wac/wit_bindgen/wrpc/wasmsign2 to this toolchain, wasm-tools/wkg/
+wit-bindgen-wrpc come from varve.
+
+`wsc` (the signing toolchain) and `rivet` are deliberately NOT here: wsc sits
+on the signing path and needs its own explicit review before its trust source
+changes; rivet has no existing rules_wasm_component toolchain to replace.
+"""
+
+load("@rules_wasm_component//toolchains:loom_toolchain.bzl", "loom_toolchain")
+load("@rules_wasm_component//toolchains:meld_toolchain.bzl", "meld_toolchain")
+load("@rules_wasm_component//toolchains:spar_toolchain.bzl", "spar_toolchain")
+load("@rules_wasm_component//toolchains:synth_toolchain.bzl", "synth_toolchain")
+load("@rules_wasm_component//toolchains:wasm_toolchain.bzl", "wasm_tools_toolchain")
+load("@rules_wasm_component//toolchains:witness_toolchain.bzl", "witness_toolchain")
+load("@rules_wasm_component//toolchains:wkg_toolchain.bzl", "wkg_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+loom_toolchain(
+    name = "loom_toolchain_impl",
+    loom = "@varve_tools//:loom",
+)
+
+toolchain(
+    name = "loom_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":loom_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:loom_toolchain_type",
+)
+
+meld_toolchain(
+    name = "meld_toolchain_impl",
+    meld = "@varve_tools//:meld",
+)
+
+toolchain(
+    name = "meld_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":meld_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:meld_toolchain_type",
+)
+
+spar_toolchain(
+    name = "spar_toolchain_impl",
+    spar = "@varve_tools//:spar",
+)
+
+toolchain(
+    name = "spar_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":spar_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:spar_toolchain_type",
+)
+
+synth_toolchain(
+    name = "synth_toolchain_impl",
+    synth = "@varve_tools//:synth",
+)
+
+toolchain(
+    name = "synth_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":synth_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:synth_toolchain_type",
+)
+
+witness_toolchain(
+    name = "witness_toolchain_impl",
+    witness = "@varve_tools//:witness",
+)
+
+toolchain(
+    name = "witness_toolchain",
+    exec_compatible_with = [],
+    target_compatible_with = [],
+    toolchain = ":witness_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:witness_toolchain_type",
+)
+
+# wasm_tools_toolchain mixes varve-sourced (wasm_tools, wit_bindgen_wrpc)
+# with the existing download path (wac — pinned at 0.9.0 for P3 async
+# compatibility, see the file docstring; wit_bindgen, wrpc, wasmsign2 — not
+# in the pulseengine-wasm realm). @wasm_tools_toolchains is generated by
+# //wasm:extensions.bzl's wasm_toolchain extension; it still downloads
+# wasm-tools/wit-bindgen-wrpc itself too (its own bundled toolchain is just
+# never registered on linux/macos), which is dead-but-harmless work, not a
+# correctness or trust concern.
+#
+# varve ships no Windows binary (checked: only the 4 unix triples exist in
+# its releases) — @varve_wasm_tools fails to fetch outright on Windows exec
+# platforms. So this is exec-platform-conditional: varve on linux/macos,
+# the untouched fully-old-download @wasm_tools_toolchains//:wasm_tools_toolchain
+# (registered below, exec_compatible_with = [] — matches whatever these two
+# don't) as the Windows (and any other unlisted OS) fallback. Toolchain
+# resolution picks the first *matching* registration in registration order,
+# so the unconstrained fallback MUST be registered after these two in
+# MODULE.bazel — it's the catch-all, not a default.
+wasm_tools_toolchain(
+    name = "wasm_tools_toolchain_impl",
+    wac = "@wasm_tools_toolchains//:wac_binary",
+    wasm_tools = "@varve_wasm_tools//:wasm-tools",
+    wasmsign2 = "@wasm_tools_toolchains//:wasmsign2_binary",
+    wit_bindgen = "@wasm_tools_toolchains//:wit_bindgen_binary",
+    wit_bindgen_wrpc = "@varve_wasm_tools//:wit-bindgen-wrpc",
+    wrpc = "@wasm_tools_toolchains//:wrpc_binary",
+)
+
+toolchain(
+    name = "wasm_tools_toolchain_linux",
+    exec_compatible_with = ["@platforms//os:linux"],
+    target_compatible_with = [],
+    toolchain = ":wasm_tools_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
+)
+
+toolchain(
+    name = "wasm_tools_toolchain_macos",
+    exec_compatible_with = ["@platforms//os:macos"],
+    target_compatible_with = [],
+    toolchain = ":wasm_tools_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
+)
+
+wkg_toolchain(
+    name = "wkg_toolchain_impl",
+    wkg = "@varve_wasm_tools//:wkg",
+)
+
+# Same exec-platform split, same reason (no varve Windows binary), same
+# fallback pattern: @wkg_toolchain//:wkg_toolchain_def (registered below)
+# is wkg's own untouched old-download toolchain, used on Windows.
+toolchain(
+    name = "wkg_toolchain_linux",
+    exec_compatible_with = ["@platforms//os:linux"],
+    target_compatible_with = [],
+    toolchain = ":wkg_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:wkg_toolchain_type",
+)
+
+toolchain(
+    name = "wkg_toolchain_macos",
+    exec_compatible_with = ["@platforms//os:macos"],
+    target_compatible_with = [],
+    toolchain = ":wkg_toolchain_impl",
+    toolchain_type = "@rules_wasm_component//toolchains:wkg_toolchain_type",
+)

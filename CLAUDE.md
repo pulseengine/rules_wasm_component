@@ -260,15 +260,51 @@ This project uses a **stratified hybrid approach** to dependency management, sel
 
 | Dependency Type | Pattern | Location | Why |
 |----------------|---------|----------|-----|
-| **Multi-platform GitHub binaries** | JSON Registry + secure_download | `checksums/tools/*.json` | Solves platform × version matrix, central security auditing |
+| **Tools carried by a varve realm** | varve module extension | `//:varve*.toml`, `//varve/toolchains` | Signed, counter-protected layer replaces hand-maintained checksums for the tools it carries |
+| **Multi-platform GitHub binaries (no varve realm)** | JSON Registry + secure_download | `checksums/tools/*.json` | Solves platform × version matrix, central security auditing |
 | **Bazel Central Registry deps** | `bazel_dep` | `MODULE.bazel` | Ecosystem standard, automatic dependency resolution |
 | **Source builds** | `git_repository` | `wasm_tools_repositories.bzl` | Bazel standard, maximum flexibility |
 | **Universal WASM binaries** | JSON Registry (preferred) or `http_file` | `checksums/tools/*.json` or `MODULE.bazel` | Platform-independent, security auditable |
 | **NPM packages** | Hermetic npm + package.json | `toolchains/jco_toolchain.bzl` | Ecosystem standard, package lock files |
 
+### Pattern 0: varve (PulseEngine Toolchain Layer Manager)
+
+**Use for**: Tools carried by a varve realm AND actually wired to consume it —
+currently loom/meld/spar/synth/witness (pulseengine realm, `//:varve.toml` +
+`//:rolling.pub`) and wasm-tools/wkg/wit-bindgen-wrpc (pulseengine-wasm realm,
+`//:varve-wasm.toml` + `//:wasm-rolling.pub`). See
+`//varve/toolchains:BUILD.bazel` for the toolchain wiring.
+
+**Why**: One signed, counter-protected, dated layer replaces a whole set of
+hand-maintained `checksums/tools/*.json` entries + per-tool download logic.
+varve's signature chain (DSSE against the realm's trust root) does the
+verification; Bazel just resolves and caches through it hermetically.
+
+**Caveat**: a realm's trust root is a claim about who *signs*, not who *built*
+the payload — read `varve-realms.toml`'s per-realm comment before assuming
+upstream provenance. In the pulseengine-wasm realm specifically, only
+wasm-tools carries build-provenance; wkg/wit-bindgen-wrpc are PulseEngine-
+key-signed hashes of unverified upstream downloads.
+
+**Being in a realm doesn't mean we consume it from there**: `wac` is IN the
+pulseengine-wasm realm but deliberately stays on Pattern 1 (pinned at 0.9.0
+in `toolchains/tool_versions.bzl`) — the realm's only published layer carries
+wac 0.11.0, which breaks WASI P3 async composition (issue #180). Check what a
+tool is actually wired to in `//varve/toolchains:BUILD.bazel` before assuming
+realm membership implies varve sourcing.
+
+**Not (yet) in a varve realm, still on Pattern 1 below**: wit-bindgen (plain),
+wasmtime, wasi-sdk, binaryen, wrpc (non-wrpc-bindgen), wsc (deliberately
+excluded — signing path, needs its own review), rivet (no toolchain to
+replace). Check `varve-realms.toml` before adding a new JSON registry entry —
+if the tool already has a realm home, prefer that (subject to the caveat
+above).
+
 ### Pattern 1: JSON Registry (Multi-Platform GitHub Binaries)
 
-**Use for**: Tools with different binaries per platform (wasm-tools, wit-bindgen, wac, wkg, wasmtime, wizer, wasi-sdk, nodejs, tinygo)
+**Use for**: Tools with different binaries per platform not (yet) carried by a
+varve realm (wit-bindgen, wasmtime, wizer, wasi-sdk, nodejs, tinygo), plus wac
+— realm-eligible but deliberately kept here (see Pattern 0's caveat)
 
 **Why**: Elegantly handles the combinatorial explosion of (platforms × versions × URL patterns)
 
