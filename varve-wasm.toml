@@ -1,0 +1,20 @@
+# THE pin for the pulseengine-wasm realm: wasm-tools, wac, wkg, and
+# wit-bindgen-wrpc, sourced from ghcr.io/pulseengine/wasm-layers and
+# verified against //:wasm-rolling.pub.
+#
+# Unlike the pulseengine realm (//:varve.toml), three of this realm's four
+# tools carry NO proof of origin (see varve-realms.toml upstream: those
+# releases publish neither cosign-signed sums nor build provenance) —
+# PulseEngine's key vouches for a hash of an unverified download, not for
+# the upstream release itself. wasm-tools is the exception (build-provenance).
+# Read `varve inspect` on the pinned layer before bumping this if that
+# matters for your threat model.
+#
+# To move to a newer layer: check what's actually published first
+# (`crane ls ghcr.io/pulseengine/wasm-layers` or the GHCR package page),
+# bump `layer` below, and send it through review like any other change.
+manifest-version = 1
+
+[toolchain]
+channel = "rolling"
+layer   = "2026.09.0"
