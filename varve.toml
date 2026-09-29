@@ -1,0 +1,21 @@
+# This is THE pin: what the loom/meld/spar/synth/witness toolchains resolve
+# to (see //varve/toolchains:BUILD.bazel), and — for a developer using varve's
+# own shims outside Bazel — what their terminal resolves to too. One file,
+# both worlds.
+#
+# To move to a newer layer: check what's actually published first
+# (`crane ls ghcr.io/pulseengine/layers` or the GHCR package page),
+# bump `layer` below, and send it through review like any other change —
+# varve deliberately has no auto-update. Bumping this alone is the override;
+# nothing else needs to change.
+#
+# 2026-09-25: the rolling trust root rotated (varve#110 — the old root was a
+# write-only CI secret with no recovery path). Every layer up to and
+# including 2026.09.1 was signed by the retired key and no longer verifies;
+# see rolling.pub for the new root. 2026.09.15 is the latest layer signed
+# under it as of this bump.
+manifest-version = 1
+
+[toolchain]
+channel = "rolling"
+layer   = "2026.09.15"

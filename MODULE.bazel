@@ -119,7 +119,13 @@ use_repo(
     "wasi_nn_v0_2_0_rc_2024_08_19",
 )
 
-# WebAssembly toolchains
+# WebAssembly toolchains. On linux/macos, wasm-tools/wac/wit-bindgen-wrpc
+# come from varve instead (see varve.configure(name = "varve_wasm_tools")
+# below) — this extension supplies wit-bindgen (plain), wrpc (plain), and
+# wasmsign2 always (not in the pulseengine-wasm realm), plus the FULL
+# old-download wasm_tools/wac/wit-bindgen-wrpc as the Windows fallback
+# (varve ships no Windows binary). Its own bundled wasm_tools_toolchain is
+# registered below, after the varve-backed ones, as that fallback.
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
@@ -128,9 +134,9 @@ wasm_toolchain.register(
 )
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
-register_toolchains("@wasm_tools_toolchains//:wasm_tools_toolchain")
-
-# WebAssembly Package Tools (wkg) toolchain
+# WebAssembly Package Tools (wkg) toolchain — Windows fallback only (see
+# above); linux/macos get wkg from varve (varve.configure(name =
+# "varve_wasm_tools") below).
 wkg = use_extension("//wasm:extensions.bzl", "wkg")
 wkg.register(
     name = "wkg",
@@ -138,8 +144,6 @@ wkg.register(
     version = "0.15.0",
 )
 use_repo(wkg, "wkg_toolchain")
-
-register_toolchains("@wkg_toolchain//:wkg_toolchain_def")
 
 # WASI SDK toolchain
 wasi_sdk = use_extension("//wasm:extensions.bzl", "wasi_sdk")
@@ -235,57 +239,86 @@ use_repo(binaryen, "binaryen_toolchain")
 
 register_toolchains("@binaryen_toolchain//:binaryen_toolchain")
 
-# Meld toolchain for static WebAssembly component fusion
-meld = use_extension("//wasm:extensions.bzl", "meld")
-meld.register(
-    name = "meld",
-    version = "0.10.0",
+# loom/meld/spar/synth/witness toolchains, sourced from varve (the
+# PulseEngine toolchain layer manager) instead of this repo's own per-tool
+# GitHub-release download + checksums/tools/*.json trust-on-first-use pin.
+# One signed, counter-protected, dated layer (//:varve.toml) replaces five
+# separately hand-maintained registry entries. See //varve/README.md for the
+# trust model and //varve/toolchains:BUILD.bazel for the toolchain wiring.
+#
+# wsc (signing toolchain) stays on its existing path deliberately — a
+# signing-path trust-source change needs its own explicit review, not a
+# bundled one. rivet has no existing rules_wasm_component toolchain to
+# migrate.
+varve = use_extension("//varve:varve.bzl", "varve")
+varve.configure(
+    pin = "//:varve.toml",
+    tools = [
+        "loom",
+        "meld",
+        "spar",
+        "synth",
+        "witness",
+    ],
+    trust_root = "//:rolling.pub",
 )
-use_repo(meld, "meld_toolchain")
+use_repo(varve, "varve_tools")
 
-register_toolchains("@meld_toolchain//:meld_toolchain")
-
-# Loom toolchain for WebAssembly component optimization (native binary, v1.x).
-# wasm_optimize consumes this (loom_toolchain_type); the old @loom_wasm 0.3.0
-# component path was removed (#512).
-loom = use_extension("//wasm:extensions.bzl", "loom")
-loom.register(
-    name = "loom",
-    version = "1.1.14",
+register_toolchains(
+    "//varve/toolchains:loom_toolchain",
+    "//varve/toolchains:meld_toolchain",
+    "//varve/toolchains:spar_toolchain",
+    "//varve/toolchains:synth_toolchain",
+    "//varve/toolchains:witness_toolchain",
 )
-use_repo(loom, "loom_toolchain")
 
-register_toolchains("@loom_toolchain//:loom_toolchain")
-
-# spar toolchain: AADL architecture model -> WIT generation
-spar = use_extension("//wasm:extensions.bzl", "spar")
-spar.register(
-    name = "spar",
-    version = "0.10.0",
+# wasm-tools/wkg/wit-bindgen-wrpc, sourced from varve's pulseengine-wasm
+# realm (ghcr.io/pulseengine/wasm-layers) instead of checksums/tools/*.json.
+# A DIFFERENT realm than the one above: pulseengine-wasm carries
+# bytecodealliance-origin tools, signed by a separate PulseEngine key
+# (//:wasm-rolling.pub), not the pulseengine realm's key. See
+# //:varve-wasm.toml's header for the proof-of-origin caveat — the two
+# tools here besides wasm-tools carry no upstream provenance, unlike
+# loom/meld/spar/synth/witness above.
+#
+# wac is DELIBERATELY NOT in this list, even though it's in the realm:
+# toolchains/tool_versions.bzl pins wac at 0.9.0 specifically because
+# "wac 0.9.0 does NOT support P3 async yet (issue #180)" — the realm's only
+# published layer carries wac 0.11.0, which rejects the WASI P3 dual-compile
+# composition (examples/rust_p3/p3_cli, actively developed) with "the async
+# canonical option requires an async function type". Caught by this PR's own
+# CI (Direct Integration Test), not assumed. wac stays on the old download
+# path (still pinned at 0.9.0) until either P3 composition is updated for
+# newer wac or the realm publishes a compatible version.
+#
+# wit-bindgen (plain), wasmtime, wasi-sdk, binaryen, and wrpc (non-wrpc-
+# bindgen) are NOT in this realm and stay on their existing paths.
+varve.configure(
+    name = "varve_wasm_tools",
+    pin = "//:varve-wasm.toml",
+    registry = "oci://ghcr.io/pulseengine/wasm-layers",
+    tools = [
+        "wasm-tools",
+        "wit-bindgen-wrpc",
+        "wkg",
+    ],
+    trust_root = "//:wasm-rolling.pub",
 )
-use_repo(spar, "spar_toolchain")
+use_repo(varve, "varve_wasm_tools")
 
-register_toolchains("@spar_toolchain//:spar_toolchain")
-
-# witness toolchain: MC/DC branch coverage for WASM core modules
-witness = use_extension("//wasm:extensions.bzl", "witness")
-witness.register(
-    name = "witness",
-    version = "0.22.0",
+# Order matters: toolchain resolution picks the first *matching*
+# registration for the current exec platform. The linux/macos varve-backed
+# toolchains must come before the unconstrained (exec_compatible_with = [])
+# old-download fallbacks, or the fallback would win everywhere and the
+# varve switch would be a no-op.
+register_toolchains(
+    "//varve/toolchains:wasm_tools_toolchain_linux",
+    "//varve/toolchains:wasm_tools_toolchain_macos",
+    "@wasm_tools_toolchains//:wasm_tools_toolchain",  # Windows fallback
+    "//varve/toolchains:wkg_toolchain_linux",
+    "//varve/toolchains:wkg_toolchain_macos",
+    "@wkg_toolchain//:wkg_toolchain_def",  # Windows fallback
 )
-use_repo(witness, "witness_toolchain")
-
-register_toolchains("@witness_toolchain//:witness_toolchain")
-
-# synth toolchain: WebAssembly-to-ARM ahead-of-time compiler
-synth = use_extension("//wasm:extensions.bzl", "synth")
-synth.register(
-    name = "synth",
-    version = "0.6.0",
-)
-use_repo(synth, "synth_toolchain")
-
-register_toolchains("@synth_toolchain//:synth_toolchain")
 
 # File Operations Component toolchain for universal file handling
 register_toolchains("//toolchains:file_ops_toolchain_target")
@@ -318,7 +351,7 @@ wasm_component_download(
     version = "0.7.0",
 )
 
-# LOOM: consumed via the native loom toolchain (@loom_toolchain, above).
+# LOOM: consumed via the native loom toolchain, sourced from varve (above).
 # The old @loom_wasm 0.3.0 component download was removed — loom v1.x is
 # native-only and wasm_optimize now runs the native binary directly (#512).
 
