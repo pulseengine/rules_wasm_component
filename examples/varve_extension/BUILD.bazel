@@ -13,7 +13,7 @@ exports_files([
 [
     alias(
         name = tool,
-        actual = "@varve_tools//:" + tool,
+        actual = "@varve_extension_example_tools//:" + tool,
     )
     for tool in [
         "loom",

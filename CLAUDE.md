@@ -270,21 +270,26 @@ This project uses a **stratified hybrid approach** to dependency management, sel
 ### Pattern 0: varve (PulseEngine Toolchain Layer Manager)
 
 **Use for**: Tools carried by a varve realm AND actually wired to consume it —
-currently loom/meld/spar/synth/witness (pulseengine realm, `//:varve.toml` +
-`//:rolling.pub`) and wasm-tools/wkg/wit-bindgen-wrpc (pulseengine-wasm realm,
-`//:varve-wasm.toml` + `//:wasm-rolling.pub`). See
-`//varve/toolchains:BUILD.bazel` for the toolchain wiring.
+currently loom/meld/spar/synth/witness/wasm-tools/wkg/wit-bindgen-wrpc, ONE
+pin (`//:varve.toml` + `//:covalent.pub`) through varve's `covalent` realm,
+which COMPOSES the `pulseengine` realm (loom/meld/spar/synth/witness) and the
+`pulseengine-wasm` realm (wasm-tools/wkg/wit-bindgen-wrpc) — each half still
+verified independently against its OWN root, per `//:varve-realms.toml`
+(required for the composition walk to resolve them; see `varve docs
+composition`). See `//varve/toolchains:BUILD.bazel` for the toolchain wiring.
 
 **Why**: One signed, counter-protected, dated layer replaces a whole set of
 hand-maintained `checksums/tools/*.json` entries + per-tool download logic.
-varve's signature chain (DSSE against the realm's trust root) does the
+varve's signature chain (DSSE against each realm's trust root) does the
 verification; Bazel just resolves and caches through it hermetically.
+Composing two realms into one pin means one `layer` bump instead of two.
 
 **Caveat**: a realm's trust root is a claim about who *signs*, not who *built*
 the payload — read `varve-realms.toml`'s per-realm comment before assuming
 upstream provenance. In the pulseengine-wasm realm specifically, only
 wasm-tools carries build-provenance; wkg/wit-bindgen-wrpc are PulseEngine-
-key-signed hashes of unverified upstream downloads.
+key-signed hashes of unverified upstream downloads. Composing does not
+change this: covalent's root signs only the pairing, never the bytes.
 
 **Being in a realm doesn't mean we consume it from there**: `wac` is IN the
 pulseengine-wasm realm but deliberately stays on Pattern 1 (pinned at 0.9.0
