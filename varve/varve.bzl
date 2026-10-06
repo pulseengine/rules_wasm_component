@@ -12,6 +12,14 @@ Trust model: the ONLY trust-on-first-use root is the sha256 pin of the
 varve binary itself in `varve/varve_checksums.json` (itself transcribed
 from varve's cosign-verified release sums). Every tool byte after that is
 accepted or refused by varve's signature chain, not by this file.
+
+A pinned layer may COMPOSE layers from other realms (see `varve docs
+composition`) — this repo's pin does: the `covalent` realm pairs
+`pulseengine` and `pulseengine-wasm` into one layer, each half still
+verified against its OWN realm's root, never covalent's. Composition
+requires a `realms` attr (a `varve-realms.toml`) so the install walk can
+resolve each composed realm's registry and root; a non-composing pin
+doesn't need one.
 """
 
 _VARVE_CHECKSUMS_LABEL = Label("//varve:varve_checksums.json")
@@ -76,16 +84,25 @@ def _varve_tools_impl(repository_ctx):
     )
     varve = repository_ctx.path("varve-dist/varve")
 
-    # 2. Watch the pin and trust root: editing either re-runs this rule.
+    # 2. Watch the pin, trust root, and (if the layer composes other
+    # realms) the realms file: editing any of them re-runs this rule.
     pin = repository_ctx.path(repository_ctx.attr.pin)
     trust_root = repository_ctx.path(repository_ctx.attr.trust_root)
     repository_ctx.watch(pin)
     repository_ctx.watch(trust_root)
+    if repository_ctx.attr.realms:
+        repository_ctx.watch(repository_ctx.path(repository_ctx.attr.realms))
 
     # 3. A tiny project dir carrying the pin, and a repo-local varve root:
     # fully hermetic — no shared host state, rebuilt when Bazel says so.
+    # varve-realms.toml is needed only if the pinned layer COMPOSES other
+    # realms (varve's install walk refuses outright without it — "no
+    # varve-realms.toml found" — confirmed empirically, not assumed); a
+    # layer with no includes never looks for it.
     repository_ctx.file("project/.keep", "")
     repository_ctx.template("project/varve.toml", repository_ctx.attr.pin)
+    if repository_ctx.attr.realms:
+        repository_ctx.template("project/varve-realms.toml", repository_ctx.attr.realms)
     varve_root = repository_ctx.path(".varve-root")
 
     # 4. varve does the trust work. Where the bytes come from is pluggable;
@@ -142,11 +159,18 @@ varve_tools_repository = repository_rule(
         "trust_root": attr.label(
             mandatory = True,
             allow_single_file = True,
-            doc = "Hex-encoded ed25519 root public key file (e.g. trust-roots/rolling.pub).",
+            doc = "Hex-encoded ed25519 root public key file (e.g. //:covalent.pub).",
         ),
         "registry": attr.string(
             default = "oci://ghcr.io/pulseengine/layers",
             doc = "Layer source. Availability only — acceptance is varve's signature chain.",
+        ),
+        "realms": attr.label(
+            allow_single_file = True,
+            doc = "Optional varve-realms.toml, needed only when the pinned layer " +
+                  "composes layers from OTHER realms (see varve docs composition). " +
+                  "Each composed realm verifies independently against its OWN " +
+                  "root, as declared in this file — never the top-level trust_root.",
         ),
         "tools": attr.string_list(
             mandatory = True,
@@ -161,6 +185,7 @@ _configure = tag_class(attrs = {
     "pin": attr.label(mandatory = True),
     "trust_root": attr.label(mandatory = True),
     "registry": attr.string(default = "oci://ghcr.io/pulseengine/layers"),
+    "realms": attr.label(),
     "tools": attr.string_list(mandatory = True),
     "name": attr.string(default = "varve_tools"),
 })
@@ -173,6 +198,7 @@ def _varve_extension_impl(module_ctx):
                 pin = cfg.pin,
                 trust_root = cfg.trust_root,
                 registry = cfg.registry,
+                realms = cfg.realms,
                 tools = cfg.tools,
             )
 

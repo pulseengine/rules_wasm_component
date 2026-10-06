@@ -119,13 +119,15 @@ use_repo(
     "wasi_nn_v0_2_0_rc_2024_08_19",
 )
 
-# WebAssembly toolchains. On linux/macos, wasm-tools/wac/wit-bindgen-wrpc
-# come from varve instead (see varve.configure(name = "varve_wasm_tools")
-# below) — this extension supplies wit-bindgen (plain), wrpc (plain), and
-# wasmsign2 always (not in the pulseengine-wasm realm), plus the FULL
-# old-download wasm_tools/wac/wit-bindgen-wrpc as the Windows fallback
-# (varve ships no Windows binary). Its own bundled wasm_tools_toolchain is
-# registered below, after the varve-backed ones, as that fallback.
+# WebAssembly toolchains. On linux/macos, wasm-tools/wit-bindgen-wrpc come
+# from varve instead (see the varve.configure() covalent block below) —
+# this extension supplies wac (held back from varve, see that block),
+# wit-bindgen (plain), wrpc (plain), and wasmsign2 always (none of these
+# are in the pulseengine-wasm realm, or — for wac — not consumed from it),
+# plus the FULL old-download wasm_tools/wit-bindgen-wrpc as the Windows
+# fallback (varve ships no Windows binary, tracked upstream). Its own
+# bundled wasm_tools_toolchain is registered below, after the varve-backed
+# ones, as that fallback.
 wasm_toolchain = use_extension("//wasm:extensions.bzl", "wasm_toolchain")
 wasm_toolchain.register(
     name = "wasm_tools",
@@ -135,8 +137,7 @@ wasm_toolchain.register(
 use_repo(wasm_toolchain, "wasm_tools_toolchains")
 
 # WebAssembly Package Tools (wkg) toolchain — Windows fallback only (see
-# above); linux/macos get wkg from varve (varve.configure(name =
-# "varve_wasm_tools") below).
+# above); linux/macos get wkg from varve (the covalent block below).
 wkg = use_extension("//wasm:extensions.bzl", "wkg")
 wkg.register(
     name = "wkg",
@@ -144,6 +145,32 @@ wkg.register(
     version = "0.15.0",
 )
 use_repo(wkg, "wkg_toolchain")
+
+# loom/meld/spar/synth/witness — Windows fallback only (varve ships no
+# Windows binary); linux/macos get these from varve too (the covalent
+# block below). Versions match checksums/tools/<tool>.json's latest, same
+# freshness tier as the wasm-tools/wkg Windows fallback above — exact
+# version parity with the varve-sourced ones isn't the point of a
+# fallback that should rarely execute.
+loom = use_extension("//wasm:extensions.bzl", "loom")
+loom.register(version = "1.1.14")
+use_repo(loom, "loom_toolchain")
+
+meld = use_extension("//wasm:extensions.bzl", "meld")
+meld.register(version = "0.10.0")
+use_repo(meld, "meld_toolchain")
+
+spar = use_extension("//wasm:extensions.bzl", "spar")
+spar.register(version = "0.33.0")
+use_repo(spar, "spar_toolchain")
+
+synth = use_extension("//wasm:extensions.bzl", "synth")
+synth.register(version = "0.6.0")
+use_repo(synth, "synth_toolchain")
+
+witness = use_extension("//wasm:extensions.bzl", "witness")
+witness.register(version = "0.22.0")
+use_repo(witness, "witness_toolchain")
 
 # WASI SDK toolchain
 wasi_sdk = use_extension("//wasm:extensions.bzl", "wasi_sdk")
@@ -239,72 +266,53 @@ use_repo(binaryen, "binaryen_toolchain")
 
 register_toolchains("@binaryen_toolchain//:binaryen_toolchain")
 
-# loom/meld/spar/synth/witness toolchains, sourced from varve (the
-# PulseEngine toolchain layer manager) instead of this repo's own per-tool
-# GitHub-release download + checksums/tools/*.json trust-on-first-use pin.
-# One signed, counter-protected, dated layer (//:varve.toml) replaces five
-# separately hand-maintained registry entries. See //varve/README.md for the
-# trust model and //varve/toolchains:BUILD.bazel for the toolchain wiring.
+# loom/meld/spar/synth/witness/wasm-tools/wkg/wit-bindgen-wrpc, sourced
+# from varve's `covalent` realm — ONE pin (//:varve.toml) composing the
+# `pulseengine` realm (PulseEngine's own tools) and `pulseengine-wasm`
+# realm (bytecodealliance-origin tools, signed by a separate PulseEngine
+# key) into a single signed, counter-protected, dated layer. Each composed
+# half still verifies against its OWN realm's root — covalent's root signs
+# only the pairing, never the bytes (`varve docs composition`). Realm
+# definitions, including covalent's own root, live in //:varve-realms.toml
+# — required for the composition walk to resolve pulseengine and
+# pulseengine-wasm, not read directly by this extension. See
+# //varve/README.md for the trust model and //varve/toolchains:BUILD.bazel
+# for the toolchain wiring.
 #
-# wsc (signing toolchain) stays on its existing path deliberately — a
-# signing-path trust-source change needs its own explicit review, not a
-# bundled one. rivet has no existing rules_wasm_component toolchain to
-# migrate.
+# wac is DELIBERATELY NOT in `tools`, even though covalent carries it:
+# toolchains/tool_versions.bzl pins wac at 0.9.0 specifically because
+# "wac 0.9.0 does NOT support P3 async yet (issue #180)" — the
+# pulseengine-wasm realm's only published wac (0.11.0) rejects the WASI P3
+# dual-compile composition (examples/rust_p3/p3_cli, actively developed)
+# with "the async canonical option requires an async function type".
+# Caught by this repo's own CI (Direct Integration Test), not assumed.
+# wac stays on the old download path (still pinned at 0.9.0) until either
+# P3 composition is updated for newer wac or the realm publishes a
+# compatible version.
+#
+# wit-bindgen (plain), wasmtime, wasi-sdk, binaryen, and wrpc (non-wrpc-
+# bindgen) are NOT in either composed realm and stay on their existing
+# paths. wsc (signing toolchain) and rivet stay on their existing paths
+# too — wsc deliberately: a signing-path trust-source change needs its
+# own explicit review, not a bundled one.
 varve = use_extension("//varve:varve.bzl", "varve")
 varve.configure(
     pin = "//:varve.toml",
+    realms = "//:varve-realms.toml",
+    registry = "oci://ghcr.io/pulseengine/covalent-layers",
     tools = [
         "loom",
         "meld",
         "spar",
         "synth",
-        "witness",
-    ],
-    trust_root = "//:rolling.pub",
-)
-use_repo(varve, "varve_tools")
-
-register_toolchains(
-    "//varve/toolchains:loom_toolchain",
-    "//varve/toolchains:meld_toolchain",
-    "//varve/toolchains:spar_toolchain",
-    "//varve/toolchains:synth_toolchain",
-    "//varve/toolchains:witness_toolchain",
-)
-
-# wasm-tools/wkg/wit-bindgen-wrpc, sourced from varve's pulseengine-wasm
-# realm (ghcr.io/pulseengine/wasm-layers) instead of checksums/tools/*.json.
-# A DIFFERENT realm than the one above: pulseengine-wasm carries
-# bytecodealliance-origin tools, signed by a separate PulseEngine key
-# (//:wasm-rolling.pub), not the pulseengine realm's key. See
-# //:varve-wasm.toml's header for the proof-of-origin caveat — the two
-# tools here besides wasm-tools carry no upstream provenance, unlike
-# loom/meld/spar/synth/witness above.
-#
-# wac is DELIBERATELY NOT in this list, even though it's in the realm:
-# toolchains/tool_versions.bzl pins wac at 0.9.0 specifically because
-# "wac 0.9.0 does NOT support P3 async yet (issue #180)" — the realm's only
-# published layer carries wac 0.11.0, which rejects the WASI P3 dual-compile
-# composition (examples/rust_p3/p3_cli, actively developed) with "the async
-# canonical option requires an async function type". Caught by this PR's own
-# CI (Direct Integration Test), not assumed. wac stays on the old download
-# path (still pinned at 0.9.0) until either P3 composition is updated for
-# newer wac or the realm publishes a compatible version.
-#
-# wit-bindgen (plain), wasmtime, wasi-sdk, binaryen, and wrpc (non-wrpc-
-# bindgen) are NOT in this realm and stay on their existing paths.
-varve.configure(
-    name = "varve_wasm_tools",
-    pin = "//:varve-wasm.toml",
-    registry = "oci://ghcr.io/pulseengine/wasm-layers",
-    tools = [
         "wasm-tools",
         "wit-bindgen-wrpc",
+        "witness",
         "wkg",
     ],
-    trust_root = "//:wasm-rolling.pub",
+    trust_root = "//:covalent.pub",
 )
-use_repo(varve, "varve_wasm_tools")
+use_repo(varve, "varve_tools")
 
 # Order matters: toolchain resolution picks the first *matching*
 # registration for the current exec platform. The linux/macos varve-backed
@@ -312,6 +320,21 @@ use_repo(varve, "varve_wasm_tools")
 # old-download fallbacks, or the fallback would win everywhere and the
 # varve switch would be a no-op.
 register_toolchains(
+    "//varve/toolchains:loom_toolchain_linux",
+    "//varve/toolchains:loom_toolchain_macos",
+    "@loom_toolchain//:loom_toolchain",  # Windows fallback
+    "//varve/toolchains:meld_toolchain_linux",
+    "//varve/toolchains:meld_toolchain_macos",
+    "@meld_toolchain//:meld_toolchain",  # Windows fallback
+    "//varve/toolchains:spar_toolchain_linux",
+    "//varve/toolchains:spar_toolchain_macos",
+    "@spar_toolchain//:spar_toolchain",  # Windows fallback
+    "//varve/toolchains:synth_toolchain_linux",
+    "//varve/toolchains:synth_toolchain_macos",
+    "@synth_toolchain//:synth_toolchain",  # Windows fallback
+    "//varve/toolchains:witness_toolchain_linux",
+    "//varve/toolchains:witness_toolchain_macos",
+    "@witness_toolchain//:witness_toolchain",  # Windows fallback
     "//varve/toolchains:wasm_tools_toolchain_linux",
     "//varve/toolchains:wasm_tools_toolchain_macos",
     "@wasm_tools_toolchains//:wasm_tools_toolchain",  # Windows fallback

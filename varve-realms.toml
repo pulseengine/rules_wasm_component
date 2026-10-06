@@ -1,0 +1,29 @@
+# Realm definitions this repo's varve pin relies on, transcribed from each
+# realm's own authoritative source (see the commit that added this file for
+# exactly where each was verified):
+#   - pulseengine, pulseengine-wasm: varve's own varve-realms.toml
+#     (https://github.com/pulseengine/varve, release asset and repo root).
+#   - covalent: https://github.com/pulseengine/covalent-layers's README —
+#     the realm's own producer repo, not varve's canonical file (covalent is
+#     described there as varve's "worked multi-realm example").
+#
+# This file is NOT read directly by our pin (//:varve.toml passes registry
+# and trust_root explicitly for the top-level covalent layer — see
+# //varve:varve.bzl) — it exists because `varve install`'s own composition
+# walk requires a varve-realms.toml on disk to resolve the registry and
+# trust root of each realm a layer COMPOSES (here: covalent composes
+# pulseengine and pulseengine-wasm). Confirmed empirically: `varve install`
+# refuses a composing pin outright ("no varve-realms.toml found") without
+# this file present. See `varve docs composition`.
+
+[realm.pulseengine]
+registry   = "oci://ghcr.io/pulseengine/layers"
+trust-root = "7d3b892e6a33c70043becc708e08042e1cef0d54dd5ae6f23d7d4c68de1da1a0"
+
+[realm.pulseengine-wasm]
+registry   = "oci://ghcr.io/pulseengine/wasm-layers"
+trust-root = "f1300acb791d330da9b81951d4137f5b1fb0c5efc50213deee4d7a981be28745"
+
+[realm.covalent]
+registry   = "oci://ghcr.io/pulseengine/covalent-layers"
+trust-root = "32d09d12ec3dcd448fcfd9f5768327126d3d9c54a74fe01266882b43362eb8a5"
