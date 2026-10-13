@@ -17,94 +17,49 @@ load("//toolchains:tool_registry.bzl", "tool_registry")
 _TINYGO_TOOLCHAIN_DOC = """
 TinyGo WASI Preview 2 toolchain using unified tool_registry for enterprise air-gap support.
 
-All tools (Go SDK, Binaryen, TinyGo) are downloaded via tool_registry.download() which:
+All tools (Go SDK, Binaryen, TinyGo, wit-bindgen-go) are downloaded via
+tool_registry.download() which:
 - Verifies SHA256 checksums from checksums/tools/*.json
 - Supports BAZEL_WASM_MIRROR for corporate mirrors
 - Supports BAZEL_WASM_OFFLINE for fully offline builds
 - Supports BAZEL_WASM_VENDOR_DIR for shared network caches
+
+The Go SDK download (go.dev) is only reachable when something actually
+needs tinygo_toolchain_type — Bazel's lazy repository fetching means a
+build that never touches a TinyGo/Go target never triggers it. If it's
+unexpectedly required, check what in the requested build graph needs this
+toolchain type before assuming it's eager.
 """
 
 # Version constants - centralized for easy updates
 _GO_VERSION = "1.25.3"
 _BINARYEN_VERSION = "129"
+_WIT_BINDGEN_GO_VERSION = "0.7.0"
 
-def _setup_go_wit_bindgen(repository_ctx, go_binary):
-    """Install wit-bindgen-go Go tool for WIT binding generation
+def _setup_go_wit_bindgen(repository_ctx, platform):
+    """Install wit-bindgen-go for WIT binding generation.
 
-    Installs go.bytecodealliance.org/wit/bindgen which provides 'go tool wit-bindgen-go'
-
-    Supports configurable Go proxy via environment variable for enterprise/air-gap deployments:
-    - BAZEL_GOPROXY: Override Go module proxy (default: https://proxy.golang.org,direct)
+    Downloaded as a pinned, checksummed binary from its own GitHub releases
+    (checksums/tools/wit-bindgen-go.json) via tool_registry — the same
+    hermetic path as every other tool here. Previously this ran `go install
+    go.bytecodealliance.org/cmd/wit-bindgen-go@latest` using the Go SDK
+    downloaded above: an unpinned floating dependency (resolves to whatever
+    "latest" is at build time, not reproducible) that also required network
+    access to proxy.golang.org — a second, separate host from the GitHub
+    releases every other tool in this file already uses, and one more thing
+    to allowlist on a restrictive corporate network. Pinning it here removes
+    both problems; it does not remove the Go SDK download above, which
+    TinyGo compilation itself genuinely needs.
     """
-
-    print("Installing Go WIT binding tools...")
-
-    # Create bin directory first
-    repository_ctx.file("bin/.gitkeep", "")
-
-    # Get Go proxy configuration from environment (enterprise support)
-    goproxy = repository_ctx.os.environ.get("BAZEL_GOPROXY", "https://proxy.golang.org,direct")
-
-    # Set up Go environment for tool installation
-    go_env = {
-        "GOCACHE": str(repository_ctx.path("go_cache")),
-        "GOPATH": str(repository_ctx.path("go_path")),
-        "CGO_ENABLED": "0",
-        "GO111MODULE": "on",
-        "GOPROXY": goproxy,
-    }
-
-    # Install wit-bindgen-go using hermetic Go - this provides 'go tool wit-bindgen-go'
-    result = repository_ctx.execute(
-        [str(go_binary), "install", "go.bytecodealliance.org/cmd/wit-bindgen-go@latest"],
-        environment = go_env,
-        timeout = 300,  # 5 minute timeout
+    result = tool_registry.download(
+        repository_ctx,
+        "wit-bindgen-go",
+        _WIT_BINDGEN_GO_VERSION,
+        platform,
+        output_name = "wit-bindgen-go",
+        output_dir = "bin",
     )
-
-    if result.return_code != 0:
-        print("Warning: Failed to install wit-bindgen-go Go tool")
-        print("Error: {}".format(result.stderr))
-        print("Stdout: {}".format(result.stdout))
-
-        # Create fallback that explains the issue
-        repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
-echo "Error: wit-bindgen-go installation failed during toolchain setup"
-echo "Manual installation: go install go.bytecodealliance.org/cmd/wit-bindgen-go@latest"
-exit 1
-""", executable = True)
-    else:
-        print("wit-bindgen-go Go tool installed successfully")
-
-        # Test wit-bindgen-go as a standalone binary (installed via go install)
-        # The tool is installed in GOPATH/bin, not as a Go tool
-        wit_bindgen_binary = repository_ctx.path("go_path/bin/wit-bindgen-go")
-
-        if wit_bindgen_binary.exists:
-            print("wit-bindgen-go found as standalone binary")
-
-            # Create wrapper that uses the installed binary directly
-            repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
-# wit-bindgen-go wrapper - uses installed binary
-exec "{wit_bindgen_binary}" "$@"
-""".format(wit_bindgen_binary = str(wit_bindgen_binary)), executable = True)
-        else:
-            print("Warning: wit-bindgen-go binary not found in expected location")
-
-            # Try go tool approach as fallback
-            test_result = repository_ctx.execute(
-                [str(go_binary), "tool", "wit-bindgen-go", "--help"],
-                environment = go_env,
-                timeout = 30,
-            )
-
-            if test_result.return_code == 0:
-                print("wit-bindgen-go found as Go tool")
-                repository_ctx.file("bin/wit-bindgen-go", """#!/bin/bash
-# wit-bindgen-go wrapper - uses Go tool
-exec "{go_binary}" tool wit-bindgen-go "$@"
-""".format(go_binary = str(go_binary)), executable = True)
-            else:
-                print("Warning: wit-bindgen-go not available as Go tool either")
+    repository_ctx.execute(["chmod", "+x", result["binary_path"]])
 
 def _tinygo_toolchain_repository_impl(repository_ctx):
     """Implementation of TinyGo toolchain repository rule
@@ -167,8 +122,8 @@ def _tinygo_toolchain_repository_impl(repository_ctx):
     )
     tinygo_binary = repository_ctx.path(tinygo_result["binary_path"])
 
-    # Set up wit-bindgen-go using hermetic Go binary
-    _setup_go_wit_bindgen(repository_ctx, go_binary)
+    # Set up wit-bindgen-go — pinned download, not a `go install`
+    _setup_go_wit_bindgen(repository_ctx, platform)
 
     # wasm-tools will be provided by the wasm toolchain dependency
 
@@ -188,7 +143,7 @@ filegroup(
 # wit-bindgen-go tool files
 filegroup(
     name = "wit_bindgen_go_files",
-    srcs = glob(["bin/*", "go_path/**/*"]),
+    srcs = glob(["bin/*"]),
     visibility = ["//visibility:public"],
 )
 

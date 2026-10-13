@@ -163,6 +163,16 @@ _URL_PATTERNS = {
         "base": "https://github.com/{repo}/releases/download/v{version}",
         "filename": "synth-v{version}-{suffix}",
     },
+    "wit-bindgen-go": {
+        # wit-bindgen-go releases are single-binary .tgz archives, no
+        # subdirectory (url_suffix IS the filename, e.g.
+        # "wit-bindgen-go-darwin-arm64.tgz") — same shape as loom, just
+        # gzip-compressed under a short extension; the default archive_type
+        # detection in _download_tool() already falls back to "tar.gz" for
+        # any unrecognized suffix, which is the right format for .tgz too.
+        "base": "https://github.com/{repo}/releases/download/v{version}",
+        "filename": "{suffix}",
+    },
 }
 
 def _build_download_url(tool_name, version, platform, tool_info, github_repo):
