@@ -8,21 +8,33 @@ hermetic, repo-local root that Bazel invalidates when the pin or trust
 root changes.
 
 ```starlark
-# MODULE.bazel
+# MODULE.bazel — pulling PulseEngine's own tools from the `pulseengine` realm
 varve = use_extension("@rules_wasm_component//varve:varve.bzl", "varve")
 varve.configure(
+    name = "my_varve_tools",  # give it a name distinct from any other
+                               # configure() call in your dependency graph —
+                               # the extension is one, globally, and a second
+                               # call under the same default name collides.
     pin = "//:varve.toml",
-    trust_root = "//:trust-roots/rolling.pub",
+    trust_root = "//:rolling.pub",
     tools = ["loom", "meld", "rivet", "spar", "synth", "witness", "wsc"],
 )
-use_repo(varve, "varve_tools")
-# then depend on @varve_tools//:synth etc.
+use_repo(varve, "my_varve_tools")
+# then depend on @my_varve_tools//:synth etc.
 ```
 
-As of layer `2026.09.0`, that covers every PulseEngine tool this repo's own
-`checksum_updater` hand-manages today (`checksums/tools/{loom,meld,spar,synth,
-witness,wsc}.json`) plus `rivet`, which isn't tracked there at all. See
-`examples/varve_extension` for a working `varve.configure` pulling all six.
+See `examples/varve_extension` for a working, standalone version of this
+(pulling all six PulseEngine tools this repo's own `checksum_updater`
+hand-manages, plus `rivet`, which isn't tracked there at all).
+
+This repo's OWN `MODULE.bazel` goes further: it pins the `covalent` realm
+instead, which COMPOSES `pulseengine` with `pulseengine-wasm`
+(bytecodealliance-origin tools, a separate PulseEngine key) into one layer —
+loom/meld/spar/synth/witness AND wasm-tools/wkg/wit-bindgen-wrpc from a
+single `varve.configure()`. Composing needs one more attr, `realms` (a
+`varve-realms.toml` defining every realm the pin's layer composes — see
+`varve docs composition`); a non-composing pin like the one above doesn't.
+See `//varve/toolchains:BUILD.bazel` for exactly how.
 
 Trust model: the single trust-on-first-use root is the sha256 pin of the
 varve binary in `varve_checksums.json` (transcribed from varve's

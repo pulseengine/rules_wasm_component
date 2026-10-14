@@ -259,16 +259,16 @@
   "moduleExtensions": {
     "@@rules_wasm_component+//varve:varve.bzl%varve": {
       "general": {
-        "bzlTransitiveDigest": "aCJ/wBLdOxzdkLLe2SWy4Ymd6OIhQJV4NJCf9OgDw4s=",
-        "usagesDigest": "LoaHp7/W+5rPJ2dW6pYrReq6PQVhUrgVRTipNzt3WCo=",
+        "bzlTransitiveDigest": "wViu+lp556rOOSqvhgwUuM7gKbgTdrjDscoKS1sHsRo=",
+        "usagesDigest": "CsRx4WwFISI8eqOu2aC83B2QqPI52cLzwYNmTbSSUG8=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
-          "varve_tools": {
+          "varve_extension_example_tools": {
             "repoRuleId": "@@rules_wasm_component+//varve:varve.bzl%varve_tools_repository",
             "attributes": {
               "pin": "@@//:varve.toml",
               "trust_root": "@@//:rolling.pub",
-              "registry": "oci://ghcr.io/pulseengine/varve/layers",
+              "registry": "oci://ghcr.io/pulseengine/layers",
               "tools": [
                 "loom",
                 "meld",
@@ -277,6 +277,25 @@
                 "synth",
                 "witness",
                 "wsc"
+              ]
+            }
+          },
+          "varve_tools": {
+            "repoRuleId": "@@rules_wasm_component+//varve:varve.bzl%varve_tools_repository",
+            "attributes": {
+              "pin": "@@rules_wasm_component+//:varve.toml",
+              "trust_root": "@@rules_wasm_component+//:covalent.pub",
+              "registry": "oci://ghcr.io/pulseengine/covalent-layers",
+              "realms": "@@rules_wasm_component+//:varve-realms.toml",
+              "tools": [
+                "loom",
+                "meld",
+                "spar",
+                "synth",
+                "wasm-tools",
+                "wit-bindgen-wrpc",
+                "witness",
+                "wkg"
               ]
             }
           }

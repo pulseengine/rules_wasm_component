@@ -1,18 +1,18 @@
 {
   "_comment": "The ONE trust-on-first-use root of the varve extension: sha256 pins of the varve binary itself, transcribed from the cosign-verified SHA256SUMS.txt of the release below. Update by verifying the new release's sums (cosign verify-blob) and transcribing — never by hashing an unverified download.",
-  "version": "v0.38.0",
+  "version": "v0.39.0",
   "platforms": {
     "aarch64-apple-darwin": {
-      "sha256": "287764748ade5c73ffb25d4ba1326de023cf2c036b734305bd9f143743ff3c5b"
+      "sha256": "e62b11d1043c90c6f17b940d534e84bf0f036a2f912985f5fa251576c18e8844"
     },
     "x86_64-apple-darwin": {
-      "sha256": "b40caa2ab9159b9d8dd4718d40a818412f187c8c59355b9768bf4515f12f7f46"
+      "sha256": "86f97ed6b45c852e94ac512e6b6e8760ccf51ed20712fec690ad061398601ba6"
     },
     "aarch64-unknown-linux-gnu": {
-      "sha256": "424c8e64951dc80be3f8799394cf927cc663006c6df9d3a41f7f23a68de60086"
+      "sha256": "9e597cff0513e5d1ca506ce87013598e555a526041505174cac5fc8c69f239c0"
     },
     "x86_64-unknown-linux-gnu": {
-      "sha256": "b436a1f4bded9acbca5d3dcf2bb7bc8bea0dca6a3ab8574f7b0d5900b825d03e"
+      "sha256": "8333bd487a25a1072efceedc7b582379410fe64ac5e864ff7fa793692c216071"
     }
   }
 }
