@@ -202,25 +202,10 @@ tinygo_toolchain(
     binaryen_files = ":binaryen_files",
 )
 
-# Toolchain definition
-toolchain(
-    name = "tinygo_toolchain_def",
-    exec_compatible_with = [
-        "@platforms//os:{os}",
-        "@platforms//cpu:{cpu}",
-    ],
-    target_compatible_with = [
-        "@platforms//cpu:wasm32",
-    ],
-    toolchain = ":tinygo_toolchain",
-    toolchain_type = "@rules_wasm_component//toolchains:tinygo_toolchain_type",
-)
 """.format(
         tinygo_binary_name = "tinygo/bin/tinygo.exe" if platform == "windows_amd64" else "tinygo/bin/tinygo",
         go_binary_name = "go_sdk/bin/go.exe" if platform == "windows_amd64" else "go_sdk/bin/go",
         wasm_opt_binary_name = "binaryen/bin/wasm-opt.exe" if platform == "windows_amd64" else "binaryen/bin/wasm-opt",
-        os = "osx" if "darwin" in platform else ("windows" if "windows" in platform else "linux"),
-        cpu = "arm64" if "arm64" in platform else "x86_64",
     ))
 
     print("TinyGo toolchain setup complete!")

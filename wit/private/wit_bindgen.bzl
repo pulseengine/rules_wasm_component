@@ -70,24 +70,21 @@ def _wit_bindgen_impl(ctx):
         # C generates multiple files
         out_dir = ctx.actions.declare_directory(ctx.label.name + "_bindings")
         out_file = out_dir
-    elif ctx.attr.language == "go":
-        # Go generates multiple files (packages)
-        out_dir = ctx.actions.declare_directory(ctx.label.name + "_bindings")
-        out_file = out_dir
     else:
         fail("Unsupported language: " + ctx.attr.language)
 
-    # Get wit-bindgen tool from appropriate toolchain
-    if ctx.attr.language == "go":
-        # Check if TinyGo toolchain is available
-        tinygo_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:tinygo_toolchain_type"]
-        if not tinygo_toolchain:
-            fail("TinyGo toolchain not available. Go WIT binding generation requires TinyGo toolchain.")
-        wit_bindgen = tinygo_toolchain.wit_bindgen_go
-    else:
-        # Use standard wit-bindgen for other languages
-        toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
-        wit_bindgen = toolchain.wit_bindgen
+    # Use standard wit-bindgen for all supported languages. Go is NOT
+    # handled here — go_wasm_component (go/defs.bzl) generates Go WIT
+    # bindings directly via tinygo_toolchain.wit_bindgen_go, bypassing this
+    # rule entirely. This rule used to also declare tinygo_toolchain_type
+    # (mandatory = False) for a "go" branch below that nothing ever called
+    # — confirmed by repo-wide search, not assumed — but Bazel configures
+    # every toolchain a rule declares for EVERY instantiation regardless of
+    # which runtime branch actually runs, so every rust/c component build
+    # was eagerly fetching the entire TinyGo toolchain (Go SDK included) in
+    # the bargain. Removed instead of worked around.
+    toolchain = ctx.toolchains["@rules_wasm_component//toolchains:wasm_tools_toolchain_type"]
+    wit_bindgen = toolchain.wit_bindgen
 
     # Get the main WIT library directory which contains the deps structure
     wit_library_dir = None
@@ -97,17 +94,10 @@ def _wit_bindgen_impl(ctx):
                 wit_library_dir = file
                 break
 
-    # Build command arguments based on tool
-    if ctx.attr.language == "go":
-        # wit-bindgen-go has different CLI: wit-bindgen-go generate --world <world> --out <dir> <wit-path>
-        cmd_args = ["generate"]
-        if wit_info.world_name:
-            cmd_args.extend(["--world", wit_info.world_name])
-    else:
-        # Standard wit-bindgen CLI: wit-bindgen <language> --world <world> ...
-        cmd_args = [ctx.attr.language]
-        if wit_info.world_name:
-            cmd_args.extend(["--world", wit_info.world_name])
+    # Standard wit-bindgen CLI: wit-bindgen <language> --world <world> ...
+    cmd_args = [ctx.attr.language]
+    if wit_info.world_name:
+        cmd_args.extend(["--world", wit_info.world_name])
 
     # Add interface mappings (--with)
     cmd_args.extend(_build_with_args(ctx.attr.with_mappings))
@@ -235,39 +225,6 @@ def _wit_bindgen_impl(ctx):
                     ctx.label,
                 ),
             )
-    elif ctx.attr.language == "go":
-        # Handle Go wit-bindgen-go specifically
-        if wit_library_dir:
-            # Run wit-bindgen-go directly on the WIT library directory
-            bindgen_args = cmd_args + ["--out", out_file.path, wit_library_dir.path]
-
-            ctx.actions.run(
-                executable = wit_bindgen,
-                arguments = bindgen_args,
-                inputs = depset(
-                    direct = [wit_library_dir],
-                    transitive = [wit_info.wit_files, wit_info.wit_deps] if wit_info.wit_deps else [wit_info.wit_files],
-                ),
-                outputs = [out_file],
-                mnemonic = "GoWitBindgen",
-                progress_message = "Generating Go WIT bindings for {}".format(ctx.label),
-            )
-        else:
-            # No dependencies - run wit-bindgen-go directly on WIT files
-            wit_file = wit_info.wit_files.to_list()[0] if wit_info.wit_files.to_list() else None
-            if not wit_file:
-                fail("No WIT files found")
-
-            bindgen_args = cmd_args + ["--out", out_file.path, wit_file.path]
-
-            ctx.actions.run(
-                executable = wit_bindgen,
-                arguments = bindgen_args,
-                inputs = wit_info.wit_files,
-                outputs = [out_file],
-                mnemonic = "GoWitBindgen",
-                progress_message = "Generating Go WIT bindings for {}".format(ctx.label),
-            )
     else:
         # For other languages, create dependency structure using hermetic Go tool
         if wit_library_dir:
@@ -359,9 +316,11 @@ wit_bindgen = rule(
             doc = "WIT library to generate bindings for",
         ),
         "language": attr.string(
-            values = ["rust", "c", "go", "python"],
+            values = ["rust", "c", "python"],
             default = "rust",
-            doc = "Target language for bindings",
+            doc = "Target language for bindings. Go is NOT handled here — " +
+                  "go_wasm_component (go/defs.bzl) generates Go WIT bindings " +
+                  "directly via its own TinyGo toolchain access.",
         ),
         "options": attr.string_list(
             doc = "Additional options to pass to wit-bindgen",
@@ -400,7 +359,6 @@ wit_bindgen = rule(
     toolchains = [
         "@rules_wasm_component//toolchains:wasm_tools_toolchain_type",
         "@rules_wasm_component//toolchains:file_ops_toolchain_type",
-        config_common.toolchain_type("@rules_wasm_component//toolchains:tinygo_toolchain_type", mandatory = False),
     ],
     doc = """
     Generates language bindings from WIT files.

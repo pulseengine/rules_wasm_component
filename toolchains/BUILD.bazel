@@ -47,6 +47,43 @@ toolchain_type(
     visibility = ["//visibility:public"],
 )
 
+# Static per-exec-platform toolchain() registrations for TinyGo, deliberately
+# NOT generated inside @tinygo_toolchain's own repository rule (that's where
+# they used to live). Bazel reads a registered toolchain's exec/target
+# compatibility to build its resolution context for EVERY invocation that
+# resolves ANY toolchain type at all — confirmed empirically, not assumed:
+# commenting out this toolchain's registration entirely was the only thing
+# that stopped @tinygo_toolchain (Go SDK, wit-bindgen-go, Binaryen, TinyGo
+# itself) from being fetched by a plain Rust component build that uses
+# tinygo_toolchain_type nowhere in its dependency graph. When that
+# compatibility data lives in the toolchain's OWN auto-generated repo,
+# reading it means fetching the repo — regardless of whether the type is
+# ever actually selected. A static declaration here is read for free.
+# Combined with removing wit/private/wit_bindgen.bzl's unconditional (and,
+# it turned out, entirely dead) declaration of this type, a plain Rust/C
+# component build no longer touches this toolchain at all.
+[
+    toolchain(
+        name = "tinygo_toolchain_def_" + os + "_" + cpu,
+        exec_compatible_with = [
+            "@platforms//os:" + os,
+            "@platforms//cpu:" + cpu,
+        ],
+        target_compatible_with = [
+            "@platforms//cpu:wasm32",
+        ],
+        toolchain = "@tinygo_toolchain//:tinygo_toolchain",
+        toolchain_type = ":tinygo_toolchain_type",
+    )
+    for (os, cpu) in [
+        ("osx", "arm64"),
+        ("osx", "x86_64"),
+        ("linux", "arm64"),
+        ("linux", "x86_64"),
+        ("windows", "x86_64"),
+    ]
+]
+
 # Toolchain type for Wasmtime WebAssembly runtime
 # Note: Wizer functionality is now part of wasmtime (v39.0.0+), use wasmtime_toolchain_type
 toolchain_type(
