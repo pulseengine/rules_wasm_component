@@ -198,7 +198,13 @@ tinygo.register(
 )
 use_repo(tinygo, "tinygo_toolchain")
 
-register_toolchains("@tinygo_toolchain//:tinygo_toolchain_def")
+register_toolchains(
+    "//toolchains:tinygo_toolchain_def_osx_arm64",
+    "//toolchains:tinygo_toolchain_def_osx_x86_64",
+    "//toolchains:tinygo_toolchain_def_linux_arm64",
+    "//toolchains:tinygo_toolchain_def_linux_x86_64",
+    "//toolchains:tinygo_toolchain_def_windows_x86_64",
+)
 
 # Wasmtime WebAssembly runtime (includes wizer as of v39.0.0)
 # Note: Standalone wizer toolchain removed - use `wasmtime wizer` subcommand instead
