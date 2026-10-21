@@ -1,18 +1,13 @@
 {
   "tool_name": "wrpc",
-  "github_repo": "bytecodealliance/wrpc",
-  "latest_version": "0.16.0",
-  "last_checked": "2026-02-07T00:00:00Z",
   "description": "WebAssembly Component RPC runtime (wrpc-wasmtime)",
-  "binary_name": "wrpc-wasmtime",
+  "github_repo": "bytecodealliance/wrpc",
+  "latest_version": "0.17.0",
+  "last_checked": "2026-07-30T03:59:04.591014Z",
   "versions": {
     "0.16.0": {
       "release_date": "2025-11-18",
       "platforms": {
-        "darwin_arm64": {
-          "sha256": "4bb3341c8b8ad5d96b87dd95ee1e7e091104d4f64ea83b690ad50a9639b834e1",
-          "url_suffix": "wrpc-wasmtime-aarch64-apple-darwin"
-        },
         "darwin_amd64": {
           "sha256": "9d198256eb72f6246fa424b1f3c384f9eac8476b7da59ac1ddb65323bb2ccb57",
           "url_suffix": "wrpc-wasmtime-x86_64-apple-darwin"
@@ -21,6 +16,10 @@
           "sha256": "5669a01a64da8954b864df9ec934fd8ef318446f7d8f97263d27fbd5f30c07a8",
           "url_suffix": "wrpc-wasmtime-x86_64-unknown-linux-musl"
         },
+        "darwin_arm64": {
+          "sha256": "4bb3341c8b8ad5d96b87dd95ee1e7e091104d4f64ea83b690ad50a9639b834e1",
+          "url_suffix": "wrpc-wasmtime-aarch64-apple-darwin"
+        },
         "linux_arm64": {
           "sha256": "542810b5bd159b2d412fc6a0a32f17e53b9732fca8c9ea66f2bdef1d807cdc9f",
           "url_suffix": "wrpc-wasmtime-aarch64-unknown-linux-musl"
@@ -28,6 +27,31 @@
         "windows_amd64": {
           "sha256": "bb28a2da97805be2cf3be146bdf68931e3dada7598be3d7750551a5824d2b4a5",
           "url_suffix": "wrpc-wasmtime-x86_64-pc-windows-gnu.exe"
+        }
+      }
+    },
+    "0.17.0": {
+      "release_date": "2026-06-15",
+      "platforms": {
+        "linux_amd64": {
+          "sha256": "69c7b074e7599efadff4d68e077cf3018463f3d9036e524a75e9ba8bdd108814",
+          "url_suffix": "wrpc-wasmtime-x86_64-unknown-linux-musl"
+        },
+        "windows_amd64": {
+          "sha256": "de195c4abace8b2534310b04d833861b5137066d3cd3d3745d682ee38efd8b90",
+          "url_suffix": "wrpc-wasmtime-x86_64-pc-windows-gnu.exe"
+        },
+        "darwin_amd64": {
+          "sha256": "bb999cba5da5d5c7e6022f64fdb372757960f96a64bb87c909c2cf9f1edfd9ca",
+          "url_suffix": "wrpc-wasmtime-x86_64-apple-darwin"
+        },
+        "linux_arm64": {
+          "sha256": "26a58dabdfc2848860b5e4d5923ecb3fac75907901b09b94d033953a076916b1",
+          "url_suffix": "wrpc-wasmtime-aarch64-unknown-linux-musl"
+        },
+        "darwin_arm64": {
+          "sha256": "59634f874134545a91812606a81091f0cf40a479af3e49984aac09840b5e1664",
+          "url_suffix": "wrpc-wasmtime-aarch64-apple-darwin"
         }
       }
     }
