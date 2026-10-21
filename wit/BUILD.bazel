@@ -12,6 +12,7 @@ bzl_library(
         "//wit/private:wasi_deps",
         "//wit/private:wit_bindgen",
         "//wit/private:wit_deps_check",
+        "//wit/private:wit_from_component",
         "//wit/private:wit_library",
         "//wit/private:wit_markdown",
     ],

@@ -30,6 +30,8 @@ Available rules:
     symmetric_wit_bindgen: Generate symmetric bindings
     wit_markdown: Generate Markdown documentation from WIT
     wit_docs_collection: Collect WIT documentation
+    wit_from_component: Recover a WitInfo by extracting WIT from an adopted
+        component's binary (see wasm_component_import)
 
 Example usage:
 
@@ -64,6 +66,10 @@ load(
     _wit_deps_check = "wit_deps_check",
 )
 load(
+    "//wit/private:wit_from_component.bzl",
+    _wit_from_component = "wit_from_component",
+)
+load(
     "//wit/private:wit_library.bzl",
     _wit_library = "wit_library",
 )
@@ -87,6 +93,7 @@ wit_markdown = _wit_markdown
 wit_docs_collection = _wit_docs_collection
 wasi_wit_dependencies = _wasi_wit_dependencies
 wit_deps_check = _wit_deps_check
+wit_from_component = _wit_from_component
 
 # Air-gap/vendoring support
 wit_package = _wit_package
