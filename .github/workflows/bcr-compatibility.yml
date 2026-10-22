@@ -216,7 +216,7 @@ jobs:
           submodules: false
 
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.19.0
+        uses: bazel-contrib/setup-bazel@0.19.1
         with:
           bazelisk-version: "1.x"
           bazelisk-cache: true
@@ -257,7 +257,7 @@ jobs:
           submodules: false
 
       - name: Setup Bazel with Incompatible Flags
-        uses: bazel-contrib/setup-bazel@0.19.0
+        uses: bazel-contrib/setup-bazel@0.19.1
         with:
           bazelisk-version: "1.x"
           bazelisk-cache: true
@@ -364,7 +364,7 @@ jobs:
           submodules: false
 
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.19.0
+        uses: bazel-contrib/setup-bazel@0.19.1
         with:
           bazelisk-version: "1.x"
           bazelisk-cache: true
