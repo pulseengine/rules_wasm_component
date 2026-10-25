@@ -9,9 +9,15 @@ Motivating use case (rules_wasm_component#489): a consumer adopts a released
 component artifact — e.g. a flight-control `.wasm` fetched via `http_file` — and
 runs validate / optimize / fuse / compile over it. Before this rule that
 required a hand-rolled shim in every consuming repo.
+
+`wit_info` defaults to `None` — this rule does not extract WIT itself, since
+doing so needs the adopted `wasm_file` to already exist as a build input,
+which would make a same-target extraction self-referential. Pass the optional
+`wit` attr (typically a `//wit:defs.bzl%wit_from_component` target built from
+this same underlying `.wasm`) to populate it instead (rules_wasm_component#626).
 """
 
-load("//providers:providers.bzl", "WasmComponentInfo")
+load("//providers:providers.bzl", "WasmComponentInfo", "WitInfo")
 
 def _wasm_component_import_impl(ctx):
     wasm_file = ctx.file.wasm
@@ -24,10 +30,8 @@ def _wasm_component_import_impl(ctx):
         DefaultInfo(files = depset([wasm_file])),
         WasmComponentInfo(
             wasm_file = wasm_file,
-            # No WIT is recovered from a prebuilt binary here; consumers that
-            # need typed bindings can supply it out of band. None is the
-            # documented "no WIT available" value.
-            wit_info = None,
+            # None unless the caller supplies `wit` — see the file-level doc.
+            wit_info = ctx.attr.wit[WitInfo] if ctx.attr.wit else None,
             component_type = "component",
             # Optional, caller-declared interface surface. Left empty when the
             # caller does not know it — downstream rules must not hard-fail on a
@@ -63,8 +67,28 @@ wasm_validate(
 ```
 
 `imports`/`exports` are optional and caller-declared; omit them for an opaque
-component (downstream rules tolerate empty lists). `wit_info` is always `None`
-for an imported binary — supply typed bindings out of band if needed.
+component (downstream rules tolerate empty lists). `wit_info` is `None` unless
+`wit` is supplied:
+
+```starlark
+load("@rules_wasm_component//wit:defs.bzl", "wit_from_component")
+
+wasm_component_import(
+    name = "_falcon_flight_raw",
+    wasm = "@falcon_flight_wasm//file",
+)
+
+wit_from_component(
+    name = "falcon_flight_wit",
+    component = ":_falcon_flight_raw",
+)
+
+wasm_component_import(
+    name = "falcon_flight",
+    wasm = "@falcon_flight_wasm//file",
+    wit = ":falcon_flight_wit",   # populates wit_info instead of None
+)
+```
 """,
     attrs = {
         "wasm": attr.label(
@@ -83,6 +107,12 @@ for an imported binary — supply typed bindings out of band if needed.
         "metadata": attr.string_dict(
             default = {},
             doc = "Optional extra metadata to attach to the WasmComponentInfo.",
+        ),
+        "wit": attr.label(
+            providers = [WitInfo],
+            doc = "Optional target providing WitInfo for this component (e.g. a " +
+                  "wit_from_component target built from the same underlying .wasm). " +
+                  "Populates wit_info instead of leaving it None.",
         ),
     },
 )
