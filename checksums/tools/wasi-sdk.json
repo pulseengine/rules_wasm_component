@@ -1,20 +1,66 @@
 {
   "tool_name": "wasi-sdk",
   "github_repo": "WebAssembly/wasi-sdk",
-  "latest_version": "32",
-  "last_checked": "2026-05-20T00:00:00Z",
+  "latest_version": "33",
+  "last_checked": "2026-07-30T04:03:41.708317Z",
   "versions": {
+    "33": {
+      "release_date": "2026-04-30",
+      "platforms": {
+        "linux_amd64": {
+          "sha256": "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce",
+          "url_suffix": "x86_64-linux.tar.xz"
+        },
+        "darwin_amd64": {
+          "sha256": "18f3f201ba9734e6a4455b0b6410690395a55e9ffa9f6f5066f66083a94b93b3",
+          "url_suffix": "x86_64-macos.tar.xz"
+        },
+        "linux_arm64": {
+          "sha256": "4f98ee738c7abb45c81a94d1461fc53cc569d1cd01498951c8184d841a027844",
+          "url_suffix": "arm64-linux.tar.xz"
+        },
+        "windows_amd64": {
+          "sha256": "df14ca2a2127c2d6b6be07e6f5549b3af9c1b3c0112430c200a4749970c59f06",
+          "url_suffix": "x86_64-windows.zip"
+        },
+        "windows_arm64": {
+          "sha256": "2f457a62da1ce1a55e2ba77c450401b3551f27f04f0a87112b74c5aa8dd9504f",
+          "url_suffix": "arm64-windows.zip"
+        },
+        "darwin_arm64": {
+          "sha256": "85c997a2665ead91673b5bb88b7d0df3fc8900df3bfa244f720d478187bbdc78",
+          "url_suffix": "arm64-macos.tar.xz"
+        }
+      }
+    },
+    "29": {
+      "release_date": "2025-11-15",
+      "platforms": {
+        "darwin_arm64": {
+          "sha256": "e11552913e3f99e834d7fe7da1bd081abaf764759ed76b6097a34c63fc83665e",
+          "url_suffix": "arm64-macos.tar.gz"
+        },
+        "windows_amd64": {
+          "sha256": "6c19b820577486f00332ad8d04ac506da67b0892316b8d485371a58cbf216dee",
+          "url_suffix": "x86_64-windows.tar.gz"
+        },
+        "darwin_amd64": {
+          "sha256": "d0de2fd3ea5c57060efa87e4356c164bec3689972f2386f0c9a89c58e10cec8d",
+          "url_suffix": "x86_64-macos.tar.gz"
+        },
+        "linux_arm64": {
+          "sha256": "052ad773397dc9e5aa99fb4cfef694175e6b1e81bb2ad1d3c8e7b3fc81441b7c",
+          "url_suffix": "arm64-linux.tar.gz"
+        },
+        "linux_amd64": {
+          "sha256": "87d1d1a2879d139cdc624b968efad3d4a97b8078cdff95e63ac88ecafd1a0171",
+          "url_suffix": "x86_64-linux.tar.gz"
+        }
+      }
+    },
     "32": {
       "release_date": "2026-03-12",
       "platforms": {
-        "darwin_amd64": {
-          "sha256": "a36c9ab106a40abe8a051279c233c6bab719a5788ecc0788e8d141796eb55b1b",
-          "url_suffix": "x86_64-macos.tar.gz"
-        },
-        "darwin_arm64": {
-          "sha256": "383be7fe00ae04691e1859164fd99970a528c55d624b886ed59f7933898b933d",
-          "url_suffix": "arm64-macos.tar.gz"
-        },
         "linux_amd64": {
           "sha256": "55fc523ebfbc98f69d1034fcfcb83d1ff5610cd9ab7eceef6cd097a30ba4ef93",
           "url_suffix": "x86_64-linux.tar.gz"
@@ -23,36 +69,26 @@
           "sha256": "b2070865e6cb0c1e97a38e6ac8d9c37a9dfcd0752764ebabc6bacd3e60cedb96",
           "url_suffix": "arm64-linux.tar.gz"
         },
+        "darwin_arm64": {
+          "sha256": "383be7fe00ae04691e1859164fd99970a528c55d624b886ed59f7933898b933d",
+          "url_suffix": "arm64-macos.tar.gz"
+        },
         "windows_amd64": {
           "sha256": "3188807b9708d05e854b1b2f8db1f2bffcc337292449a4673fbab7175416bd41",
           "url_suffix": "x86_64-windows.tar.gz"
-        }
-      }
-    },
-    "29": {
-      "release_date": "2025-11-15",
-      "platforms": {
+        },
         "darwin_amd64": {
-          "sha256": "d0de2fd3ea5c57060efa87e4356c164bec3689972f2386f0c9a89c58e10cec8d",
+          "sha256": "a36c9ab106a40abe8a051279c233c6bab719a5788ecc0788e8d141796eb55b1b",
           "url_suffix": "x86_64-macos.tar.gz"
-        },
-        "darwin_arm64": {
-          "sha256": "e11552913e3f99e834d7fe7da1bd081abaf764759ed76b6097a34c63fc83665e",
-          "url_suffix": "arm64-macos.tar.gz"
-        },
-        "linux_amd64": {
-          "sha256": "87d1d1a2879d139cdc624b968efad3d4a97b8078cdff95e63ac88ecafd1a0171",
-          "url_suffix": "x86_64-linux.tar.gz"
-        },
-        "linux_arm64": {
-          "sha256": "052ad773397dc9e5aa99fb4cfef694175e6b1e81bb2ad1d3c8e7b3fc81441b7c",
-          "url_suffix": "arm64-linux.tar.gz"
-        },
-        "windows_amd64": {
-          "sha256": "6c19b820577486f00332ad8d04ac506da67b0892316b8d485371a58cbf216dee",
-          "url_suffix": "x86_64-windows.tar.gz"
         }
       }
     }
-  }
+  },
+  "supported_platforms": [
+    "darwin_amd64",
+    "darwin_arm64",
+    "linux_amd64",
+    "linux_arm64",
+    "windows_amd64"
+  ]
 }

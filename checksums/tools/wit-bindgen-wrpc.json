@@ -1,10 +1,35 @@
 {
   "tool_name": "wit-bindgen-wrpc",
-  "github_repo": "bytecodealliance/wrpc",
-  "latest_version": "0.16.0",
-  "last_checked": "2026-02-07T00:00:00Z",
   "description": "WIT binding generator for WebAssembly Component RPC (wrpc)",
+  "github_repo": "bytecodealliance/wrpc",
+  "latest_version": "0.17.0",
+  "last_checked": "2026-07-30T03:58:24.584272Z",
   "versions": {
+    "0.17.0": {
+      "release_date": "2026-06-15",
+      "platforms": {
+        "linux_arm64": {
+          "sha256": "44f50868170db9198bef2f9af4110b6f255588fb44b4fdae406e3695920417c9",
+          "url_suffix": "wit-bindgen-wrpc-aarch64-unknown-linux-musl"
+        },
+        "linux_amd64": {
+          "sha256": "9dbdd033ebcbebd376d26d8af81bc1821c403a9337ba1aaec22d339cd18f9ec2",
+          "url_suffix": "wit-bindgen-wrpc-x86_64-unknown-linux-musl"
+        },
+        "darwin_amd64": {
+          "sha256": "4add69455e7e7d5bb9cd724874f1f4b0bcb4d07b09da2c449497741e8a5a6ed8",
+          "url_suffix": "wit-bindgen-wrpc-x86_64-apple-darwin"
+        },
+        "darwin_arm64": {
+          "sha256": "26a379f1ef91aa6cbc83ae27cc90cd2ee164f7a9ad05e4afead27e617fcf24df",
+          "url_suffix": "wit-bindgen-wrpc-aarch64-apple-darwin"
+        },
+        "windows_amd64": {
+          "sha256": "db9c48de06e336a7e569cc97fc7da1bb2436f506ae276ea811ee464bdecb8352",
+          "url_suffix": "wit-bindgen-wrpc-x86_64-pc-windows-gnu.exe"
+        }
+      }
+    },
     "0.16.0": {
       "release_date": "2025-11-18",
       "platforms": {
@@ -12,21 +37,21 @@
           "sha256": "d2ef54ca193ee3d16cd23c67adb42713dc8ba2c96968eff53b9bcc3051466a65",
           "url_suffix": "wit-bindgen-wrpc-aarch64-apple-darwin"
         },
-        "darwin_amd64": {
-          "sha256": "e60efb3198774996f250e0168fd555cd9c6e056f863dc3983f373df119d2cdc4",
-          "url_suffix": "wit-bindgen-wrpc-x86_64-apple-darwin"
-        },
         "linux_amd64": {
           "sha256": "ce66c70da2f612c91c5d42b4eff86773dd7d13821b4c6eccea4d1dd62c399326",
           "url_suffix": "wit-bindgen-wrpc-x86_64-unknown-linux-musl"
         },
-        "linux_arm64": {
-          "sha256": "b35772253ef4030ec8b420fde3145610e5de44350d89a0e5135c53248a4f1f9e",
-          "url_suffix": "wit-bindgen-wrpc-aarch64-unknown-linux-musl"
+        "darwin_amd64": {
+          "sha256": "e60efb3198774996f250e0168fd555cd9c6e056f863dc3983f373df119d2cdc4",
+          "url_suffix": "wit-bindgen-wrpc-x86_64-apple-darwin"
         },
         "windows_amd64": {
           "sha256": "e08a74f717e77372cf1104e4da6c3aa301c9283ae13b984a55b67bd6ebf84a51",
           "url_suffix": "wit-bindgen-wrpc-x86_64-pc-windows-gnu.exe"
+        },
+        "linux_arm64": {
+          "sha256": "b35772253ef4030ec8b420fde3145610e5de44350d89a0e5135c53248a4f1f9e",
+          "url_suffix": "wit-bindgen-wrpc-aarch64-unknown-linux-musl"
         }
       }
     }
