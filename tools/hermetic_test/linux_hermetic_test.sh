@@ -5,6 +5,13 @@
 
 set -euo pipefail
 
+# Linux-only (strace), and it uses associative arrays: say so on an old bash
+# rather than dying on `declare -A`.
+if [ "${BASH_VERSINFO[0]:-0}" -lt 4 ]; then
+    echo "linux_hermetic_test.sh needs bash 4+ (associative arrays); this is bash ${BASH_VERSION:-unknown}" >&2
+    exit 2
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -127,7 +134,9 @@ while IFS= read -r line; do
         for suspicious_pattern in "${SUSPICIOUS_PATTERNS[@]}"; do
             if [[ "$filepath" == "$suspicious_pattern"* ]]; then
                 suspicious_files["$filepath"]=1
-                ((suspicious_count++))
+                # Not ((suspicious_count++)): it returns 1 at 0, which set -e
+                # treats as failure, ending the scan at the first match.
+                suspicious_count=$((suspicious_count + 1))
                 break
             fi
         done
