@@ -12,7 +12,7 @@ echo ""
 # Test setup
 TEST_TARGET="//examples/basic:hello_component"
 TEMP_VENDOR_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_VENDOR_DIR" EXIT
+trap 'rm -rf "$TEMP_VENDOR_DIR"' EXIT
 
 echo "Test target: $TEST_TARGET"
 echo "Temp vendor dir: $TEMP_VENDOR_DIR"

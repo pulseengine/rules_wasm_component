@@ -103,7 +103,9 @@ echo ""
 
 # Analyze the log
 suspicious_count=0
-declare -A suspicious_files
+# A file of paths, not `declare -A`: macOS /bin/bash is 3.2, which has no
+# associative arrays. De-duplicated with sort -u after the scan.
+suspicious_list="$(mktemp)"
 
 while IFS= read -r line; do
     # Extract file paths from fs_usage output
@@ -150,12 +152,16 @@ while IFS= read -r line; do
     # Check if it's suspicious
     for suspicious_pattern in "${SUSPICIOUS_PATTERNS[@]}"; do
         if [[ "$filepath" == "$suspicious_pattern"* ]]; then
-            suspicious_files["$filepath"]=1
-            ((suspicious_count++))
+            printf '%s\n' "$filepath" >> "$suspicious_list"
+            # Not ((suspicious_count++)): that returns 1 when the count is 0,
+            # so under set -e the first suspicious file ended the scan.
+            suspicious_count=$((suspicious_count + 1))
             break
         fi
     done
 done < "$FS_USAGE_LOG"
+sort -u -o "$suspicious_list" "$suspicious_list"
+n_suspicious=$(wc -l < "$suspicious_list" | tr -d ' ')
 
 # Report results
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -163,17 +169,17 @@ echo "                    HERMITICITY REPORT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-if [ ${#suspicious_files[@]} -eq 0 ]; then
+if [ "$n_suspicious" -eq 0 ]; then
     echo -e "${GREEN}✅ PASSED: No suspicious file access detected!${NC}"
     echo ""
     echo "The build appears to be hermetic."
 else
-    echo -e "${YELLOW}⚠️  WARNING: Found ${#suspicious_files[@]} suspicious file(s) accessed${NC}"
+    echo -e "${YELLOW}⚠️  WARNING: Found $n_suspicious suspicious file(s) accessed${NC}"
     echo ""
     echo "Suspicious files accessed:"
-    for file in "${!suspicious_files[@]}"; do
+    while IFS= read -r file; do
         echo -e "  ${RED}•${NC} $file"
-    done | sort
+    done < "$suspicious_list"
     echo ""
     echo "These accesses may indicate non-hermetic behavior."
     echo "Review the full log: $FS_USAGE_LOG"
@@ -187,4 +193,5 @@ echo ""
 echo "Full fs_usage log saved to: $FS_USAGE_LOG"
 echo "To analyze manually: cat $FS_USAGE_LOG | less"
 
-exit ${#suspicious_files[@]}
+rm -f "$suspicious_list"
+exit "$n_suspicious"
