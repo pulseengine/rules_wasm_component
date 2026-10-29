@@ -589,7 +589,7 @@ jobs:
   # path. curl, not `gh`: self-hosted runners do not have the GitHub CLI.
   script-portability:
     name: Script portability (shellcheck + Python 3.9 floor)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # setup-python has no 3.9 build for 26.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
