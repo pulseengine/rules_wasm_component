@@ -2,27 +2,6 @@ version: 2
 # One PR per logical release across all directories: the wasm-tools family is
 # version-locked, so bumping it in several tool dirs split one release into
 # several PRs (#683 #687 #699 #701). Group them.
-groups:
-  wasm-tools-family:
-    patterns:
-      - "wasmparser"
-      - "wasm-encoder"
-      - "wasmprinter"
-      - "wit-component"
-      - "wit-parser"
-      - "wasm-metadata"
-      - "wat"
-      - "walrus"
-  wasmtime:
-    patterns:
-      - "wasmtime"
-      - "wasmtime-*"
-  github-actions-all:
-    # groups cannot be scoped by package-ecosystem; action names are
-    # owner/name (contain a slash, never start with @), which cargo crates
-    # and unscoped npm packages never match.
-    patterns:
-      - "^[^@]+/"
 updates:
   # Rust dependencies for tools and components
   - package-ecosystem: "cargo"
@@ -45,6 +24,27 @@ updates:
       - "automated"
       - "toolchain"
 
+    groups:
+      wasm-tools-family:
+        patterns:
+          - "wasmparser"
+          - "wasm-encoder"
+          - "wasmprinter"
+          - "wit-component"
+          - "wit-parser"
+          - "wasm-metadata"
+          - "wat"
+          - "walrus"
+      wasmtime:
+        patterns:
+          - "wasmtime"
+          - "wasmtime-*"
+      github-actions-all:
+        # groups cannot be scoped by package-ecosystem; action names are
+        # owner/name (contain a slash, never start with @), which cargo crates
+        # and unscoped npm packages never match.
+        patterns:
+          - "^[^@]+/"
   - package-ecosystem: "cargo"
     directory: "/tools/checksum_updater_wasm"
     schedule:
