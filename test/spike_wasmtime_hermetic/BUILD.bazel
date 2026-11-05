@@ -1,0 +1,45 @@
+"""SPIKE: hermetic tool execution under wasmtime via a single preopened root.
+
+Demonstrates running a tool compiled to WebAssembly as a Bazel action that maps
+declared inputs/outputs through ONE preopened root (`wasmtime run --dir .::/`),
+the model standardized by WebAssembly/wasi-testsuite#264.
+
+See SPIKE.md for the write-up.
+"""
+
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@rules_wasm_component//rust:defs.bzl", "rust_wasm_binary")
+load("//wasm/private:wasm_tool_run.bzl", "wasm_tool_run")
+
+package(default_visibility = ["//visibility:public"])
+
+# The tool: a plain WASI command (wasm32-wasip2 component) that reads an input
+# file, uppercases it, writes an output file, and probes hermeticity.
+rust_wasm_binary(
+    name = "transform_tool",
+    srcs = ["transform.rs"],
+)
+
+# Run it hermetically: only `sample.txt` is a declared input, so the single
+# root the guest sees contains exactly that (plus the tool). The action fails
+# if the tool's hermeticity probe can reach a host path.
+wasm_tool_run(
+    name = "run_transform",
+    srcs = ["sample.txt"],
+    out = "sample.UPPER.txt",
+    tool = ":transform_tool",
+)
+
+# Functional + hermeticity assertion in one: the output must equal the golden
+# (proves read+transform+write through the single root), and the action only
+# succeeds if the in-guest hermeticity probe was denied.
+diff_test(
+    name = "transform_output_test",
+    file1 = ":run_transform",
+    file2 = "expected.txt",
+)
+
+test_suite(
+    name = "all",
+    tests = [":transform_output_test"],
+)
