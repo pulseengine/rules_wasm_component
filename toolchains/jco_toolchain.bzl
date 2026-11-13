@@ -186,9 +186,18 @@ def _setup_downloaded_jco_tools(repository_ctx, platform, jco_version, node_vers
     elif platform == "windows_amd64":
         platform_binding = "@oxc-parser/binding-win32-x64-msvc"
 
+    # componentize-js must match the jco release. jco 1.4.x lists componentize-js
+    # ^0.9.0 as a devDependency (npm does not install it for us). An unpinned
+    # install resolves to the latest 0.2x, which pulls preview2-shim >= 0.30 with
+    # no "/" preopen, so `jco componentize --wit <absolute path>` fails with
+    # "reading file ... No such file or directory (os error 44)".
+    componentize_spec = "@bytecodealliance/componentize-js"
+    if jco_version.startswith("1.4."):
+        componentize_spec += "@0.9.0"
+
     install_packages = [
         "@bytecodealliance/jco@{}".format(jco_version),
-        "@bytecodealliance/componentize-js",  # Required dependency
+        componentize_spec,  # Required dependency
     ]
 
     if platform_binding:
