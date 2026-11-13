@@ -74,7 +74,7 @@ jobs:
       - name: Deploy to Netcup hosting
         # Only deploy if secrets are available
         if: env.NETCUP_URI != '' && env.NETCUP_USER != '' && env.NETCUP_PASSWORD != ''
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
         with:
           server: ${{ env.NETCUP_URI }}
           username: ${{ env.NETCUP_USER }}
@@ -96,7 +96,7 @@ jobs:
 
       - name: Purge Cloudflare cache (optional)
         if: env.CLOUDFLARE_ZONE_ID != ''
-        uses: jakejarvis/cloudflare-purge-action@master
+        uses: jakejarvis/cloudflare-purge-action@eee6dba0236093358f25bb1581bd615dc8b3d8e3 # master (repo archived 2022)
         with:
           zone: ${{ env.CLOUDFLARE_ZONE_ID }}
           token: ${{ env.CLOUDFLARE_TOKEN }}
