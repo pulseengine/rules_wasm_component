@@ -91,6 +91,54 @@ build_test(
     targets = [":hello_p3_sync"],
 )
 
+# WIT-declared `async func` (#720). The native-guest host bindings use the
+# embedded runtime, which has no async_support, so they cannot represent an
+# async function. The macro must degrade `_bindings_host` (empty crate) instead
+# of failing every `bazel build //...`.
+#
+# The components themselves are `manual`: linking an async-func component needs
+# wasm-component-ld >= 0.5.30 (Rust >= 1.100.0); this repo's Rust 1.91.1 linker
+# rejects the type ("invalid leading byte (0x43)"). The bindings crates below
+# are what #720 is about and build on the current toolchain.
+wit_library(
+    name = "hello_async_interfaces",
+    package_name = "hello:asyncfn",
+    srcs = ["wit_async/hello_async.wit"],
+    world = "hello-async",
+)
+
+rust_wasm_component_bindgen(
+    name = "hello_p3_asyncfn",
+    srcs = ["src_p3_asyncfn/lib.rs"],
+    # Follow the WIT: `async func` exports lift async.
+    async_interfaces = [],
+    profiles = ["release"],
+    tags = ["manual"],
+    wasi_version = "p3",
+    wit = ":hello_async_interfaces",
+)
+
+# Same component with the caller opt-out: no `_bindings_host` target exists.
+rust_wasm_component_bindgen(
+    name = "hello_p3_asyncfn_nohost",
+    srcs = ["src_p3_asyncfn_nohost/lib.rs"],
+    async_interfaces = [],
+    host_bindings = False,
+    profiles = ["release"],
+    tags = ["manual"],
+    wasi_version = "p3",
+    wit = ":hello_async_interfaces",
+)
+
+build_test(
+    name = "p3_async_func_build_test",
+    targets = [
+        ":hello_p3_asyncfn_bindings",
+        ":hello_p3_asyncfn_bindings_host",
+        ":hello_p3_asyncfn_nohost_bindings",
+    ],
+)
+
 # ============================================================================
 # WASI 0.3 interface WIT (stable v0.3.0) — covers wasi_p3_deps.bzl
 # ============================================================================
@@ -123,6 +171,7 @@ test_suite(
     name = "p3",
     tests = [
         ":p3_build_test",
+        ":p3_async_func_build_test",
         ":p3_sync_export_build_test",
         ":wasi_p3_wit_build_test",
     ],
@@ -133,6 +182,7 @@ test_suite(
     tests = [
         ":p2_build_test",
         ":p3_build_test",
+        ":p3_async_func_build_test",
         ":p3_sync_export_build_test",
         ":wasi_p3_wit_build_test",
     ],

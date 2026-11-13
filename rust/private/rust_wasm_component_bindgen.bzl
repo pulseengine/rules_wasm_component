@@ -337,6 +337,22 @@ with open(sys.argv[1], 'r') as f:
 with open(sys.argv[2], 'r') as f:
     bindgen_content = f.read()
 
+# Native-guest bindings for a WIT `async func` reference
+# crate::wit_bindgen::rt::async_support, which the embedded runtime lacks, so
+# they cannot compile (#720). Emit an empty crate and say so instead of
+# failing every `bazel build //...`.
+if 'async_support' in bindgen_content:
+    sys.stderr.write(
+        'WARNING: ' + sys.argv[4] + ': the WIT declares async functions; '
+        'native-guest host bindings cannot represent them, so this host '
+        'bindings crate is generated EMPTY. Set host_bindings = False on '
+        'the rust_wasm_component_bindgen target to drop it (#720).\\n')
+    with open(sys.argv[3], 'w') as f:
+        f.write('//! Empty: the WIT declares async functions, which the native-guest\\n')
+        f.write('//! host bindings (embedded runtime, no async_support) cannot\\n')
+        f.write('//! represent. Set `host_bindings = False` to drop this target (#720).\\n')
+    sys.exit(0)
+
 # Filter out conflicting pub(crate) use export line
 # The wrapper provides a public export! macro, so we don't need the crate-private one
 filtered_lines = []
@@ -358,7 +374,7 @@ with open(sys.argv[3], 'w') as f:
 
         ctx.actions.run(
             executable = filter_script,
-            arguments = [temp_wrapper.path, ctx.file.bindgen.path, out_file.path],
+            arguments = [temp_wrapper.path, ctx.file.bindgen.path, out_file.path, str(ctx.label)],
             inputs = [temp_wrapper, ctx.file.bindgen, filter_script],
             outputs = [out_file],
             mnemonic = "FilterWitWrapper",
@@ -478,6 +494,7 @@ def rust_wasm_component_bindgen(
         invert_direction = False,
         bitflags_dep = "@crates//:bitflags",
         async_interfaces = None,
+        host_bindings = True,
         **kwargs):
     """Builds a Rust WebAssembly component with automatic WIT binding generation.
 
@@ -532,6 +549,18 @@ def rust_wasm_component_bindgen(
             WIT-default (`[]`) or allowlist forms above instead. Only affects the
             guest bindings; native-guest bindings are always sync (the host
             runtime has no async_support).
+        host_bindings: Whether to create `<name>_bindings_host`, a native
+            (non-WASM) bindings library built from native-guest bindings with
+            the embedded runtime. Set `False` when nothing consumes it, e.g. a
+            component whose WIT declares `async func` (#720).
+
+            The embedded runtime has no async_support, so native-guest
+            bindings for an `async func` cannot compile. When they contain
+            async code, `<name>_bindings_host` is generated as an EMPTY crate
+            (no bindings) and the build prints a warning, so `bazel build
+            //...` stays green. Depending on that crate from host code then
+            fails to resolve the binding paths; pass `host_bindings = False`
+            to drop the target instead.
         **kwargs: Additional arguments passed to rust_wasm_component
     """
 
@@ -574,13 +603,14 @@ def rust_wasm_component_bindgen(
 
         # Native-guest mode bindings for native applications
         # No async for native-guest — host runtime doesn't have async_support
-        wit_bindgen(
-            name = bindgen_native_guest_target,
-            wit = wit,
-            language = "rust",
-            generation_mode = "native-guest",
-            visibility = ["//visibility:private"],
-        )
+        if host_bindings:
+            wit_bindgen(
+                name = bindgen_native_guest_target,
+                wit = wit,
+                language = "rust",
+                generation_mode = "native-guest",
+                visibility = ["//visibility:private"],
+            )
 
     # Create separate wrappers for guest and native-guest bindings
     # Guest (WASM): use wit-bindgen crate runtime for full async support
@@ -596,13 +626,14 @@ def rust_wasm_component_bindgen(
         visibility = ["//visibility:private"],
     )
 
-    _generate_wrapper(
-        name = wrapper_native_guest_target,
-        bindgen = ":" + bindgen_native_guest_target,
-        mode = "native-guest",
-        use_crate_runtime = False,  # Host build uses embedded runtime
-        visibility = ["//visibility:private"],
-    )
+    if host_bindings:
+        _generate_wrapper(
+            name = wrapper_native_guest_target,
+            bindgen = ":" + bindgen_native_guest_target,
+            mode = "native-guest",
+            use_crate_runtime = False,  # Host build uses embedded runtime
+            visibility = ["//visibility:private"],
+        )
 
     # Create a rust_library from the generated bindings
     bindings_lib = name + "_bindings"
@@ -615,14 +646,15 @@ def rust_wasm_component_bindgen(
     host_bindings_deps = [bitflags_dep]
 
     # Create the bindings library for native platform (host) using native-guest wrapper
-    rust_library(
-        name = bindings_lib_host,
-        srcs = [":" + wrapper_native_guest_target],
-        crate_name = name.replace("-", "_") + "_bindings",
-        edition = "2021",
-        deps = host_bindings_deps,
-        visibility = visibility,
-    )
+    if host_bindings:
+        rust_library(
+            name = bindings_lib_host,
+            srcs = [":" + wrapper_native_guest_target],
+            crate_name = name.replace("-", "_") + "_bindings",
+            edition = "2021",
+            deps = host_bindings_deps,
+            visibility = visibility,
+        )
 
     # Create a separate WASM bindings library using guest wrapper
     bindings_lib_wasm_base = bindings_lib + "_wasm_base"
