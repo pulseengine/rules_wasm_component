@@ -39,12 +39,6 @@ updates:
         patterns:
           - "wasmtime"
           - "wasmtime-*"
-      github-actions-all:
-        # groups cannot be scoped by package-ecosystem; action names are
-        # owner/name (contain a slash, never start with @), which cargo crates
-        # and unscoped npm packages never match.
-        patterns:
-          - "^[^@]+/"
   - package-ecosystem: "cargo"
     directory: "/tools/checksum_updater_wasm"
     schedule:
@@ -106,6 +100,19 @@ updates:
       - "rust"
       - "automated"
       - "toolchain"
+    # Groups apply per updates entry, so this directory needs its own copy;
+    # without it #710-#715 arrived as six PRs for one wasm-tools release.
+    groups:
+      wasm-tools-family:
+        patterns:
+          - "wasmparser"
+          - "wasm-encoder"
+          - "wasmprinter"
+          - "wit-component"
+          - "wit-parser"
+          - "wasm-metadata"
+          - "wat"
+          - "walrus"
 
   # Go module dependencies
   - package-ecosystem: "gomod"
@@ -258,3 +265,9 @@ updates:
       - "dependencies"
       - "ci-cd"
       - "automated"
+    # Groups apply per updates entry; under the first (cargo) entry this
+    # group never matched an action (#716-#719 arrived as four PRs).
+    groups:
+      github-actions-all:
+        patterns:
+          - "*"
