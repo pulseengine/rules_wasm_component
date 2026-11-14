@@ -28,5 +28,8 @@
 manifest-version = 1
 
 [toolchain]
+# Names the realm so varve's own shims (outside Bazel) find the trust root
+# in //:varve-realms.toml; Bazel passes registry and root explicitly anyway.
+realm   = "covalent"
 channel = "rolling"
 layer   = "2026.10.0"
