@@ -22,7 +22,7 @@ jobs:
       # Self-hosted runners may lack sudo for /usr/local/bin; setup-bazel
       # puts bazelisk on PATH without it (same pin as the other jobs).
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.19.1
+        uses: bazel-contrib/setup-bazel@0.19.2
         with:
           bazelisk-version: 1.x
 
