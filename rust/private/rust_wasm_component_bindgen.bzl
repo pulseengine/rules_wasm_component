@@ -558,9 +558,11 @@ def rust_wasm_component_bindgen(
             bindings for an `async func` cannot compile. When they contain
             async code, `<name>_bindings_host` is generated as an EMPTY crate
             (no bindings) and the build prints a warning, so `bazel build
-            //...` stays green. Depending on that crate from host code then
-            fails to resolve the binding paths; pass `host_bindings = False`
-            to drop the target instead.
+            //...` stays green (the native compile check of `srcs` is
+            `manual` for p3, see rust_wasm_component's `host_library`).
+            Depending on that crate from host code then fails to resolve the
+            binding paths; pass `host_bindings = False` to drop the target
+            instead.
         **kwargs: Additional arguments passed to rust_wasm_component
     """
 
@@ -685,5 +687,6 @@ def rust_wasm_component_bindgen(
         profiles = profiles,
         validate_wit = validate_wit,  # Pass validation flag to component
         visibility = visibility,
+        host_library = host_bindings,  # No host bindings -> no native compile check
         **kwargs
     )

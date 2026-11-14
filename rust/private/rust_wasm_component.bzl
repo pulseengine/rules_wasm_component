@@ -166,6 +166,7 @@ def rust_wasm_component(
         edition = "2021",
         tags = [],
         wasi_version = "p2",
+        host_library = True,
         **kwargs):
     """Builds a Rust WebAssembly component with multi-profile support.
 
@@ -192,6 +193,11 @@ def rust_wasm_component(
         edition: Rust edition to use (default: "2021").
         tags: Tags to apply to all generated targets (e.g., ["manual"]).
         wasi_version: WASI version to target: "p2" (default, stable) or "p3" (experimental async).
+        host_library: Whether to create the private `<name>_wasm_lib_<profile>_host`
+            native compile check of `srcs` (#720). False drops it; set by
+            rust_wasm_component_bindgen(host_bindings = False). For p3 it is
+            tagged `manual`: p3 sources often only compile as WASM (async
+            exports), so it stays out of `//...` but can be built by name.
             P3 requires wasmtime 43+, wit-bindgen 0.54+, wasi-sdk 32+.
             P3 uses async func, stream<T>, and future<T> Component Model types.
         **kwargs: Additional arguments forwarded to rust_shared_library.
@@ -259,20 +265,26 @@ def rust_wasm_component(
         # Filter out conflicting kwargs to avoid multiple values for parameters
         filtered_kwargs = {k: v for k, v in kwargs.items() if k not in ["tags", "visibility"]}
 
-        # Create the host-platform rust_shared_library first
-        host_library_name = rust_library_name + "_host"
-        rust_shared_library(
-            name = host_library_name,
-            srcs = all_srcs,
-            crate_root = crate_root,
-            deps = host_deps,
-            edition = edition,
-            crate_features = crate_features,
-            rustc_flags = profile_rustc_flags,
-            visibility = ["//visibility:private"],
-            tags = tags + ["wasm_component"],  # Propagate user tags + wasm_component marker
-            **filtered_kwargs
-        )
+        # Create the host-platform rust_shared_library first (a native compile
+        # check of srcs; nothing consumes it). Dropped on request; `manual` for
+        # p3, whose async exports often have no native form (#720).
+        if host_library:
+            host_library_name = rust_library_name + "_host"
+            host_tags = tags + ["wasm_component"]  # Propagate user tags + wasm_component marker
+            if wasi_version == "p3":
+                host_tags = host_tags + ["manual"]
+            rust_shared_library(
+                name = host_library_name,
+                srcs = all_srcs,
+                crate_root = crate_root,
+                deps = host_deps,
+                edition = edition,
+                crate_features = crate_features,
+                rustc_flags = profile_rustc_flags,
+                visibility = ["//visibility:private"],
+                tags = host_tags,
+                **filtered_kwargs
+            )
 
         # Create a separate WASM library that uses base dependencies (not transitioned yet)
         # The transition will be applied to both this target and its dependencies together
