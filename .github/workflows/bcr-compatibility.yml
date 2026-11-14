@@ -292,7 +292,7 @@ jobs:
   bcr-metadata-validation:
     name: BCR Metadata Validation
     # Stays on ubuntu-latest: bundled with the BCR test suite; keeping co-located with related Bazel jobs.
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","linux","x64","light"]') }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
     timeout-minutes: 10
 
     steps:
@@ -400,7 +400,7 @@ jobs:
   bcr-summary:
     name: BCR Test Summary
     # Stays on ubuntu-latest: bundled summary job for the BCR test suite, keeping co-located.
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","linux","x64","light"]') }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
     needs: [bcr-hermetic-test, bcr-toolchain-validation]
     if: always()
 
