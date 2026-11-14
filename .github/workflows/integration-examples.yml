@@ -49,7 +49,7 @@ env:
 jobs:
   trigger-integration:
     name: Trigger Integration Tests
-    runs-on: [self-hosted, linux, x64, light]
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","linux","x64","light"]') }}
 
     # This job requires a PAT with repo scope stored as INTEGRATION_TEST_TOKEN
     # If the secret is not configured, the job will be skipped gracefully
