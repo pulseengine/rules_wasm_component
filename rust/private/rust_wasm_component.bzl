@@ -195,9 +195,10 @@ def rust_wasm_component(
         wasi_version: WASI version to target: "p2" (default, stable) or "p3" (experimental async).
         host_library: Whether to create the private `<name>_wasm_lib_<profile>_host`
             native compile check of `srcs` (#720). False drops it; set by
-            rust_wasm_component_bindgen(host_bindings = False). For p3 it is
-            tagged `manual`: p3 sources often only compile as WASM (async
-            exports), so it stays out of `//...` but can be built by name.
+            rust_wasm_component_bindgen(host_bindings = False). It is always
+            tagged `manual`: nothing consumes it, and sources that use async
+            WIT functions (imports or exports, p2 or p3) only compile as WASM,
+            which Bazel cannot see at loading time. Build it by name.
             P3 requires wasmtime 43+, wit-bindgen 0.54+, wasi-sdk 32+.
             P3 uses async func, stream<T>, and future<T> Component Model types.
         **kwargs: Additional arguments forwarded to rust_shared_library.
@@ -266,13 +267,11 @@ def rust_wasm_component(
         filtered_kwargs = {k: v for k, v in kwargs.items() if k not in ["tags", "visibility"]}
 
         # Create the host-platform rust_shared_library first (a native compile
-        # check of srcs; nothing consumes it). Dropped on request; `manual` for
-        # p3, whose async exports often have no native form (#720).
+        # check of srcs; nothing consumes it). Dropped on request; always
+        # `manual`, since code using async WIT functions has no native form
+        # and the WIT is not readable at loading time (#720).
         if host_library:
             host_library_name = rust_library_name + "_host"
-            host_tags = tags + ["wasm_component"]  # Propagate user tags + wasm_component marker
-            if wasi_version == "p3":
-                host_tags = host_tags + ["manual"]
             rust_shared_library(
                 name = host_library_name,
                 srcs = all_srcs,
@@ -282,7 +281,7 @@ def rust_wasm_component(
                 crate_features = crate_features,
                 rustc_flags = profile_rustc_flags,
                 visibility = ["//visibility:private"],
-                tags = host_tags,
+                tags = tags + ["wasm_component", "manual"],
                 **filtered_kwargs
             )
 

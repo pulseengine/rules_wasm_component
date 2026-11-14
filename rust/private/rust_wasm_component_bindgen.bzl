@@ -559,7 +559,7 @@ def rust_wasm_component_bindgen(
             async code, `<name>_bindings_host` is generated as an EMPTY crate
             (no bindings) and the build prints a warning, so `bazel build
             //...` stays green (the native compile check of `srcs` is
-            `manual` for p3, see rust_wasm_component's `host_library`).
+            `manual`, see rust_wasm_component's `host_library`).
             Depending on that crate from host code then fails to resolve the
             binding paths; pass `host_bindings = False` to drop the target
             instead.
