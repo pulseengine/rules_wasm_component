@@ -1,0 +1,11 @@
+/// P3 interface whose export is declared `async func` in the WIT (#720)
+package hello:asyncfn@0.1.0;
+
+interface greeting {
+    /// Greet someone, asynchronously
+    greet: async func(name: string) -> string;
+}
+
+world hello-async {
+    export greeting;
+}
