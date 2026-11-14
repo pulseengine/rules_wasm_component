@@ -14,16 +14,17 @@ jobs:
   lint:
     name: Lint and Format Check
     # Stays on ubuntu-latest: Bazel (buildifier) not installed on smithy fleet.
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, lean-mem]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Install Bazelisk
-        run: |
-          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
-          chmod +x bazelisk-linux-amd64
-          sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+      # Self-hosted runners may lack sudo for /usr/local/bin; setup-bazel
+      # puts bazelisk on PATH without it (same pin as the other jobs).
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.19.1
+        with:
+          bazelisk-version: 1.x
 
       - name: Check Buildifier Formatting
         run: |
@@ -589,7 +590,7 @@ jobs:
   # path. curl, not `gh`: self-hosted runners do not have the GitHub CLI.
   script-portability:
     name: Script portability (shellcheck + Python 3.9 floor)
-    runs-on: ubuntu-24.04  # setup-python has no 3.9 build for 26.04
+    runs-on: [self-hosted, linux, x64, light]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

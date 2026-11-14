@@ -292,7 +292,7 @@ jobs:
   bcr-metadata-validation:
     name: BCR Metadata Validation
     # Stays on ubuntu-latest: bundled with the BCR test suite; keeping co-located with related Bazel jobs.
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, light]
     timeout-minutes: 10
 
     steps:
@@ -400,7 +400,7 @@ jobs:
   bcr-summary:
     name: BCR Test Summary
     # Stays on ubuntu-latest: bundled summary job for the BCR test suite, keeping co-located.
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, light]
     needs: [bcr-hermetic-test, bcr-toolchain-validation]
     if: always()
 
