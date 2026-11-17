@@ -9,7 +9,8 @@ never touched):
      must fail (`expect = "fail"`), and its output must match
      `stderr_or_stdout_matches` when given.
 Exits non-zero when any control's check stays green on its planted input, or
-when the manifest lists no control at all.
+when the manifest lists no control at all. `--only ID` runs one control (for
+a CI job that has that control's tools); an unknown ID fails.
 """
 import pathlib
 import re
@@ -35,6 +36,11 @@ def run(cmd, cwd):
 
 def main():
     controls = tomllib.loads((ROOT / "ci-controls.toml").read_text()).get("control", [])
+    if "--only" in sys.argv:
+        only = sys.argv[sys.argv.index("--only") + 1]
+        if only not in {c["id"] for c in controls}:
+            sys.exit(f"FAIL  --only {only}: no such control in ci-controls.toml")
+        controls = [c for c in controls if c["id"] == only]
     if not controls:
         sys.exit("FAIL  ci-controls.toml lists no control: nothing was compared")
     failures = 0

@@ -20,11 +20,29 @@ exports_files([
     "README.md",
 ])
 
-# Buildifier for formatting
+# Buildifier for formatting. `bazel run //:buildifier` FIXES files in place;
+# the runner script ignores arguments, so `-- --mode=check` does not turn it
+# into a check (CI used it that way and could never fail).
 buildifier(
     name = "buildifier",
     diff_command = "diff -u",
     mode = "fix",
+)
+
+# What CI runs: reports unformatted files and exits non-zero, changes nothing.
+# ci-controls/ holds planted bad inputs and is excluded.
+buildifier(
+    name = "buildifier_check",
+    exclude_patterns = ["./ci-controls/*"],
+    mode = "check",
+)
+
+# Informational lint warnings (CI does not gate on them).
+buildifier(
+    name = "buildifier_lint_warn",
+    exclude_patterns = ["./ci-controls/*"],
+    lint_mode = "warn",
+    mode = "check",
 )
 
 # Documentation generation

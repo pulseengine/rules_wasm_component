@@ -30,13 +30,19 @@ jobs:
         run: |
           echo "Checking Bazel file formatting..."
           # Check only formatting, not lint warnings
-          bazel run //:buildifier -- --lint=off --mode=check -r .
+          bazel run //:buildifier_check
+
+      # The planted bad input is the acceptance test of the step above: in a
+      # scratch copy the clean tree must pass and a planted unformatted .bzl
+      # must be reported (ci-controls.toml: unformatted-starlark).
+      - name: Planted control (unformatted Starlark must fail the check)
+        run: python3 .github/scripts/run_ci_controls.py --only unformatted-starlark
 
       - name: Show Lint Warnings (Informational)
         run: |
           echo "Showing lint warnings (informational only - won't fail the build)..."
           # Show warnings but don't fail the CI
-          bazel run //:buildifier -- --lint=warn --mode=check -r . || true
+          bazel run //:buildifier_lint_warn || true
 
   hermiticity-check:
     name: Hermiticity Check
@@ -619,7 +625,7 @@ jobs:
           set -euo pipefail
           "$PY" .github/scripts/check_selfhosted_fork_guard.py --self-test
           "$PY" .github/scripts/check_selfhosted_fork_guard.py
-          "$PY" .github/scripts/run_ci_controls.py
+          "$PY" .github/scripts/run_ci_controls.py --only fail-open-fork-guard
 
   # Committed scripts get run on macOS, where /bin/bash is 3.2 and
   # /usr/bin/python3 is 3.9, while every other job here runs newer tools, so
