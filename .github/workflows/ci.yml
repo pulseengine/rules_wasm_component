@@ -582,6 +582,45 @@ jobs:
           name: rules_wasm_component
           path: rules_wasm_component.tar.gz
 
+  # No pull request from a fork may reach a self-hosted runner: every
+  # self-hosted job must use the fail-closed runs-on form, and none may sit in
+  # a workflow with a trigger a fork can cause under another name
+  # (pull_request_target, workflow_run, ...). Run order: the checker's own
+  # self-test (planted workflows, both directions), the real workflows, then
+  # the planted control in ci-controls.toml (the baseline must pass and the
+  # fail-open plant must be rejected).
+  selfhosted-fork-guard:
+    name: Self-hosted fork guard
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - id: py
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      # PyYAML pinned by the sha256 of its cp312 manylinux x86_64 wheel (PyPI,
+      # 2026-11-17); --require-hashes refuses anything else.
+      - name: Install PyYAML (pinned by sha256)
+        env:
+          PY: ${{ steps.py.outputs.python-path }}
+        run: |
+          set -euo pipefail
+          req="$RUNNER_TEMP/guard-requirements.txt"
+          echo "PyYAML==6.0.2 --hash=sha256:80bab7bfc629882493af4aa31a4cfa43a4c57c83813253626916b8c7ada83476" > "$req"
+          "$PY" -m pip install --quiet --only-binary :all: --require-hashes -r "$req"
+
+      - name: Check self-hosted fork guard
+        env:
+          PY: ${{ steps.py.outputs.python-path }}
+        run: |
+          set -euo pipefail
+          "$PY" .github/scripts/check_selfhosted_fork_guard.py --self-test
+          "$PY" .github/scripts/check_selfhosted_fork_guard.py
+          "$PY" .github/scripts/run_ci_controls.py
+
   # Committed scripts get run on macOS, where /bin/bash is 3.2 and
   # /usr/bin/python3 is 3.9, while every other job here runs newer tools, so
   # nothing caught a script that only works on the newer ones. Both tools are

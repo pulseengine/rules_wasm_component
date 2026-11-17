@@ -1,0 +1,13 @@
+# Planted controls: each CI check below is run against an input it must
+# reject (pulseengine/plant manifest format). Run them with
+#   python3 .github/scripts/run_ci_controls.py
+# which runs every control in a scratch copy of the tree: the baseline (no
+# plant) must pass, the planted overlay must fail.
+
+[[control]]
+id     = "fail-open-fork-guard"
+check  = "Self-hosted fork guard"
+run    = "python3 .github/scripts/check_selfhosted_fork_guard.py"
+plant  = "ci-controls/fail-open-fork-guard"
+expect = "fail"
+stderr_or_stdout_matches = "a fork PR could reach"
