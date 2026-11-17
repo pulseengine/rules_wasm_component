@@ -62,7 +62,7 @@ rust.toolchain(
         "aarch64-apple-darwin",
         "x86_64-pc-windows-msvc",
     ],
-    versions = ["1.91.1"],
+    versions = ["1.95.0"],
 )
 use_repo(rust, "rust_toolchains")
 
