@@ -26,8 +26,8 @@ env:
 jobs:
   bcr-hermetic-test:
     name: BCR Hermetic Build Test
-    # Stays on ubuntu-latest: docker run against vendor BCR image (gcr.io/bazel-public/ubuntu2204) untested on smithy podman shim.
-    runs-on: ubuntu-latest
+    # Stays on ubuntu-24.04: docker run against vendor BCR image (gcr.io/bazel-public/ubuntu2204) untested on smithy podman shim.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
@@ -131,8 +131,8 @@ jobs:
 
   bcr-toolchain-validation:
     name: BCR Toolchain Validation
-    # Stays on ubuntu-latest: docker run against vendor BCR image (gcr.io/bazel-public/ubuntu2204) untested on smithy podman shim.
-    runs-on: ubuntu-latest
+    # Stays on ubuntu-24.04: docker run against vendor BCR image (gcr.io/bazel-public/ubuntu2204) untested on smithy podman shim.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:
@@ -195,7 +195,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-latest, windows-latest]
         bazel_version: ["6.x", "7.x", "8.x"]
         exclude:
           # Skip some combinations to reduce CI load
@@ -204,7 +204,7 @@ jobs:
           # On PRs, only test latest Bazel versions to reduce load
           - os: windows-latest
             bazel_version: "7.x"
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             bazel_version: "6.x"
           - os: macos-latest
             bazel_version: "6.x"
@@ -244,8 +244,8 @@ jobs:
 
   bcr-incompatible-flags-test:
     name: BCR Incompatible Flags Test
-    # Stays on ubuntu-latest: Bazel not installed on smithy fleet.
-    runs-on: ubuntu-latest
+    # Stays on ubuntu-24.04: Bazel not installed on smithy fleet.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     # Only run on main branch and manual dispatch
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
@@ -291,8 +291,8 @@ jobs:
 
   bcr-metadata-validation:
     name: BCR Metadata Validation
-    # Stays on ubuntu-latest: bundled with the BCR test suite; keeping co-located with related Bazel jobs.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
+    # Stays on ubuntu-24.04: bundled with the BCR test suite; keeping co-located with related Bazel jobs.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
     timeout-minutes: 10
 
     steps:
@@ -353,8 +353,8 @@ jobs:
 
   bcr-test-module-validation:
     name: BCR Test Module Validation
-    # Stays on ubuntu-latest: Bazel not installed on smithy fleet.
-    runs-on: ubuntu-latest
+    # Stays on ubuntu-24.04: Bazel not installed on smithy fleet.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
@@ -399,8 +399,8 @@ jobs:
 
   bcr-summary:
     name: BCR Test Summary
-    # Stays on ubuntu-latest: bundled summary job for the BCR test suite, keeping co-located.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
+    # Stays on ubuntu-24.04: bundled summary job for the BCR test suite, keeping co-located.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
     needs: [bcr-hermetic-test, bcr-toolchain-validation]
     if: always()
 

@@ -4,9 +4,9 @@
 Every job in .github/workflows/ whose runs-on names `self-hosted` must use
 exactly the fail-closed form
 
-  ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('[...]') || 'ubuntu-latest' }}
+  ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('[...]') || 'ubuntu-24.04' }}
 
-so the self-hosted labels are chosen only for a non-PR event or a PR whose
+(the hosted fallback may be `ubuntu-latest` or a pinned `ubuntu-NN.NN`) so the self-hosted labels are chosen only for a non-PR event or a PR whose
 head repository is this one; anything else (a fork, a deleted fork whose
 head.repo is null) falls to the hosted runner. Rejected:
   - a plain self-hosted label (list or string);
@@ -33,7 +33,7 @@ import yaml
 FORM = re.compile(
     r"^\$\{\{ \(github\.event_name != 'pull_request' \|\| "
     r"github\.event\.pull_request\.head\.repo\.full_name == github\.repository\) && "
-    r"fromJSON\('\[[^\]]*\"self-hosted\"[^\]]*\]'\) \|\| 'ubuntu-latest' \}\}$"
+    r"fromJSON\('\[[^\]]*\"self-hosted\"[^\]]*\]'\) \|\| 'ubuntu-(?:latest|\d\d\.\d\d)' \}\}$"
 )
 MATRIX_REF = re.compile(r"^\$\{\{\s*(fromJSON\()?matrix\.([A-Za-z0-9_-]+)\)?\s*\}\}$")
 # Triggers only a maintainer or this repository's own branches can cause,
@@ -147,6 +147,10 @@ def self_test():
         ("good form, every trusted trigger -> holds", "x.yml",
          wf(["push", "pull_request", "schedule", "workflow_dispatch", "merge_group"], GOOD), False),
         ("good form in a .yaml file -> holds", "x.yaml", wf(["push"], GOOD), False),
+        ("good form, pinned ubuntu-24.04 fallback -> holds", "x.yml",
+         wf(["push", "pull_request"], GOOD.replace("ubuntu-latest", "ubuntu-24.04")), False),
+        ("good form, non-hosted fallback label -> fails", "x.yml",
+         wf(["push", "pull_request"], GOOD.replace("'ubuntu-latest'", "'light'")), True),
         ("plain label list -> fails", "x.yml", wf(["push"], ["self-hosted", "linux", "x64", "light"]), True),
         ("plain label string -> fails", "x.yml", wf(["push"], "self-hosted"), True),
         ("fail-open fork form -> fails", "x.yml", wf(["push", "pull_request"], FAIL_OPEN), True),

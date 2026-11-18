@@ -13,8 +13,8 @@ env:
 jobs:
   lint:
     name: Lint and Format Check
-    # Stays on ubuntu-latest: Bazel (buildifier) not installed on smithy fleet.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
+    # Stays on ubuntu-24.04: Bazel (buildifier) not installed on smithy fleet.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -46,8 +46,8 @@ jobs:
 
   hermiticity-check:
     name: Hermiticity Check
-    # Stays on ubuntu-latest: Bazel not installed on smithy fleet.
-    runs-on: ubuntu-latest
+    # Stays on ubuntu-24.04: Bazel not installed on smithy fleet.
+    runs-on: ubuntu-24.04
     needs: lint
 
     steps:
@@ -88,9 +88,9 @@ jobs:
           path: /tmp/exec.json
 
   test-linux:
-    name: Test on ubuntu-latest
-    # Stays on ubuntu-latest: Bazel + service container (registry:2) not supported on smithy fleet.
-    runs-on: ubuntu-latest
+    name: Test on ubuntu-24.04
+    # Stays on ubuntu-24.04: Bazel + service container (registry:2) not supported on smithy fleet.
+    runs-on: ubuntu-24.04
     needs: [lint, hermiticity-check]
 
     services:
@@ -369,8 +369,8 @@ jobs:
 
   bcr-docker-test:
     name: BCR Docker Environment Test
-    # Stays on ubuntu-latest: docker run against vendor BCR image (gcr.io/bazel-public/ubuntu2204) untested on smithy podman shim.
-    runs-on: ubuntu-latest
+    # Stays on ubuntu-24.04: docker run against vendor BCR image (gcr.io/bazel-public/ubuntu2204) untested on smithy podman shim.
+    runs-on: ubuntu-24.04
     needs: [lint, hermiticity-check]
 
     steps:
@@ -450,8 +450,8 @@ jobs:
 
   integration:
     name: Integration Tests
-    # Stays on ubuntu-latest: Bazel + sudo apt-get install not supported on smithy fleet.
-    runs-on: ubuntu-latest
+    # Stays on ubuntu-24.04: Bazel + sudo apt-get install not supported on smithy fleet.
+    runs-on: ubuntu-24.04
     needs: [test-linux, test-macos]
 
     steps:
@@ -543,7 +543,7 @@ jobs:
 
   release:
     name: Release
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
     needs: [test-linux, test-macos, integration, bcr-docker-test, hermiticity-check]
     if: github.ref == 'refs/heads/main'
 
@@ -597,7 +597,7 @@ jobs:
   # fail-open plant must be rejected).
   selfhosted-fork-guard:
     name: Self-hosted fork guard
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -635,7 +635,7 @@ jobs:
   # path. curl, not `gh`: self-hosted runners do not have the GitHub CLI.
   script-portability:
     name: Script portability (shellcheck + Python 3.9 floor)
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
