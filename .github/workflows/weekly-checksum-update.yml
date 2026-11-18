@@ -34,8 +34,8 @@ env:
 
 jobs:
   checksum-update:
-    # Stays on ubuntu-latest: Bazel + sudo apt-get install not supported on smithy fleet.
-    runs-on: ubuntu-latest
+    # Stays on ubuntu-24.04: Bazel + sudo apt-get install not supported on smithy fleet.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
 
     steps:
@@ -336,7 +336,7 @@ jobs:
 
           jobs:
             auto-merge:
-              runs-on: ubuntu-latest
+              runs-on: ubuntu-24.04
               if: github.repository == '${{ github.repository }}'
               steps:
               - name: Auto-merge PR
@@ -431,7 +431,7 @@ jobs:
   # Separate job for notification and cleanup
   notify:
     needs: checksum-update
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
     if: always()
 
     steps:
