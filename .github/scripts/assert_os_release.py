@@ -9,9 +9,8 @@ container is in effect: without it, a dropped `container:` line would test the
   assert_os_release.py --id ubuntu --version-id 22.04 [--file PATH]
 
 PATH defaults to /etc/os-release. Python 3.9+ (the container has 3.10).
-
-rivet: verifies REQ-005
 """
+# rivet: verifies REQ-005
 import argparse
 import sys
 
