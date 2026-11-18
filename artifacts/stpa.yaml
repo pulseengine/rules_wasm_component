@@ -299,7 +299,7 @@ artifacts:
   - id: LS-001
     type: loss-scenario
     title: componentize-py canary checksum drift
-    status: mitigated
+    status: accepted
     description: >
       componentize-py only publishes a rolling canary release. Every push
       to main rebuilds all platform binaries and overwrites the release.
@@ -328,7 +328,7 @@ artifacts:
   - id: LS-003
     type: loss-scenario
     title: Wasmtime 39.0.1 removed during checksum update
-    status: mitigated
+    status: accepted
     description: >
       During a bulk checksum update, wasmtime 39.0.1 (the pinned default
       in tool_versions.bzl) was removed from wasmtime.json. This broke
