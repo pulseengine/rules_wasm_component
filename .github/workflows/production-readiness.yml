@@ -10,13 +10,49 @@ on:
     - cron: "0 10 * * *"
 
 jobs:
+  smoke-tests-linux:
+    name: Smoke Tests (linux)
+    # On the self-hosted light pool (owner decision 2026-11-18); fork PRs fall
+    # back to ubuntu-24.04. Split out of the matrix below because a
+    # self-hosted label may not come from strategy.matrix (fork-guard checker).
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Pinned bazelisk into a job-local bin: no sudo, nothing left on the
+      # persistent self-hosted host, checked against the sha256 digest GitHub
+      # publishes for the v1.30.0 release asset.
+      - name: Install bazelisk (pinned)
+        env:
+          BAZELISK_VERSION: v1.30.0
+          BAZELISK_SHA256: a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSL -o "$RUNNER_TEMP/bin/bazel" \
+            "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-linux-amd64"
+          echo "${BAZELISK_SHA256}  $RUNNER_TEMP/bin/bazel" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/bin/bazel"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Build info
+        run: bazel info
+
+      - name: Run smoke tests
+        run: bazel test //test/smoke:all --test_output=errors
+
+      - name: Validate WebAssembly output
+        run: |
+          bazel build //examples/basic:hello_component
+          find bazel-out/ -name "*.wasm" -type f | head -5
+
   smoke-tests:
     name: Smoke Tests
-    # Stays on ${{ matrix.os }}: Bazel matrix (Linux + macOS); smithy fleet is Linux-only without Bazel.
+    # Stays on ${{ matrix.os }}: macOS needs a GitHub-hosted image.
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-latest]
+        os: [macos-latest]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -177,6 +213,7 @@ jobs:
     needs:
       [
         smoke-tests,
+        smoke-tests-linux,
         security-validation,
         performance-benchmark,
         compatibility-matrix,
