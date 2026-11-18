@@ -22,3 +22,15 @@ run    = "bazel --max_idle_secs=5 run //:buildifier_check"
 plant  = "ci-controls/unformatted-starlark"
 expect = "fail"
 stderr_or_stdout_matches = "planted_unformatted.bzl # reformat"
+
+# Run by the "Self-hosted fork guard" job (it has Python 3.11+ for this
+# runner). The assertion itself runs in "Compatibility Tests (ubuntu-22.04)"
+# against the container's /etc/os-release; this control proves it rejects a
+# 24.04 host (the container line dropped).
+[[control]]
+id     = "os-release-floor"
+check  = "Compatibility Tests (ubuntu-22.04)"
+run    = "python3 .github/scripts/assert_os_release.py --id ubuntu --version-id 22.04 --file .github/scripts/testdata/os-release"
+plant  = "ci-controls/os-release-floor"
+expect = "fail"
+stderr_or_stdout_matches = "expected ubuntu 22.04, found ubuntu 24.04"

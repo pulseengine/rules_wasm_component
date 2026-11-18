@@ -1,0 +1,8 @@
+# Planted: the ubuntu-24.04 host's os-release, i.e. the job ran without its
+# container. assert_os_release.py must reject it.
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.3 LTS (Noble Numbat)"
+ID=ubuntu
+ID_LIKE=debian

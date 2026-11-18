@@ -626,6 +626,10 @@ jobs:
           "$PY" .github/scripts/check_selfhosted_fork_guard.py --self-test
           "$PY" .github/scripts/check_selfhosted_fork_guard.py
           "$PY" .github/scripts/run_ci_controls.py --only fail-open-fork-guard
+          # Pure-Python control for the "Compatibility Tests (ubuntu-22.04)"
+          # floor assertion; that job's container has Python 3.10, and
+          # run_ci_controls.py needs 3.11+ (tomllib).
+          "$PY" .github/scripts/run_ci_controls.py --only os-release-floor
 
   # Committed scripts get run on macOS, where /bin/bash is 3.2 and
   # /usr/bin/python3 is 3.9, while every other job here runs newer tools, so
