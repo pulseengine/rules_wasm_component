@@ -144,7 +144,11 @@ jobs:
 
       - name: Assert the job runs on the Linux floor (DD-004)
         if: matrix.container != ''
-        run: python3 .github/scripts/assert_os_release.py --id ubuntu --version-id 22.04
+        # rivet: verifies REQ-005
+        # Fails unless the container's os-release is ubuntu 22.04; a dropped
+        # `container:` line would otherwise test the 24.04 host. Its planted
+        # control is ci-controls.toml "os-release-floor".
+        run: grep -qx 'VERSION_ID="22.04"' /etc/os-release && grep -qx 'ID=ubuntu' /etc/os-release
 
       # setup-bazel configures bazelisk but relies on the copy preinstalled on
       # GitHub's runner images; the plain ubuntu:22.04 image has none.
