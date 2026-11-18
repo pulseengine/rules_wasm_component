@@ -52,20 +52,16 @@ Example usage:
 """
 
 load(
+    "//wasm/private:aadl_wit_library.bzl",
+    _aadl_wit_library = "aadl_wit_library",
+)
+load(
     "//wasm/private:binaryen_optimize.bzl",
     _binaryen_optimize = "binaryen_optimize",
 )
 load(
     "//wasm/private:meld_fuse.bzl",
     _meld_fuse = "meld_fuse",
-)
-load(
-    "//wasm/private:aadl_wit_library.bzl",
-    _aadl_wit_library = "aadl_wit_library",
-)
-load(
-    "//wasm/private:wasm_module_coverage.bzl",
-    _wasm_module_coverage = "wasm_module_coverage",
 )
 load(
     "//wasm/private:ssh_keygen.bzl",
@@ -79,6 +75,10 @@ load(
     "//wasm/private:wasm_aot_aspect.bzl",
     _wasm_aot_aspect = "wasm_aot_aspect",
     _wasm_aot_config = "wasm_aot_config",
+)
+load(
+    "//wasm/private:wasm_component_import.bzl",
+    _wasm_component_import = "wasm_component_import",
 )
 load(
     "//wasm/private:wasm_component_new.bzl",
@@ -95,8 +95,8 @@ load(
     _wasm_extract_aot = "wasm_extract_aot",
 )
 load(
-    "//wasm/private:wasm_component_import.bzl",
-    _wasm_component_import = "wasm_component_import",
+    "//wasm/private:wasm_module_coverage.bzl",
+    _wasm_module_coverage = "wasm_module_coverage",
 )
 load(
     "//wasm/private:wasm_optimize.bzl",
@@ -119,14 +119,14 @@ load(
     _wasm_verify = "wasm_verify",
 )
 load(
+    "//wasm/private:wasm_validate.bzl",
+    _wasm_validate = "wasm_validate",
+)
+load(
     "//wasm/private:wsc_attestation.bzl",
     _wasm_attest = "wasm_attest",
     _wasm_show_chain = "wasm_show_chain",
     _wasm_verify_chain = "wasm_verify_chain",
-)
-load(
-    "//wasm/private:wasm_validate.bzl",
-    _wasm_validate = "wasm_validate",
 )
 
 # Re-export public rules

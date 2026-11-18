@@ -169,8 +169,8 @@ test_suite(
 test_suite(
     name = "p3",
     tests = [
-        ":p3_build_test",
         ":p3_async_func_build_test",
+        ":p3_build_test",
         ":p3_sync_export_build_test",
         ":wasi_p3_wit_build_test",
     ],
@@ -180,8 +180,8 @@ test_suite(
     name = "all",
     tests = [
         ":p2_build_test",
-        ":p3_build_test",
         ":p3_async_func_build_test",
+        ":p3_build_test",
         ":p3_sync_export_build_test",
         ":wasi_p3_wit_build_test",
     ],

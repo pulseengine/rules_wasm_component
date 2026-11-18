@@ -26,8 +26,8 @@ package(default_visibility = ["//visibility:public"])
 # see docs/certification-pipeline.md.
 wasm_module_coverage(
     name = "coverage_demo_coverage",
-    module = "coverage_demo.wasm",
     invoke = ["run"],
+    module = "coverage_demo.wasm",
 )
 
 build_test(

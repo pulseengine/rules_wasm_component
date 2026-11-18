@@ -43,6 +43,7 @@ def _wasm_module_coverage_impl(ctx):
 
     name = ctx.label.name
     instrumented = ctx.actions.declare_file(name + "_instrumented.wasm")
+
     # witness writes the branch manifest as a sidecar: <instrumented>.witness.json
     manifest = ctx.actions.declare_file(name + "_instrumented.wasm.witness.json")
     run_data = ctx.actions.declare_file(name + "_witness-run.json")

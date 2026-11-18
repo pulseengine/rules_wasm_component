@@ -84,6 +84,7 @@ def _meld_repository_impl(repository_ctx):
     # on Windows/other hosts. meld_fuse targets simply won't be buildable.
     if platform not in _SUPPORTED_PLATFORMS or not validate_tool_exists(repository_ctx, "meld", version, platform):
         print("Meld: no native binary for platform {} (version {}); emitting stub".format(platform, version))
+
         # Create a placeholder file so the meld_toolchain rule's single-file
         # attribute resolves during loading. The toolchain is never selected
         # (target_compatible_with = @platforms//:incompatible) so this file

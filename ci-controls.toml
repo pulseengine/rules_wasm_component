@@ -1,0 +1,24 @@
+# Planted controls: each CI check below is run against an input it must
+# reject (pulseengine/plant manifest format). Run them with
+#   python3 .github/scripts/run_ci_controls.py
+# which runs every control in a scratch copy of the tree: the baseline (no
+# plant) must pass, the planted overlay must fail.
+
+# Run by the "Self-hosted fork guard" job.
+[[control]]
+id     = "fail-open-fork-guard"
+check  = "Self-hosted fork guard"
+run    = "python3 .github/scripts/check_selfhosted_fork_guard.py"
+plant  = "ci-controls/fail-open-fork-guard"
+expect = "fail"
+stderr_or_stdout_matches = "a fork PR could reach"
+
+# Run by the "Lint and Format Check" job (it has Bazel). The plant is a .bzl
+# file with buildifier-visible formatting errors; the check must report it.
+[[control]]
+id     = "unformatted-starlark"
+check  = "Lint and Format Check"
+run    = "bazel --max_idle_secs=5 run //:buildifier_check"
+plant  = "ci-controls/unformatted-starlark"
+expect = "fail"
+stderr_or_stdout_matches = "planted_unformatted.bzl # reformat"

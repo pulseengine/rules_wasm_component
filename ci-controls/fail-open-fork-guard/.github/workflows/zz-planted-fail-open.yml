@@ -1,0 +1,11 @@
+# PLANTED BAD INPUT (ci-controls.toml: fail-open-fork-guard). Never copied
+# into the real .github/workflows. The fork-flag form below picks the
+# self-hosted runner whenever head.repo.fork is not true, including a PR from
+# a deleted fork (head.repo is null), so the guard check must reject it.
+name: planted-fail-open
+on: [push, pull_request]
+jobs:
+  planted:
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","linux","x64","light"]') }}
+    steps:
+      - run: echo planted
