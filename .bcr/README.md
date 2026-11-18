@@ -36,8 +36,8 @@ Once the dependency issue is resolved:
 
 The `presubmit.yml` configuration will test the module on:
 
-- **Platforms**: Ubuntu 20.04/22.04, macOS, Windows
-- **Bazel versions**: 7.x, latest
+- **Platforms**: Debian 11, Ubuntu 22.04, macOS (the `matrix.platform` list in `presubmit.yml`)
+- **Bazel versions**: 7.x, 8.x
 - **Targets**: Core functionality (excludes problematic targets with target triple issues)
 
 ## Maintenance
