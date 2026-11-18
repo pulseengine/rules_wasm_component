@@ -123,3 +123,18 @@ artifacts:
     links:
       - type: satisfies
         target: REQ-004
+
+  - id: DD-004
+    type: design-decision
+    title: "Linux compatibility floor: Ubuntu 22.04 userland (glibc 2.35), tested in a container on ubuntu-24.04"
+    status: approved
+    release: v2.0.0
+    description: GitHub's ubuntu-22.04 runner image is unsupported from 2027-04-17 (deprecation began 2026-09-17, brownouts expected earlier). Keep Ubuntu 22.04 / glibc 2.35 as the stated Linux floor and test it by running the 'Compatibility Tests' job in an ubuntu:22.04 container on the ubuntu-24.04 hosted runner, with a step asserting the container's /etc/os-release is 22.04 so the job cannot silently test the host. Drop the untested Ubuntu 20.04 claim from .bcr/README.md. The BCR presubmit (debian11, ubuntu2204 on Bazel CI) is independent of GitHub images and stays as is.
+    tags: [ci, platform-support]
+    fields:
+      alternatives: Drop 22.04 from the support statement and test only ubuntu-24.04 (narrows support; 24.04 is glibc 2.39); keep runs-on ubuntu-22.04 until removal (fails during brownouts, then permanently); rely on BCR presubmit alone (not run on our PRs).
+      rationale: The floor that matters to a consumer is the userland glibc the prebuilt toolchain binaries and Bazel run against, which a container reproduces; the host kernel image does not change it. Dropping 22.04 would narrow support with no consumer-driven reason, and keeping the job on a deprecated image turns it red on GitHub's schedule, not ours.
+      source-ref: .github/workflows/production-readiness.yml
+    links:
+      - type: satisfies
+        target: REQ-005
