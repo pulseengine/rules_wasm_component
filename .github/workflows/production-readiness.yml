@@ -146,6 +146,19 @@ jobs:
         if: matrix.container != ''
         run: python3 .github/scripts/assert_os_release.py --id ubuntu --version-id 22.04
 
+      # setup-bazel configures bazelisk but relies on the copy preinstalled on
+      # GitHub's runner images; the plain ubuntu:22.04 image has none.
+      - name: Install bazelisk (container)
+        if: matrix.container != ''
+        env:
+          BAZELISK_VERSION: v1.30.0
+          BAZELISK_SHA256: a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8
+        run: |
+          curl -fsSL -o /usr/local/bin/bazel \
+            "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-linux-amd64"
+          echo "${BAZELISK_SHA256}  /usr/local/bin/bazel" | sha256sum -c -
+          chmod +x /usr/local/bin/bazel
+
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.19.2
         with:
