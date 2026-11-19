@@ -33,7 +33,7 @@ artifacts:
   - id: REQ-006
     type: requirement
     title: WASI P3 async components build from WIT with async funcs and per-function async selection
-    status: implemented
+    status: verified
     release: v2.0.0
     description: A Rust component whose WIT declares async funcs (P3, func type byte 0x43) builds, links and validates; async export/import lowering can be selected per function. Requires a wasm-component-ld that decodes 0x43 (Rust >= 1.95.0).
     tags: [wasi-p3]
@@ -41,7 +41,7 @@ artifacts:
   - id: FEAT-002
     type: feature
     title: "async_interfaces and async-func components (#527, #724, #730)"
-    status: implemented
+    status: verified
     release: v2.0.0
     description: rust_wasm_component_bindgen takes async_interfaces for per-function async selection; components whose WIT has async funcs build on Rust 1.95.0, with host bindings skipped automatically (or via host_bindings = False).
     tags: [wasi-p3]
