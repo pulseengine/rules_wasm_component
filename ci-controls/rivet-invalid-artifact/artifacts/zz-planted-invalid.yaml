@@ -1,0 +1,10 @@
+# Planted: an artifact with a status rivet does not accept. This is the
+# exact error that kept `rivet validate` red on main for weeks before #731
+# (LS-001/LS-003 status 'mitigated'). The "Rivet validate" job must fail on it.
+artifacts:
+  - id: LS-099
+    type: loss-scenario
+    title: Planted invalid loss scenario
+    status: mitigated
+    description: >
+      Not a real artifact. ci-controls.toml control "rivet-invalid-artifact".
