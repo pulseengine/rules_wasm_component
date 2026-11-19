@@ -29,3 +29,71 @@ artifacts:
     release: v2.0.0
     description: The documented minimum Linux userland (distribution and glibc version) is the one a CI job on every PR builds and tests against; no platform is claimed in docs without such a job.
     tags: [platform-support]
+
+  - id: REQ-006
+    type: requirement
+    title: WASI P3 async components build from WIT with async funcs and per-function async selection
+    status: implemented
+    release: v2.0.0
+    description: A Rust component whose WIT declares async funcs (P3, func type byte 0x43) builds, links and validates; async export/import lowering can be selected per function. Requires a wasm-component-ld that decodes 0x43 (Rust >= 1.95.0).
+    tags: [wasi-p3]
+
+  - id: FEAT-002
+    type: feature
+    title: "async_interfaces and async-func components (#527, #724, #730)"
+    status: implemented
+    release: v2.0.0
+    description: rust_wasm_component_bindgen takes async_interfaces for per-function async selection; components whose WIT has async funcs build on Rust 1.95.0, with host bindings skipped automatically (or via host_bindings = False).
+    tags: [wasi-p3]
+    fields:
+      acceptance-criteria: "[\"//test/p3:p3_async_func_build_test builds hello_p3_asyncfn and hello_p3_asyncfn_nohost bindings\",\"//test/p3:all passes in CI (Test on ubuntu-24.04)\"]"
+    links:
+      - type: satisfies
+        target: REQ-006
+
+  - id: REQ-007
+    type: requirement
+    title: WIT can be recovered from an adopted component
+    status: implemented
+    release: v2.0.0
+    description: wit_from_component extracts the WIT of a component imported with wasm_component_import, usable for binding generation.
+    tags: [wit]
+
+  - id: FEAT-003
+    type: feature
+    title: wit_from_component (#627)
+    status: implemented
+    release: v2.0.0
+    description: Rule that recovers WIT from an adopted component.
+    tags: [wit]
+    fields:
+      acceptance-criteria: "[\"//examples/component_import_example:component_import_test passes in CI\"]"
+    links:
+      - type: satisfies
+        target: REQ-007
+
+  - id: FEAT-004
+    type: feature
+    title: "varve module extension and covalent realm toolchains (#606, #635, #669)"
+    status: implemented
+    release: v2.0.0
+    description: loom/meld/spar/synth/witness/wasm-tools/wkg/wit-bindgen-wrpc are sourced from varve's covalent realm (one pin, //:varve.toml) on Linux and macOS, replacing per-tool download logic; Windows keeps the per-tool fallback.
+    tags: [toolchain, varve]
+    fields:
+      acceptance-criteria: "[\"CI builds on Linux and macOS resolve these tools through //varve/toolchains\"]"
+    links:
+      - type: satisfies
+        target: REQ-003
+      - type: satisfies
+        target: REQ-004
+
+  - id: FEAT-005
+    type: feature
+    title: "wasm_optimize on the native loom toolchain (#512, #514)"
+    status: implemented
+    release: v2.0.0
+    description: wasm_optimize uses native loom binaries instead of the previous optimizer path.
+    tags: [toolchain, loom]
+    links:
+      - type: satisfies
+        target: REQ-004

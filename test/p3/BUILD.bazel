@@ -129,6 +129,8 @@ rust_wasm_component_bindgen(
     wit = ":hello_async_interfaces",
 )
 
+# rivet: verifies REQ-006
+# rivet: verifies FEAT-002
 build_test(
     name = "p3_async_func_build_test",
     targets = [
