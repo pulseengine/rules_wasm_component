@@ -131,7 +131,8 @@ jobs:
 
       - name: Install Bazelisk
         run: |
-          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          curl -fsSLO https://github.com/bazelbuild/bazelisk/releases/download/v1.30.0/bazelisk-linux-amd64
+          echo "a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8  bazelisk-linux-amd64" | sha256sum -c -
           chmod +x bazelisk-linux-amd64
           sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
 
@@ -260,7 +261,8 @@ jobs:
 
       - name: Install Bazelisk
         run: |
-          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-darwin-amd64
+          curl -fsSLO https://github.com/bazelbuild/bazelisk/releases/download/v1.30.0/bazelisk-darwin-amd64
+          echo "a0e6468b0c6b812f782d8cbfb05824121f6980c0bd70aaa1774fb8272bb7b2ad  bazelisk-darwin-amd64" | shasum -a 256 -c -
           chmod +x bazelisk-darwin-amd64
           sudo mv bazelisk-darwin-amd64 /usr/local/bin/bazel
 
@@ -371,7 +373,8 @@ jobs:
       - name: Install Bazelisk
         run: |
           # Download bazelisk for Windows
-          Invoke-WebRequest -Uri https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-windows-amd64.exe -OutFile bazelisk.exe
+          Invoke-WebRequest -Uri https://github.com/bazelbuild/bazelisk/releases/download/v1.30.0/bazelisk-windows-amd64.exe -OutFile bazelisk.exe
+          if ((Get-FileHash bazelisk.exe -Algorithm SHA256).Hash -ne '5D14A31E9D8A363C48BA1900DBD56764D730835232EB0D113CCE255856FFE3EF') { throw 'bazelisk sha256 mismatch' }
           Move-Item bazelisk.exe C:\Windows\System32\bazel.exe -Force
 
       - name: Install Rust
@@ -496,7 +499,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          curl -LO https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64
+          curl -fsSLO https://github.com/bazelbuild/bazelisk/releases/download/v1.30.0/bazelisk-linux-amd64
+          echo "a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8  bazelisk-linux-amd64" | sha256sum -c -
           chmod +x bazelisk-linux-amd64
           sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
 
