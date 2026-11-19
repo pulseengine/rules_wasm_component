@@ -195,6 +195,9 @@ jobs:
 
       # rivet: verifies REQ-006
       # rivet: verifies FEAT-002
+      # rivet: verifies FEAT-005
+      # (FEAT-005 via //test/p3:loom_optimize_build_test: wasm_optimize on
+      # the native loom toolchain.)
       - name: Run P2/P3 WASI Version Tests
         run: bazel test --test_output=errors -- //test/p3:all
 

@@ -90,7 +90,7 @@ artifacts:
   - id: FEAT-005
     type: feature
     title: "wasm_optimize on the native loom toolchain (#512, #514)"
-    status: implemented
+    status: verified
     release: v2.0.0
     description: wasm_optimize uses native loom binaries instead of the previous optimizer path.
     tags: [toolchain, loom]
