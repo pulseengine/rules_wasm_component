@@ -75,7 +75,7 @@ artifacts:
   - id: FEAT-004
     type: feature
     title: "varve module extension and covalent realm toolchains (#606, #635, #669)"
-    status: implemented
+    status: verified
     release: v2.0.0
     description: loom/meld/spar/synth/witness/wasm-tools/wkg/wit-bindgen-wrpc are sourced from varve's covalent realm (one pin, //:varve.toml) on Linux and macOS, replacing per-tool download logic; Windows keeps the per-tool fallback.
     tags: [toolchain, varve]

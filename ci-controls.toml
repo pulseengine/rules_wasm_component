@@ -55,3 +55,13 @@ run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --te
 plant  = "ci-controls/component-import-core-module"
 expect = "fail"
 stderr_or_stdout_matches = "input is a core wasm module"
+
+# Run by "Test on ubuntu-24.04". The plant points varve's loom toolchain at
+# the per-tool fallback binary; varve_resolution_test (FEAT-004) must fail.
+[[control]]
+id     = "varve-fallback-wins"
+check  = "Test on ubuntu-24.04"
+run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors //test/varve:varve_resolution_test"
+plant  = "ci-controls/varve-fallback-wins"
+expect = "fail"
+stderr_or_stdout_matches = "loom_toolchain_type.loom resolved to"

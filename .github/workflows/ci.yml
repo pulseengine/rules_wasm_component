@@ -212,6 +212,15 @@ jobs:
       - name: Planted control (wit_from_component must reject a core module)
         run: python3 .github/scripts/run_ci_controls.py --only component-import-core-module
 
+      # rivet: verifies FEAT-004
+      # Every varve-carried tool must resolve from the varve layer, not the
+      # per-tool fallback (registration order in MODULE.bazel decides).
+      - name: Run varve resolution test
+        run: bazel test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors -- //test/varve:varve_resolution_test
+
+      - name: Planted control (a fallback toolchain winning must fail the test)
+        run: python3 .github/scripts/run_ci_controls.py --only varve-fallback-wins
+
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
 
@@ -318,7 +327,7 @@ jobs:
             -//test/integration:service_b_component_wasm_lib_release_host \
 
       - name: Run Tests
-        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/js:test_hello_js_component_provides_info //test/js:test_calc_js_component_provides_info //test/js:test_npm_dependencies_installation
+        run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/js:test_hello_js_component_provides_info //test/js:test_calc_js_component_provides_info //test/js:test_npm_dependencies_installation //test/varve:varve_resolution_test
 
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
