@@ -54,7 +54,7 @@ artifacts:
   - id: REQ-007
     type: requirement
     title: WIT can be recovered from an adopted component
-    status: implemented
+    status: verified
     release: v2.0.0
     description: wit_from_component extracts the WIT of a component imported with wasm_component_import, usable for binding generation.
     tags: [wit]
@@ -62,7 +62,7 @@ artifacts:
   - id: FEAT-003
     type: feature
     title: wit_from_component (#627)
-    status: implemented
+    status: verified
     release: v2.0.0
     description: Rule that recovers WIT from an adopted component.
     tags: [wit]

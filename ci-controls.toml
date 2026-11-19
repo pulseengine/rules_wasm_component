@@ -44,3 +44,14 @@ run    = "rivet validate"
 plant  = "ci-controls/rivet-invalid-artifact"
 expect = "fail"
 stderr_or_stdout_matches = "LS-099"
+
+# Run by "Test on ubuntu-24.04" after its tests (that job has Bazel and a warm
+# disk cache). The plant adopts an empty core wasm module in place of the
+# component; component_import_test (wit_from_component, FEAT-003) must fail.
+[[control]]
+id     = "component-import-core-module"
+check  = "Test on ubuntu-24.04"
+run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors //examples/component_import_example:component_import_test"
+plant  = "ci-controls/component-import-core-module"
+expect = "fail"
+stderr_or_stdout_matches = "input is a core wasm module"

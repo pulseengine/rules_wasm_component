@@ -198,6 +198,17 @@ jobs:
       - name: Run P2/P3 WASI Version Tests
         run: bazel test --test_output=errors -- //test/p3:all
 
+      # rivet: verifies REQ-007
+      # rivet: verifies FEAT-003
+      # wit_from_component on an adopted component, fed back into an import
+      # and into wit_bindgen. The disk cache warms the planted control below,
+      # which rebuilds the example in a scratch copy of the tree.
+      - name: Run component import tests (wit_from_component)
+        run: bazel test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors -- //examples/component_import_example:component_import_test
+
+      - name: Planted control (wit_from_component must reject a core module)
+        run: python3 .github/scripts/run_ci_controls.py --only component-import-core-module
+
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
 
