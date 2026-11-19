@@ -102,7 +102,7 @@ artifacts:
     type: feature
     title: One Bazel target from AADL model to signed component and evidence bundle (prepares O2, O5)
     status: draft
-    release: v2.0.0
+    release: v2.1.0
     description: "//examples/certifiable_chain:bundle: aadl_wit_library -> component -> loom -> meld -> witness, signed and attested, collected by wasm_evidence_bundle; layer-pinned tools. Partial bundle until rivet trace and MC/DC are included. Plan: docs/release-plans/v2.0.0.md."
     tags: [north-star-o2, north-star-o5, bet-1]
     fields:
@@ -117,7 +117,7 @@ artifacts:
     type: feature
     title: Evidence verify check that fails when any evidence piece is removed (prepares the O2 guard)
     status: draft
-    release: v2.0.0
+    release: v2.1.0
     description: wasm_evidence_verify_test with a Rust checker as a WASI component; one planted control per evidence piece. Repo-local, not the org verify command.
     tags: [north-star-o2, bet-2]
     fields:
@@ -143,7 +143,7 @@ artifacts:
     type: feature
     title: Outside team builds the chain from a blank consumer module (O4 precondition)
     status: draft
-    release: v2.0.0
+    release: v2.1.0
     description: "Standalone consumer module builds the Bet 1 target in CI; #533 bootstrap steps removed or documented; migration notes for MoonBit removal."
     tags: [north-star-o4, bet-4]
     fields:
@@ -156,7 +156,7 @@ artifacts:
     type: feature
     title: "aadl_wit_diff_test: AADL-to-WIT drift check (stretch, local O3 proxy)"
     status: draft
-    release: v2.0.0
+    release: v2.1.0
     description: "#539 gap 1: regenerate WIT from the model and diff against checked-in WIT, with a planted drifted file."
     tags: [north-star-o3, bet-5, stretch]
     fields:
