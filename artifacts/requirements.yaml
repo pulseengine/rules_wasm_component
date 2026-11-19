@@ -25,7 +25,7 @@ artifacts:
   - id: REQ-005
     type: requirement
     title: The supported Linux floor is stated and tested on every PR
-    status: approved
+    status: verified
     release: v2.0.0
     description: The documented minimum Linux userland (distribution and glibc version) is the one a CI job on every PR builds and tests against; no platform is claimed in docs without such a job.
     tags: [platform-support]

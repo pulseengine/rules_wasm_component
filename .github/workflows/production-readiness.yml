@@ -115,15 +115,53 @@ jobs:
           fi
 
   compatibility-matrix:
-    name: Compatibility Tests
+    name: Compatibility Tests (${{ matrix.name }})
     # Stays on ${{ matrix.os }}: Bazel matrix (Linux + macOS); smithy fleet is Linux-only without Bazel.
+    # The Linux floor is Ubuntu 22.04 / glibc 2.35 (rivet DD-004, REQ-005),
+    # tested in an ubuntu:22.04 container: GitHub's ubuntu-22.04 runner image
+    # is unsupported from 2027-04-17. An empty `container` runs on the host.
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-15-intel]
+        include:
+          - name: ubuntu-22.04
+            os: ubuntu-24.04
+            container: ubuntu:22.04
+          - name: macos-15-intel
+            os: macos-15-intel
+            container: ""
 
     steps:
+      - name: Install base packages (container)
+        if: matrix.container != ''
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            ca-certificates curl git python3 build-essential unzip zip xz-utils
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Assert the job runs on the Linux floor (DD-004)
+        if: matrix.container != ''
+        # rivet: verifies REQ-005
+        # Fails unless the container's os-release is ubuntu 22.04; a dropped
+        # `container:` line would otherwise test the 24.04 host. Its planted
+        # control is ci-controls.toml "os-release-floor".
+        run: grep -qx 'VERSION_ID="22.04"' /etc/os-release && grep -qx 'ID=ubuntu' /etc/os-release
+
+      # setup-bazel configures bazelisk but relies on the copy preinstalled on
+      # GitHub's runner images; the plain ubuntu:22.04 image has none.
+      - name: Install bazelisk (container)
+        if: matrix.container != ''
+        env:
+          BAZELISK_VERSION: v1.30.0
+          BAZELISK_SHA256: a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8
+        run: |
+          curl -fsSL -o /usr/local/bin/bazel \
+            "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-linux-amd64"
+          echo "${BAZELISK_SHA256}  /usr/local/bin/bazel" | sha256sum -c -
+          chmod +x /usr/local/bin/bazel
 
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.19.2

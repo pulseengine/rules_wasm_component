@@ -1,0 +1,8 @@
+# Fixture: /etc/os-release of the ubuntu:22.04 image (the Linux floor, DD-004).
+# The os-release-floor control in ci-controls.toml overlays a 24.04 copy.
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.5 LTS (Jammy Jellyfish)"
+ID=ubuntu
+ID_LIKE=debian
