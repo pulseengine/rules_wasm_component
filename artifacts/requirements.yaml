@@ -29,3 +29,138 @@ artifacts:
     release: v2.0.0
     description: The documented minimum Linux userland (distribution and glibc version) is the one a CI job on every PR builds and tests against; no platform is claimed in docs without such a job.
     tags: [platform-support]
+
+  - id: REQ-006
+    type: requirement
+    title: WASI P3 async components build from WIT with async funcs and per-function async selection
+    status: verified
+    release: v2.0.0
+    description: A Rust component whose WIT declares async funcs (P3, func type byte 0x43) builds, links and validates; async export/import lowering can be selected per function. Requires a wasm-component-ld that decodes 0x43 (Rust >= 1.95.0).
+    tags: [wasi-p3]
+
+  - id: FEAT-002
+    type: feature
+    title: "async_interfaces and async-func components (#527, #724, #730)"
+    status: verified
+    release: v2.0.0
+    description: rust_wasm_component_bindgen takes async_interfaces for per-function async selection; components whose WIT has async funcs build on Rust 1.95.0, with host bindings skipped automatically (or via host_bindings = False).
+    tags: [wasi-p3]
+    fields:
+      acceptance-criteria: "[\"//test/p3:p3_async_func_build_test builds hello_p3_asyncfn and hello_p3_asyncfn_nohost bindings\",\"//test/p3:all passes in CI (Test on ubuntu-24.04)\"]"
+    links:
+      - type: satisfies
+        target: REQ-006
+
+  - id: REQ-007
+    type: requirement
+    title: WIT can be recovered from an adopted component
+    status: implemented
+    release: v2.0.0
+    description: wit_from_component extracts the WIT of a component imported with wasm_component_import, usable for binding generation.
+    tags: [wit]
+
+  - id: FEAT-003
+    type: feature
+    title: wit_from_component (#627)
+    status: implemented
+    release: v2.0.0
+    description: Rule that recovers WIT from an adopted component.
+    tags: [wit]
+    fields:
+      acceptance-criteria: "[\"//examples/component_import_example:component_import_test passes in CI\"]"
+    links:
+      - type: satisfies
+        target: REQ-007
+
+  - id: FEAT-004
+    type: feature
+    title: "varve module extension and covalent realm toolchains (#606, #635, #669)"
+    status: implemented
+    release: v2.0.0
+    description: loom/meld/spar/synth/witness/wasm-tools/wkg/wit-bindgen-wrpc are sourced from varve's covalent realm (one pin, //:varve.toml) on Linux and macOS, replacing per-tool download logic; Windows keeps the per-tool fallback.
+    tags: [toolchain, varve]
+    fields:
+      acceptance-criteria: "[\"CI builds on Linux and macOS resolve these tools through //varve/toolchains\"]"
+    links:
+      - type: satisfies
+        target: REQ-003
+      - type: satisfies
+        target: REQ-004
+
+  - id: FEAT-005
+    type: feature
+    title: "wasm_optimize on the native loom toolchain (#512, #514)"
+    status: implemented
+    release: v2.0.0
+    description: wasm_optimize uses native loom binaries instead of the previous optimizer path.
+    tags: [toolchain, loom]
+    links:
+      - type: satisfies
+        target: REQ-004
+
+  - id: FEAT-006
+    type: feature
+    title: One Bazel target from AADL model to signed component and evidence bundle (prepares O2, O5)
+    status: draft
+    release: v2.1.0
+    description: "//examples/certifiable_chain:bundle: aadl_wit_library -> component -> loom -> meld -> witness, signed and attested, collected by wasm_evidence_bundle; layer-pinned tools. Partial bundle until rivet trace and MC/DC are included. Plan: docs/release-plans/v2.0.0.md."
+    tags: [north-star-o2, north-star-o5, bet-1]
+    fields:
+      acceptance-criteria: "[\"bazel build //examples/certifiable_chain:bundle green in CI on linux and macos\",\"a test asserts coverage > 0 on the fused module, attestation verifies, manifest hashes match\",\"cquery shows spar/loom/meld/witness from the varve layer\"]"
+    links:
+      - type: satisfies
+        target: REQ-002
+      - type: satisfies
+        target: REQ-004
+
+  - id: FEAT-007
+    type: feature
+    title: Evidence verify check that fails when any evidence piece is removed (prepares the O2 guard)
+    status: draft
+    release: v2.1.0
+    description: wasm_evidence_verify_test with a Rust checker as a WASI component; one planted control per evidence piece. Repo-local, not the org verify command.
+    tags: [north-star-o2, bet-2]
+    fields:
+      acceptance-criteria: "[\"passes on the Bet 1 bundle\",\"each plant (attestation stripped, coverage removed, coverage 0%, hash altered, trace removed) fails with a matching message\"]"
+    links:
+      - type: satisfies
+        target: REQ-002
+
+  - id: FEAT-008
+    type: feature
+    title: Release claims backed by checks that can fail (local O3 proxy)
+    status: draft
+    release: v2.0.0
+    description: rivet validate in CI with a plant; CI evidence for FEAT-003/004/005 and REQ-007; component_import_example and pipeline_attestation in CI; pinned bazelisk; required checks on main.
+    tags: [north-star-o3, bet-3]
+    fields:
+      acceptance-criteria: "[\"every required check has a plant that turns it red in CI\",\"rivet release status v2.0.0 cuttable with each verified status backed by a marker on a PR-run step\"]"
+    links:
+      - type: satisfies
+        target: REQ-003
+
+  - id: FEAT-009
+    type: feature
+    title: Outside team builds the chain from a blank consumer module (O4 precondition)
+    status: draft
+    release: v2.1.0
+    description: "Standalone consumer module builds the Bet 1 target in CI; #533 bootstrap steps removed or documented; migration notes for MoonBit removal."
+    tags: [north-star-o4, bet-4]
+    fields:
+      acceptance-criteria: "[\"consumer CI job green on linux and macos\",\"plant: a consumer missing one bootstrap step fails naming the step\"]"
+    links:
+      - type: satisfies
+        target: REQ-002
+
+  - id: FEAT-010
+    type: feature
+    title: "aadl_wit_diff_test: AADL-to-WIT drift check (stretch, local O3 proxy)"
+    status: draft
+    release: v2.1.0
+    description: "#539 gap 1: regenerate WIT from the model and diff against checked-in WIT, with a planted drifted file."
+    tags: [north-star-o3, bet-5, stretch]
+    fields:
+      acceptance-criteria: "[\"passes on examples/spar_example\",\"fails on the planted drifted WIT\"]"
+    links:
+      - type: satisfies
+        target: REQ-002

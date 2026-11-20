@@ -33,3 +33,14 @@ check  = "Compatibility Tests (ubuntu-22.04)"
 run    = "grep -qx 'VERSION_ID=\"22.04\"' .github/scripts/testdata/os-release"
 plant  = "ci-controls/os-release-floor"
 expect = "fail"
+
+# Run by the "Rivet validate" job, which installs a pinned rivet. The plant
+# adds an artifact whose status rivet does not accept (the error that kept
+# main red before #731); `rivet validate` must exit non-zero on it.
+[[control]]
+id     = "rivet-invalid-artifact"
+check  = "Rivet validate"
+run    = "rivet validate"
+plant  = "ci-controls/rivet-invalid-artifact"
+expect = "fail"
+stderr_or_stdout_matches = "LS-099"

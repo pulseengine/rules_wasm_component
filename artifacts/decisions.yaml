@@ -138,3 +138,17 @@ artifacts:
     links:
       - type: satisfies
         target: REQ-005
+
+  - id: DD-005
+    type: design-decision
+    title: Remove MoonBit language support (#639); the reason v2.0.0 is a major release
+    status: accepted
+    release: v2.0.0
+    description: MoonBit rules and toolchain are removed. MoonBit's toolchain was only available from rolling /latest/ URLs (LS-002), which SC-002 forbids as an eager dependency. Removing public rules is a breaking change, so the next release is v2.0.0 (owner decision 2026-11-18).
+    tags: [breaking, toolchain]
+    fields:
+      alternatives: Keep MoonBit behind a lazy extension until a versioned release exists; ship the removal in a minor release.
+      rationale: Rolling-URL sourcing cannot be checksum-pinned (REQ-003); the rules had been disabled rather than tested.
+    links:
+      - type: satisfies
+        target: REQ-003

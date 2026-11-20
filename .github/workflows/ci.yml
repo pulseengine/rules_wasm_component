@@ -193,6 +193,8 @@ jobs:
       - name: Run Tests
         run: bazel test --test_output=errors -- //test/integration:basic_component_build_test //test/integration:basic_component_validation //test/unit:unit_tests //test/wkg/unit:smoke //test/js:test_hello_js_component_provides_info //test/js:test_calc_js_component_provides_info //test/js:test_npm_dependencies_installation
 
+      # rivet: verifies REQ-006
+      # rivet: verifies FEAT-002
       - name: Run P2/P3 WASI Version Tests
         run: bazel test --test_output=errors -- //test/p3:all
 
@@ -640,6 +642,48 @@ jobs:
           # floor assertion; that job's container has Python 3.10, and
           # run_ci_controls.py needs 3.11+ (tomllib).
           "$PY" .github/scripts/run_ci_controls.py --only os-release-floor
+
+  # rivet's trace must validate on every PR: `rivet validate` failed on main
+  # for weeks with nothing to catch it (fixed in #731). rivet is pinned by
+  # the sha256 GitHub publishes for the v0.42.2 musl release asset and
+  # installed into a job-local bin. The planted control (ci-controls.toml
+  # "rivet-invalid-artifact") proves the job fails on an invalid artifact.
+  rivet-validate:
+    name: Rivet validate
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - id: py
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install rivet (pinned)
+        env:
+          RIVET_VERSION: v0.42.2
+          RIVET_SHA256: 7433f219334d938a2c98d75f4b1a94502271a6870b94258b2c64b6cd356f7c49
+        run: |
+          set -euo pipefail
+          asset="rivet-${RIVET_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          mkdir -p "$RUNNER_TEMP/rivet" "$RUNNER_TEMP/bin"
+          curl -fsSL -o "$RUNNER_TEMP/rivet/$asset" \
+            "https://github.com/pulseengine/rivet/releases/download/${RIVET_VERSION}/${asset}"
+          echo "${RIVET_SHA256}  $RUNNER_TEMP/rivet/$asset" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/rivet/$asset" -C "$RUNNER_TEMP/rivet"
+          install -m 0755 "$(find "$RUNNER_TEMP/rivet" -type f -name rivet | head -1)" "$RUNNER_TEMP/bin/rivet"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: rivet validate
+        run: |
+          rivet --version
+          rivet validate
+
+      - name: Planted control (an invalid artifact must fail rivet validate)
+        env:
+          PY: ${{ steps.py.outputs.python-path }}
+        run: '"$PY" .github/scripts/run_ci_controls.py --only rivet-invalid-artifact'
 
   # Committed scripts get run on macOS, where /bin/bash is 3.2 and
   # /usr/bin/python3 is 3.9, while every other job here runs newer tools, so
