@@ -26,7 +26,9 @@ Version numbers change frequently. MODULE.bazel specifies the exact versions for
 
 All toolchains support:
 - **Linux**: x86_64, aarch64
-- **macOS**: x86_64 (Intel), aarch64 (Apple Silicon)
+- **macOS**: aarch64 (Apple Silicon); x86_64 (Intel) is not tested in CI (no
+  Intel macOS runners since 2026-11-20), and PulseEngine's own tools stop
+  shipping x86_64 macOS binaries from their next releases
 - **Windows**: x86_64
 
 No WSL required on Windows - all toolchains work natively.
