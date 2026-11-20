@@ -54,7 +54,7 @@ artifacts:
   - id: REQ-007
     type: requirement
     title: WIT can be recovered from an adopted component
-    status: implemented
+    status: verified
     release: v2.0.0
     description: wit_from_component extracts the WIT of a component imported with wasm_component_import, usable for binding generation.
     tags: [wit]
@@ -62,7 +62,7 @@ artifacts:
   - id: FEAT-003
     type: feature
     title: wit_from_component (#627)
-    status: implemented
+    status: verified
     release: v2.0.0
     description: Rule that recovers WIT from an adopted component.
     tags: [wit]
@@ -75,7 +75,7 @@ artifacts:
   - id: FEAT-004
     type: feature
     title: "varve module extension and covalent realm toolchains (#606, #635, #669)"
-    status: implemented
+    status: verified
     release: v2.0.0
     description: loom/meld/spar/synth/witness/wasm-tools/wkg/wit-bindgen-wrpc are sourced from varve's covalent realm (one pin, //:varve.toml) on Linux and macOS, replacing per-tool download logic; Windows keeps the per-tool fallback.
     tags: [toolchain, varve]
@@ -90,7 +90,7 @@ artifacts:
   - id: FEAT-005
     type: feature
     title: "wasm_optimize on the native loom toolchain (#512, #514)"
-    status: implemented
+    status: verified
     release: v2.0.0
     description: wasm_optimize uses native loom binaries instead of the previous optimizer path.
     tags: [toolchain, loom]

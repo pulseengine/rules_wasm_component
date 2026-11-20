@@ -1,0 +1,11 @@
+load(":varve_resolution_test.bzl", "varve_resolution_test")
+
+# rivet: FEAT-004. varve ships no Windows binaries, so Windows resolves the
+# per-tool fallback by design.
+varve_resolution_test(
+    name = "varve_resolution_test",
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)
