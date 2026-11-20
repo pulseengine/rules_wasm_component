@@ -152,10 +152,10 @@ jobs:
 
   compatibility-matrix:
     name: Compatibility Tests (${{ matrix.name }})
-    # Stays on ${{ matrix.os }}: Bazel matrix (Linux + macOS); smithy fleet is Linux-only without Bazel.
+    # Stays on ${{ matrix.os }}: the ubuntu:22.04 floor container runs on a hosted ubuntu-24.04 runner. Intel macOS dropped 2026-11-20 (owner decision).
     # The Linux floor is Ubuntu 22.04 / glibc 2.35 (rivet DD-004, REQ-005),
     # tested in an ubuntu:22.04 container: GitHub's ubuntu-22.04 runner image
-    # is unsupported from 2027-04-17. An empty `container` runs on the host.
+    # is unsupported from 2027-04-17.
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     strategy:
@@ -164,9 +164,6 @@ jobs:
           - name: ubuntu-22.04
             os: ubuntu-24.04
             container: ubuntu:22.04
-          - name: macos-15-intel
-            os: macos-15-intel
-            container: ""
 
     steps:
       - name: Install base packages (container)
