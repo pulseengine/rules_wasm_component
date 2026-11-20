@@ -32,4 +32,4 @@ manifest-version = 1
 # in //:varve-realms.toml; Bazel passes registry and root explicitly anyway.
 realm   = "covalent"
 channel = "rolling"
-layer   = "2026.10.0"
+layer   = "2026.11.17"
