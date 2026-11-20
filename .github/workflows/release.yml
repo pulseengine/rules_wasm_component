@@ -34,7 +34,7 @@ permissions:
 
 jobs:
   release:
-    uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7.7.0
+    uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@1d798ff015ed0696433e01e2c3ccbb2abefadad7 # v7.7.0
     with:
       release_files: rules_wasm_component-*.tar.gz
       prerelease: false
@@ -54,7 +54,7 @@ jobs:
 
   publish:
     needs: release
-    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v1.7.0
+    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@1ae09341a6014e9bea052879c42392ac6b8b632c # v1.7.0
     with:
       tag_name: ${{ inputs.tag || github.ref_name }}
       registry_fork: pulseengine/bazel-central-registry
