@@ -5,6 +5,8 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  # Required checks must also report on merge-queue commits.
+  merge_group:
   schedule:
     # Run daily to catch dependency issues
     - cron: "0 10 * * *"
@@ -215,9 +217,27 @@ jobs:
         performance-benchmark,
         compatibility-matrix,
       ]
-    if: success()
+    if: always()
 
     steps:
+      - name: Fail unless every needed job passed
+        # A required check that is skipped counts as passing, so this job runs
+        # always() and fails itself on any needed job that did not pass. The
+        # block between the markers is run verbatim by ci-controls.toml
+        # "aggregate-gate-*" against a planted failing result.
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          # aggregate-gate-begin
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "a needed job ended with: $r"; exit 1 ;;
+            esac
+          done
+          echo "all needed jobs passed: $RESULTS"
+          # aggregate-gate-end
+
       - name: Mark as production ready
         run: |
           echo "🎉 All production readiness checks passed!"

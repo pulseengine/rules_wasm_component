@@ -65,3 +65,25 @@ run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --te
 plant  = "ci-controls/varve-fallback-wins"
 expect = "fail"
 stderr_or_stdout_matches = "loom_toolchain_type.loom resolved to"
+
+# Run by the "Self-hosted fork guard" job. Runs the aggregate-gate block of
+# "Production Ready ✅" (extracted verbatim from production-readiness.yml) on the job results in
+# .github/scripts/testdata/needs-results; the plant adds a failed job.
+[[control]]
+id     = "aggregate-gate-production"
+check  = "Production Ready ✅"
+run    = "sh -c 'RESULTS=\"$(cat .github/scripts/testdata/needs-results)\" sh -c \"$(sed -n \"/# aggregate-gate-begin/,/# aggregate-gate-end/p\" .github/workflows/production-readiness.yml)\"'"
+plant  = "ci-controls/aggregate-gate"
+expect = "fail"
+stderr_or_stdout_matches = "a needed job ended with: failure"
+
+# Run by the "Self-hosted fork guard" job. Runs the aggregate-gate block of
+# "BCR Test Summary" (extracted verbatim from bcr-compatibility.yml) on the job results in
+# .github/scripts/testdata/needs-results; the plant adds a failed job.
+[[control]]
+id     = "aggregate-gate-bcr"
+check  = "BCR Test Summary"
+run    = "sh -c 'RESULTS=\"$(cat .github/scripts/testdata/needs-results)\" sh -c \"$(sed -n \"/# aggregate-gate-begin/,/# aggregate-gate-end/p\" .github/workflows/bcr-compatibility.yml)\"'"
+plant  = "ci-controls/aggregate-gate"
+expect = "fail"
+stderr_or_stdout_matches = "a needed job ended with: failure"
