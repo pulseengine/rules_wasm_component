@@ -60,6 +60,8 @@ go.work.sum
 
 # Exception: Keep essential adapter files
 !wasm/adapters/*.wasm
+# Exception: planted bad inputs for ci-controls.toml must be committed
+!ci-controls/**/*.wasm
 
 # Editor and tool specific
 .vscode/settings.json
