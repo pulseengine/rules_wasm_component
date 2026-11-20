@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Bazel
-        uses: bazel-contrib/setup-bazel@0.19.2
+        uses: bazel-contrib/setup-bazel@f34d6a05eae3c24acab7fa54587492daeaeffdab # 0.19.2
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}

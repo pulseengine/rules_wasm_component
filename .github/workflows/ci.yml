@@ -22,7 +22,7 @@ jobs:
       # Self-hosted runners may lack sudo for /usr/local/bin; setup-bazel
       # puts bazelisk on PATH without it (same pin as the other jobs).
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.19.2
+        uses: bazel-contrib/setup-bazel@f34d6a05eae3c24acab7fa54587492daeaeffdab # 0.19.2
         with:
           bazelisk-version: 1.x
 
@@ -137,8 +137,9 @@ jobs:
           sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (branch head 2026-11-20)
         with:
+          toolchain: stable
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
@@ -267,8 +268,9 @@ jobs:
           sudo mv bazelisk-darwin-amd64 /usr/local/bin/bazel
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (branch head 2026-11-20)
         with:
+          toolchain: stable
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
@@ -378,8 +380,9 @@ jobs:
           Move-Item bazelisk.exe C:\Windows\System32\bazel.exe -Force
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (branch head 2026-11-20)
         with:
+          toolchain: stable
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
