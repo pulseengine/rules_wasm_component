@@ -7,6 +7,8 @@ on:
   # Run on PRs to catch BCR issues early
   pull_request:
     branches: [main]
+  # Required checks must also report on merge-queue commits.
+  merge_group:
   # Allow manual triggering for testing specific scenarios
   workflow_dispatch:
     inputs:
@@ -401,10 +403,36 @@ jobs:
     name: BCR Test Summary
     # Stays on ubuntu-24.04: bundled summary job for the BCR test suite, keeping co-located.
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
-    needs: [bcr-hermetic-test, bcr-toolchain-validation]
+    needs:
+      [
+        bcr-hermetic-test,
+        bcr-toolchain-validation,
+        bcr-multi-platform-test,
+        bcr-incompatible-flags-test,
+        bcr-metadata-validation,
+        bcr-test-module-validation,
+      ]
     if: always()
 
     steps:
+      - name: Fail unless every needed job passed
+        # A required check that is skipped counts as passing, so this job runs
+        # always() and fails itself on any needed job that did not pass. The
+        # block between the markers is run verbatim by ci-controls.toml
+        # "aggregate-gate-*" against a planted failing result.
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          # aggregate-gate-begin
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "a needed job ended with: $r"; exit 1 ;;
+            esac
+          done
+          echo "all needed jobs passed: $RESULTS"
+          # aggregate-gate-end
+
       - name: Generate Test Summary
         run: |
           echo "📋 BCR Compatibility Test Summary"

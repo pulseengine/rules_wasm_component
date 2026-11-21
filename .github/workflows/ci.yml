@@ -5,6 +5,8 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  # Required checks must also report on merge-queue commits.
+  merge_group:
 
 env:
   BAZEL_VERSION: 8.3.1
@@ -672,6 +674,9 @@ jobs:
           # floor assertion; that job's container has Python 3.10, and
           # run_ci_controls.py needs 3.11+ (tomllib).
           "$PY" .github/scripts/run_ci_controls.py --only os-release-floor
+          # The aggregator gates of "Production Ready ✅" and "BCR Test Summary".
+          "$PY" .github/scripts/run_ci_controls.py --only aggregate-gate-production
+          "$PY" .github/scripts/run_ci_controls.py --only aggregate-gate-bcr
 
   # rivet's trace must validate on every PR: `rivet validate` failed on main
   # for weeks with nothing to catch it (fixed in #731). rivet is pinned by
