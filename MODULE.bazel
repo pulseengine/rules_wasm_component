@@ -212,7 +212,7 @@ wasmtime = use_extension("//wasm:extensions.bzl", "wasmtime")
 wasmtime.register(
     name = "wasmtime",
     strategy = "download",
-    version = "45.0.1",
+    version = "50.0.3",
 )
 use_repo(wasmtime, "wasmtime_toolchain")
 

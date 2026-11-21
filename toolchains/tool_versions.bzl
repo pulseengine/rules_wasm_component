@@ -26,7 +26,7 @@ IMPORTANT: When updating versions here:
 TOOL_VERSIONS = {
     # Core WebAssembly toolchain
     "wasm-tools": "1.246.2",  # Component model tools (validate, parse, compose, etc.)
-    "wasmtime": "45.0.1",  # WebAssembly runtime — runs WASI 0.3.0 stable (ratified 2026-06-11)
+    "wasmtime": "50.0.3",  # WebAssembly runtime — runs WASI 0.3.0 stable; >= 50.0.3 (fleet target, matches covalent) for RUSTSEC-2026-0587 (Windows)
 
     # WIT and binding generation
     "wit-bindgen": "0.55.0",  # held at 0.55: 0.58 changes C codegen type names, breaks cpp_component (see #500 follow-up)
@@ -58,7 +58,7 @@ TOOL_VERSIONS = {
 # P3-capable tool versions — minimum versions that support WASI Preview 3 async
 P3_TOOL_VERSIONS = {
     "wasm-tools": "1.246.2",  # async task.return fixes, stream/future intrinsic extensions
-    "wasmtime": "45.0.1",  # runs WASI 0.3.0 stable (ratified 2026-06-11)
+    "wasmtime": "50.0.3",  # runs WASI 0.3.0 stable; >= 50.0.3 (fleet target, matches covalent) for RUSTSEC-2026-0587 (Windows)
     "wit-bindgen": "0.55.0",  # WIT binding generator with futures::Stream adapter
     "wasi-sdk": "32",
     "jco": "1.17.6",  # P3 stream/async stabilization (nested streams, re-entrancy fixes)
@@ -84,7 +84,7 @@ TOOL_COMPATIBILITY_MATRIX = {
         "wac": ["0.9.0"],  # wac 0.9.0 does NOT support P3 async yet (issue #180)
         "wkg": ["0.13.0", "0.15.0"],
         "wasmsign2": ["0.2.6"],
-        "wasmtime": ["43.0.0", "43.0.1", "45.0.1"],
+        "wasmtime": ["43.0.0", "43.0.1", "45.0.1", "50.0.3"],
     },
     "1.245.1": {
         "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
