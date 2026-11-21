@@ -37,7 +37,7 @@ TOOL_VERSIONS = {
 
     # Signatures and security
     "wasmsign2": "0.2.6",  # WebAssembly signing tool (legacy)
-    "wsc": "0.7.0",  # WebAssembly Signature Component (signing, attestation, SLSA)
+    "wsc": "0.12.2",  # WebAssembly Signature Component (signing, attestation, SLSA)
 
     # PulseEngine pipeline tools
     "loom": "0.3.0",  # WebAssembly optimizer with Z3 formal verification

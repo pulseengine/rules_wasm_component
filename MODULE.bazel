@@ -413,7 +413,7 @@ wasm_component_download(
     name = "wasmsign2_cli_wasm",
     filename = "wasmsign2.wasm",
     tool_name = "wsc",
-    version = "0.7.0",
+    version = "0.12.2",  # >= 0.12.2: verify-chain recomputes the attested output hash (sigil#395)
 )
 
 # LOOM: consumed via the native loom toolchain, sourced from varve (above).
