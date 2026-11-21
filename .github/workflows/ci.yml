@@ -225,6 +225,14 @@ jobs:
       - name: Planted control (a fallback toolchain winning must fail the test)
         run: python3 .github/scripts/run_ci_controls.py --only varve-fallback-wins
 
+      # The attestation chain of the pipeline example must verify, and a
+      # component changed after attestation must not (sigil#395).
+      - name: Verify the attestation chain (wsc verify-chain)
+        run: bazel build --disk_cache=~/.cache/rwc-disk-cache -- //examples/pipeline_attestation:greeter_chain_verified
+
+      - name: Planted control (verify-chain must reject a component changed after attestation)
+        run: python3 .github/scripts/run_ci_controls.py --only wsc-verify-chain-tamper
+
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
 

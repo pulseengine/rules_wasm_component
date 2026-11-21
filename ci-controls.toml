@@ -87,3 +87,14 @@ run    = "sh -c 'RESULTS=\"$(cat .github/scripts/testdata/needs-results)\" sh -c
 plant  = "ci-controls/aggregate-gate"
 expect = "fail"
 stderr_or_stdout_matches = "a needed job ended with: failure"
+
+# Run by "Test on ubuntu-24.04". The plant verifies a copy of the attested
+# greeter whose content was changed after attestation (wasm-tools metadata
+# add); wasm_verify_chain (wsc verify-chain, >= 0.12.2, sigil#395) must fail.
+[[control]]
+id     = "wsc-verify-chain-tamper"
+check  = "Test on ubuntu-24.04"
+run    = "bazel --max_idle_secs=5 build --disk_cache=~/.cache/rwc-disk-cache //examples/pipeline_attestation:greeter_chain_verified"
+plant  = "ci-controls/wsc-verify-chain-tamper"
+expect = "fail"
+stderr_or_stdout_matches = "content changed after attestation"
