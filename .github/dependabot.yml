@@ -3,6 +3,7 @@ version: 2
 # version-locked, so bumping it in several tool dirs split one release into
 # several PRs (#683 #687 #699 #701). Group them.
 updates:
+  # PAUSED 2026-11-21 under the fleet CI hold; restore the previous limits when it lifts.
   # Rust dependencies for tools and components
   - package-ecosystem: "cargo"
     directory: "/tools/checksum_updater"
@@ -10,7 +11,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -45,7 +46,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -65,7 +66,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -87,7 +88,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -121,7 +122,7 @@ updates:
       interval: "weekly"
       day: "tuesday"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -140,7 +141,7 @@ updates:
       interval: "weekly"
       day: "tuesday"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -159,7 +160,7 @@ updates:
       interval: "weekly"
       day: "tuesday"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -179,7 +180,7 @@ updates:
       interval: "weekly"
       day: "tuesday"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -199,7 +200,7 @@ updates:
       interval: "weekly"
       day: "wednesday"
       time: "06:00"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -233,7 +234,7 @@ updates:
       interval: "weekly"
       day: "wednesday"
       time: "06:00"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
@@ -253,7 +254,7 @@ updates:
       interval: "weekly"
       day: "thursday"
       time: "06:00"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     reviewers:
       - "avrabe"
     assignees:
