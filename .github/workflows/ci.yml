@@ -717,6 +717,79 @@ jobs:
   # the sha256 GitHub publishes for the v0.42.2 musl release asset and
   # installed into a job-local bin. The planted control (ci-controls.toml
   # "rivet-invalid-artifact") proves the job fails on an invalid artifact.
+  # Every Cargo.toml has a current Cargo.lock without an unignored
+  # vulnerability, and MODULE.bazel.lock is current for Bazel 8.2.1 (owner
+  # decision: --lockfile_mode=error). The ssh_keygen advisory ignores expire
+  # (#747). cargo audit fails on vulnerabilities only; unmaintained, unsound
+  # and yanked warnings are printed but do not fail the job.
+  lockfiles:
+    name: Lockfiles and advisories
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (branch head 2026-11-20)
+        with:
+          toolchain: 1.100.0
+
+      - name: Install cargo-audit (pinned)
+        run: cargo install cargo-audit --locked --version 0.22.1
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@f34d6a05eae3c24acab7fa54587492daeaeffdab # 0.19.2
+        with:
+          bazelisk-version: 1.x
+
+      - name: Cargo.lock present, current and free of unignored vulnerabilities
+        run: |
+          # lockfile-check-begin
+          set -eu
+          status=0
+          today=$(date -u +%Y%m%d)
+          for manifest in $(find . -name Cargo.toml -not -path './ci-controls/*' -not -path './bazel-*' -not -path '*/target/*' -not -path '*/node_modules/*' | sort); do
+            dir=$(dirname "$manifest")
+            if [ ! -f "$dir/Cargo.lock" ]; then
+              echo "::error file=$manifest::no Cargo.lock next to $manifest"
+              status=1
+              continue
+            fi
+            if ! (cd "$dir" && cargo update --workspace --locked --quiet); then
+              echo "::error file=$dir/Cargo.lock::$dir/Cargo.lock is stale: cargo update --workspace --locked would change it"
+              status=1
+            fi
+            cfg="$dir/.cargo/audit.toml"
+            if [ -f "$cfg" ]; then
+              expiry=$(sed -n 's/^# expires: *\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\).*/\1/p' "$cfg" | tr -d -)
+              if [ -z "$expiry" ] || [ "$today" -gt "$expiry" ]; then
+                echo "::error file=$cfg::advisory ignores in $cfg have expired or carry no '# expires: YYYY-MM-DD' line"
+                status=1
+              fi
+            fi
+            if ! (cd "$dir" && cargo audit --quiet); then
+              echo "::error file=$dir/Cargo.lock::cargo audit found an unignored vulnerability in $dir/Cargo.lock"
+              status=1
+            fi
+          done
+          exit "$status"
+          # lockfile-check-end
+
+      - name: Planted control (a Cargo.toml change without its lock must fail)
+        run: python3 .github/scripts/run_ci_controls.py --only stale-cargo-lock
+
+      - name: Planted control (a nested lock with a vulnerable crate must fail)
+        run: python3 .github/scripts/run_ci_controls.py --only nested-vulnerable-lock
+
+      - name: Planted control (expired advisory ignores must fail)
+        run: python3 .github/scripts/run_ci_controls.py --only expired-audit-ignore
+
+      - name: MODULE.bazel.lock current (Bazel 8.2.1, --lockfile_mode=error)
+        run: bazel mod deps --lockfile_mode=error
+
+      - name: Planted control (a .bzl change without the lock must fail)
+        run: python3 .github/scripts/run_ci_controls.py --only stale-bazel-lock
+
   rivet-validate:
     name: Rivet validate
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
