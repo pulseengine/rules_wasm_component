@@ -98,3 +98,14 @@ run    = "bazel --max_idle_secs=5 build --disk_cache=~/.cache/rwc-disk-cache //e
 plant  = "ci-controls/wsc-verify-chain-tamper"
 expect = "fail"
 stderr_or_stdout_matches = "content changed after attestation"
+
+# Run by "Direct Integration Test" (Integration Examples workflow), which
+# runs the install snippet itself. The plant replaces the wasmtime 50.0.3
+# linux_amd64 sha256 with zeros; the pinned install must refuse the archive.
+[[control]]
+id     = "wasmtime-install-wrong-sha"
+check  = "Direct Integration Test"
+run    = "sh -c \"$(sed -n '/# wasmtime-install-begin/,/# wasmtime-install-end/p' .github/workflows/integration-examples.yml)\""
+plant  = "ci-controls/wasmtime-install-wrong-sha"
+expect = "fail"
+stderr_or_stdout_matches = "FAILED"

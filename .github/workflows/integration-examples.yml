@@ -176,10 +176,29 @@ jobs:
         working-directory: examples
         run: bazel build //...
 
-      - name: Install Wasmtime
+      # Pinned download, sha256 from checksums/tools/wasmtime.json (#749).
+      # wasmtime.dev/install.sh asked an unauthenticated GitHub API for the
+      # latest version and, when rate limited, tried to fetch version "{".
+      - name: Install Wasmtime (pinned, sha256-checked)
+        working-directory: rules_wasm_component
         run: |
-          curl https://wasmtime.dev/install.sh -sSf | bash
-          echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
+          # wasmtime-install-begin
+          set -eu
+          WASMTIME_VERSION=50.0.3
+          SHA=$(jq -r --arg v "$WASMTIME_VERSION" '.versions[$v].platforms.linux_amd64.sha256' checksums/tools/wasmtime.json)
+          ARCHIVE="wasmtime-v${WASMTIME_VERSION}-x86_64-linux.tar.xz"
+          curl -fsSL -o "$RUNNER_TEMP/$ARCHIVE" "https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/$ARCHIVE"
+          echo "$SHA  $RUNNER_TEMP/$ARCHIVE" | sha256sum -c -
+          tar -xJf "$RUNNER_TEMP/$ARCHIVE" -C "$RUNNER_TEMP"
+          mkdir -p "$HOME/.wasmtime/bin"
+          install -m 0755 "$RUNNER_TEMP/wasmtime-v${WASMTIME_VERSION}-x86_64-linux/wasmtime" "$HOME/.wasmtime/bin/wasmtime"
+          "$HOME/.wasmtime/bin/wasmtime" --version
+          # wasmtime-install-end
+          echo "$HOME/.wasmtime/bin" >> "$GITHUB_PATH"
+
+      - name: Planted control (a wrong wasmtime sha256 must fail the install)
+        working-directory: rules_wasm_component
+        run: python3 .github/scripts/run_ci_controls.py --only wasmtime-install-wrong-sha
 
       - name: Test Rust components
         working-directory: examples
