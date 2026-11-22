@@ -4,7 +4,9 @@ built by rustc 1.97.0 must fail.
 testdata/pre_1100_reactor.wasm is testdata/pre_1100_reactor.rs built as a
 cdylib with `cargo +1.97.0 build --release --target wasm32-wasip2` (package
 `lib1`, edition 2021, no dependencies). Its wit-component-fixup module has
-no start function and it does not import exit-with-code.
+no start function. It imports wasi:cli/exit@0.2.0 `exit` but not
+`exit-with-code`, which only the rustc 1.100.0 build imports (from
+wasi:cli/exit@0.2.12, next to `exit`).
 """
 
 load("@rules_rust//rust:defs.bzl", "rust_test")
