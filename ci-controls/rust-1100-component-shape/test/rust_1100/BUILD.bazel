@@ -1,0 +1,31 @@
+"""Planted control rust-1100-component-shape: the sample test on a component
+built by rustc 1.97.0 must fail.
+
+testdata/pre_1100_reactor.wasm is testdata/pre_1100_reactor.rs built as a
+cdylib with `cargo +1.97.0 build --release --target wasm32-wasip2` (package
+`lib1`, edition 2021, no dependencies). Its wit-component-fixup module has
+no start function. It imports wasi:cli/exit@0.2.0 `exit` but not
+`exit-with-code`, which only the rustc 1.100.0 build imports (from
+wasi:cli/exit@0.2.12, next to `exit`).
+"""
+
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
+rust_test(
+    name = "sample_test",
+    srcs = ["sample_test.rs"],
+    data = [
+        "testdata/pre_1100_reactor.wasm",
+        "@wasmtime_toolchain//:wasmtime",
+    ],
+    edition = "2021",
+    env = {
+        "SAMPLE_WASM": "$(rootpath testdata/pre_1100_reactor.wasm)",
+        "WASMTIME": "$(rootpath @wasmtime_toolchain//:wasmtime)",
+    },
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = ["@wasm_embed_aot_crates//:wasmparser"],
+)

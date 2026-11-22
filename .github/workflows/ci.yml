@@ -141,7 +141,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (branch head 2026-11-20)
         with:
-          toolchain: stable
+          toolchain: 1.100.0
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
@@ -233,6 +233,32 @@ jobs:
       - name: Planted control (verify-chain must reject a component changed after attestation)
         run: python3 .github/scripts/run_ci_controls.py --only wsc-verify-chain-tamper
 
+      # The Rust 1.100.0 sample component: its wit-component-fixup module runs
+      # _initialize as its start function (witness#402) and it runs on the
+      # registered wasmtime 50.0.3 but not on 45.0.1 (ordeal#309).
+      - name: Rust 1.100.0 sample component (shape and wasmtime floor)
+        run: bazel test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors -- //test/rust_1100:sample_test
+
+      - name: Planted control (a rustc 1.97.0 component must fail the 1.100 shape check)
+        run: python3 .github/scripts/run_ci_controls.py --only rust-1100-component-shape
+
+      - name: Planted control (wasmtime 45.0.1 must fail to run the 1.100 sample)
+        run: python3 .github/scripts/run_ci_controls.py --only wasmtime-pre46-rejects-1100
+
+      - name: Copy the Rust 1.100.0 sample component
+        run: |
+          mkdir -p "$RUNNER_TEMP/rust-1100-sample"
+          cp "$(bazel cquery --disk_cache=~/.cache/rwc-disk-cache --output=files //examples/basic:hello_component)" "$RUNNER_TEMP/rust-1100-sample/hello_component_rust_1_100.wasm"
+          cp ci-controls/rust-1100-component-shape/test/rust_1100/testdata/pre_1100_reactor.wasm ci-controls/rust-1100-component-shape/test/rust_1100/testdata/pre_1100_reactor.rs "$RUNNER_TEMP/rust-1100-sample/"
+          (cd "$RUNNER_TEMP/rust-1100-sample" && sha256sum *.wasm | tee SHA256SUMS)
+
+      - name: Upload the Rust 1.100.0 sample component
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: rust-1100-sample-component
+          path: ${{ runner.temp }}/rust-1100-sample/
+          if-no-files-found: error
+
       - name: Run Clippy
         run: echo "Skipping clippy for now due to target triple issues"
 
@@ -280,7 +306,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (branch head 2026-11-20)
         with:
-          toolchain: stable
+          toolchain: 1.100.0
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
@@ -392,7 +418,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (branch head 2026-11-20)
         with:
-          toolchain: stable
+          toolchain: 1.100.0
           targets: wasm32-wasip1,wasm32-wasip2,wasm32-unknown-unknown
           components: clippy
 
@@ -517,7 +543,7 @@ jobs:
           chmod +x bazelisk-linux-amd64
           sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
 
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.100.0
           source ~/.cargo/env
           rustup target add wasm32-wasip2 wasm32-wasip1
 

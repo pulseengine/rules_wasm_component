@@ -84,7 +84,9 @@ TOOL_COMPATIBILITY_MATRIX = {
         "wac": ["0.9.0"],  # wac 0.9.0 does NOT support P3 async yet (issue #180)
         "wkg": ["0.13.0", "0.15.0"],
         "wasmsign2": ["0.2.6"],
-        "wasmtime": ["43.0.0", "43.0.1", "45.0.1", "50.0.3"],
+        # >= 46.0.0: Rust 1.100 wasip2 components import wasi:cli/exit
+        # exit-with-code, which older wasmtime cannot link (ordeal#309).
+        "wasmtime": ["50.0.3"],
     },
     "1.245.1": {
         "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
