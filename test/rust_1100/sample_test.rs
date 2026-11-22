@@ -1,14 +1,21 @@
 //! Checks the Rust 1.100.0 sample component (//examples/basic:hello_component).
 //!
-//! rustc 1.100.0 (wit-component 0.257) changes what a wasm32-wasip2 component
-//! looks like in two ways that downstream tools have to handle:
+//! rustc 1.100.0 (wit-component 0.257) changes what a wasm32-wasip2 reactor
+//! component looks like:
 //!
-//! * the `wit-component-fixup` core module imports the main module's
-//!   `_initialize` and runs it as its start function (witness#402);
-//! * std imports `wasi:cli/exit@0.2.x` `exit-with-code`, which wasmtime
-//!   before 46.0.0 cannot link (ordeal#309).
+//! * every reactor: the `wit-component-fixup` core module imports the main
+//!   module's `_initialize` and runs it as its start function (witness#402).
+//!   A rustc 1.97.0 reactor's fixup module has no start function.
+//! * only a reactor whose code can reach std's default panic hook (any
+//!   panic site: formatting, allocation, indexing, unwrap; panic=abort does
+//!   not remove it) or `std::process::exit`: the main module imports
+//!   `wasi:cli/exit@0.2.x` `exit-with-code`, which wasmtime before 46.0.0
+//!   cannot link (ordeal#309). The hook reads RUST_BACKTRACE through
+//!   wasi-libc `getenv`, whose lazy environ setup calls `_Exit` on failure.
+//!   A reactor with no panic site has no such import.
 //!
-//! A component built by rustc 1.97.0 has neither, so these tests fail on it.
+//! The sample (`hello` formats a string) reaches the hook, so it must carry
+//! the import; the wasmtime-pre46-rejects-1100 control depends on that.
 
 use std::collections::HashMap;
 use std::process::Command;
@@ -117,7 +124,8 @@ fn sample_has_rust_1100_wasip2_shape() {
     });
     assert!(
         imports_exit_with_code,
-        "{path}: no core module imports wasi:cli/exit exit-with-code (ordeal#309)"
+        "{path}: no core module imports wasi:cli/exit exit-with-code, although the sample \
+         reaches std's default panic hook (ordeal#309)"
     );
 }
 

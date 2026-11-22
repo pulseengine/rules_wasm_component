@@ -1,9 +1,11 @@
 """Rust 1.100.0 wasm32-wasip2 sample component and its checks.
 
-The sample is //examples/basic:hello_component. rustc 1.100.0 gives it
-a `wit-component-fixup` core module that runs `_initialize` as its start
-function (witness#402) and an import of wasi:cli/exit exit-with-code, which
-needs wasmtime >= 46.0.0 (ordeal#309). CI uploads the sample as the
+The sample is //examples/basic:hello_component. rustc 1.100.0 gives every
+wasip2 reactor a `wit-component-fixup` core module that runs `_initialize` as
+its start function (witness#402). Because the sample can panic (it formats a
+string), it also imports wasi:cli/exit exit-with-code through std's default
+panic hook, and so needs wasmtime >= 46.0.0 (ordeal#309). A reactor with no
+panic site has no such import. CI uploads the sample as the
 `rust-1100-sample-component` artifact for the downstream tools to test against.
 
 Planted controls in //:ci-controls.toml:
