@@ -31,6 +31,11 @@ on:
       - 'wit/**'
       - 'toolchains/**'
       - 'providers/**'
+      # The job's own definition, the wasmtime sha256 it installs by, and the
+      # plant of its control: a change to any of them must run the job.
+      - '.github/workflows/integration-examples.yml'
+      - 'checksums/tools/wasmtime.json'
+      - 'ci-controls/wasmtime-install-wrong-sha/**'
 
   # Allow manual trigger for testing
   workflow_dispatch:
