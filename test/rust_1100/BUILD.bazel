@@ -1,0 +1,35 @@
+"""Rust 1.100.0 wasm32-wasip2 sample component and its checks.
+
+The sample is //examples/basic:hello_component. rustc 1.100.0 gives it
+a `wit-component-fixup` core module that runs `_initialize` as its start
+function (witness#402) and an import of wasi:cli/exit exit-with-code, which
+needs wasmtime >= 46.0.0 (ordeal#309). CI uploads the sample as the
+`rust-1100-sample-component` artifact for the downstream tools to test against.
+
+Planted controls in //:ci-controls.toml:
+  rust-1100-component-shape   the same test on a component built by rustc 1.97.0
+  wasmtime-pre46-rejects-1100 the same test with wasmtime 45.0.1
+"""
+
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
+rust_test(
+    name = "sample_test",
+    srcs = ["sample_test.rs"],
+    data = [
+        "//examples/basic:hello_component",
+        "@wasmtime_toolchain//:wasmtime",
+    ],
+    edition = "2021",
+    env = {
+        "SAMPLE_WASM": "$(rootpath //examples/basic:hello_component)",
+        "WASMTIME": "$(rootpath @wasmtime_toolchain//:wasmtime)",
+    },
+    # Runfiles are resolved through the symlink tree, which Windows CI does
+    # not create.
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = ["@wasm_embed_aot_crates//:wasmparser"],
+)

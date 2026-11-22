@@ -1,0 +1,26 @@
+"""Planted control wasmtime-pre46-rejects-1100: the Rust 1.100.0 sample must
+not run on wasmtime 45.0.1, which cannot link wasi:cli/exit exit-with-code
+(ordeal#309). @wasmtime_pre46_toolchain is a dev-only registration in
+MODULE.bazel that nothing else references.
+"""
+
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
+rust_test(
+    name = "sample_test",
+    srcs = ["sample_test.rs"],
+    data = [
+        "//examples/basic:hello_component",
+        "@wasmtime_pre46_toolchain//:wasmtime",
+    ],
+    edition = "2021",
+    env = {
+        "SAMPLE_WASM": "$(rootpath //examples/basic:hello_component)",
+        "WASMTIME": "$(rootpath @wasmtime_pre46_toolchain//:wasmtime)",
+    },
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = ["@wasm_embed_aot_crates//:wasmparser"],
+)

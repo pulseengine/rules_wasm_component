@@ -109,3 +109,23 @@ run    = "sh -c 'sh -c \"$(sed -n \"/# wasmtime-install-begin/,/# wasmtime-insta
 plant  = "ci-controls/wasmtime-install-wrong-sha"
 expect = "fail"
 stderr_or_stdout_matches = "FAILED"
+
+# Run by "Test on ubuntu-24.04". The plant points the sample test at a reactor
+# component built by rustc 1.97.0; the Rust 1.100 shape assertion must fail.
+[[control]]
+id     = "rust-1100-component-shape"
+check  = "Test on ubuntu-24.04"
+run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors --test_arg=--exact --test_arg=sample_has_rust_1100_wasip2_shape //test/rust_1100:sample_test"
+plant  = "ci-controls/rust-1100-component-shape"
+expect = "fail"
+stderr_or_stdout_matches = "wit-component-fixup does not run an imported _initialize"
+
+# Run by "Test on ubuntu-24.04". The plant runs the Rust 1.100 sample on
+# wasmtime 45.0.1, which must fail to link exit-with-code (ordeal#309).
+[[control]]
+id     = "wasmtime-pre46-rejects-1100"
+check  = "Test on ubuntu-24.04"
+run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors --test_arg=--exact --test_arg=sample_runs_on_wasmtime //test/rust_1100:sample_test"
+plant  = "ci-controls/wasmtime-pre46-rejects-1100"
+expect = "fail"
+stderr_or_stdout_matches = "instance export `exit-with-code` has the wrong type"
