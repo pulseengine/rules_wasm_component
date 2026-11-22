@@ -105,7 +105,7 @@ stderr_or_stdout_matches = "content changed after attestation"
 [[control]]
 id     = "wasmtime-install-wrong-sha"
 check  = "Direct Integration Test"
-run    = "sh -c \"$(sed -n '/# wasmtime-install-begin/,/# wasmtime-install-end/p' .github/workflows/integration-examples.yml)\""
+run    = "sh -c 'sh -c \"$(sed -n \"/# wasmtime-install-begin/,/# wasmtime-install-end/p\" .github/workflows/integration-examples.yml)\"'"
 plant  = "ci-controls/wasmtime-install-wrong-sha"
 expect = "fail"
 stderr_or_stdout_matches = "FAILED"
