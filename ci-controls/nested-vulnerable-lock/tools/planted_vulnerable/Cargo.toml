@@ -1,0 +1,9 @@
+[package]
+name = "planted-vulnerable"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# url <= 2.5.8 carries RUSTSEC-2026-0592.
+[dependencies]
+url = "=2.5.8"

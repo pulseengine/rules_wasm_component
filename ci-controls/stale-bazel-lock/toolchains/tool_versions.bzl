@@ -1,0 +1,263 @@
+"""Single source of truth for tool versions
+
+This file defines the canonical versions for all WebAssembly toolchain components.
+All toolchain setup code MUST reference these constants to ensure version consistency.
+
+TOOLCHAIN BUNDLES:
+For validated, tested combinations of tool versions, see checksums/toolchain_bundles.json.
+Bundles provide:
+- Pre-tested tool version combinations
+- Guaranteed compatibility
+- Easy atomic upgrades
+
+To use a bundle:
+    wasm_component_toolchains(bundle = "stable-2025-12")
+
+IMPORTANT: When updating versions here:
+1. Update corresponding JSON registry in checksums/tools/<tool>.json
+2. Verify compatibility using validate_tool_compatibility() in checksums/registry.bzl
+3. Check embedded runtimes (rust_wasm_component_bindgen.bzl) for API compatibility
+4. Update Cargo.toml dependencies if using the tool as a crate
+5. Test the full build pipeline
+6. Update checksums/toolchain_bundles.json with new validated combinations
+"""
+
+# Tool versions - single source of truth
+TOOL_VERSIONS = {
+    # Core WebAssembly toolchain
+    "wasm-tools": "1.246.2",  # Component model tools (validate, parse, compose, etc.)
+    "wasmtime": "50.0.3",  # WebAssembly runtime — runs WASI 0.3.0 stable; >= 50.0.3 (fleet target, matches covalent) for RUSTSEC-2026-0587 (Windows)
+
+    # WIT and binding generation
+    "wit-bindgen": "0.55.0",  # held at 0.55: 0.58 changes C codegen type names, breaks cpp_component (see #500 follow-up)
+    "wac": "0.9.0",  # WebAssembly Composition tool
+    "wkg": "0.15.0",  # WebAssembly package manager
+
+    # Note: wizer removed - now part of wasmtime v39.0.0+, use `wasmtime wizer` subcommand
+
+    # Signatures and security
+    "wasmsign2": "0.2.6",  # WebAssembly signing tool (legacy)
+    "wsc": "0.12.2",  # WebAssembly Signature Component (signing, attestation, SLSA)
+
+    # PulseEngine pipeline tools
+    "loom": "0.3.0",  # WebAssembly optimizer with Z3 formal verification
+    "meld": "0.10.0",  # Static WebAssembly component fusion
+
+    # WRPC (WebAssembly Component RPC)
+    "wrpc": "0.16.0",  # wrpc-wasmtime runtime for component RPC
+    "wit-bindgen-wrpc": "0.16.0",  # WIT binding generator for wrpc
+
+    # Platform SDKs
+    "wasi-sdk": "29",  # WASI SDK for C/C++ compilation
+    "tinygo": "0.39.0",  # TinyGo compiler for Go→WASM
+
+    # Node.js ecosystem
+    "nodejs": "24.14.1",  # Node.js runtime for jco toolchain (24.x required for Astro 6+)
+}
+
+# P3-capable tool versions — minimum versions that support WASI Preview 3 async
+P3_TOOL_VERSIONS = {
+    "wasm-tools": "1.246.2",  # async task.return fixes, stream/future intrinsic extensions
+    "wasmtime": "50.0.3",  # runs WASI 0.3.0 stable; >= 50.0.3 (fleet target, matches covalent) for RUSTSEC-2026-0587 (Windows)
+    "wit-bindgen": "0.55.0",  # WIT binding generator with futures::Stream adapter
+    "wasi-sdk": "32",
+    "jco": "1.17.6",  # P3 stream/async stabilization (nested streams, re-entrancy fixes)
+    "nodejs": "24.14.1",
+    "binaryen": "129",
+}
+
+# Languages that support P3 async
+P3_SUPPORTED_LANGUAGES = ["rust", "python", "javascript"]
+
+# Languages blocked from P3 with reasons
+P3_BLOCKED_LANGUAGES = {
+    "go": "TinyGo has no WASI P3 support (still P2-only as of v0.40.1)",
+    "cpp": "wasi-sdk has wasm32-wasip3 target but wit-bindgen C async is early stage",
+}
+
+# Compatibility matrix - defines which versions work together
+# Key: wasm-tools version
+# Value: Dict of compatible tool versions
+TOOL_COMPATIBILITY_MATRIX = {
+    "1.246.2": {
+        "wit-bindgen": ["0.54.0", "0.55.0"],
+        "wac": ["0.9.0"],  # wac 0.9.0 does NOT support P3 async yet (issue #180)
+        "wkg": ["0.13.0", "0.15.0"],
+        "wasmsign2": ["0.2.6"],
+        # >= 46.0.0: Rust 1.100 wasip2 components import wasi:cli/exit
+        # exit-with-code, which older wasmtime cannot link (ordeal#309).
+        "wasmtime": ["50.0.3"],
+    },
+    "1.245.1": {
+        "wit-bindgen": ["0.51.0", "0.53.1", "0.54.0"],
+        "wac": ["0.9.0"],
+        "wkg": ["0.13.0", "0.15.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["41.0.1", "42.0.1", "43.0.0", "43.0.1"],
+    },
+    "1.244.0": {
+        "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
+        "wac": ["0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["37.0.2", "39.0.1"],
+    },
+    "1.243.0": {
+        "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
+        "wac": ["0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["37.0.2", "39.0.1"],
+    },
+    "1.240.0": {
+        "wit-bindgen": ["0.46.0", "0.48.1", "0.49.0"],
+        "wac": ["0.7.0", "0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["27.0.0", "28.0.0", "37.0.2", "39.0.1"],
+    },
+    "1.239.0": {
+        "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
+        "wac": ["0.7.0", "0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["27.0.0", "28.0.0", "37.0.2", "39.0.1"],
+    },
+    "1.235.0": {
+        "wit-bindgen": ["0.43.0", "0.46.0", "0.48.1", "0.49.0"],
+        "wac": ["0.7.0", "0.8.0", "0.8.1"],
+        "wkg": ["0.11.0", "0.12.0", "0.13.0"],
+        "wasmsign2": ["0.2.6"],
+        "wasmtime": ["27.0.0", "37.0.2", "39.0.1"],
+    },
+}
+
+def get_tool_version(tool_name):
+    """Returns the canonical version for the given tool name.
+
+    Args:
+        tool_name: The name of the tool (e.g., "wasm-tools", "wit-bindgen").
+
+    Returns:
+        The version string for the tool, or fails if tool_name is not defined.
+    """
+    if tool_name not in TOOL_VERSIONS:
+        fail("Unknown tool: {}. Available tools: {}".format(
+            tool_name,
+            ", ".join(TOOL_VERSIONS.keys()),
+        ))
+    return TOOL_VERSIONS[tool_name]
+
+def get_compatible_versions(base_tool, base_version):
+    """Returns compatible versions for other tools based on a base tool version.
+
+    Args:
+        base_tool: The name of the base tool (usually "wasm-tools").
+        base_version: The version of the base tool.
+
+    Returns:
+        A dict mapping tool names to lists of compatible versions, or an empty dict if no compatibility info is available.
+    """
+    if base_tool == "wasm-tools" and base_version in TOOL_COMPATIBILITY_MATRIX:
+        return TOOL_COMPATIBILITY_MATRIX[base_version]
+    return {}
+
+def validate_tool_versions(tools_config):
+    """Validates that a set of tool versions are compatible with each other.
+
+    Args:
+        tools_config: A dict mapping tool names to their versions.
+
+    Returns:
+        A list of warning messages (empty if all versions are compatible).
+    """
+    warnings = []
+
+    # Check if wasm-tools is in the config
+    if "wasm-tools" not in tools_config:
+        return warnings
+
+    wasm_tools_version = tools_config["wasm-tools"]
+    compat_info = get_compatible_versions("wasm-tools", wasm_tools_version)
+
+    if not compat_info:
+        warnings.append(
+            "Warning: No compatibility information for wasm-tools {}".format(wasm_tools_version),
+        )
+        return warnings
+
+    # Check each tool against compatibility matrix
+    for tool, version in tools_config.items():
+        if tool == "wasm-tools":
+            continue
+
+        if tool in compat_info:
+            if version not in compat_info[tool]:
+                warnings.append(
+                    "Warning: {} version {} may not be compatible with wasm-tools {}. " +
+                    "Recommended versions: {}".format(
+                        tool,
+                        version,
+                        wasm_tools_version,
+                        ", ".join(compat_info[tool]),
+                    ),
+                )
+
+    return warnings
+
+def get_all_tool_versions():
+    """Get all tool versions as a dict
+
+    Returns:
+        Dict: Copy of TOOL_VERSIONS
+    """
+    return dict(TOOL_VERSIONS)
+
+# Export compatibility matrix for external use
+def get_compatibility_matrix():
+    """Get the full compatibility matrix
+
+    Returns:
+        Dict: Copy of TOOL_COMPATIBILITY_MATRIX
+    """
+    return dict(TOOL_COMPATIBILITY_MATRIX)
+
+def get_p3_tool_version(tool_name):
+    """Returns the minimum P3-capable version for the given tool.
+
+    Args:
+        tool_name: The name of the tool.
+
+    Returns:
+        The P3-minimum version string, or fails if not defined.
+    """
+    if tool_name not in P3_TOOL_VERSIONS:
+        fail("Tool '{}' does not have a P3-capable version defined. P3 tools: {}".format(
+            tool_name,
+            ", ".join(P3_TOOL_VERSIONS.keys()),
+        ))
+    return P3_TOOL_VERSIONS[tool_name]
+
+def is_p3_supported_language(language):
+    """Check if a language supports WASI P3.
+
+    Args:
+        language: Language name (e.g., "rust", "go", "python").
+
+    Returns:
+        True if the language has P3 support.
+    """
+    return language in P3_SUPPORTED_LANGUAGES
+
+def get_p3_block_reason(language):
+    """Get the reason a language is blocked from P3, or None.
+
+    Args:
+        language: Language name.
+
+    Returns:
+        String with block reason, or None if not blocked.
+    """
+    return P3_BLOCKED_LANGUAGES.get(language)
+
+# Planted control stale-bazel-lock: this line changes the bzl digest the lock records.

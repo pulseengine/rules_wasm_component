@@ -9,5 +9,3 @@ crate-type = ["cdylib"]
 [dependencies]
 wit-bindgen = "0.40.0"
 
-[dependencies.frontend_bindings]
-path = "."

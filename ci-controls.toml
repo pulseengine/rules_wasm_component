@@ -129,3 +129,46 @@ run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --te
 plant  = "ci-controls/wasmtime-pre46-rejects-1100"
 expect = "fail"
 stderr_or_stdout_matches = "instance export `exit-with-code` has the wrong type"
+
+# The four controls below are run by "Lockfiles and advisories". The cargo
+# ones run the job's lockfile-check snippet itself (markers in ci.yml).
+
+# The plant adds a dependency to rust_validator's Cargo.toml without
+# updating its Cargo.lock.
+[[control]]
+id     = "stale-cargo-lock"
+check  = "Lockfiles and advisories"
+run    = "sh -c 'sh -c \"$(sed -n \"/# lockfile-check-begin/,/# lockfile-check-end/p\" .github/workflows/ci.yml)\"'"
+plant  = "ci-controls/stale-cargo-lock"
+expect = "fail"
+stderr_or_stdout_matches = "rust_validator/Cargo.lock is stale"
+
+# The plant adds tools/planted_vulnerable with a consistent Cargo.lock that
+# pins url 2.5.8 (RUSTSEC-2026-0592).
+[[control]]
+id     = "nested-vulnerable-lock"
+check  = "Lockfiles and advisories"
+run    = "sh -c 'sh -c \"$(sed -n \"/# lockfile-check-begin/,/# lockfile-check-end/p\" .github/workflows/ci.yml)\"'"
+plant  = "ci-controls/nested-vulnerable-lock"
+expect = "fail"
+stderr_or_stdout_matches = "unignored vulnerability in ./tools/planted_vulnerable/Cargo.lock"
+
+# The plant moves the ssh_keygen advisory ignores' expiry into the past.
+[[control]]
+id     = "expired-audit-ignore"
+check  = "Lockfiles and advisories"
+run    = "sh -c 'sh -c \"$(sed -n \"/# lockfile-check-begin/,/# lockfile-check-end/p\" .github/workflows/ci.yml)\"'"
+plant  = "ci-controls/expired-audit-ignore"
+expect = "fail"
+stderr_or_stdout_matches = "tools/ssh_keygen/.cargo/audit.toml have expired"
+
+# The plant appends a comment to toolchains/tool_versions.bzl, which changes
+# the bzlTransitiveDigest MODULE.bazel.lock records for the extensions that
+# load it. If the real file changes later, the plant still differs from it.
+[[control]]
+id     = "stale-bazel-lock"
+check  = "Lockfiles and advisories"
+run    = "bazel --max_idle_secs=5 mod deps --lockfile_mode=error"
+plant  = "ci-controls/stale-bazel-lock"
+expect = "fail"
+stderr_or_stdout_matches = "MODULE.bazel.lock is no longer up-to-date"
