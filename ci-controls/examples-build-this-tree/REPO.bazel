@@ -1,0 +1,6 @@
+# Planted by ci-controls.toml "examples-build-this-tree". Copied over a
+# scratch copy of this tree, it makes every package of rules_wasm_component
+# fail to load. A "Direct Integration Test" that builds the examples against
+# this tree must then fail; one that silently builds another
+# rules_wasm_component (the examples' git_override) stays green.
+fail("planted: rules_wasm_component taken from this tree")

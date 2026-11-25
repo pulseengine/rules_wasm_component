@@ -1,41 +1,27 @@
 name: Integration Examples Test
 
-# Triggers integration tests in wasm-component-examples repo
-# to validate that rules changes don't break downstream users.
+# Builds pulseengine/wasm-component-examples against this tree.
 #
-# This is an optional check - it provides early warning but
-# won't block merges if the examples repo has its own issues.
+# "Direct Integration Test" is the gate: it runs on every PR and merge-queue
+# commit (no paths filter, so it reports on docs-only PRs too) and checks out
+# the examples repo at the commit pinned in .github/examples.ref. Only a PR
+# here can change what it builds; bump the pin by PR to pick up new examples.
+#
+# "Integration (examples@main, early warning)" is not a gate: it builds the
+# examples repo's main, or a branch there with the same name as this PR's
+# branch (the breaking-change protocol below), and only warns.
 #
 # BREAKING CHANGE PROTOCOL:
 # When introducing breaking changes, create a branch in the examples repo
-# with the SAME NAME as your PR branch. The CI will automatically detect
-# and test against that matching branch.
-#
-# Example:
-#   Your PR branch: feature/new-api
-#   Create in examples: feature/new-api (with updated examples)
-#   CI tests: rules:feature/new-api against examples:feature/new-api
+# with the SAME NAME as your PR branch; the early-warning job tests against
+# it. Then bump .github/examples.ref to the examples commit that works with
+# the new API, in the same PR, so the gate tests it too.
 
 on:
   pull_request:
     branches: [main]
-    # Only run for significant changes, not docs-only updates
-    paths:
-      - '*.bzl'
-      - 'MODULE.bazel'
-      - 'rust/**'
-      - 'go/**'
-      - 'cpp/**'
-      - 'js/**'
-      - 'wasm/**'
-      - 'wit/**'
-      - 'toolchains/**'
-      - 'providers/**'
-      # The job's own definition, the wasmtime sha256 it installs by, and the
-      # plant of its control: a change to any of them must run the job.
-      - '.github/workflows/integration-examples.yml'
-      - 'checksums/tools/wasmtime.json'
-      - 'ci-controls/wasmtime-install-wrong-sha/**'
+  # Required checks must also report on merge-queue commits.
+  merge_group:
 
   # Allow manual trigger for testing
   workflow_dispatch:
@@ -50,10 +36,14 @@ env:
   CI: true
   # The examples repository to trigger
   EXAMPLES_REPO: ${{ github.event.inputs.examples_repo || 'pulseengine/wasm-component-examples' }}
+  # The examples repo has no .bazelversion; without this bazelisk takes the
+  # newest Bazel release. Same version as ci.yml.
+  USE_BAZEL_VERSION: 8.3.1
 
 jobs:
   trigger-integration:
     name: Trigger Integration Tests
+    if: github.event_name != 'merge_group'
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
 
     # This job requires a PAT with repo scope stored as INTEGRATION_TEST_TOKEN
@@ -87,25 +77,29 @@ jobs:
 
       - name: Log integration test trigger
         if: steps.check-token.outputs.has_token == 'true'
+        # The branch name reaches the shell through env, never interpolated
+        # into the script: a branch name can contain $(...).
+        env:
+          RULES_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           echo "✅ Triggered integration tests in ${{ env.EXAMPLES_REPO }}"
           echo ""
           echo "Test configuration:"
-          echo "  Branch: ${{ github.head_ref || github.ref_name }}"
+          echo "  Branch: $RULES_BRANCH"
           echo "  Repository: ${{ github.repository }}"
           echo "  PR: #${{ github.event.pull_request.number }}"
           echo "  SHA: ${{ github.event.pull_request.head.sha || github.sha }}"
           echo ""
           echo "View results: https://github.com/${{ env.EXAMPLES_REPO }}/actions"
 
-  # Alternative: Run integration tests directly in this workflow
-  # This doesn't require cross-repo dispatch but duplicates the test logic
   direct-integration-test:
     name: Direct Integration Test
-    # Stays on ubuntu-24.04: Bazel + sudo mv install steps not supported on smithy fleet.
-    runs-on: ubuntu-24.04
-    # Only run if we don't have the dispatch token
-    # This provides a fallback for forks and repos without the secret
+    # On the self-hosted light pool (hosted ubuntu-24.04 queued 91-97 min on
+    # 2026-11-25); fork PRs fall back to ubuntu-24.04.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+    timeout-minutes: 45
+    env:
+      EXAMPLES_DIR: ${{ github.workspace }}/examples
 
     steps:
       - name: Checkout rules_wasm_component (this PR)
@@ -113,73 +107,62 @@ jobs:
         with:
           path: rules_wasm_component
 
-      - name: Check for matching examples branch
-        id: examples-branch
+      - name: Read the pinned examples commit
+        id: examples-ref
+        working-directory: rules_wasm_component
         run: |
-          RULES_BRANCH="${{ github.head_ref || github.ref_name }}"
-
-          echo "══════════════════════════════════════════════════════════"
-          echo "INTEGRATION TEST BRANCH RESOLUTION"
-          echo "══════════════════════════════════════════════════════════"
-          echo "Rules PR branch: $RULES_BRANCH"
-          echo "Checking examples repo for matching branch..."
-          echo ""
-
-          # Check if a matching branch exists in the examples repo
-          if git ls-remote --heads https://github.com/pulseengine/wasm-component-examples.git "$RULES_BRANCH" | grep -q "$RULES_BRANCH"; then
-            echo "✅ Found matching branch: $RULES_BRANCH"
-            echo "   Using examples branch: $RULES_BRANCH"
-            echo ""
-            echo "   This means the rules PR has breaking changes that require"
-            echo "   corresponding updates in the examples repo."
-            echo "branch=$RULES_BRANCH" >> $GITHUB_OUTPUT
-            echo "matched=true" >> $GITHUB_OUTPUT
-          else
-            echo "ℹ️  No matching branch found: $RULES_BRANCH"
-            echo "   Using examples branch: main"
-            echo ""
-            echo "   This is expected for non-breaking changes."
-            echo "branch=main" >> $GITHUB_OUTPUT
-            echo "matched=false" >> $GITHUB_OUTPUT
+          REF=$(head -n 1 .github/examples.ref)
+          if ! printf '%s\n' "$REF" | grep -Eqx '[0-9a-f]{40}'; then
+            echo "FAIL: .github/examples.ref must hold one full commit sha, found: $REF"
+            exit 1
           fi
+          echo "Examples pinned at: $REF"
+          echo "sha=$REF" >> "$GITHUB_OUTPUT"
 
-          echo "══════════════════════════════════════════════════════════"
-
-      - name: Checkout examples repository
+      - name: Checkout examples repository (pinned)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: pulseengine/wasm-component-examples
-          ref: ${{ steps.examples-branch.outputs.branch }}
+          ref: ${{ steps.examples-ref.outputs.sha }}
           path: examples
 
-      - name: Setup integration test
-        working-directory: examples
+      # Pinned bazelisk into a job-local bin: no sudo, nothing left on the
+      # persistent self-hosted host, checked against the sha256 digest GitHub
+      # publishes for the v1.30.0 release asset.
+      - name: Install bazelisk (pinned)
+        env:
+          BAZELISK_VERSION: v1.30.0
+          BAZELISK_SHA256: a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8
         run: |
-          # Replace git_override with local_path_override between markers
-          sed -i '/RULES_WASM_COMPONENT_OVERRIDE_START/,/RULES_WASM_COMPONENT_OVERRIDE_END/c\
-          # RULES_WASM_COMPONENT_OVERRIDE_START\
-          local_path_override(\
-              module_name = "rules_wasm_component",\
-              path = "../rules_wasm_component",\
-          )\
-          # RULES_WASM_COMPONENT_OVERRIDE_END' MODULE.bazel
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSL -o "$RUNNER_TEMP/bin/bazel" \
+            "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-linux-amd64"
+          echo "${BAZELISK_SHA256}  $RUNNER_TEMP/bin/bazel" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/bin/bazel"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
-          echo "=== MODULE.bazel override block ==="
-          sed -n '/OVERRIDE_START/,/OVERRIDE_END/p' MODULE.bazel
-
-          echo "=== Testing against PR branch ==="
-          cd ../rules_wasm_component && git log -1 --oneline
-
-      - name: Install Bazelisk
+      # Builds the examples with rules_wasm_component taken from the directory
+      # this runs in (--override_module replaces the examples' git_override).
+      # ci-controls.toml "examples-build-this-tree" runs the block verbatim on
+      # a scratch copy of this tree with a planted defect.
+      - name: Build examples against this tree
+        working-directory: rules_wasm_component
         run: |
-          curl -fsSLO https://github.com/bazelbuild/bazelisk/releases/download/v1.30.0/bazelisk-linux-amd64
-          echo "a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8  bazelisk-linux-amd64" | sha256sum -c -
-          chmod +x bazelisk-linux-amd64
-          sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+          # examples-build-begin
+          set -eu
+          RULES_DIR=$(pwd)
+          cd "$EXAMPLES_DIR"
+          # EXAMPLES_TARGETS may list several targets: split on purpose.
+          # shellcheck disable=SC2086
+          bazel build --override_module=rules_wasm_component="$RULES_DIR" ${EXAMPLES_TARGETS:-//...}
+          # examples-build-end
 
-      - name: Build examples
-        working-directory: examples
-        run: bazel build //...
+      # rivet: verifies FEAT-008
+      - name: Planted control (examples must be built from this tree)
+        working-directory: rules_wasm_component
+        env:
+          EXAMPLES_TARGETS: //rust:hello_rust
+        run: python3 .github/scripts/run_ci_controls.py --only examples-build-this-tree
 
       # Pinned download, sha256 from checksums/tools/wasmtime.json (#749).
       # wasmtime.dev/install.sh asked an unauthenticated GitHub API for the
@@ -208,44 +191,74 @@ jobs:
       - name: Test Rust components
         working-directory: examples
         run: |
+          set -eu
+          OVERRIDE="--override_module=rules_wasm_component=$GITHUB_WORKSPACE/rules_wasm_component"
           echo "=== Testing hello_rust ==="
-          WASM_FILE=$(bazel cquery --output=files //rust:hello_rust 2>/dev/null | head -1)
-          $HOME/.wasmtime/bin/wasmtime run "$WASM_FILE"
+          WASM_FILE=$(bazel cquery "$OVERRIDE" --output=files //rust:hello_rust 2>/dev/null | head -1)
+          "$HOME/.wasmtime/bin/wasmtime" run "$WASM_FILE"
 
           echo ""
           echo "=== Testing calculator ==="
-          WASM_FILE=$(bazel cquery --output=files //rust:calculator 2>/dev/null | head -1)
-          OUTPUT=$($HOME/.wasmtime/bin/wasmtime run "$WASM_FILE" 8 + 8)
+          WASM_FILE=$(bazel cquery "$OVERRIDE" --output=files //rust:calculator 2>/dev/null | head -1)
+          OUTPUT=$("$HOME/.wasmtime/bin/wasmtime" run "$WASM_FILE" 8 + 8)
           echo "$OUTPUT"
           echo "$OUTPUT" | grep -q "8 + 8 = 16"
 
-      - name: Report result
-        if: success()
-        run: |
-          echo "══════════════════════════════════════════════════════════"
-          echo "✅ INTEGRATION TEST PASSED"
-          echo "══════════════════════════════════════════════════════════"
-          echo "Rules:    ${{ github.repository }}@${{ github.head_ref || github.ref_name }}"
-          echo "Examples: ${{ steps.examples-branch.outputs.branch }}"
-          if [ "${{ steps.examples-branch.outputs.matched }}" == "true" ]; then
-            echo ""
-            echo "Note: Used matching examples branch for breaking changes."
-          fi
-          echo "══════════════════════════════════════════════════════════"
+  examples-main-early-warning:
+    name: Integration (examples@main, early warning)
+    # Not a required check: the examples repo's main can change without a PR
+    # here. Not run in the merge queue, where only the gate above matters.
+    if: github.event_name != 'merge_group'
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+    timeout-minutes: 45
 
-      - name: Report failure
+    steps:
+      - name: Checkout rules_wasm_component (this PR)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: rules_wasm_component
+
+      - name: Check for matching examples branch
+        id: examples-branch
+        # The branch name reaches the shell through env, never interpolated
+        # into the script: a fork's branch name can contain $(...).
+        env:
+          RULES_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/pulseengine/wasm-component-examples.git "refs/heads/$RULES_BRANCH" >/dev/null; then
+            echo "Found a matching examples branch; testing against it."
+            echo "branch=$RULES_BRANCH" >> "$GITHUB_OUTPUT"
+          else
+            echo "No matching examples branch; testing against main."
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout examples repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: pulseengine/wasm-component-examples
+          ref: ${{ steps.examples-branch.outputs.branch }}
+          path: examples
+
+      - name: Install bazelisk (pinned)
+        env:
+          BAZELISK_VERSION: v1.30.0
+          BAZELISK_SHA256: a248ae2b2b62b5baebb748f6fba7203bff1a27e5d01b55399a8406744cb539e8
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSL -o "$RUNNER_TEMP/bin/bazel" \
+            "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-linux-amd64"
+          echo "${BAZELISK_SHA256}  $RUNNER_TEMP/bin/bazel" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/bin/bazel"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Build examples against this tree
+        working-directory: examples
+        run: bazel build --override_module=rules_wasm_component="$GITHUB_WORKSPACE/rules_wasm_component" //...
+
+      - name: Report
         if: failure()
         run: |
-          echo "══════════════════════════════════════════════════════════"
-          echo "❌ INTEGRATION TEST FAILED"
-          echo "══════════════════════════════════════════════════════════"
-          echo "Rules:    ${{ github.repository }}@${{ github.head_ref || github.ref_name }}"
-          echo "Examples: ${{ steps.examples-branch.outputs.branch }}"
-          if [ "${{ steps.examples-branch.outputs.matched }}" == "false" ]; then
-            echo ""
-            echo "💡 TIP: If this is a breaking change, create a branch in"
-            echo "   pulseengine/wasm-component-examples with the same name:"
-            echo "   ${{ github.head_ref || github.ref_name }}"
-            echo "   Update the examples to work with the new API, then re-run."
-          fi
-          echo "══════════════════════════════════════════════════════════"
+          echo "The examples repo's main (or the same-name branch) does not build"
+          echo "against this tree. Not a gate. If this PR breaks the examples API,"
+          echo "add a same-name branch there and bump .github/examples.ref."

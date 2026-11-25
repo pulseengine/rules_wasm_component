@@ -110,6 +110,19 @@ plant  = "ci-controls/wasmtime-install-wrong-sha"
 expect = "fail"
 stderr_or_stdout_matches = "FAILED"
 
+# Run by "Direct Integration Test" (Integration Examples workflow), which
+# runs the examples build block itself with EXAMPLES_DIR set to its examples
+# checkout. The plant is a REPO.bazel that fails every package of this tree:
+# the examples build must break, proving it used this tree and not the
+# examples' own git_override of rules_wasm_component.
+[[control]]
+id     = "examples-build-this-tree"
+check  = "Direct Integration Test"
+run    = "sh -c 'sh -c \"$(sed -n \"/# examples-build-begin/,/# examples-build-end/p\" .github/workflows/integration-examples.yml)\"'"
+plant  = "ci-controls/examples-build-this-tree"
+expect = "fail"
+stderr_or_stdout_matches = "planted: rules_wasm_component taken from this tree"
+
 # Run by "Test on ubuntu-24.04". The plant points the sample test at a reactor
 # component built by rustc 1.97.0; the Rust 1.100 shape assertion must fail.
 [[control]]
