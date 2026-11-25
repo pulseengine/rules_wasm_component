@@ -711,6 +711,8 @@ jobs:
           # The aggregator gates of "Production Ready ✅" and "BCR Test Summary".
           "$PY" .github/scripts/run_ci_controls.py --only aggregate-gate-production
           "$PY" .github/scripts/run_ci_controls.py --only aggregate-gate-bcr
+          "$PY" .github/scripts/run_ci_controls.py --only aggregate-gate-production-cancelled
+          "$PY" .github/scripts/run_ci_controls.py --only aggregate-gate-bcr-cancelled
 
   # rivet's trace must validate on every PR: `rivet validate` failed on main
   # for weeks with nothing to catch it (fixed in #731). rivet is pinned by

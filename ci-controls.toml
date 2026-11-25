@@ -75,7 +75,7 @@ check  = "Production Ready ✅"
 run    = "sh -c 'RESULTS=\"$(cat .github/scripts/testdata/needs-results)\" sh -c \"$(sed -n \"/# aggregate-gate-begin/,/# aggregate-gate-end/p\" .github/workflows/production-readiness.yml)\"'"
 plant  = "ci-controls/aggregate-gate"
 expect = "fail"
-stderr_or_stdout_matches = "a needed job ended with: failure"
+stderr_or_stdout_matches = "FAILED: a needed job ended with: failure"
 
 # Run by the "Self-hosted fork guard" job. Runs the aggregate-gate block of
 # "BCR Test Summary" (extracted verbatim from bcr-compatibility.yml) on the job results in
@@ -86,7 +86,7 @@ check  = "BCR Test Summary"
 run    = "sh -c 'RESULTS=\"$(cat .github/scripts/testdata/needs-results)\" sh -c \"$(sed -n \"/# aggregate-gate-begin/,/# aggregate-gate-end/p\" .github/workflows/bcr-compatibility.yml)\"'"
 plant  = "ci-controls/aggregate-gate"
 expect = "fail"
-stderr_or_stdout_matches = "a needed job ended with: failure"
+stderr_or_stdout_matches = "FAILED: a needed job ended with: failure"
 
 # Run by "Test on ubuntu-24.04". The plant verifies a copy of the attested
 # greeter whose content was changed after attestation (wasm-tools metadata
@@ -172,3 +172,23 @@ run    = "bazel --max_idle_secs=5 mod deps --lockfile_mode=error"
 plant  = "ci-controls/stale-bazel-lock"
 expect = "fail"
 stderr_or_stdout_matches = "MODULE.bazel.lock is no longer up-to-date"
+
+# Run by the "Self-hosted fork guard" job, like the two aggregate-gate
+# controls above. The plant's needs-results holds a cancelled job (a hosted
+# runner that was never acquired); the gate must fail it as INCOMPLETE, never
+# pass it.
+[[control]]
+id     = "aggregate-gate-production-cancelled"
+check  = "Production Ready ✅"
+run    = "sh -c 'RESULTS=\"$(cat .github/scripts/testdata/needs-results)\" sh -c \"$(sed -n \"/# aggregate-gate-begin/,/# aggregate-gate-end/p\" .github/workflows/production-readiness.yml)\"'"
+plant  = "ci-controls/aggregate-gate-cancelled"
+expect = "fail"
+stderr_or_stdout_matches = "INCOMPLETE: a needed job was cancelled"
+
+[[control]]
+id     = "aggregate-gate-bcr-cancelled"
+check  = "BCR Test Summary"
+run    = "sh -c 'RESULTS=\"$(cat .github/scripts/testdata/needs-results)\" sh -c \"$(sed -n \"/# aggregate-gate-begin/,/# aggregate-gate-end/p\" .github/workflows/bcr-compatibility.yml)\"'"
+plant  = "ci-controls/aggregate-gate-cancelled"
+expect = "fail"
+stderr_or_stdout_matches = "INCOMPLETE: a needed job was cancelled"
