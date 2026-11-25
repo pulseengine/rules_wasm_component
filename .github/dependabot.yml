@@ -1,31 +1,78 @@
 version: 2
-# One PR per logical release across all directories: the wasm-tools family is
-# version-locked, so bumping it in several tool dirs split one release into
-# several PRs (#683 #687 #699 #701). Group them.
+# Grouped monthly updates (fleet template, owner decision 2026-11-21; same
+# shape as pulseengine/rivet's .github/dependabot.yml).
+# One entry per ecosystem, its directories in one `directories:` list, so a
+# release opens one PR and not one per directory (#683 #687 #699 #701,
+# #710-#715, #716-#719 each split one release into several PRs). Every entry
+# runs monthly (the 1st, 02:00 UTC), keeps at most 2 PRs open, and waits 7
+# days after a release (cooldown). Lockstep groups come first because
+# Dependabot puts a dependency in the FIRST group it matches; then one
+# minor-patch group. Majors stay ungrouped, one PR each, so a breaking change
+# is read on its own. Security updates ignore the schedule and the limit.
 updates:
-  # PAUSED 2026-11-21 under the fleet CI hold; restore the previous limits when it lifts.
-  # Rust dependencies for tools and components
-  - package-ecosystem: "cargo"
-    directory: "/tools/checksum_updater"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
+      interval: monthly
+      time: "02:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
     assignees:
       - "avrabe"
     commit-message:
-      prefix: "rust/checksum"
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "ci-cd"
+      - "automated"
+    groups:
+      github-actions-all:
+        patterns:
+          - "*"
+
+  # NOT listed: /tools/checksum_updater, /tools/ssh_keygen and
+  # /tools/wasm_embed_aot. MODULE.bazel feeds their Cargo.lock files to
+  # crate_universe (crate.from_cargo), so a lock bump there changes
+  # MODULE.bazel.lock. Measured 2026-11-25 on 76fbb63a: `cargo update -p anyhow
+  # --precise 1.0.105` in tools/ssh_keygen made `bazel mod deps
+  # --lockfile_mode=error` exit 2 ("MODULE.bazel.lock is no longer up-to-date
+  # because: One or more files the extension
+  # '@@rules_rust+//crate_universe:extension.bzl%crate' is using have
+  # changed"), which turns "Lockfiles and advisories" red on every such PR.
+  # Dependabot cannot regenerate MODULE.bazel.lock, and a commit pushed with
+  # GITHUB_TOKEN neither triggers CI nor is signed. Owner decision 2026-11-25:
+  # no App token; the lock step stays verify-only (it prints the regen
+  # command) and an agent pushes the signed MODULE.bazel.lock. Add the three
+  # back when that verify-only step (being built in pulseengine/synth) is
+  # copied here. Until then their locks are bumped by hand; cargo audit in
+  # "Lockfiles and advisories" still reports advisories in them.
+  - package-ecosystem: cargo
+    directories:
+      - /tools/checksum_updater_wasm
+      - /tools-builder/toolchains
+      - /tools/checksum_validator_multi/rust_validator
+      - /examples/wac_remote_compose
+    schedule:
+      interval: monthly
+      time: "02:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    assignees:
+      - "avrabe"
+    commit-message:
+      prefix: "rust"
       include: "scope"
     labels:
       - "dependencies"
       - "rust"
       - "automated"
-      - "toolchain"
-
     groups:
+      # The wasm-tools family is version-locked: one release, one PR.
       wasm-tools-family:
         patterns:
           - "wasmparser"
@@ -40,186 +87,73 @@ updates:
         patterns:
           - "wasmtime"
           - "wasmtime-*"
-  - package-ecosystem: "cargo"
-    directory: "/tools/checksum_updater_wasm"
+      minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: gomod
+    directories:
+      - /tools/http_downloader_go
+      - /tools/checksum_validator_multi/go_downloader
+      - /tools/checksum_validator_multi/production_checksum_updater
+      - /examples/go_component
+      - /examples/olareg_wasm
+      - /examples/cpp_component/multi_component_system
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
+      interval: monthly
+      time: "02:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
     assignees:
       - "avrabe"
     commit-message:
-      prefix: "rust/wasm-checksum"
+      prefix: "go"
       include: "scope"
     labels:
       - "dependencies"
-      - "rust"
+      - "tinygo"
       - "automated"
-      - "wasm"
-
-  - package-ecosystem: "cargo"
-    directory: "/tools/ssh_keygen"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "rust/keygen"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "rust"
-      - "automated"
-      - "security"
-
-  # Note: /tools/wizer_initializer removed - wizer is now part of wasmtime v39.0.0+
-
-  - package-ecosystem: "cargo"
-    directory: "/tools-builder/toolchains"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "rust/toolchains"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "rust"
-      - "automated"
-      - "toolchain"
-    # Groups apply per updates entry, so this directory needs its own copy;
-    # without it #710-#715 arrived as six PRs for one wasm-tools release.
     groups:
-      wasm-tools-family:
-        patterns:
-          - "wasmparser"
-          - "wasm-encoder"
-          - "wasmprinter"
-          - "wit-component"
-          - "wit-parser"
-          - "wasm-metadata"
-          - "wat"
-          - "walrus"
+      minor-patch:
+        update-types:
+          - minor
+          - patch
 
-  # Go module dependencies
-  - package-ecosystem: "gomod"
-    directory: "/tools/file_ops"
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /docs-site
+      - /examples/js_component
     schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
+      interval: monthly
+      time: "02:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
     assignees:
       - "avrabe"
     commit-message:
-      prefix: "go/file-ops"
+      prefix: "npm"
       include: "scope"
     labels:
       - "dependencies"
-      - "tinygo"
-      - "automated"
-
-  - package-ecosystem: "gomod"
-    directory: "/tools/http_downloader_go"
-    schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "go/http-downloader"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "tinygo"
-      - "automated"
-
-  - package-ecosystem: "gomod"
-    directory: "/examples/olareg_wasm"
-    schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "go/olareg"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "tinygo"
-      - "automated"
-      - "registry"
-
-  - package-ecosystem: "gomod"
-    directory: "/examples/go_component"
-    schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "go/examples"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "tinygo"
-      - "automated"
-
-  # NPM dependencies for documentation site
-  - package-ecosystem: "npm"
-    directory: "/docs-site"
-    schedule:
-      interval: "weekly"
-      day: "wednesday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "docs"
-      include: "scope"
-    labels:
-      - "dependencies"
+      - "javascript"
       - "documentation"
       - "automated"
+    # Ignores apply to every directory of the entry, so the two major holds
+    # below also hold /examples/js_component's typescript (^7) at 7.x.
     ignore:
-      # typescript is capped by @astrojs/check, whose peer range is
+      # /docs-site: typescript is capped by @astrojs/check, whose peer range is
       # `^5.0.0 || ^6.0.0` (latest 0.9.9 — no TS 7 support yet). Major bumps
-      # here repeatedly break the docs-site build (ERESOLVE). Hold at 6.x until
-      # @astrojs/check ships TS 7 support, then lift this ignore.
+      # here repeatedly break the docs-site build (ERESOLVE). Hold the major
+      # until @astrojs/check supports the next one, then lift this ignore.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
-      # mermaid is capped by astro-mermaid, whose peer range is
+      # /docs-site: mermaid is capped by astro-mermaid, whose peer range is
       # `^10.0.0 || ^11.0.0` (latest 2.1.0 — no mermaid 12 support yet;
       # verified via `npm view astro-mermaid@latest peerDependencies`). A
       # major bump broke the docs-site build (ERESOLVE) exactly like
@@ -227,48 +161,8 @@ updates:
       # ships mermaid 12 support, then lift this ignore.
       - dependency-name: "mermaid"
         update-types: ["version-update:semver-major"]
-
-  - package-ecosystem: "npm"
-    directory: "/examples/js_component"
-    schedule:
-      interval: "weekly"
-      day: "wednesday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "js/examples"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "javascript"
-      - "automated"
-
-  # GitHub Actions workflow dependencies
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-      time: "06:00"
-    open-pull-requests-limit: 0
-    reviewers:
-      - "avrabe"
-    assignees:
-      - "avrabe"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "ci-cd"
-      - "automated"
-    # Groups apply per updates entry; under the first (cargo) entry this
-    # group never matched an action (#716-#719 arrived as four PRs).
     groups:
-      github-actions-all:
-        patterns:
-          - "*"
+      minor-patch:
+        update-types:
+          - minor
+          - patch
