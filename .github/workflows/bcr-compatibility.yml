@@ -424,12 +424,21 @@ jobs:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
           # aggregate-gate-begin
+          # A cancelled job (hosted runner not acquired, timeout, manual
+          # cancel) is INCOMPLETE, not a pass: it fails the gate with its own
+          # message so a red run says whether anything actually failed.
+          status=pass
           for r in $RESULTS; do
             case "$r" in
               success|skipped) ;;
-              *) echo "a needed job ended with: $r"; exit 1 ;;
+              cancelled) [ "$status" = pass ] && status=incomplete ;;
+              *) status=failed; echo "FAILED: a needed job ended with: $r" ;;
             esac
           done
+          case "$status" in
+            failed) exit 1 ;;
+            incomplete) echo "INCOMPLETE: a needed job was cancelled (runner not acquired, timeout or manual cancel); not a pass, rerun it: $RESULTS"; exit 1 ;;
+          esac
           echo "all needed jobs passed: $RESULTS"
           # aggregate-gate-end
 
