@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 - Rust 1.100.0 is the registered toolchain (was 1.97.0), and CI installs exact 1.100.0.
 - Rust 1.100 wasip2 components require wasmtime ≥ 46.0.0 (ordeal#309). The wasmtime compatibility list for wasm-tools 1.246.2 now holds only 50.0.3.
 
+### CI
+
+- "Direct Integration Test" builds wasm-component-examples at the commit pinned in `.github/examples.ref` against this tree (`--override_module`), on every PR and merge-queue commit, on the self-hosted light pool. A non-required job keeps testing the examples repo's main (or a same-name branch) as early warning.
+
 ## [2.0.0] - TBD
 
 ### 🎉 Major Milestone: Official rules_rust Integration
