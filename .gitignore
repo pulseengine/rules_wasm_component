@@ -1,5 +1,7 @@
 # Bazel outputs
 bazel-*
+# The copied synth action's directory name starts with bazel-.
+!/.github/actions/bazel-lock-check/
 /bazel-*
 
 # IDE files
