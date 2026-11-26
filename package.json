@@ -1,6 +1,6 @@
 {
   "devDependencies": {
     "markdownlint-cli": "^0.45.0",
-    "prettier-plugin-astro": "^0.14.1"
+    "prettier-plugin-astro": "^1.1.2"
   }
 }
