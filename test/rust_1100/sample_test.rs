@@ -55,7 +55,7 @@ fn core_modules(bytes: &[u8]) -> (Vec<CoreModule>, HashMap<u32, String>) {
             }
             Payload::ImportSection(reader) if in_core_module => {
                 let m = modules.last_mut().unwrap();
-                for import in reader {
+                for import in reader.into_imports() {
                     let import = import.expect("bad import section");
                     if let TypeRef::Func(_) = import.ty {
                         m.func_imports
