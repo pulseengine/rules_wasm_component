@@ -796,7 +796,7 @@ jobs:
       # above already ran, so check: "false".
       - name: Regenerate MODULE.bazel.lock and print the fix
         if: failure() && steps.bazel-lock.outcome == 'failure'
-        uses: ./.github/actions/bazel-lock-check
+        uses: ./.github/actions/lock-check-bazel
         with:
           check: "false"
 

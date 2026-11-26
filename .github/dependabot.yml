@@ -40,7 +40,7 @@ updates:
   # made `bazel mod deps --lockfile_mode=error` exit 2. Dependabot cannot
   # regenerate MODULE.bazel.lock, so such a PR goes red on "Lockfiles and
   # advisories". Owner decision 2026-11-25: no App token; the lock step is
-  # verify-only. On a stale lock that job runs .github/actions/bazel-lock-check
+  # verify-only. On a stale lock that job runs .github/actions/lock-check-bazel
   # (copied from pulseengine/synth), which uploads the regenerated lock as the
   # module-bazel-lock artifact and prints the commands; an agent pushes the
   # lock as a signed commit to the Dependabot branch.
