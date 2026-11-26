@@ -99,7 +99,6 @@ updates:
       - /tools/checksum_validator_multi/production_checksum_updater
       - /examples/go_component
       - /examples/olareg_wasm
-      - /examples/cpp_component/multi_component_system
     schedule:
       interval: monthly
       time: "02:00"
@@ -116,6 +115,15 @@ updates:
       - "dependencies"
       - "tinygo"
       - "automated"
+    # First run 2026-11-26 (Dependabot Updates run 45747344663) failed on:
+    # - go.bytecodealliance.org/cm: "go_module_path_mismatch" (the vanity path
+    #   resolves to the go.bytecodealliance.org repo root, not the cm module),
+    #   in /examples/go_component. Bump it by hand with wit-bindgen-go.
+    # - /examples/cpp_component/multi_component_system, no longer listed: its
+    #   go.mod imports example.com/multi-component-system/... packages that
+    #   only exist in the Bazel build, so `go mod tidy` cannot resolve them.
+    ignore:
+      - dependency-name: "go.bytecodealliance.org/cm"
     groups:
       minor-patch:
         update-types:
