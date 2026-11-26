@@ -383,7 +383,7 @@ fn validate_file_checksum(file_path: &str, expected_sha256: &str) -> Result<Vali
         }
     }
 
-    let actual_sha256 = format!("{:x}", hasher.finalize());
+    let actual_sha256 = hex_lower(&hasher.finalize());
     let valid = actual_sha256.eq_ignore_ascii_case(expected_sha256);
 
     Ok(ValidationResult {
@@ -400,7 +400,19 @@ fn validate_file_checksum(file_path: &str, expected_sha256: &str) -> Result<Vali
 fn calculate_sha256_bytes(data: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(data);
-    format!("{:x}", hasher.finalize())
+    hex_lower(&hasher.finalize())
+}
+
+/// Lowercase hex of a digest. sha2 0.11 returns a hybrid-array digest that
+/// does not implement `LowerHex`, so `format!("{:x}", ...)` no longer builds.
+fn hex_lower(bytes: &[u8]) -> String {
+    use std::fmt::Write;
+    bytes
+        .iter()
+        .fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
+            let _ = write!(s, "{b:02x}");
+            s
+        })
 }
 
 fn manage_checksum_registry(checksums_dir: &Path) -> Result<RegistryUpdateResult> {
@@ -596,5 +608,23 @@ fn print_tool_info(tool_info: &ToolInfo) {
                 );
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::calculate_sha256_bytes;
+
+    #[test]
+    fn sha256_hex_matches_known_vectors() {
+        // FIPS 180-2 test vectors.
+        assert_eq!(
+            calculate_sha256_bytes(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        assert_eq!(
+            calculate_sha256_bytes(b""),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
     }
 }
