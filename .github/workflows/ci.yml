@@ -787,7 +787,18 @@ jobs:
         run: python3 .github/scripts/run_ci_controls.py --only expired-audit-ignore
 
       - name: MODULE.bazel.lock current (Bazel 8.2.1, --lockfile_mode=error)
+        id: bazel-lock
         run: bazel mod deps --lockfile_mode=error
+
+      # Verify-only (owner decision 2026-11-25): never pushes. On a stale lock
+      # it writes the lock this runner accepts, uploads it as the
+      # module-bazel-lock artifact and prints the signed-commit fix. The check
+      # above already ran, so check: "false".
+      - name: Regenerate MODULE.bazel.lock and print the fix
+        if: failure() && steps.bazel-lock.outcome == 'failure'
+        uses: ./.github/actions/bazel-lock-check
+        with:
+          check: "false"
 
       - name: Planted control (a .bzl change without the lock must fail)
         run: python3 .github/scripts/run_ci_controls.py --only stale-bazel-lock

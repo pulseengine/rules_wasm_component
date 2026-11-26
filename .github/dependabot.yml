@@ -33,28 +33,26 @@ updates:
         patterns:
           - "*"
 
-  # NOT listed: /tools/checksum_updater, /tools/ssh_keygen and
-  # /tools/wasm_embed_aot. MODULE.bazel feeds their Cargo.lock files to
-  # crate_universe (crate.from_cargo), so a lock bump there changes
-  # MODULE.bazel.lock. Measured 2026-11-25 on 76fbb63a: `cargo update -p anyhow
-  # --precise 1.0.105` in tools/ssh_keygen made `bazel mod deps
-  # --lockfile_mode=error` exit 2 ("MODULE.bazel.lock is no longer up-to-date
-  # because: One or more files the extension
-  # '@@rules_rust+//crate_universe:extension.bzl%crate' is using have
-  # changed"), which turns "Lockfiles and advisories" red on every such PR.
-  # Dependabot cannot regenerate MODULE.bazel.lock, and a commit pushed with
-  # GITHUB_TOKEN neither triggers CI nor is signed. Owner decision 2026-11-25:
-  # no App token; the lock step stays verify-only (it prints the regen
-  # command) and an agent pushes the signed MODULE.bazel.lock. Add the three
-  # back when that verify-only step (being built in pulseengine/synth) is
-  # copied here. Until then their locks are bumped by hand; cargo audit in
-  # "Lockfiles and advisories" still reports advisories in them.
+  # /tools/checksum_updater, /tools/ssh_keygen and /tools/wasm_embed_aot feed
+  # their Cargo.lock files to crate_universe (crate.from_cargo in MODULE.bazel),
+  # so a lock bump there also changes MODULE.bazel.lock. Measured 2026-11-25 on
+  # 76fbb63a: `cargo update -p anyhow --precise 1.0.105` in tools/ssh_keygen
+  # made `bazel mod deps --lockfile_mode=error` exit 2. Dependabot cannot
+  # regenerate MODULE.bazel.lock, so such a PR goes red on "Lockfiles and
+  # advisories". Owner decision 2026-11-25: no App token; the lock step is
+  # verify-only. On a stale lock that job runs .github/actions/bazel-lock-check
+  # (copied from pulseengine/synth), which uploads the regenerated lock as the
+  # module-bazel-lock artifact and prints the commands; an agent pushes the
+  # lock as a signed commit to the Dependabot branch.
   - package-ecosystem: cargo
     directories:
       - /tools/checksum_updater_wasm
       - /tools-builder/toolchains
       - /tools/checksum_validator_multi/rust_validator
       - /examples/wac_remote_compose
+      - /tools/checksum_updater
+      - /tools/ssh_keygen
+      - /tools/wasm_embed_aot
     schedule:
       interval: monthly
       time: "02:00"

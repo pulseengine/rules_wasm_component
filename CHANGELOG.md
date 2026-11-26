@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### CI
 
 - "Direct Integration Test" builds wasm-component-examples at the commit pinned in `.github/examples.ref` against this tree (`--override_module`), on every PR and merge-queue commit, on the self-hosted light pool. A non-required job keeps testing the examples repo's main (or a same-name branch) as early warning.
+- On a stale `MODULE.bazel.lock`, "Lockfiles and advisories" now runs `.github/actions/bazel-lock-check` (copied from pulseengine/synth): it uploads the regenerated lock as the `module-bazel-lock` artifact and prints the signed-commit fix. It never pushes. Dependabot covers `tools/checksum_updater`, `tools/ssh_keygen` and `tools/wasm_embed_aot` again.
 
 ## [2.0.0] - TBD
 
