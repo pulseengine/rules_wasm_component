@@ -130,8 +130,6 @@ updates:
 
   - package-ecosystem: npm
     directories:
-      - /
-      - /docs-site
       - /examples/js_component
     schedule:
       interval: monthly
@@ -148,25 +146,7 @@ updates:
     labels:
       - "dependencies"
       - "javascript"
-      - "documentation"
       - "automated"
-    # Ignores apply to every directory of the entry, so the two major holds
-    # below also hold /examples/js_component's typescript (^7) at 7.x.
-    ignore:
-      # /docs-site: typescript is capped by @astrojs/check, whose peer range is
-      # `^5.0.0 || ^6.0.0` (latest 0.9.9 — no TS 7 support yet). Major bumps
-      # here repeatedly break the docs-site build (ERESOLVE). Hold the major
-      # until @astrojs/check supports the next one, then lift this ignore.
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
-      # /docs-site: mermaid is capped by astro-mermaid, whose peer range is
-      # `^10.0.0 || ^11.0.0` (latest 2.1.0 — no mermaid 12 support yet;
-      # verified via `npm view astro-mermaid@latest peerDependencies`). A
-      # major bump broke the docs-site build (ERESOLVE) exactly like
-      # typescript above (#654 -> reverted). Hold at 11.x until astro-mermaid
-      # ships mermaid 12 support, then lift this ignore.
-      - dependency-name: "mermaid"
-        update-types: ["version-update:semver-major"]
     groups:
       minor-patch:
         update-types:

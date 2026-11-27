@@ -14,6 +14,10 @@ All notable changes to this project will be documented in this file.
 - "Direct Integration Test" builds wasm-component-examples at the commit pinned in `.github/examples.ref` against this tree (`--override_module`), on every PR and merge-queue commit, on the self-hosted light pool. A non-required job keeps testing the examples repo's main (or a same-name branch) as early warning.
 - On a stale `MODULE.bazel.lock`, "Lockfiles and advisories" now runs `.github/actions/lock-check-bazel` (copied from pulseengine/synth): it uploads the regenerated lock as the `module-bazel-lock` artifact and prints the signed-commit fix. It never pushes. Dependabot covers `tools/checksum_updater`, `tools/ssh_keygen` and `tools/wasm_embed_aot` again.
 
+### Documentation
+
+- The Astro/Starlight site (`docs-site/`) and its deploy workflow `.github/workflows/docs-deploy.yml` are removed; the README is the project homepage. The `//docs:*_stardoc` targets now emit plain Stardoc Markdown without Astro frontmatter, and `docs/stardoc_with_frontmatter.bzl` is gone. The root `package.json`, the Astro pre-commit hooks and the `/` and `/docs-site` Dependabot npm directories go with it; Node.js stays for jco.
+
 ## [2.0.0] - TBD
 
 ### 🎉 Major Milestone: Official rules_rust Integration
