@@ -11,5 +11,6 @@ bzl_library(
     visibility = ["//visibility:public"],
     deps = [
         "//toolchains:wkg_toolchain",
+        "//tools/bazel_helpers:file_ops_actions",
     ],
 )

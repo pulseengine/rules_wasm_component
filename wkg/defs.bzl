@@ -37,6 +37,7 @@ Available rules:
 Bazel rules for WebAssembly Package Tools (wkg) with OCI support"""
 
 load("//providers:providers.bzl", "WacCompositionInfo", "WasmComponentInfo", "WasmComponentMetadataInfo", "WasmKeyInfo", "WasmMultiArchInfo", "WasmOciInfo", "WasmOciMetadataMappingInfo", "WasmRegistryInfo", "WasmSecurityPolicyInfo", "WasmSignatureInfo")
+load("//tools/bazel_helpers:file_ops_actions.bzl", "file_ops_run")
 
 def _wkg_fetch_impl(ctx):
     """Implementation of wkg_fetch rule for WebAssembly package fetching.
@@ -152,18 +153,9 @@ default_registry = "{registry}"
     package_name = ctx.attr.package.split("/")[-1].replace(":", "-")
     expected_component = "{}/{}.wasm".format(output_dir.path, package_name)
 
-    # Use file_ops tool for cross-platform file copying
-    file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
-
-    ctx.actions.run(
-        executable = file_ops_toolchain.file_ops_component,
-        arguments = [
-            "copy_file",
-            "--src",
-            expected_component,
-            "--dest",
-            component_file.path,
-        ],
+    file_ops_run(
+        ctx,
+        [{"type": "copy_file", "src_path": expected_component, "dest_path": component_file.path}],
         inputs = [output_dir],
         outputs = [component_file],
         mnemonic = "WkgCopyComponent",
@@ -173,16 +165,9 @@ default_registry = "{registry}"
     # For WIT files: use simple recursive copy (assumes wit directory exists)
     wit_source = "{}/wit".format(output_dir.path)
 
-    # Use file_ops tool for cross-platform directory copying
-    ctx.actions.run(
-        executable = file_ops_toolchain.file_ops_component,
-        arguments = [
-            "copy_directory",
-            "--src",
-            wit_source,
-            "--dest",
-            wit_dir.path,
-        ],
+    file_ops_run(
+        ctx,
+        [{"type": "copy_directory_contents", "src_path": wit_source, "dest_path": wit_dir.path}],
         inputs = [output_dir],
         outputs = [wit_dir],
         mnemonic = "WkgCopyWit",
@@ -330,17 +315,11 @@ default_registry = "{registry}"
             content = config_content,
         )
 
-    # Create wit directory structure using file operations
-    file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
-
     # First create the wit directory
-    ctx.actions.run(
-        executable = file_ops_toolchain.file_ops_component,
-        arguments = [
-            "create_directory",
-            "--path",
-            wit_dir.path,
-        ],
+    file_ops_run(
+        ctx,
+        [{"type": "mkdir", "path": wit_dir.path}],
+        inputs = [],
         outputs = [wit_dir],
         mnemonic = "CreateWitDir",
         progress_message = "Creating WIT directory structure",
@@ -348,15 +327,9 @@ default_registry = "{registry}"
 
     # Copy the WIT file into the wit directory
     wit_target = ctx.actions.declare_file(ctx.attr.name + "_wit_world.wit")
-    ctx.actions.run(
-        executable = file_ops_toolchain.file_ops_component,
-        arguments = [
-            "copy_file",
-            "--src",
-            wit_file.path,
-            "--dest",
-            wit_target.path,
-        ],
+    file_ops_run(
+        ctx,
+        [{"type": "copy_file", "src_path": wit_file.path, "dest_path": wit_target.path}],
         inputs = [wit_file, wit_dir],
         outputs = [wit_target],
         mnemonic = "CopyWitFile",

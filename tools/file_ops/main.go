@@ -24,11 +24,11 @@ func must(s string, err error) string {
 	return s
 }
 
-// Wrapper for external file operations WASM component with LOCAL AOT
-// This wrapper executes the WASM component via wasmtime, using locally-compiled
-// AOT for 100x faster startup with guaranteed Wasmtime version compatibility.
-//
-// Security: Maps only necessary directories to WASI instead of full filesystem access.
+// file_ops runs the operations of a JSON config natively in Go. It does not
+// run the bazel-file-ops-component wasm. Contract (shared with kapsel's
+// JSON-config mode, pulseengine/bazel-file-ops-component#140): one argument,
+// the config path; operation types copy_file, mkdir, copy_directory_contents
+// and concatenate_files; any other operation is an error (#775).
 func main() {
 	// Read configuration from JSON file (passed as first argument)
 	if len(os.Args) < 2 {
@@ -84,14 +84,12 @@ func main() {
 	for i, op := range config.Operations {
 		opMap, ok := op.(map[string]interface{})
 		if !ok {
-			log.Printf("WARNING: Operation %d is not a map, skipping", i)
-			continue
+			log.Fatalf("ERROR: operation %d is not an object", i)
 		}
 
 		opType, ok := opMap["type"].(string)
 		if !ok {
-			log.Printf("WARNING: Operation %d has no type, skipping", i)
-			continue
+			log.Fatalf("ERROR: operation %d has no type", i)
 		}
 
 		log.Printf("DEBUG: Processing operation %d: %s", i, opType)
@@ -128,7 +126,7 @@ func main() {
 			os.MkdirAll(destDir, 0755)
 
 			// Recursively copy all files/directories from source
-			filepath.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
+			walkErr := filepath.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -150,6 +148,9 @@ func main() {
 					return ioutil.WriteFile(destPath, data, 0644)
 				}
 			})
+			if walkErr != nil {
+				log.Fatalf("ERROR: Failed to copy directory contents from %s to %s: %v", srcDir, destDir, walkErr)
+			}
 			log.Printf("DEBUG: Copied directory contents from %s to %s", srcDir, destDir)
 
 		case "concatenate_files":
@@ -194,13 +195,12 @@ func main() {
 			log.Printf("DEBUG: Concatenated %d files to %s", len(srcPaths), destPath)
 
 		default:
-			log.Printf("WARNING: Unknown operation type: %s", opType)
+			log.Fatalf("ERROR: Unknown operation type: %s (supported: copy_file, mkdir, copy_directory_contents, concatenate_files)", opType)
 		}
 	}
 
 	log.Printf("DEBUG: All file operations completed successfully")
 }
-
 
 // uniqueStrings returns unique strings from a slice
 func uniqueStrings(strs []string) []string {

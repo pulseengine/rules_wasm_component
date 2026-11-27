@@ -6,8 +6,6 @@ from Bazel's repository cache to third_party/ using the file-ops component.
 NO shell scripts - pure Bazel + WASM.
 """
 
-load("//tools/bazel_helpers:file_ops_actions.bzl", "file_ops_action")
-
 def _vendor_export_action_impl(ctx):
     """Export vendored toolchains to third_party/ using file-ops WASM component"""
 

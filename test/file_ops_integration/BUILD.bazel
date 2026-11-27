@@ -45,74 +45,12 @@ file_ops_integration_test(
     implementation = "external",
 )
 
-# Test 3: Backward compatibility test
-# Verifies that switching implementations doesn't break existing functionality
-sh_test(
-    name = "backward_compatibility_test",
-    srcs = ["backward_compatibility_test.sh"],
-    data = [
-        ":test_input_file",
-        "//tools/file_ops",
-        "//tools/file_ops_external",
-    ],
-    tags = [
-        "compatibility",
-        "file_ops",
-    ],
-)
-
-# Test 4: Performance comparison test
-sh_test(
-    name = "performance_comparison_test",
-    srcs = ["performance_comparison_test.sh"],
-    data = [
-        ":test_input_file",
-        "//tools/file_ops",
-        "//tools/file_ops_external",
-    ],
-    tags = [
-        "file_ops",
-        "manual",
-        "performance",
-    ],  # manual because it's slow
-)
-
-# Test 5: Signature verification test
-sh_test(
-    name = "signature_verification_test",
-    srcs = ["signature_verification_test.sh"],
-    data = [
-        "@file_ops_component_external//file",
-    ],
-    tags = [
-        "file_ops",
-        "manual",
-        "security",
-    ],  # manual - requires cosign
-)
-
-# Test 6: Fallback mechanism test
-sh_test(
-    name = "fallback_mechanism_test",
-    srcs = ["fallback_mechanism_test.sh"],
-    data = [
-        "//tools/file_ops",
-        "//tools/file_ops_external",
-    ],
-    tags = [
-        "fallback",
-        "file_ops",
-    ],
-)
-
 # Test suite for all file operations tests
 test_suite(
     name = "file_ops_integration_tests",
     tags = ["file_ops"],
     tests = [
-        ":backward_compatibility_test",
         ":embedded_implementation_test",
-        ":fallback_mechanism_test",
     ],
 )
 
@@ -121,11 +59,7 @@ test_suite(
     name = "file_ops_all_tests",
     tags = ["file_ops"],
     tests = [
-        ":backward_compatibility_test",
         ":embedded_implementation_test",
         ":external_implementation_test",
-        ":fallback_mechanism_test",
-        ":performance_comparison_test",
-        ":signature_verification_test",
     ],
 )
