@@ -17,7 +17,7 @@
 Production-ready Bazel rules for building WebAssembly components across multiple languages with native WASI 0.2 support.
 
 > [!NOTE]
-> Part of the PulseEngine toolchain. Used across all PulseEngine projects for hermetic component builds.
+> Part of the PulseEngine WebAssembly Component Model engine. Used across all PulseEngine projects for hermetic component builds.
 
 ## Why Use This?
 
@@ -161,6 +161,6 @@ Apache-2.0 &mdash; see [LICENSE](LICENSE).
 
 <div align="center">
 
-<sub>Part of the <a href="https://github.com/pulseengine">PulseEngine</a> toolchain.</sub>
+<sub>Part of the <a href="https://github.com/pulseengine">PulseEngine</a> WebAssembly Component Model engine.</sub>
 
 </div>
