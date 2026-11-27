@@ -25,8 +25,8 @@ func must(s string, err error) string {
 }
 
 // file_ops runs the operations of a JSON config natively in Go. It does not
-// run the bazel-file-ops-component wasm. Contract (shared with kapsel's
-// JSON-config mode, pulseengine/bazel-file-ops-component#140): one argument,
+// run the kapsel (formerly bazel-file-ops-component) wasm. Contract (shared with kapsel's
+// JSON-config mode, pulseengine/kapsel#140): one argument,
 // the config path; operation types copy_file, mkdir, copy_directory_contents
 // and concatenate_files; any other operation is an error (#775).
 func main() {
