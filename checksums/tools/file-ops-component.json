@@ -1,6 +1,6 @@
 {
   "tool_name": "file-ops-component",
-  "github_repo": "pulseengine/bazel-file-ops-component",
+  "github_repo": "pulseengine/kapsel",
   "latest_version": "0.2.0",
   "last_checked": "2025-11-01T16:00:00.000000Z",
   "supported_platforms": [

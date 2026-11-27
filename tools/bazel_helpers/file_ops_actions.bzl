@@ -4,10 +4,11 @@ This module provides helper functions that replace shell scripts with
 cross-platform file operations using Bazel-native methods.
 
 Usage:
-    load("//tools/bazel_helpers:file_ops_actions.bzl", "file_ops_action", "prepare_workspace_action")
+    load("//tools/bazel_helpers:file_ops_actions.bzl", "file_ops_run", "prepare_workspace_action")
 
     # In your rule implementation:
-    file_ops_action(ctx, "copy_file", src="input.txt", dest="output.txt")
+    file_ops_run(ctx, [{"type": "copy_file", "src_path": src.path, "dest_path": out.path}],
+                 inputs = [src], outputs = [out], mnemonic = "CopyX", progress_message = "...")
     prepare_workspace_action(ctx, workspace_config)
 """
 
@@ -15,119 +16,39 @@ Usage:
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-def file_ops_action(ctx, operation, **kwargs):
-    """Execute a file operation using the File Operations Component
+def file_ops_run(ctx, operations, inputs, outputs, mnemonic, progress_message):
+    """Run the file_ops toolchain executable on a JSON config.
+
+    The toolchain executable takes one argument, the path of a JSON config
+    {"workspace_dir": ".", "operations": [...]}, and supports the operation
+    types copy_file (src_path, dest_path), mkdir (path),
+    copy_directory_contents (src_path, dest_path) and concatenate_files
+    (src_paths, dest_path). Destination paths are joined to workspace_dir;
+    with "." they are execroot-relative, so pass File.path. An unknown
+    operation type is an error (#775).
 
     Args:
         ctx: Bazel rule context
-        operation: Operation to perform (copy_file, copy_directory, create_directory, etc.)
-        **kwargs: Operation-specific arguments
-
-    Returns:
-        Action result or None for operations that don't produce outputs
+        operations: list of operation dicts
+        inputs: input Files
+        outputs: output Files (files or directories)
+        mnemonic: action mnemonic
+        progress_message: action progress message
     """
-
-    # Get the file operations component from toolchain
     file_ops_toolchain = ctx.toolchains["@rules_wasm_component//toolchains:file_ops_toolchain_type"]
-    file_ops_component = file_ops_toolchain.file_ops_component
-
-    if not file_ops_component:
-        fail("File operations component not available in toolchain")
-
-    # Build arguments based on operation
-    args = [operation]
-    inputs = []
-    outputs = []
-
-    if operation == "copy_file":
-        src = kwargs.get("src")
-        dest = kwargs.get("dest")
-        if not src or not dest:
-            fail("copy_file requires 'src' and 'dest' arguments")
-
-        # Handle File objects vs strings
-        if hasattr(src, "path"):
-            inputs.append(src)
-            args.extend(["--src", src.path])
-        else:
-            args.extend(["--src", src])
-
-        if hasattr(dest, "path"):
-            outputs.append(dest)
-            args.extend(["--dest", dest.path])
-        else:
-            # Create output file declaration
-            dest_file = ctx.actions.declare_file(dest)
-            outputs.append(dest_file)
-            args.extend(["--dest", dest_file.path])
-
-    elif operation == "copy_directory":
-        src = kwargs.get("src")
-        dest = kwargs.get("dest")
-        if not src or not dest:
-            fail("copy_directory requires 'src' and 'dest' arguments")
-
-        if hasattr(src, "path"):
-            inputs.append(src)
-            args.extend(["--src", src.path])
-        else:
-            args.extend(["--src", src])
-
-        if hasattr(dest, "path"):
-            outputs.append(dest)
-            args.extend(["--dest", dest.path])
-        else:
-            dest_dir = ctx.actions.declare_directory(dest)
-            outputs.append(dest_dir)
-            args.extend(["--dest", dest_dir.path])
-
-    elif operation == "create_directory":
-        path = kwargs.get("path")
-        if not path:
-            fail("create_directory requires 'path' argument")
-
-        if hasattr(path, "path"):
-            outputs.append(path)
-            args.extend(["--path", path.path])
-        else:
-            dir_output = ctx.actions.declare_directory(path)
-            outputs.append(dir_output)
-            args.extend(["--path", dir_output.path])
-
-    elif operation == "list_directory":
-        dir_path = kwargs.get("dir")
-        pattern = kwargs.get("pattern")
-        output = kwargs.get("output")
-
-        if not dir_path or not output:
-            fail("list_directory requires 'dir' and 'output' arguments")
-
-        args.extend(["--dir", dir_path])
-        if pattern:
-            args.extend(["--pattern", pattern])
-
-        if hasattr(output, "path"):
-            outputs.append(output)
-            args.extend(["--output", output.path])
-        else:
-            output_file = ctx.actions.declare_file(output)
-            outputs.append(output_file)
-            args.extend(["--output", output_file.path])
-    else:
-        fail("Unsupported file operation: {}".format(operation))
-
-    # Execute the component action
-    ctx.actions.run(
-        executable = file_ops_component,
-        arguments = args,
-        inputs = inputs,
-        outputs = outputs,
-        mnemonic = "FileOps" + operation.replace("_", "").title(),
-        progress_message = "Running file operation {} for {}".format(operation, ctx.label),
+    config_file = ctx.actions.declare_file(ctx.label.name + "_" + mnemonic + "_file_ops.json")
+    ctx.actions.write(
+        output = config_file,
+        content = json.encode({"workspace_dir": ".", "operations": operations}),
     )
-
-    # Return the first output for chaining
-    return outputs[0] if outputs else None
+    ctx.actions.run(
+        executable = file_ops_toolchain.file_ops_component,
+        arguments = [config_file.path],
+        inputs = inputs + [config_file],
+        outputs = outputs,
+        mnemonic = mnemonic,
+        progress_message = progress_message,
+    )
 
 def prepare_workspace_action(ctx, config):
     """Prepare a complete workspace using hermetic Go binary for file operations

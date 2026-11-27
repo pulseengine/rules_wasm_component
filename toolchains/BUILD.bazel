@@ -311,7 +311,7 @@ bzl_library(
 
 # Phase 4 Complete: External File Operations Component
 # The external pre-built WASM component is now the standard
-# See https://github.com/pulseengine/bazel-file-ops-component for component source
+# See https://github.com/pulseengine/kapsel for component source
 
 file_ops_toolchain(
     name = "file_ops_toolchain_impl",

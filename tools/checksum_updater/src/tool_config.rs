@@ -405,7 +405,7 @@ impl ToolConfig {
         tools.insert(
             "file-ops-component".to_string(),
             ToolConfigEntry {
-                github_repo: "pulseengine/bazel-file-ops-component".to_string(),
+                github_repo: "pulseengine/kapsel".to_string(),
                 platforms: vec!["wasm_component".to_string()],
                 url_pattern: UrlPattern::UniversalWasm {
                     asset_name: "file_ops_component.wasm".to_string(),
@@ -961,12 +961,12 @@ mod tests {
     fn test_universal_wasm_file_ops() {
         let config = ToolConfig::new();
         let fo = config.get_tool_config("file-ops-component");
-        assert_eq!(fo.github_repo, "pulseengine/bazel-file-ops-component");
+        assert_eq!(fo.github_repo, "pulseengine/kapsel");
         assert_eq!(fo.universal_asset_name(), Some("file_ops_component.wasm"));
         let url = fo.generate_download_url("0.2.0", "wasm_component").unwrap();
         assert_eq!(
             url,
-            "https://github.com/pulseengine/bazel-file-ops-component/releases/download/v0.2.0/file_ops_component.wasm"
+            "https://github.com/pulseengine/kapsel/releases/download/v0.2.0/file_ops_component.wasm"
         );
     }
 

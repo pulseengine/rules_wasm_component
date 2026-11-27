@@ -66,6 +66,17 @@ plant  = "ci-controls/varve-fallback-wins"
 expect = "fail"
 stderr_or_stdout_matches = "loom_toolchain_type.loom resolved to"
 
+# Run by "Test on ubuntu-24.04". The plant builds the file_ops integration
+# test's workspace with a misspelled operation type; the file_ops wrapper must
+# fail the action instead of skipping the operation (#775).
+[[control]]
+id     = "file-ops-unknown-op"
+check  = "Test on ubuntu-24.04"
+run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors //test/file_ops_integration:embedded_implementation_test"
+plant  = "ci-controls/file-ops-unknown-op"
+expect = "fail"
+stderr_or_stdout_matches = "Unknown operation type: copy_files"
+
 # Run by the "Self-hosted fork guard" job. Runs the aggregate-gate block of
 # "Production Ready ✅" (extracted verbatim from production-readiness.yml) on the job results in
 # .github/scripts/testdata/needs-results; the plant adds a failed job.
