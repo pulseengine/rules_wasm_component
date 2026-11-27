@@ -8,8 +8,6 @@ Provides WASI versions:
 - 0.2.3 (default - stable release, used by wasi-sdk 26/27)
 - 0.2.6 (used by wasi-sdk 29)
 - 0.2.8 (latest stable - newest features)
-
-See docs-site/src/content/docs/guides/external-wit-dependencies.mdx for usage guide.
 """
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")

@@ -217,13 +217,6 @@ wasmsign2 verify bazel-bin/examples/multi_file_packaging/embedded_service_signed
 wasmtime run bazel-bin/examples/multi_file_packaging/embedded_service_signed_oci_image_oci.wasm
 ```
 
-## 📖 Related Documentation
-
-- **[Multi-File Packaging Guide](../../docs-site/src/content/docs/guides/multi-file-packaging.mdx)** - Complete documentation
-- **[Component Signing](../../docs-site/src/content/docs/security/component-signing.mdx)** - Security details
-- **[OCI Integration](../../docs-site/src/content/docs/security/oci-signing.mdx)** - OCI signing patterns
-- **[Production Deployment](../../docs-site/src/content/docs/production/deployment-guide.mdx)** - Deployment strategies
-
 ## 🎯 Next Steps
 
 1. **Start with embedded resources** for most use cases

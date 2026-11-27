@@ -277,8 +277,6 @@ alias(
 
 ## 📖 Further Reading
 
-- [WAC Composition Guide](../../docs-site/src/content/docs/composition/wac.md)
-- [Multi-Profile Builds](../../docs-site/src/content/docs/guides/multi-profile-builds.mdx)
 - [WebAssembly Component Model](https://component-model.bytecodealliance.org/)
 - [WIT Language Specification](https://component-model.bytecodealliance.org/design/wit.html)
 

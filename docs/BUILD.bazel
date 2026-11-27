@@ -21,31 +21,17 @@ wit_docs_collection(
 # Stardoc API Documentation
 # ============================================================================
 # Auto-generated API reference for all rules_wasm_component rule files
-# All outputs include Astro frontmatter for docs-site integration
+# Plain Stardoc Markdown, one file per rule file
 
 # ----------------------------------------------------------------------------
 # Toolchain Configuration (Tool Versions)
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "tool_versions_stardoc_raw",
-    out = "tool_versions_raw.md",
+    name = "tool_versions_stardoc",
+    out = "tool_versions.md",
     input = "//toolchains:tool_versions.bzl",
     deps = ["//toolchains:tool_versions"],
-)
-
-genrule(
-    name = "tool_versions_stardoc",
-    srcs = [":tool_versions_stardoc_raw"],
-    outs = ["tool_versions.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: Toolchain Versions API' >> $@
-        echo 'description: Canonical versions and compatibility information for all WebAssembly ecosystem tools' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
 )
 
 # ----------------------------------------------------------------------------
@@ -53,23 +39,9 @@ genrule(
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "example_rule_stardoc_raw",
-    out = "example_rule_stardoc_raw.md",
-    input = "example_rule.bzl",
-)
-
-genrule(
     name = "example_rule_stardoc",
-    srcs = [":example_rule_stardoc_raw"],
-    outs = ["example_rule.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: Example Rule' >> $@
-        echo 'description: Simple Stardoc example demonstrating documentation generation' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
+    out = "example_rule.md",
+    input = "example_rule.bzl",
 )
 
 # ----------------------------------------------------------------------------
@@ -77,8 +49,8 @@ genrule(
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "cpp_component_stardoc_raw",
-    out = "cpp_component_raw.md",
+    name = "cpp_component_stardoc",
+    out = "cpp_component.md",
     input = "//cpp:defs.bzl",
     deps = [
         "//cpp:defs",
@@ -90,27 +62,13 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "cpp_component_stardoc",
-    srcs = [":cpp_component_stardoc_raw"],
-    outs = ["cpp_component.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: C++ Components API' >> $@
-        echo 'description: Build WebAssembly components from C++ code using cpp_component and cc_component_library' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 # ----------------------------------------------------------------------------
 # Rust Component Rules
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "rust_defs_stardoc_raw",
-    out = "rust_defs_raw.md",
+    name = "rust_defs_stardoc",
+    out = "rust_defs.md",
     input = "//rust:defs.bzl",
     deps = [
         "//providers",
@@ -123,23 +81,9 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "rust_defs_stardoc",
-    srcs = [":rust_defs_stardoc_raw"],
-    outs = ["rust_defs.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: Rust Components API' >> $@
-        echo 'description: Build WebAssembly components from Rust code using rust_wasm_component' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 stardoc(
-    name = "rust_wasm_component_stardoc_raw",
-    out = "rust_wasm_component_stardoc_raw.md",
+    name = "rust_wasm_component_stardoc",
+    out = "rust_wasm_component.md",
     input = "//rust:rust_wasm_component.bzl",
     deps = [
         "//rust:rust_wasm_component",
@@ -147,27 +91,13 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "rust_wasm_component_stardoc",
-    srcs = [":rust_wasm_component_stardoc_raw"],
-    outs = ["rust_wasm_component.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: rust_wasm_component Rule' >> $@
-        echo 'description: Core implementation of rust_wasm_component rule for building WebAssembly components' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 # ----------------------------------------------------------------------------
 # Go Component Rules
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "go_defs_stardoc_raw",
-    out = "go_defs_raw.md",
+    name = "go_defs_stardoc",
+    out = "go_defs.md",
     input = "//go:defs.bzl",
     deps = [
         "//go:defs",
@@ -179,27 +109,13 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "go_defs_stardoc",
-    srcs = [":go_defs_stardoc_raw"],
-    outs = ["go_defs.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: Go Components API' >> $@
-        echo 'description: Build WebAssembly components from Go code using TinyGo and wit-bindgen-go' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 # ----------------------------------------------------------------------------
 # JavaScript/TypeScript Component Rules
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "js_defs_stardoc_raw",
-    out = "js_defs_raw.md",
+    name = "js_defs_stardoc",
+    out = "js_defs.md",
     input = "//js:defs.bzl",
     deps = [
         "//js:defs",
@@ -209,27 +125,13 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "js_defs_stardoc",
-    srcs = [":js_defs_stardoc_raw"],
-    outs = ["js_defs.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: JavaScript Components API' >> $@
-        echo 'description: Build WebAssembly components from JavaScript/TypeScript using componentize-js' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 # ----------------------------------------------------------------------------
 # WIT (WebAssembly Interface Type) Rules
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "wit_defs_stardoc_raw",
-    out = "wit_defs_raw.md",
+    name = "wit_defs_stardoc",
+    out = "wit_defs.md",
     input = "//wit:defs.bzl",
     deps = [
         "//wit:defs",
@@ -241,27 +143,13 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "wit_defs_stardoc",
-    srcs = [":wit_defs_stardoc_raw"],
-    outs = ["wit_defs.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: WIT Interface API' >> $@
-        echo 'description: Define and document WebAssembly Component Model interfaces using WIT' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 # ----------------------------------------------------------------------------
 # WASM Component Utilities
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "wasm_defs_stardoc_raw",
-    out = "wasm_defs_raw.md",
+    name = "wasm_defs_stardoc",
+    out = "wasm_defs.md",
     input = "//wasm:defs.bzl",
     deps = [
         "//providers",
@@ -270,27 +158,13 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "wasm_defs_stardoc",
-    srcs = [":wasm_defs_stardoc_raw"],
-    outs = ["wasm_defs.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: WASM Utilities API' >> $@
-        echo 'description: Validate, inspect, and manipulate WebAssembly components and modules' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 # ----------------------------------------------------------------------------
 # WKG (Wasm Package) Rules
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "wkg_defs_stardoc_raw",
-    out = "wkg_defs_raw.md",
+    name = "wkg_defs_stardoc",
+    out = "wkg_defs.md",
     input = "//wkg:defs.bzl",
     deps = [
         "//providers",
@@ -298,27 +172,13 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "wkg_defs_stardoc",
-    srcs = [":wkg_defs_stardoc_raw"],
-    outs = ["wkg_defs.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: WKG Package API' >> $@
-        echo 'description: Fetch and use WebAssembly packages from wkg registries' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 # ----------------------------------------------------------------------------
 # WAC (WebAssembly Composition) Rules
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "wac_defs_stardoc_raw",
-    out = "wac_defs_raw.md",
+    name = "wac_defs_stardoc",
+    out = "wac_defs.md",
     input = "//wac:defs.bzl",
     deps = [
         "//providers",
@@ -326,44 +186,16 @@ stardoc(
     ],
 )
 
-genrule(
-    name = "wac_defs_stardoc",
-    srcs = [":wac_defs_stardoc_raw"],
-    outs = ["wac_defs.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: WAC Composition API' >> $@
-        echo 'description: Compose multiple WebAssembly components using wac' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
-)
-
 # ----------------------------------------------------------------------------
 # WRPC (WebAssembly RPC) Rules
 # ----------------------------------------------------------------------------
 
 stardoc(
-    name = "wrpc_defs_stardoc_raw",
-    out = "wrpc_defs_raw.md",
+    name = "wrpc_defs_stardoc",
+    out = "wrpc_defs.md",
     input = "//wrpc:defs.bzl",
     deps = [
         "//providers",
         "//wrpc:defs",
     ],
-)
-
-genrule(
-    name = "wrpc_defs_stardoc",
-    srcs = [":wrpc_defs_stardoc_raw"],
-    outs = ["wrpc_defs.md"],
-    cmd = """
-        echo '---' > $@
-        echo 'title: WRPC Protocol API' >> $@
-        echo 'description: Generate RPC bindings for WebAssembly components using wrpc' >> $@
-        echo '---' >> $@
-        echo '' >> $@
-        cat $(SRCS) >> $@
-    """,
 )
