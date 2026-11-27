@@ -202,7 +202,10 @@ jobs:
       # (FEAT-005 via //test/p3:loom_optimize_build_test: wasm_optimize on
       # the native loom toolchain.)
       - name: Run P2/P3 WASI Version Tests
-        run: bazel test --test_output=errors -- //test/p3:all
+        run: bazel test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors -- //test/p3:all
+
+      - name: Planted control (the hub's wit-bindgen without async-spawn must fail p3_spawn_build_test)
+        run: python3 .github/scripts/run_ci_controls.py --only no-async-spawn
 
       # rivet: verifies REQ-007
       # rivet: verifies FEAT-003
