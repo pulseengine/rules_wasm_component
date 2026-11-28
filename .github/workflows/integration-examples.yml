@@ -94,9 +94,11 @@ jobs:
 
   direct-integration-test:
     name: Direct Integration Test
-    # On the self-hosted light pool (hosted ubuntu-24.04 queued 91-97 min on
-    # 2026-11-25); fork PRs fall back to ubuntu-24.04.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+    # Self-hosted (hosted ubuntu-24.04 queued 91-97 min on 2026-11-25), rust-cpu
+    # class: bazel build //... does not fit a 4 GB light runner. The build is
+    # capped at 6 jobs and 8 GB because Bazel sizes itself from host RAM, not
+    # the runner's cgroup. Fork PRs fall back to ubuntu-24.04.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","rust-cpu"]') || 'ubuntu-24.04' }}
     timeout-minutes: 45
     env:
       EXAMPLES_DIR: ${{ github.workspace }}/examples
@@ -154,7 +156,7 @@ jobs:
           cd "$EXAMPLES_DIR"
           # EXAMPLES_TARGETS may list several targets: split on purpose.
           # shellcheck disable=SC2086
-          bazel build --override_module=rules_wasm_component="$RULES_DIR" ${EXAMPLES_TARGETS:-//...}
+          bazel build --jobs=6 --local_resources=memory=8000 --override_module=rules_wasm_component="$RULES_DIR" ${EXAMPLES_TARGETS:-//...}
           # examples-build-end
 
       # rivet: verifies FEAT-008
@@ -209,7 +211,7 @@ jobs:
     # Not a required check: the examples repo's main can change without a PR
     # here. Not run in the merge queue, where only the gate above matters.
     if: github.event_name != 'merge_group'
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","rust-cpu"]') || 'ubuntu-24.04' }}
     timeout-minutes: 45
 
     steps:
@@ -254,7 +256,7 @@ jobs:
 
       - name: Build examples against this tree
         working-directory: examples
-        run: bazel build --override_module=rules_wasm_component="$GITHUB_WORKSPACE/rules_wasm_component" //...
+        run: bazel build --jobs=6 --local_resources=memory=8000 --override_module=rules_wasm_component="$GITHUB_WORKSPACE/rules_wasm_component" //...
 
       - name: Report
         if: failure()

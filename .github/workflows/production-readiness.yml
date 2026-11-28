@@ -14,10 +14,11 @@ on:
 jobs:
   smoke-tests-linux:
     name: Smoke Tests (linux)
-    # On the self-hosted light pool (owner decision 2026-11-18); fork PRs fall
-    # back to ubuntu-24.04. Split out of the matrix below because a
-    # self-hosted label may not come from strategy.matrix (fork-guard checker).
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+    # Builds with Bazel: on the self-hosted rust-cpu class (light can be a
+    # 4 GB runner); fork PRs fall back to ubuntu-24.04. Split out of the
+    # matrix below because a self-hosted label may not come from
+    # strategy.matrix (fork-guard checker).
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","rust-cpu"]') || 'ubuntu-24.04' }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -36,6 +37,13 @@ jobs:
           echo "${BAZELISK_SHA256}  $RUNNER_TEMP/bin/bazel" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/bin/bazel"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      # Bazel sizes --jobs and its memory budget from the host (125 GB), not
+      # from the runner's cgroup cap, so cap it at the smallest rust-cpu
+      # runner (12 GB MemoryHigh): 6 jobs, 8 GB for actions, the rest for the
+      # Bazel server. .bazelrc try-imports user.bazelrc.
+      - name: Cap Bazel at the smallest rust-cpu runner
+        run: printf 'build --jobs=6\nbuild --local_resources=memory=8000\n' > user.bazelrc
 
       - name: Build info
         run: bazel info

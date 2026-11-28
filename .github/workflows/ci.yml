@@ -48,9 +48,11 @@ jobs:
 
   hermiticity-check:
     name: Hermiticity Check
-    # On the self-hosted light pool (owner decision 2026-11-18: hosted
-    # concurrency is the bottleneck); fork PRs fall back to ubuntu-24.04.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","light"]') || 'ubuntu-24.04' }}
+    # A full Bazel build: on the self-hosted rust-cpu class (12-16 GB). On
+    # light it can land on a 4 GB runner and thrash for hours (merge-queue
+    # run 46073766492). Fork PRs fall back to ubuntu-24.04.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","rust-cpu"]') || 'ubuntu-24.04' }}
+    timeout-minutes: 30
     needs: lint
 
     steps:
@@ -70,6 +72,13 @@ jobs:
           echo "${BAZELISK_SHA256}  $RUNNER_TEMP/bin/bazel" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/bin/bazel"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      # Bazel sizes --jobs and its memory budget from the host (125 GB), not
+      # from the runner's cgroup cap, so cap it at the smallest rust-cpu
+      # runner (12 GB MemoryHigh): 6 jobs, 8 GB for actions, the rest for the
+      # Bazel server. .bazelrc try-imports user.bazelrc.
+      - name: Cap Bazel at the smallest rust-cpu runner
+        run: printf 'build --jobs=6\nbuild --local_resources=memory=8000\n' > user.bazelrc
 
       - name: Install Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7

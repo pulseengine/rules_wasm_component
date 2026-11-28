@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 
 ### CI
 
+- Hermiticity Check, Smoke Tests (linux), Direct Integration Test and the examples@main early-warning job build with Bazel, so they run on the self-hosted `rust-cpu` class (12-16 GB) instead of `light`, which includes 4 GB runners. On one of those, Hermiticity Check thrashed for about 5 hours in merge-queue run 46073766492. Their Bazel builds are capped at `--jobs=6 --local_resources=memory=8000`, because Bazel sizes itself from host RAM rather than the runner's cgroup: the two jobs that build this workspace write `user.bazelrc`, which `.bazelrc` now try-imports last, and the examples builds pass the flags inline. Hermiticity Check gets `timeout-minutes: 30`.
 - "Direct Integration Test" builds wasm-component-examples at the commit pinned in `.github/examples.ref` against this tree (`--override_module`), on every PR and merge-queue commit, on the self-hosted light pool. A non-required job keeps testing the examples repo's main (or a same-name branch) as early warning.
 - On a stale `MODULE.bazel.lock`, "Lockfiles and advisories" now runs `.github/actions/lock-check-bazel` (copied from pulseengine/synth): it uploads the regenerated lock as the `module-bazel-lock` artifact and prints the signed-commit fix. It never pushes. Dependabot covers `tools/checksum_updater`, `tools/ssh_keygen` and `tools/wasm_embed_aot` again.
 
