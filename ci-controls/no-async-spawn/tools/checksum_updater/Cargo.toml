@@ -1,0 +1,40 @@
+[package]
+name = "checksum_updater"
+version = "0.1.0"
+edition = "2021"
+description = "Automated tool for updating WebAssembly tool checksums"
+license = "Apache-2.0"
+repository = "https://github.com/rules-wasm-component/rules_wasm_component"
+
+[lib]
+name = "checksum_updater"
+path = "src/lib.rs"
+
+[[bin]]
+name = "checksum_updater"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.6.1", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.52", features = ["full"] }
+reqwest = { version = "0.13", features = ["json"] }
+sha2 = "0.11"
+hex = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+semver = "1.0"
+regex = "1.12"
+futures = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tempfile = "3.27"
+async-trait = "0.1"
+wit-bindgen = { version = "0.63.0", features = ["async"] }  # WIT binding generation; async feature for P3 support
+uuid = { version = "1.23", default-features = false }  # UUID generation for user service (deterministic, no getrandom dependency)
+bitflags = "2.13"  # Bitflags for WASI filesystem interfaces in generated bindings
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockito = "1.7"

@@ -14,6 +14,10 @@ All notable changes to this project will be documented in this file.
 - "Direct Integration Test" builds wasm-component-examples at the commit pinned in `.github/examples.ref` against this tree (`--override_module`), on every PR and merge-queue commit, on the self-hosted light pool. A non-required job keeps testing the examples repo's main (or a same-name branch) as early warning.
 - On a stale `MODULE.bazel.lock`, "Lockfiles and advisories" now runs `.github/actions/lock-check-bazel` (copied from pulseengine/synth): it uploads the regenerated lock as the `module-bazel-lock` artifact and prints the signed-commit fix. It never pushes. Dependabot covers `tools/checksum_updater`, `tools/ssh_keygen` and `tools/wasm_embed_aot` again.
 
+### Changed
+
+- The `@crates` hub's wit-bindgen 0.63.0 now enables `async-spawn`, so P3 components built with `rust_wasm_component_bindgen` can call `wit_bindgen::spawn_local`. The async executor changes with it: exports register a spawn hook, and a cancelled root future is aborted inside a `FuturesUnordered` rather than dropped directly. `//test/p3:p3_spawn_build_test` covers it.
+
 ### Fixed
 
 - `wkg_fetch` and `wkg_lock` called the file_ops toolchain with argv subcommands it does not support; they now pass a JSON config (#775). The file_ops wrapper fails on an unknown operation type instead of skipping it.

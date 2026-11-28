@@ -216,3 +216,14 @@ run    = "sh -c 'RESULTS=\"$(cat .github/scripts/testdata/needs-results)\" sh -c
 plant  = "ci-controls/aggregate-gate-cancelled"
 expect = "fail"
 stderr_or_stdout_matches = "INCOMPLETE: a needed job was cancelled"
+
+# Run by "Test on ubuntu-24.04". The @crates hub's wit-bindgen must carry the
+# `async-spawn` feature (relay's p3 stream loops spawn tasks); the plant puts back
+# the manifest and lock without it, so wit_bindgen::spawn_local is missing.
+[[control]]
+id     = "no-async-spawn"
+check  = "Test on ubuntu-24.04"
+run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --test_output=errors //test/p3:p3_spawn_build_test"
+plant  = "ci-controls/no-async-spawn"
+expect = "fail"
+stderr_or_stdout_matches = "spawn_local"

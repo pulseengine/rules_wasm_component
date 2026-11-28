@@ -70,6 +70,24 @@ build_test(
     targets = [":hello_p3"],
 )
 
+# wit-bindgen `async-spawn` (relay): the hub's wit-bindgen exports
+# spawn_local, and an export registers the spawn hook, so a stream loop can run
+# as a spawned task. Without the feature `wit_bindgen::spawn_local` does not
+# exist and this fails to compile.
+rust_wasm_component_bindgen(
+    name = "hello_p3_spawn",
+    srcs = ["src_p3_spawn/lib.rs"],
+    profiles = ["release"],
+    wasi_version = "p3",
+    wit = ":hello_interfaces",
+    deps = ["@crates//:wit-bindgen"],
+)
+
+build_test(
+    name = "p3_spawn_build_test",
+    targets = [":hello_p3_spawn"],
+)
+
 # Per-function async override (#526): a plain-sync WIT export kept sync under p3
 # while the component is still p3. Without the override this fails to compile
 # ("method should be `async` ... but it is synchronous"); the override forces a
@@ -171,6 +189,7 @@ test_suite(
     tests = [
         ":p3_async_func_build_test",
         ":p3_build_test",
+        ":p3_spawn_build_test",
         ":p3_sync_export_build_test",
         ":wasi_p3_wit_build_test",
     ],
@@ -182,6 +201,7 @@ test_suite(
         ":p2_build_test",
         ":p3_async_func_build_test",
         ":p3_build_test",
+        ":p3_spawn_build_test",
         ":p3_sync_export_build_test",
         ":wasi_p3_wit_build_test",
     ],
