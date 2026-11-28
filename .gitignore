@@ -85,3 +85,6 @@ __pycache__/
 
 # Legacy bazel strategy BUILD files (removed in dependency management cleanup)
 toolchains/BUILD.*_bazel
+
+# Per-machine Bazel overrides (CI writes resource caps here)
+user.bazelrc

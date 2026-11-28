@@ -82,3 +82,7 @@ build:clippy --@rules_rust//:clippy_flags=-D,warnings,-D,clippy::all,-D,clippy::
 #
 # All downloads include mandatory SHA256 checksum verification for security.
 # See checksums/tools/*.json for the complete list of verified checksums.
+
+# Per-machine overrides (git-ignored), imported last so they win. CI jobs on
+# self-hosted runners write Bazel resource caps here.
+try-import %workspace%/user.bazelrc
