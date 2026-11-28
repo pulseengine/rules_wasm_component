@@ -227,3 +227,16 @@ run    = "bazel --max_idle_secs=5 test --disk_cache=~/.cache/rwc-disk-cache --te
 plant  = "ci-controls/no-async-spawn"
 expect = "fail"
 stderr_or_stdout_matches = "spawn_local"
+
+# Run by the "BCR Multi-Platform Test (ubuntu-24.04, 9.3.3)" cell. Runs the
+# "Select the Bazel version under test" block of bcr-compatibility.yml; the
+# plant removes its USE_BAZEL_VERSION lines, so bazelisk falls back to
+# .bazelversion (8.2.1), which is how every cell silently ran 8.2.1 before.
+# env -u: the cell has already exported USE_BAZEL_VERSION via GITHUB_ENV.
+[[control]]
+id     = "matrix-bazel-version"
+check  = "BCR Multi-Platform Test (ubuntu-24.04, 9.3.3)"
+run    = "env -u USE_BAZEL_VERSION sh -c 'BAZEL_UNDER_TEST=9.3.3 bash -c \"$(sed -n \"/# bazel-version-begin/,/# bazel-version-end/p\" .github/workflows/bcr-compatibility.yml)\"'"
+plant  = "ci-controls/matrix-bazel-version"
+expect = "fail"
+stderr_or_stdout_matches = "requested Bazel 9.3.3 but bazelisk ran 8"
